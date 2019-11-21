@@ -6,7 +6,7 @@ Usage example:
 $ python scripts.py train ./model ./train.jsonl ./eval.jsonl --tok2vec tok2vec.bin
 
 Requirements:
-spacy>=2.2.2
+spacy>=2.2.3
 """
 import spacy
 from spacy.cli.train import _load_pretrained_tok2vec

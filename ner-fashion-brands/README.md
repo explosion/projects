@@ -8,12 +8,12 @@ We've limited our experiments to spaCy, but you can use the annotations in any o
 
 | Model                                                                                                                         |  F-Score | Precision | Recall | wps CPU | wps GPU | # Examples |
 | ----------------------------------------------------------------------------------------------------------------------------- | -------: | --------: | -----: | ------: | ------: | ---------: |
-| **Rule-based baseline**                                                                                                       |     48.4 |      96.3 |   32.4 |    130k |    130k |          0 |
+| **Rule-based baseline**<br />[`fashion_brands_patterns.jsonl`](fashion_brands_patterns.jsonl)                                 |     48.4 |      96.3 |   32.4 |    130k |    130k |          0 |
 | **[spaCy](https://spacy.io)**<br />blank                                                                                      |     65.7 |      77.3 |   57.1 |     13k |     72k |       1235 |
 | **[spaCy](https://spacy.io)**<br /> [`en_vectors_web_lg`](https://spacy.io/models/en#en_vectors_web_lg)                       |     73.4 |      81.5 |   66.8 |     13k |     72k |       1235 |
 | **[spaCy](https://spacy.io)**<br /> [`en_vectors_web_lg`](https://spacy.io/models/en#en_vectors_web_lg) + tok2vec<sup>1</sup> | **82.1** |      83.5 |   80.7 |      5k |     68k |       1235 |
 
-1. Representations trained on 1 billion words from Reddit comments using [`spacy pretrain`](https://spacy.io/api/cli#pretrain) predicting the `en_vectors_web_lg` vectors (~8 hours on GPU). Download: [`tok2vec_cd8_model289.bin`](https://github.com/explosion/projects/releases/download/ner-fashion-brands-v1.0/tok2vec_cd8_model289.bin)
+1. Representations trained on 1 billion words from Reddit comments using [`spacy pretrain`](https://spacy.io/api/cli#pretrain) predicting the `en_vectors_web_lg` vectors (~8 hours on GPU). Download: [`tok2vec_cd8_model289.bin`](https://github.com/explosion/projects/releases/download/tok2vec/tok2vec_cd8_model289.bin)
 
 ## 📚 Data
 
