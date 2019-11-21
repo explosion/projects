@@ -57,7 +57,7 @@ The training and evaluation datasets are distributed in Prodigy's simple JSONL (
 
 ## 🎛 Scripts
 
-The [`scripts_spacy.py`](scripts_spacy.py) file includes command line scripts for training and evaluating spaCy models using the data in Prodigy's format. This should let you reproduce our [experiments](https://explosion.ai/blog/sense2vec-reloaded#ner-results). We tried to keep the scripts as straightforward as possible. To see the available arguments, you can run `python scripts_spacy.py [command] --help`.
+The [`scripts_spacy.py`](scripts_spacy.py) file includes command line scripts for training and evaluating spaCy models using the data in Prodigy's format. This should let you reproduce our results. We tried to keep the scripts as straightforward as possible. To see the available arguments, you can run `python scripts_spacy.py [command] --help`.
 
 | Command    | Description                                                                                                                           |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
