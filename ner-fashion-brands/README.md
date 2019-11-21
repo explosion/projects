@@ -25,6 +25,17 @@ We've limited our experiments to spaCy, but you can use the annotations in any o
 | [`fashion_brands_training.jsonl`](fashion_brands_training.jsonl) |  1235 | Training data annotated with `FASHION_BRAND` entities.                                                                                                                                                                                                                                                                                                                                         |
 | [`fashion_brands_eval.jsonl`](fashion_brands_eval.jsonl)         |   500 | Evaluation data annotated with `FASHION_BRAND` entities.                                                                                                                                                                                                                                                                                                                                       |
 
+<img width="250" src="https://user-images.githubusercontent.com/13643239/69343953-d6eccb00-0c6e-11ea-96ed-ea1833eb3902.png" alt="" align="right">
+
+### Visualize the data
+
+The [`streamlit_visualizer.py`](streamlit_visualizer.py) script lets you visualize the training and evaluation datasets with [displaCy](https://spacy.io/usage/visualizers).
+
+```bash
+pip install streamlit
+streamlit run streamlit_visualizer.py
+```
+
 ### Training and evaluation data format
 
 The training and evaluation datasets are distributed in Prodigy's simple JSONL (newline-delimited JSON) format. Each entry contains a `"text"` and a list of `"spans"` with the `"start"` and `"end"` character offsets and the `"label"` of the annotated entities. The data also includes the tokenization. Here's a simplified example entry:
