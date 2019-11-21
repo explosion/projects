@@ -2,7 +2,7 @@
 
 # Example projects
 
-This repo will contain example projects for various NLP tasks, including scripts, benchmarks and datasets created with [Prodigy](https://prodi.gy).
+This repo will contain example projects for various NLP tasks, including scripts, benchmarks, results and datasets created with [Prodigy](https://prodi.gy).
 
 ## 💝 Projects
 
