@@ -46,6 +46,14 @@ The training and evaluation datasets are distributed in Prodigy's simple JSONL (
 prodigy mark docs_issues_data ./raw_text.jsonl --label DOCUMENTATION --view-id classification
 ```
 
+<img width="250" src="https://user-images.githubusercontent.com/13643239/69798875-7d3a5280-11d2-11ea-94d2-e04f9e18b69e.png" alt="" align="right">
+
+## 🚘🐱 Live demo and model download
+
+We also trained [a model](https://autocat.apps.allenai.org/?uid=d9cd6f8c-8f1d-4367-b1ae-b6264bfe2cda) using Allen AI's [Autocat](https://autocat.apps.allenai.org) app (a web-based tool for training, visualizing and showcasing spaCy text classification models). You can try out the classifier in real-time and see the updated predictions as you type. You can also evaluate it on your own data, download the model Python package or just `pip install` it with one command to try it locally. [**View model here.**](https://autocat.apps.allenai.org/?uid=d9cd6f8c-8f1d-4367-b1ae-b6264bfe2cda)
+
+To use the JSONL data in Autocat, we added `"labels": ["DOCUMENTATION"]` to all examples with `"answer": "accept"` and `"labels": ["N/A"]` to all examples with `"answer": "reject"`.
+
 ## 🎛 Scripts
 
 The [`scripts_spacy.py`](scripts_spacy.py) file includes command line scripts for training and evaluating spaCy models using the data in Prodigy's format. This should let you reproduce our results. We tried to keep the scripts as straightforward as possible. To see the available arguments, you can run `python scripts_spacy.py [command] --help`.
