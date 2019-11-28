@@ -2,7 +2,7 @@
 models.
 
 Usage example:
-$ python scripts.py train ./model ./train.jsonl ./eval.jsonl --tok2vec tok2vec.bin
+$ python scripts.py train en_vectors_web_lg ./train.jsonl ./eval.jsonl
 
 Requirements:
 spacy>=2.2.3
