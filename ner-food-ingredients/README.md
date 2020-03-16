@@ -21,10 +21,10 @@ Labelling the data took about 2.5 hours and was done manually using the patterns
 
 ### Raw data
 
-| File                                                             |     Count | Description                                          |
-| ---------------------------------------------------------------- | --------: | ---------------------------------------------------- |
-| [`reddit_r_cooking.jsonl`](#)                                    | 2,174,118 | Extracted data from Reddit (2012-2019).              |
-| [`reddit_r_cooking_sample.jsonl`](reddit_r_cooking_sample.jsonl) |    10,000 | Randomly selected sample for annotation and testing. |
+| File                                                                                                                              |     Count | Description                                          |
+| --------------------------------------------------------------------------------------------------------------------------------- | --------: | ---------------------------------------------------- |
+| [`reddit_r_cooking.jsonl`](https://github.com/explosion/projects/releases/download/reddit_r_cooking.jsonl/reddit_r_cooking.jsonl) | 2,174,118 | Extracted data from Reddit (2012-2019).              |
+| [`reddit_r_cooking_sample.jsonl`](reddit_r_cooking_sample.jsonl)                                                                  |    10,000 | Randomly selected sample for annotation and testing. |
 
 ### Labelled data, patterns and artifacts
 
