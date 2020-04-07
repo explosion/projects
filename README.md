@@ -2,7 +2,8 @@
 
 # Example projects
 
-This repo contains example projects for various NLP tasks, including scripts, benchmarks, results and datasets created with [Prodigy](https://prodi.gy).
+This repo contains example projects for various NLP tasks, implemented with spaCy and other NLP frameworks. The projects include scripts, benchmarks and results, as well as annotated datasets (created with [Prodigy](https://prodi.gy)).
+
 
 ## 💝 Projects
 
