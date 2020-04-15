@@ -1,6 +1,6 @@
 # NER: detecting drug names in online comments
 
-This directory contains the datasets and scripts for an example project using [Prodigy](https://prodi.gy) to boostrap an NER model to detect drug names in [Reddit comments](https://files.pushshift.io/reddit/comments/).
+This directory contains the datasets and scripts for an example project using [Prodigy](https://prodi.gy) to bootstrap an NER model to detect drug names in [Reddit comments](https://files.pushshift.io/reddit/comments/).
 
 We've limited our experiments to spaCy, but you can use the annotations in any other NER system instead. You can likely beat spaCy's scores using a system based on a large transformer model. **If you run the experiments, please let us know!** Feel free to submit a pull request with your scripts.
 
