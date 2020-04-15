@@ -1,6 +1,6 @@
 # NER: detecting fashion brands in online comments
 
-This directory contains the datasets and scripts for an example project using [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to boostrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
+This directory contains the datasets and scripts for an example project using [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
 
 We've limited our experiments to spaCy, but you can use the annotations in any other NER system instead. You can likely beat spaCy's scores using a system based on a large transformer model. **If you run the experiments, please let us know!** Feel free to submit a pull request with your scripts.
 
