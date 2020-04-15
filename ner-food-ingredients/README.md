@@ -2,7 +2,7 @@
 
 <a href="https://www.youtube.com/watch?v=59BKHO_xBPA" target="_blank"><img src="https://user-images.githubusercontent.com/13643239/76709989-cd96db00-6703-11ea-927a-456200f74f45.png" width="300" height="auto" align="right" /></a>
 
-This directory contains raw data, preprocessing scripts and annotations for a project using [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to boostrap an NER model to detect ingredients [Reddit comments](https://files.pushshift.io/reddit/comments/) and to calculate how mentions change over time. The results were then used to create a [bar chart race visualization](https://public.flourish.studio/visualisation/1532208/) of selected ingredients.
+This directory contains raw data, preprocessing scripts and annotations for a project using [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect ingredients [Reddit comments](https://files.pushshift.io/reddit/comments/) and to calculate how mentions change over time. The results were then used to create a [bar chart race visualization](https://public.flourish.studio/visualisation/1532208/) of selected ingredients.
 
 > 📺 **This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=59BKHO_xBPA).**
 
