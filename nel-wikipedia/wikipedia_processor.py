@@ -8,12 +8,8 @@ import random
 import json
 
 from spacy.gold import GoldParse
-from bin.wiki_entity_linking import wiki_io as io
-from bin.wiki_entity_linking.wiki_namespaces import (
-    WP_META_NAMESPACE,
-    WP_FILE_NAMESPACE,
-    WP_CATEGORY_NAMESPACE,
-)
+import wiki_io as io
+from wiki_namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
 
 """
 Process a Wikipedia dump to calculate entity frequencies and prior probabilities in combination with certain mentions.
@@ -497,7 +493,9 @@ def read_el_docs_golds(nlp, entity_file_path, dev, line_ids, kb, labels_discard=
                     continue
 
                 doc = nlp(clean_text)
-                gold = _get_gold_parse(doc, entities, dev=dev, kb=kb, labels_discard=labels_discard)
+                gold = _get_gold_parse(
+                    doc, entities, dev=dev, kb=kb, labels_discard=labels_discard
+                )
                 if gold and len(gold.links) > 0:
                     yield doc, gold
             i += 1

@@ -5,16 +5,18 @@ import bz2
 import json
 import logging
 
-from bin.wiki_entity_linking.wiki_namespaces import WD_META_ITEMS
+from wiki_namespaces import WD_META_ITEMS
 
 logger = logging.getLogger(__name__)
 
 
-def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang="en", parse_descr=True):
+def read_wikidata_entities_json(
+    wikidata_file, limit=None, to_print=False, lang="en", parse_descr=True
+):
     # Read the JSON wiki data and parse out the entities. Takes about 7-10h to parse 55M lines.
     # get latest-all.json.bz2 from https://dumps.wikimedia.org/wikidatawiki/entities/
 
-    site_filter = '{}wiki'.format(lang)
+    site_filter = "{}wiki".format(lang)
 
     # filter: currently defined as OR: one hit suffices to be removed from further processing
     exclude_list = WD_META_ITEMS
@@ -23,11 +25,13 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     exclude_list.extend(["Q1383557", "Q10617810"])
 
     # letters etc
-    exclude_list.extend(["Q188725", "Q19776628", "Q3841820", "Q17907810", "Q9788", "Q9398093"])
+    exclude_list.extend(
+        ["Q188725", "Q19776628", "Q3841820", "Q17907810", "Q9788", "Q9398093"]
+    )
 
     neg_prop_filter = {
-        'P31': exclude_list,    # instance of
-        'P279': exclude_list    # subclass
+        "P31": exclude_list,  # instance of
+        "P279": exclude_list,  # subclass
     }
 
     title_to_id = dict()
@@ -41,7 +45,7 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     parse_aliases = True
     parse_claims = True
 
-    with bz2.open(wikidata_file, mode='rb') as file:
+    with bz2.open(wikidata_file, mode="rb") as file:
         for cnt, line in enumerate(file):
             if limit and cnt >= limit:
                 break
@@ -150,5 +154,3 @@ def read_wikidata_entities_json(wikidata_file, limit=None, to_print=False, lang=
     # log final number of lines processed
     logger.info("Finished. Processed {} lines of WikiData JSON dump".format(cnt))
     return title_to_id, id_to_descr, id_to_alias
-
-

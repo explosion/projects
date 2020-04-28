@@ -13,17 +13,17 @@ from https://dumps.wikimedia.org/enwiki/latest/
 """
 from __future__ import unicode_literals
 
+import spacy
+
 import logging
 from pathlib import Path
 import plac
 
-from bin.wiki_entity_linking import wikipedia_processor as wp, wikidata_processor as wd
-from bin.wiki_entity_linking import wiki_io as io
-from bin.wiki_entity_linking import kb_creator
-from bin.wiki_entity_linking import TRAINING_DATA_FILE, KB_FILE, ENTITY_DESCR_PATH, KB_MODEL_DIR, LOG_FORMAT
-from bin.wiki_entity_linking import ENTITY_FREQ_PATH, PRIOR_PROB_PATH, ENTITY_DEFS_PATH, ENTITY_ALIAS_PATH
-import spacy
-from bin.wiki_entity_linking.kb_creator import read_kb
+import wikipedia_processor as wp, wikidata_processor as wd
+import wiki_io as io
+from wiki_io import TRAINING_DATA_FILE, KB_FILE, ENTITY_DESCR_PATH, KB_MODEL_DIR, LOG_FORMAT
+from wiki_io import ENTITY_FREQ_PATH, PRIOR_PROB_PATH, ENTITY_DEFS_PATH, ENTITY_ALIAS_PATH
+import kb_creator
 
 logger = logging.getLogger(__name__)
 

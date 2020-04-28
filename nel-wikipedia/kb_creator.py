@@ -5,8 +5,8 @@ import logging
 
 from spacy.kb import KnowledgeBase
 
-from bin.wiki_entity_linking.train_descriptions import EntityEncoder
-from bin.wiki_entity_linking import wiki_io as io
+from train_descriptions import EntityEncoder
+import wiki_io as io
 
 
 logger = logging.getLogger(__name__)
