@@ -1,5 +1,8 @@
 ## Entity Linking with Wikipedia and Wikidata
 
+These scripts are provided on an as-is basis. Questions around usage of these scripts are best asked at StackOverflow.
+Note that processing the whole of Wikipedia will require a lot of resources and can be overkill for your specific use-case.
+
 ### Step 1: Create a Knowledge Base (KB) and training data
 
 Run `wikidata_pretrain_kb.py` 
