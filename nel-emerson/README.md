@@ -10,9 +10,9 @@ three different people called Emerson: [an Australian tennis player](https://www
 Roughly speaking, the following steps are performed in this project.
 First, a pretrained model is used to perform Named Entity Recognition (NER). 
 Then, we create a Knowledge Base (KB) in spaCy that holds the information of the entities we want to disambiguate. 
-In this example project we consider three different people called "Emerson": Next, we use [Prodigy](https://prodi.gy) to create some manually 
+Next, we use [Prodigy](https://prodi.gy) to create some manually 
 annotated data with a custom annotation recipe. Finally, we create a new Entity Linking component in spaCy, 
-and train it with this annotated data. We test the model on a few unseen sentences.
+and train it with the annotated data. We test the model on a few unseen sentences.
 
 > 📺 **This project was created as part of a [step-by-step video tutorial](TODO LINK).**
 
@@ -30,7 +30,9 @@ Both files cover the same steps:
 
 To perform the manual annotation in Prodigy, we have written a custom recipe [`el_recipe.py`](scripts/el_recipe.py).
 
-As input, the file [`emerson_input_text.txt`](prodigy/emerson_input_text) contains 30 sentences from Wikipedia containing just 
+As input, we need to provide the Knowledge base `my_kb` and NER pipeline `my_nlp` that are created 
+with the scripts described in the previous section. Further, the file 
+[`emerson_input_text.txt`](prodigy/emerson_input_text) lists 30 sentences from Wikipedia containing just 
 the mention "Emerson" and not the full name. These sentences are then annotated with Prodigy by executing the command
 ```
 prodigy entity_linker.manual emersons_annotated emerson_input_text.txt my_nlp/ my_kb entitites.csv -F el_recipe.py

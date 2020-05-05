@@ -16,6 +16,7 @@ prodigy_dir = Path.cwd().parent / "prodigy"
 
 
 def load_entities():
+    """ Helper function to read in the pre-defined entities we want to disambiguate to. """
     entities_loc = input_dir / "entities.csv"
 
     names = dict()
@@ -32,6 +33,7 @@ def load_entities():
 
 
 def create_kb():
+    """ Step 1: create the Knowledge Base in spaCy and write it to file """
     nlp = spacy.load("en_core_web_lg")
     name_dict, desc_dict = load_entities()
 
@@ -60,6 +62,7 @@ def create_kb():
 
 
 def train_el():
+    """ Step 2: Once we have done the manual annotations, use it to train a new Entity Linking component. """
     nlp = spacy.load(output_dir / "my_nlp")
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=1)
     kb.load_bulk(output_dir / "my_kb")
@@ -135,6 +138,7 @@ def train_el():
 
 
 def eval():
+    """ Step 3: Evaluate the new Entity Linking component by applying it to unseen text. """
     nlp = spacy.load(output_dir / "my_nlp_el")
     with open(output_dir / "test_set.pkl", "rb") as f:
         test_dataset = pickle.load(f)
@@ -158,5 +162,7 @@ def eval():
 
 if __name__ == "__main__":
     create_kb()
+    # after creating the KB, it can be used to run the Prodigy recipe and create the manual annotations
+
     train_el()
     eval()
