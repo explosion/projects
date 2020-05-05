@@ -2,12 +2,13 @@
 
 This directory contains the datasets and scripts for an example project using 
 [spaCy's Entity Linking (EL) functionality ](https://spacy.io/usage/linguistic-features#entity-linking) 
-to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. 
+to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider 
+three different people called Emerson: an Australian tennis player, an American writer, and a Brazilian footballer.
 
+Roughly speaking, the following steps are performed in this project.
 First, a pretrained model is used to perform Named Entity Recognition (NER). 
 Then, we create a Knowledge Base (KB) in spaCy that holds the information of the entities we want to disambiguate. 
-In this example project we consider three different people called "Emerson": an Australian tennis player, 
-an American writer, and a Brazilian footballer. Next, we use [Prodigy](https://prodi.gy) to create some manually 
+In this example project we consider three different people called "Emerson": Next, we use [Prodigy](https://prodi.gy) to create some manually 
 annotated data with a custom annotation recipe. Finally, we create a new Entity Linking component in spaCy, 
 and train it with this annotated data. We test the model on a few unseen sentences.
 
