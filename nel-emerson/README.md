@@ -3,7 +3,9 @@
 This directory contains the datasets and scripts for an example project using 
 [spaCy's Entity Linking (EL) functionality ](https://spacy.io/usage/linguistic-features#entity-linking) 
 to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider 
-three different people called Emerson: an Australian tennis player, an American writer, and a Brazilian footballer.
+three different people called Emerson: [an Australian tennis player](https://www.wikidata.org/wiki/Q312545), 
+[an American writer](https://www.wikidata.org/wiki/Q48226), and a 
+[Brazilian footballer](https://www.wikidata.org/wiki/Q215952).
 
 Roughly speaking, the following steps are performed in this project.
 First, a pretrained model is used to perform Named Entity Recognition (NER). 
