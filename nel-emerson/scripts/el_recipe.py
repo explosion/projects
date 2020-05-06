@@ -1,3 +1,8 @@
+"""
+Custom Prodigy recipe to perform manual annotation of entity links,
+given an existing NER model and a knowledge base performing candidate generation.
+"""
+
 import spacy
 from spacy.kb import KnowledgeBase
 

@@ -1,3 +1,10 @@
+"""
+Script showcasing spaCy's Entity Linking functionality:
+ 1) create a Knowledge Base (KB)
+ 2) Train a new Entity Linking (EL) component
+ 3) Test the new component on unseen data
+"""
+
 import spacy
 from spacy.kb import KnowledgeBase
 from spacy.util import minibatch, compounding
