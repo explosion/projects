@@ -1,4 +1,4 @@
-"""Scripts used for training and evaluation of NER models boostrapped with
+"""Scripts used for training and evaluation of NER models bootstrapped with
 sense2vec annotations. See our blog post for details:
 https://explosion.ai/blog/sense2vec-reloaded
 
