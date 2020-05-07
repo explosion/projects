@@ -1,5 +1,7 @@
 # Entity Linking: disambiguation of "Emerson" mentions in sentences
 
+<a href="https://www.youtube.com/watch?v=8u57WSXVpmw" target="_blank"><img src="https://user-images.githubusercontent.com/13643239/81293769-216fd180-906e-11ea-9f9c-d9dec9163dcc.png" width="300" height="auto" align="right" /></a>
+
 This directory contains the datasets and scripts for an example project using
 [spaCy's Entity Linking (EL) functionality ](https://spacy.io/usage/linguistic-features#entity-linking)
 to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider
