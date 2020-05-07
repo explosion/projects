@@ -109,7 +109,7 @@ def train_el():
 
     TRAIN_DOCS = []
     for text, annotation in train_dataset:
-        doc = nlp(text)
+        doc = nlp(text)   # to make this more efficient, you can use nlp.pipe() just once for all the texts
         TRAIN_DOCS.append((doc, annotation))
 
     entity_linker = nlp.create_pipe("entity_linker", config={"incl_prior": False})
@@ -160,7 +160,7 @@ def eval():
     for text, true_annot in test_dataset:
         print(text)
         print(f"Gold annotation: {true_annot}")
-        doc = nlp(text)
+        doc = nlp(text)   # to make this more efficient, you can use nlp.pipe() just once for all the texts
         for ent in doc.ents:
             if ent.text == "Emerson":
                 print(f"Prediction: {ent.text}, {ent.label_}, {ent.kb_id_}")
