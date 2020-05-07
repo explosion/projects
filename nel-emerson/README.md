@@ -14,7 +14,7 @@ Next, we use [Prodigy](https://prodi.gy) to create some manually
 annotated data with a custom annotation recipe. Finally, we create a new Entity Linking component in spaCy, 
 and train it with the annotated data. We test the model on a few unseen sentences.
 
-> 📺 **This project was created as part of a [step-by-step video tutorial](TODO LINK).**
+> 📺 **This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=8u57WSXVpmw).**
 
 ## Scripts
 
