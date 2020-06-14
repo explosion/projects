@@ -94,7 +94,7 @@ def main(
         )
     )
     logger.info(
-        "Dev set has {} articles, limit set to rougly {} articles for evaluation".format(
+        "Dev set has {} articles, limit set to roughly {} articles for evaluation".format(
             len(dev_indices), dev_articles if dev_articles else "all"
         )
     )
