@@ -11,7 +11,7 @@ This directory contains raw data, preprocessing scripts and annotations for a pr
 | Model                                                                                                                         |   F-Score | Precision | Recall | # Examples |
 | ----------------------------------------------------------------------------------------------------------------------------- | --------: | --------: | -----: | ---------: |
 | **[spaCy](https://spacy.io)**<br />blank                                                                                      |     80.85 |     82.13 |  79.61 |        760 |
-| **[spaCy](https://spacy.io)**<br /> [`en_vectors_web_lg`](https://spacy.io/models/en#en_vectors_web_lg) + tok2vec<sup>1</sup> | **84.95** |     87.28 |  82.74 |        760 |
+| **[spaCy](https://spacy.io)**<br /> [`en_vectors_web_lg`](https://spacy.io/models/en-starters#en_vectors_web_lg) + tok2vec<sup>1</sup> | **84.95** |     87.28 |  82.74 |        760 |
 
 1. Representations trained on 1 billion words from Reddit comments using [`spacy pretrain`](https://spacy.io/api/cli#pretrain) predicting the `en_vectors_web_lg` vectors (~8 hours on GPU). Download: [`tok2vec_cd8_model289.bin`](https://github.com/explosion/projects/releases/download/tok2vec/tok2vec_cd8_model289.bin)
 
