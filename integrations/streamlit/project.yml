@@ -1,0 +1,29 @@
+title: "Streamlit integration"
+description: "[Streamlit](https://streamlit.io) is a Python framework for building interactive data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit) package helps you integrate spaCy visualizations into your Streamlit apps and quickly spin up demos to explore your pipelines interactively. It includes a full embedded visualizer, as well as individual components. If you're training your own pipelines, you can integrate the `visualize` command into your `project.yml` and pass in the path to your exported pipeline to visualize it. See the tutorial project templates for examples."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  # The default text shown in the visualizer on load
+  default_text: "Sundar Pichai is the CEO of Google."
+  # A comma-separated list of paths or installed package names
+  models: "en_core_web_sm"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts"]
+
+commands:
+  - name: "install"
+    help: "Install dependencies and download models"
+    script:
+      - "pip install -r requirements.txt"
+      # TODO: fix this once we have models
+      - "python -c \"import spacy;spacy.blank('en').to_disk('en_core_web_sm')\""
+      # - "python -m spacy download en_core_web_sm"
+  - name: visualize
+    help: Visualize a pipeline interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize.py ${vars.models} \"${vars.default_text}\""
+    deps:
+      - "scripts/visualize.py"
+    no_skip: true
