@@ -1,3 +1,6 @@
+# Project-specific
+project.lock
+
 .env/
 .env*
 .vscode/
