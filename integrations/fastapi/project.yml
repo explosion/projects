@@ -1,7 +1,7 @@
-title: "FastAPI"
+title: "FastAPI integration"
 description: "Use [FastAPI](https://fastapi.tiangolo.com/) to serve your spaCy models and host modern REST APIs. To install the dependencies and start the server, you can run `spacy project run start`. To explore the REST API interactively, navigate to `http://${vars.host}:${vars.port}/docs` in your browser. See the examples for how to query the API using Python or JavaScript."
 
-# Variables can be references across the project.yml using ${vars.var_name}
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   host: "127.0.0.1"
   port: 5000

@@ -1,10 +1,10 @@
 # These variables can be referenced in asset URLs and command scripts using
 # curly braces (like in Python's format strings)
-variables:
-  NAME: "en_textcat_reddit"
-  CONFIG: "cnn"
-  VERSION: "0.0.1"
-  GPU_ID: -1 
+vars:
+  name: "en_textcat_reddit"
+  config: "cnn"
+  version: "0.0.1"
+  gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -28,7 +28,7 @@ assets:
     dest: "assets/test.tsv"
     url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/test.tsv"
   # Uncomment this asset if you want to download the vectors.
-  #- 
+  #-
   #  dest: "assets/vectors.zip"
   #  url: "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip"
 
@@ -77,30 +77,30 @@ commands:
     name: train
     help: "Train a spaCy model using the specified corpus and config"
     script:
-      - "mkdir -p training/{CONFIG}"
-      - "python -m spacy train ./configs/{CONFIG}.cfg -o training/{CONFIG} --system.gpu {GPU_ID}"
+      - "mkdir -p training/${vars.config}"
+      - "python -m spacy train ./configs/${vars.config}.cfg -o training/${vars.config} --system.gpu ${vars.gpu_id}"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
-      - "configs/{CONFIG}.cfg"
+      - "configs/${vars.config}.cfg"
     outputs:
-      - "training/{CONFIG}/model-best"
+      - "training/${vars.config}/model-best"
   -
     name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/{CONFIG}/model-best ./corpus/test.spacy --output ./metrics/{CONFIG}.json"
+      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json"
     deps:
-      - "training/{CONFIG}/model-best"
+      - "training/${vars.config}/model-best"
       - "corpus/test.spacy"
     outputs:
-      - "metrics/{CONFIG}.json"
+      - "metrics/${vars.config}.json"
   -
     name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package ./training/{CONFIG}/model-best packages/ --meta-path ./metas/{NAME}.json --force --version {VERSION}"
+      - "python -m spacy package ./training/${vars.config}/model-best packages/ --meta-path ./metas/${vars.name}.json --force --version ${vars.version}"
     deps:
-      - "training/{CONFIG}/model-best"
+      - "training/${vars.config}/model-best"
     outputs_no_cache:
-      - "packages/{NAME}-{VERSION}/dist/{NAME}-{VERSION}.tar.gz"
+      - "packages/${vars.name}-${vars.version}/dist/${vars.name}-${vars.version}.tar.gz"

@@ -1,2 +1,2 @@
+spacy-streamlit>=1.0.0a1
 streamlit
-spacy-streamlit

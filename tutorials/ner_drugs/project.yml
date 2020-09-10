@@ -1,6 +1,6 @@
 title: "Detecting drug names in online comments (Named Entity Recognition)"
 description: "This project uses [Prodigy](https://prodi.gy) to bootstrap an NER model to detect drug names in [Reddit comments](https://files.pushshift.io/reddit/comments/)."
-# Variables can be references across the project.yml using ${vars.var_name}
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
   name: "ner_drugs"

@@ -1,6 +1,6 @@
 title: "Predicting whether a GitHub issue is about docs (Text Classification)"
 description: "This project uses [spaCy](https://spacy.io) with annotated data from [Prodigy](https://prodi.gy) to train a **binary text classifier with exclusive classes** to predict whether a GitHub issue title is about documentation."
-# Variables can be references across the project.yml using ${vars.var_name}
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
   name: "textcat_docs"

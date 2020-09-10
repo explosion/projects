@@ -1,6 +1,6 @@
 title: "Detecting fashion brands in online comments (Named Entity Recognition)"
 description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)."
-# Variables can be references across the project.yml using ${vars.var_name}
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
   name: "ner_fashion"
