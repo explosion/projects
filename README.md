@@ -1,15 +1,57 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# Example projects
+# 🪐 Project Templates
 
-This repo contains example projects for various NLP tasks, implemented with spaCy and other NLP frameworks. The projects include scripts, benchmarks and results, as well as annotated datasets (created with [Prodigy](https://prodi.gy)).
+[spaCy projects](https://nightly.spacy.io/usage/projects) let you manage and
+share **end-to-end spaCy workflows** for different **use cases and domains**,
+and orchestrate training, packaging and serving your custom pipelines. You can
+start off by cloning a pre-defined project template, adjust it to fit your
+needs, load in your data, train a pipeline, export it as a Python package,
+upload your outputs to a remote storage and share your results with your team.
 
-## 💝 Projects
+> ⚠️ spaCy project templates require the new
+> [**spaCy v3.0**](https://nightly.spacy.io), which is currently available as a
+> nightly pre-release. You can install it from pip as `spacy-nightly`:
+> `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
+>
+> See the [`master` branch](https://github.com/explosion/projects/tree/master)
+> for the previous version of this repo.
 
-| Name                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`ner-food-ingredients`](ner-food-ingredients) | Use [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect ingredients in [Reddit comments](https://files.pushshift.io/reddit/comments/) and to calculate how these mentions change over time. Includes an **end-to-end [video tutorial](https://www.youtube.com/watch?v=59BKHO_xBPA)**, raw pre-processed data, **949 annotated examples** and pretrained tok2vec weights. |
-| [`ner-fashion-brands`](ner-fashion-brands)     | Use [`sense2vec`](https://github.com/explosion/sense2vec) to bootstrap an NER model to detect fashion brands in Reddit comments. Includes **1735 annotated examples**, a data visualizer, training and evaluation scripts for spaCy and pretrained tok2vec weights.                                                                                                                                                                            |
-| [`ner-drugs`](ner-drugs)                       | Use word vectors to bootstrap an NER model to detect drug names in Reddit comments. Includes **1977 annotated examples**, a data visualizer, training and evaluation scripts for spaCy and pretrained tok2vec weights.                                                                                                                                                                                                                         |
-| [`textcat-docs-issues`](textcat-docs-issues)   | Train a binary text classifier with exclusive classes to predict whether a GitHub issue title is about documentation. Includes **1161 annotated examples**, a live demo and downloadable model and training and evaluation scripts for spaCy.                                                                                                                                                                                                  |
-| [`nel-emerson`](nel-emerson)                   | Use [spaCy](https://spacy.io/) and [Prodigy](https://prodi.gy) to train an Entity Linking model to disambiguate mentions of "Emerson" to unique [WikiData](https://www.wikidata.org/) identifiers.                                                                                                                                                                                                                          |
+## 🗃 Categories
+
+| Name                           | Description                                                                                                                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`pipelines`](pipelines)       | Templates for training NLP pipelines with different components on different corpora.                                                                                                    |
+| [`tutorials`](tutorials)       | Templates that work through a specific NLP use case end-to-end.                                                                                                                         |
+| [`integrations`](integrations) | Templates showing integrations with third-party libraries and tools for managing your data and experiments, iterating on demos and prototypes and shipping your models into production. |
+| [`benchmarks`](benchmarks)     | Templates to reproduce our benchmarks and produce quantifiable results that are easy to compare against other systems or versions of spaCy.                                             |
+| [`experimental`](experimental) | Experimental workflows and other cutting-edge stuff to use at your own risk.                                                                                                            |
+
+## 🚀 Quickstart
+
+Projects can be used via the new
+[`spacy project`](https://nightly.spacy.io/api/cli#project) CLI. To find out
+more about a command, add `--help`. For detailed instructions, see the
+[usage guide](https://nightly.spacy.io/usage/projects).
+
+<!-- TODO: update example -->
+
+1. **Clone** the project template you want to use.
+   ```bash
+   python -m spacy project clone tutorials/ner_fashion_brands
+   ```
+2. **Fetch assets** (data, weights) defined in the `project.yml`.
+   ```bash
+   cd ner_fashion_brands
+   python -m spacy project assets
+   ```
+3. **Run a command** defined in the `project.yml`.
+   ```bash
+   python -m spacy project run preprocess
+   ```
+4. **Run a workflow** of multiple steps in order.
+   ```bash
+   python -m spacy project run all
+   ```
+5. **Adjust** the template for **your specific use case**, load in your own
+   data, adjust the settings and model and share the result with your team.

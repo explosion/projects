@@ -1,0 +1,7 @@
+{
+  "lang": "en",
+  "name": "ner_fashion",
+  "version": "0.0.0",
+  "description": "NER model to detect fashion brands in text",
+  "author": "Explosion"
+}

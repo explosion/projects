@@ -1,0 +1,43 @@
+title: "FastAPI"
+description: "Use [FastAPI](https://fastapi.tiangolo.com/) to serve your spaCy models and host modern REST APIs. To install the dependencies and start the server, you can run `spacy project run start`. To explore the REST API interactively, navigate to `http://${vars.host}:${vars.port}/docs` in your browser. See the examples for how to query the API using Python or JavaScript."
+
+# Variables can be references across the project.yml using ${vars.var_name}
+vars:
+  host: "127.0.0.1"
+  port: 5000
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "assets", "examples"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+  - dest: "assets/data.jsonl"
+    url: "https://raw.githubusercontent.com/explosion/prodigy-recipes/master/example-datasets/plot_summaries.jsonl"
+    description: "Selected sentences from the CMU Movie Summary Corpus used for testing"
+
+workflows:
+  start:
+    - install
+    - serve
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "install"
+    help: "Install dependencies and download models"
+    script:
+      - "pip install -r requirements.txt"
+      # TODO: fix this once we have models
+      - "python -c \"import spacy;spacy.blank('en').to_disk('en_core_web_sm')\""
+      # - "python -m spacy download en_core_web_sm"
+      # - "python -m spacy download de_core_news_sm"
+    deps:
+      - "requirements.txt"
+  - name: "serve"
+    help: "Serve the models via a FastAPI REST API using the given host and port"
+    script:
+      - "uvicorn scripts.main:app --reload --host ${vars.host} --port ${vars.port}"

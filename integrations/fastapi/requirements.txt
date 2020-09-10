@@ -1,0 +1,5 @@
+starlette>=0.12.9,<=0.12.9
+pydantic>=1.0.0,<2.0.0
+fastapi>=0.44.0,<0.45.0
+aiofiles
+uvicorn>=0.11.6,<0.12.0

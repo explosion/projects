@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test the FastAPI REST API</title>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                width: 750px;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            textarea {
+                display: block;
+                margin: 25px 0;
+                width: 100%;
+                padding: 15px;
+                font: inherit;
+            }
+
+            pre {
+                white-space: pre-wrap;
+                width: 100%;
+                margin-top: 25px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Test the FastAPI REST API (Vanilla JavaScript)</h1>
+        <p>
+            This page shows a quick example of sending text to your REST API from Vanilla JavaScript
+            to process them with spaCy. Make sure the server is running on the given host and port
+            via
+            <code>python -m spacy project serve</code>. See the source of this page for the code.
+        </p>
+        <label for="dropdown">Model:</label>
+        <select id="dropdown">
+            <option disabled>Select model</option>
+        </select>
+        <textarea id="textarea" rows="10">
+            The film is based on the events that happened on the ship Exodus in 1947 as well as events dealing with the founding of the state of Israel in 1948. Nurse Katherine "Kitty" Fremont is an American volunteer at the Karaolos internment camp on Cyprus, where thousands of Jews - Holocaust survivors - are being held by the British, who won't let them go to Palestine. They anxiously wait for the day they will be liberated. Ari Ben Canaan , a Hagannah rebel who previously was a captain in the Jewish Brigade of the British Army in the Second World War, obtains a cargo ship and smuggles 611 Jewish inmates out of the camp for an illegal voyage to Mandate Palestine before being discovered by military authorities.
+        </textarea>
+
+        <button id="submit">Process</button>
+
+        <pre id="result"></pre>
+
+        <script>
+            const url = 'http://127.0.0.1:5000'
+            const textarea = document.querySelector('#textarea')
+            const dropdown = document.querySelector('#dropdown')
+            const submit = document.querySelector('#submit')
+            const result = document.querySelector('#result')
+
+            // Populate the models dropdown
+            fetch(`${url}/models`)
+                .then((r) => r.json())
+                .then((result) =>
+                    result.forEach((name, i) => {
+                        dropdown.innerHTML += `<option value="${name}">${name}</option>`
+                    })
+                )
+
+            // Send text to the REST API
+            submit.addEventListener('click', () => {
+                const articles = [{ text: textarea.value.trim() }]
+                const model = dropdown.options[dropdown.selectedIndex].value
+                const body = JSON.stringify({ articles, model })
+                fetch(`${url}/process/`, { method: 'POST', body })
+                    .then((r) => r.json())
+                    .then((data) => {
+                        result.textContent = JSON.stringify(data, null, 2)
+                    })
+            })
+        </script>
+    </body>
+</html>

@@ -1,0 +1,54 @@
+preprocess:
+  cmd: python -m spacy run preprocess
+  script:
+    - python scripts/preprocess.py assets/fashion_brands_training.jsonl corpus/fashion_brands_training.spacy
+    - python scripts/preprocess.py assets/fashion_brands_eval.jsonl corpus/fashion_brands_eval.spacy
+  deps:
+    - path: assets/fashion_brands_training.jsonl
+      md5: 63373dd656daa1fd3043ce166a59474c
+    - path: assets/fashion_brands_eval.jsonl
+      md5: 5113dc04e03f079525edd8df3f4f39e3
+    - path: scripts/preprocess.py
+      md5: a1a912a37d5a490951cd6b8f819652ab
+  outs:
+    - path: corpus/fashion_brands_training.spacy
+      md5: ad6041b10c22e87aaaac889264f7d532
+    - path: corpus/fashion_brands_eval.spacy
+      md5: 9a6b73de6b36fe6909e5e1ad12f9077e
+visualize-data:
+  cmd: python -m spacy run visualize-data
+  script:
+    - pip install streamlit
+    - python scripts/visualizer.py assets/fashion_brands_training.jsonl,assets/fashion_brands_eval.jsonl
+  deps:
+    - path: scripts/visualizer.py
+      md5: 748f9caf4da04fc63dc19beac6015ccf
+    - path: assets/fashion_brands_training.jsonl
+      md5: 63373dd656daa1fd3043ce166a59474c
+    - path: assets/fashion_brands_eval.jsonl
+      md5: 5113dc04e03f079525edd8df3f4f39e3
+  outs: []
+evaluate:
+  cmd: python -m spacy run evaluate
+  script:
+    - python -m spacy evaluate training/model-best corpus/fashion_brands_eval.spacy
+      --output training/metrics.json
+  deps:
+    - path: corpus/fashion_brands_eval.spacy
+      md5: 9a6b73de6b36fe6909e5e1ad12f9077e
+    - path: training/model-best
+      md5: 873eb2882d7eccdac7e8992c74bdfe31
+  outs:
+    - path: training/metrics.json
+      md5: 0c013995f5ccd96d2508f6508d1f652b
+package:
+  cmd: python -m spacy run package
+  script:
+    - python -m spacy package training/model-best packages --meta-path ./metas/ner_fashion.json
+      --version 0.0.0 --force
+  deps:
+    - path: training/model-best
+      md5: 873eb2882d7eccdac7e8992c74bdfe31
+  outs:
+    - path: packages/en_ner_fashion-0.0.0/dist/en_ner_fashion-0.0.0.tar.gz
+      md5: 52b3e9e6f1ec9ebb99865861ee712a5a

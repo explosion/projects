@@ -1,0 +1,106 @@
+# These variables can be referenced in asset URLs and command scripts using
+# curly braces (like in Python's format strings)
+variables:
+  NAME: "en_textcat_reddit"
+  CONFIG: "cnn"
+  VERSION: "0.0.1"
+  GPU_ID: -1 
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "metas", "metrics", "packages", "scripts", "corpus"]
+
+# Assets that should be downloaded or otherwise referenced (from a cache etc.)
+# The URL is the URL to the resource and the "dest" specifies where the file
+# should be placed, relative to the local project directory. If a checksum is
+# provided, the file is only re-downloaded if the local version is different.
+assets:
+  -
+    dest: "assets/categories.txt"
+    url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/emotions.txt"
+  -
+    dest: "assets/train.tsv"
+    url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/train.tsv"
+  -
+    dest: "assets/dev.tsv"
+    url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/dev.tsv"
+  -
+    dest: "assets/test.tsv"
+    url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/test.tsv"
+  # Uncomment this asset if you want to download the vectors.
+  #- 
+  #  dest: "assets/vectors.zip"
+  #  url: "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - preprocess
+    - train
+    - evaluate
+    - package
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [path] [command]". The help message is optional and
+# shown when executing "spacy project run [path] [optional command] --help".
+# The script is a list (!) of commands in order that will be split using
+# shlex.split and executed in a subprocess. The deps/outputs/outputs_no_cache
+# are the dependencies and outputs, used for DVC (Data Version Control).
+commands:
+  -
+    name: init-vectors
+    help: Download vectors and convert to model
+    script:
+      - "python -m spacy init model --vectors-loc assets/vectors.zip en assets/en_fasttext_vectors"
+    deps:
+      - "assets/vectors.zip"
+    outputs_no_cache:
+      - "assets/en_vectors_web_lg"
+  -
+    name: preprocess
+    help: "Convert the corpus to spaCy's format"
+    script:
+      - "python scripts/convert_corpus.py"
+    deps:
+      - "assets/train.tsv"
+      - "assets/dev.tsv"
+      - "assets/test.tsv"
+      - "assets/categories.txt"
+    outputs_no_cache:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+  -
+    name: train
+    help: "Train a spaCy model using the specified corpus and config"
+    script:
+      - "mkdir -p training/{CONFIG}"
+      - "python -m spacy train ./configs/{CONFIG}.cfg -o training/{CONFIG} --system.gpu {GPU_ID}"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/{CONFIG}.cfg"
+    outputs:
+      - "training/{CONFIG}/model-best"
+  -
+    name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/{CONFIG}/model-best ./corpus/test.spacy --output ./metrics/{CONFIG}.json"
+    deps:
+      - "training/{CONFIG}/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/{CONFIG}.json"
+  -
+    name: package
+    help: "Package the trained model so it can be installed"
+    script:
+      - "python -m spacy package ./training/{CONFIG}/model-best packages/ --meta-path ./metas/{NAME}.json --force --version {VERSION}"
+    deps:
+      - "training/{CONFIG}/model-best"
+    outputs_no_cache:
+      - "packages/{NAME}-{VERSION}/dist/{NAME}-{VERSION}.tar.gz"

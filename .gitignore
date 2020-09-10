@@ -1,6 +1,8 @@
-tmp/
-.ipynb_checkpoints/
+.env/
+.env*
 .vscode/
+.prettierrc
+tmp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -24,8 +26,6 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -44,14 +44,12 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
 .pytest_cache/
 
@@ -63,7 +61,6 @@ coverage.xml
 *.log
 local_settings.py
 db.sqlite3
-db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -81,19 +78,8 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# IPython
-profile_default/
-ipython_config.py
-
 # pyenv
 .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
 
 # celery beat schedule file
 celerybeat-schedule
@@ -117,16 +103,17 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# Pycharm project files
+*.idea
+
 # mkdocs documentation
 /site
 
 # mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
 
-# Pyre type checker
-.pyre/
+# Cython intermediate files
+*.cpp
 
-# Pycharm project files
-*.idea
+# Vim files
+*.sw*

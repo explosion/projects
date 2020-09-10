@@ -1,0 +1,71 @@
+title: "Predicting whether a GitHub issue is about docs (Text Classification)"
+description: "This project uses [spaCy](https://spacy.io) with annotated data from [Prodigy](https://prodi.gy) to train a **binary text classifier with exclusive classes** to predict whether a GitHub issue title is about documentation."
+# Variables can be references across the project.yml using ${vars.var_name}
+vars:
+  config: "config.cfg"
+  name: "textcat_docs"
+  version: "0.0.0"
+  train: "docs_issues_training"
+  dev: "docs_issues_eval"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "scripts", "corpus"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/${vars.train}.jsonl"
+    checksum: "ebd254a77132b9018fdd581e95aef549"
+    description: "JSONL-formatted training data exported from Prodigy, annotated with `DOCUMENTATION` (661 examples)"
+  - dest: "assets/${vars.dev}.jsonl"
+    checksum: "ab56fc1828403bffaf163f3c540e473f"
+    description: "JSONL-formatted development data exported from Prodigy, annotated with `DOCUMENTATION` (500 examples)"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - preprocess
+    - train
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "preprocess"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python scripts/preprocess.py assets/${vars.train}.jsonl corpus/${vars.train}.spacy"
+      - "python scripts/preprocess.py assets/${vars.dev}.jsonl corpus/${vars.dev}.spacy"
+    deps:
+      - "assets/${vars.train}.jsonl"
+      - "assets/${vars.dev}.jsonl"
+      - "scripts/preprocess.py"
+    outputs:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+
+  - name: "train"
+    help: "Train a text classification model"
+    script:
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy"
+    deps:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the model and export metrics"
+    script:
+      - "python -m spacy evaluate training/model-best corpus/${vars.dev}.spacy --output training/metrics.json"
+    deps:
+      - "corpus/${vars.dev}.spacy"
+      - "training/model-best"
+    outputs:
+      - "training/metrics.json"

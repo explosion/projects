@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test the FastAPI REST API</title>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                width: 750px;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            textarea {
+                display: block;
+                margin: 25px 0;
+                width: 100%;
+                padding: 15px;
+                font: inherit;
+            }
+
+            pre {
+                white-space: pre-wrap;
+                width: 100%;
+                margin-top: 25px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Test the FastAPI REST API (JavaScript + React)</h1>
+        <p>
+            This page shows a quick example of sending text to your REST API from JavaScript (using
+            <a href="https://reactjs.org">React</a>) to process them with spaCy. Make sure the
+            server is running on the given host and port via
+            <code>python -m spacy project serve</code>. See the source of this page for the code.
+        </p>
+
+        <div id="root"></div>
+
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script
+            src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+            crossorigin
+        ></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+        <script type="text/babel">
+            const url = 'http://127.0.0.1:5000'
+            const defaultText = `The film is based on the events that happened on the ship Exodus in 1947 as well as events dealing with the founding of the state of Israel in 1948. Nurse Katherine "Kitty" Fremont is an American volunteer at the Karaolos internment camp on Cyprus, where thousands of Jews - Holocaust survivors - are being held by the British, who won't let them go to Palestine. They anxiously wait for the day they will be liberated. Ari Ben Canaan , a Hagannah rebel who previously was a captain in the Jewish Brigade of the British Army in the Second World War, obtains a cargo ship and smuggles 611 Jewish inmates out of the camp for an illegal voyage to Mandate Palestine before being discovered by military authorities.`
+
+            const App = () => {
+                const [models, setModels] = React.useState([])
+                const [model, setModel] = React.useState()
+                const [text, setText] = React.useState(defaultText)
+                const [result, setResult] = React.useState('')
+
+                React.useEffect(() => {
+                    // Populate the models dropdown
+                    fetch(`${url}/models`)
+                        .then((r) => r.json())
+                        .then((result) => setModels(result))
+                }, [])
+
+                // Send text to the REST API
+                function processText() {
+                    const articles = [{ text: text.trim() }]
+                    const body = JSON.stringify({ articles, model })
+                    fetch(`${url}/process/`, { method: 'POST', body })
+                        .then((r) => r.json())
+                        .then((data) => setResult(JSON.stringify(data, null, 2)))
+                }
+
+                return (
+                    <div>
+                        <label htmlFor="dropdown">Model:</label>{' '}
+                        <select onChange={(event) => setModel(event.target.value)}>
+                            <option disabled>Select model</option>
+                            {models.map((name) => (
+                                <option key={name} value={name}>
+                                    {name}
+                                </option>
+                            ))}
+                        </select>
+                        <textarea
+                            rows={10}
+                            defaultValue={text}
+                            onChange={(event) => setText(event.target.value)}
+                        />
+                        <button onClick={processText}>Process</button>
+                        <pre>{result}</pre>
+                    </div>
+                )
+            }
+
+            ReactDOM.render(<App />, document.querySelector('#root'))
+        </script>
+    </body>
+</html>
