@@ -41,3 +41,6 @@ commands:
     help: "Serve the models via a FastAPI REST API using the given host and port"
     script:
       - "uvicorn scripts.main:app --reload --host ${vars.host} --port ${vars.port}"
+    deps:
+      - "scripts/main.py"
+    no_skip: true
