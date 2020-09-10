@@ -1,9 +1,0 @@
-install:
-  cmd: python -m spacy run install
-  script:
-    - pip install -r requirements.txt
-    - python -c "import spacy;spacy.blank('en').to_disk('en_core_web_sm')"
-  deps:
-    - path: requirements.txt
-      md5: 66ce856ee17b37d6abc0ad663d1530d3
-  outs: []
