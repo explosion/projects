@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from enum import Enum
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 from spacy.tokens import Doc
