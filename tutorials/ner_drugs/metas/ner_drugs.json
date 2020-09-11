@@ -1,7 +1,0 @@
-{
-    "lang": "en",
-    "name": "ner_drugs",
-    "version": "0.0.0",
-    "description": "NER model to detect drug names in text",
-    "author": "Explosion"
-}

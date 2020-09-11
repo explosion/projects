@@ -1,35 +1,34 @@
-# These variables can be referenced in asset URLs and command scripts using
-# curly braces (like in Python's format strings)
+title: "Categorization of emotions in Reddit posts (Text Classification)"
+description: "This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`."
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "en_textcat_reddit"
-  config: "cnn"
   version: "0.0.1"
+  # Choose your GPU here
   gpu_id: -1
+  # Change this to "bert" to use the transformer-based model
+  config: "cnn"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "configs", "metas", "metrics", "packages", "scripts", "corpus"]
+directories: ["assets", "training", "configs", "metrics", "packages", "scripts", "corpus"]
 
-# Assets that should be downloaded or otherwise referenced (from a cache etc.)
-# The URL is the URL to the resource and the "dest" specifies where the file
-# should be placed, relative to the local project directory. If a checksum is
-# provided, the file is only re-downloaded if the local version is different.
+# Assets that should be downloaded or available in the directory.
 assets:
-  -
-    dest: "assets/categories.txt"
+  - dest: "assets/categories.txt"
     url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/emotions.txt"
-  -
-    dest: "assets/train.tsv"
+    description: "The categories to train"
+  - dest: "assets/train.tsv"
     url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/train.tsv"
-  -
-    dest: "assets/dev.tsv"
+    description: "The training data"
+  - dest: "assets/dev.tsv"
     url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/dev.tsv"
-  -
-    dest: "assets/test.tsv"
+    description: "The development data"
+  - dest: "assets/test.tsv"
     url: "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/test.tsv"
+    description: "The test data"
   # Uncomment this asset if you want to download the vectors.
-  #-
-  #  dest: "assets/vectors.zip"
+  #- dest: "assets/vectors.zip"
   #  url: "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip"
 
 # Workflows are sequences of commands (see below) executed in order. You can
@@ -44,14 +43,10 @@ workflows:
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
-# via "spacy project run [path] [command]". The help message is optional and
-# shown when executing "spacy project run [path] [optional command] --help".
-# The script is a list (!) of commands in order that will be split using
-# shlex.split and executed in a subprocess. The deps/outputs/outputs_no_cache
-# are the dependencies and outputs, used for DVC (Data Version Control).
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  -
-    name: init-vectors
+  - name: init-vectors
     help: Download vectors and convert to model
     script:
       - "python -m spacy init model --vectors-loc assets/vectors.zip en assets/en_fasttext_vectors"
@@ -59,8 +54,7 @@ commands:
       - "assets/vectors.zip"
     outputs_no_cache:
       - "assets/en_vectors_web_lg"
-  -
-    name: preprocess
+  - name: preprocess
     help: "Convert the corpus to spaCy's format"
     script:
       - "python scripts/convert_corpus.py"
@@ -73,9 +67,8 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
-  -
-    name: train
-    help: "Train a spaCy model using the specified corpus and config"
+  - name: train
+    help: "Train a spaCy pipeline using the specified corpus and config"
     script:
       - "mkdir -p training/${vars.config}"
       - "python -m spacy train ./configs/${vars.config}.cfg -o training/${vars.config} --system.gpu ${vars.gpu_id}"
@@ -85,8 +78,7 @@ commands:
       - "configs/${vars.config}.cfg"
     outputs:
       - "training/${vars.config}/model-best"
-  -
-    name: evaluate
+  - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
       - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json"
@@ -99,7 +91,7 @@ commands:
     name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package ./training/${vars.config}/model-best packages/ --meta-path ./metas/${vars.name}.json --force --version ${vars.version}"
+      - "python -m spacy package ./training/${vars.config}/model-best packages/ --name ${vars.name} --force --version ${vars.version}"
     deps:
       - "training/${vars.config}/model-best"
     outputs_no_cache:

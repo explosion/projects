@@ -22,7 +22,7 @@ def main(
             before, after = fill_config(path, path, silent=True)
         except (Exception, SystemExit) as e:
             if skip:
-                msg.fail("Failed")
+                msg.fail("Failed", e)
                 continue
             else:
                 raise

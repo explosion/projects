@@ -1,84 +1,78 @@
-<!-- SPACY PROJECT: IGNORE -->
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-## Text categorization of emotions in Reddit posts
+# 🪐 spaCy Project: Categorization of emotions in Reddit posts (Text Classification)
 
-I'll be using this project as an internal reference so we can keep a number of
-workflows straight. We can turn this into expanded user-facing docs later, but
-for now we just need something we can all refer back to.
+> ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
+> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
+> `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
 
-In order to avoid repeating lines, examples may tell you to start from one of
-the following steps.
+This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`.
 
-```bash
+## 📋 project.yml
 
-a. spacy project clone tutorials/textcat_goemotions myproject
-b. cd myproject
-c. spacy project assets
-d. spacy project run preprocess
-e. spacy init config --lang en  --pipeline textcat > configs/my_new_config.cfg
-f. Edit project.yml, changing the CONFIG variable to my_new_config
-g. spacy project run train
-h. spacy project run evaluate
-```
+The [`project.yml`](project.yml) defines the data assets required by the
+project, as well as the available commands and workflows. For details, see the
+[spaCy projects documentation](https://nightly.spacy.io/usage/projects).
 
-Note that step e isn't something we'll have exactly in the real workflow, it's
-there as a helper for the examples.
+### ⏯ Commands
 
-## Basic spacy project workflow
+The following commands are defined by the project. They
+can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
+Commands are only re-run if their inputs have changed.
 
-```bash
+| Command | Description |
+| --- | --- |
+| `init-vectors` | Download vectors and convert to model |
+| `preprocess` | Convert the corpus to spaCy's format |
+| `train` | Train a spaCy pipeline using the specified corpus and config |
+| `evaluate` | Evaluate on the test data and save the metrics |
+| `package` | Package the trained model so it can be installed |
 
-spacy project clone tutorials/textcat_goemotions myproject
-cd myproject
-spacy project assets
-spacy project run all
-```
+### ⏭ Workflows
 
-## Transformers
+The following workflows are defined by the project. They
+can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run)
+and will run the specified commands in order. Commands are only re-run if their
+inputs have changed.
 
-Install the `spacy-transformers` package:
+| Workflow | Steps |
+| --- | --- |
+| `all` | `preprocess` &rarr; `train` &rarr; `evaluate` &rarr; `package` |
+
+### 🗂 Assets
+
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
+in the project directory.
+
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/categories.txt` | URL | The categories to train |
+| `assets/train.tsv` | URL | The training data |
+| `assets/dev.tsv` | URL | The development data |
+| `assets/test.tsv` | URL | The test data |
+
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
+## Usage
+
+If you want to use the BERT-based config ([`bert.cfg`](configs/bert.cfg)), make
+sure you have `spacy-transformers` installed:
 
 ```
 pip install spacy-transformers
 ```
 
-Edit `project.yml` to use the `configs/bert.cfg` and choose your GPU:
+You can choose your GPU by setting the `gpu_id` variable in the
+[`project.yml`](project.yml).
 
-```
-variables:
-  NAME: "en_textcat_reddit"
-  CONFIG: "bert"
-  VERSION: "0.0.1"
-  GPU_ID: 0
-```
+### Tuning a hyper-parameter in the config
 
-Use via project:
+To change hyperparameters, you can edit the [config](conigs) (or create a new
+custom config). For instance, you could edit the
+`components.textcat.model.tok2vec.encode.width` value, changing it to `32`:
 
-```
-spacy project run all
-```
-
-Or directly:
-
-```
-spacy train configs/bert.cfg
-```
-
-## Tuning a hyper-parameter in the config
-
-From step h), you can make a branch for your experiment, commit your config and
-your metrics, and make a commit with your result:
-
-```bash
-git add configs/my_new_config.cfg metrics/my_new_config.json
-git commit -m "Initial experiment. Scores TODO%."
-```
-
-Now you can change some parameter in your config, and retrain. For instance, you
-could edit the `components.textcat.model.tok2vec.encode.width` value, changing
-it to 32:
-
-```yaml
+```ini
 [components.textcat.model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v1"
 width = 32
@@ -89,18 +83,16 @@ maxout_pieces = 3
 
 Now you can retrain and reevaluate, and commit the updated config and metrics:
 
-```
+```bash
 spacy project run train
 spacy project run evaluate
 git commit configs/my_new_config.cfg metrics/my_new_config.cfg -m "Scores TODO%"
 ```
 
-## Adjusting a hyper-parameter on the command line
-
-You can run experiments in a more lightweight way by running `spacy train`
-directly and changing hyper-parameters on the command line.
-
-From step h:
+You can also run experiments in a more lightweight way by running `spacy train`
+directly and
+[overwriting](https://nightly.spacy.io/usage/training#config-overrides)
+hyperparameters on the command line:
 
 ```bash
 spacy train \
@@ -108,88 +100,38 @@ spacy train \
     --components.textcat.model.tok2vec.encode.width 32
 ```
 
-## Adding components from another model
+### Adding components from another model
 
 Let's say you want to take tagger and NER components from the `en_core_web_sm`
 model, and add a new textcat model that you'll train, while keeping the existing
 models from the tagger and NER. This requires three changes to the config.
 
-1. Add the components to the `nlp.pipeline`
+1. Add the components to the `nlp.pipeline`.
 
-```
-[nlp]
-pipeline = ["tagger", "ner", "textcat"]
-```
+   ```ini
+   [nlp]
+   pipeline = ["tagger", "ner", "textcat"]
+   ```
 
-2. Add the "sourced" components in the `[components]` block
+2. Add the "sourced" components in the `[components]` block. This tells the
+   config to build the NER and tagger components from the `en_core_web_sm`
+   config and to load their models from disk.
 
-This tells the config to build the NER and tagger components from the
-`en_core_web_sm` config and to load their models from disk.
+   ```ini
+   [components]
+   tagger = {"source": "en_core_web_sm"}
+   ner = {"source": "en_core_web_sm"}
+   ```
 
-```
-[components]
-tagger = {"source": "en_core_web_sm"}
-ner = {"source": "en_core_web_sm"}
-```
+3. Specify that the tagger and NER are "frozen". This stops the weights of these
+   models from being reset, and stops the components from being updated.
 
-3. Specify that the tagger and NER are "frozen"
+   ```ini
+   [training]
+   frozen_components = ["tagger", "ner"]
+   ```
 
-This stops the weights of these models from being reset, and stops the
-components from being updated.
-
-```
-[training]
-frozen_components = ["tagger", "ner"]
-```
-
-## Training from a stream instead of a file
-
-Create a Python file `plugins/my_stream.py` with the registered function to
-stream from:
-
-```python
-from spacy.utils import registry
-from spacy.language import Language
-from spacy.gold import Example
-from functools import partial
-
-
-@registry.readers("my_data_stream.v1")
-def configure_training_stream(some_arg: Path, another_arg: float):
-    return partial(
-        stream_training_examples,
-        some_arg=some_arg,
-        another_arg=another_arg
-    )
-
-
-def stream_training_examples(nlp: Language, some_arg, another_arg) -> Iterable[Example]:
-    # TODO
-    for example in todo(nlp, ...):
-        yield example
-```
-
-Then change your config to use your registered function:
-
-```
-[training.train_corpus]
-@readers = "my_data_stream.v1"
-some_arg = "my_train_path/"
-another_arg = 42.6
-
-[training.dev_corpus]
-@readers = "my_data_stream.v1"
-some_arg = "my_dev_path/"
-another_arg = 89.1
-```
-
-And add the `-c` argument to your `spacy train` calls:
-
-```
-spacy train configs/my_config.cfg -c plugins/my_loader.py
-```
-
-## Using embeddings from a spaCy package
+### Using embeddings from a spaCy package
 
 ```bash
 spacy train \
@@ -198,9 +140,9 @@ spacy train \
     --components.textcat.model.tok2vec.embed.also_use_static_vectors true
 ```
 
-## Making and using new embeddings
+### Making and using new embeddings
 
-Add the asset in your `project.yml`:
+Uncomment the asset in your [`project.yml`](project.yml):
 
 ```yaml
 assets:
@@ -208,176 +150,18 @@ assets:
     url: 'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip'
 ```
 
-Then download the asset and run the `init-vectors` step:
+Then download the asset and run the `init-vectors` command:
 
-```
+```bash
 spacy project assets
 spacy project run init-vectors
 ```
 
 Use the vectors:
 
-```yaml
-spacy train \ configs/cnn.cfg \ --training.vectors "assets/en_fasttext_vectors"
-\ --components.textcat.model.tok2vec.embed.also_use_static_vectors true
-```
-
-## Developing a custom PyTorch model defined in an imported file
-
-In a new file `plugins/pytorch_bilstm.py`:
-
-```python
-from spacy.util import registry
-from thinc.api import PyTorchWrapper
-import json
-import torch.nn
-
-
-@registry.architectures("mine.PyTorchBiLSTMTextcat.v1")
-def make_pytorch_lstm_textcat(
-    vocab_path: Path
-    n_labels: int,
-    lstm_width: int,
-    embed_width: int,
-    depth: int,
-    dropout: float
-) -> Model[List[Doc], Floats2d]:
-    """Thinc wrapper around a PyTorch lstm textcat model. The model takes a
-    list of Doc objects, converts them into a list of strings, and uses PyTorch
-    to encode the strings into integers, embed, and run the LSTM model.
-    """
-    # TODO: Ugh, this won't actually work -- the path won't be available in
-    # deserialization.
-    with open(vocab_path) as file_:
-        vocab = json.load(file_)
-    torch_model = _PyTorchLSTMTextcat(
-                vocab,
-                n_labels,
-                lstm_width,
-                embed_width,
-                depth,
-                dropout
-            )
-
-    model = chain(
-        Model("docs2strings", docs2strings),
-        PyTorchWrapper(torch_model)
-    )
-    return model
-
-
-def docs2text(model, docs, is_train):
-    return [[token.text for token in doc] for doc in docs], lambda d_docs: []
-
-
-class _PyTorchLSTMTextcat(torch.nn.Module):
-    def __init__(
-        self,
-        vocab: Dict[str, int],
-        n_labels: int,
-        lstm_width: int,
-        embed_width:int,
-        depth: int,
-        dropout: float
-    ):
-        self.vocab = vocab
-        self.embed = torch.nn.Embedding(embed_width, len(self.vocab) + 1)
-        self.rnn = torch.nn.LSTM(
-            input_size=embed_width,
-            hidden_size=lstm_width,
-            num_layers=config.n_layers, dropout=dropout,
-            bidirectional=False
-        )
-        self.dropout = torch.nn.Dropout(p=dropout)
-        self.linear = torch.nn.Linear(lstm_width, n_labels)
-        self.softmax = torch.nn.Softmax()
-        self.all = torch.nn.Sequential(
-            self.embed,
-            self.rnn,
-            self.dropout,
-            self.linear,
-            self.softmax
-        )
-
-    def forward(self, inputs: List[str]) -> torch.Tensor:
-        return self.all(self.encode_integers(inputs))
-
-    def encode_integers(self, sbatch: List[str]) -> torch.Tensor:
-        oov = len(self.vocab)
-        ibatch = [[self.vocab.get(word, oov) for word in words] for words in sbatch]
-        tbatch = _pad_torch_tensors(ibatch)
-        return tbatch
-
-def _pad_torch_tensors(ibatch):
-    raise NotImplementedError("TODO")
-```
-
-Now we can make a new config, changing the model block:
-
-```bash
-cp configs/cnn.cfg configs/torch_lstm.cfg
-```
-
-And inside our config we replace the `components.textcat.model` block with:
-
-```yaml
-[components.textcat.model]
-@architectures = "mine.PyTorchBiLSTMTextcat.v1"
-vocab_path = "assets/vocab.json"
-n_labels = 28
-lstm_width = 128
-embed_width = 128,
-depth = 4
-dropout = 0.2
-```
-
-We then run our model with:
-
 ```bash
 spacy train \
-    corpus/train.spacy \
-    corpus/dev.spacy \
-    configs/torch_lstm.cfg \
-    -c plugins/pytoch_lstm.py
-```
-
-## Pretraining
-
-Add the following to the project.yml:
-
-```yaml
-commands:
-  - name: pretrain
-    help: 'Run language model pretraining to warm-start the tok2vec'
-    script:
-      - 'mkdir -p pretrain/'
-      - 'python -m spacy pretrain assets/reddit-100k.jsonl pretrain/
-        configs/cnn.cfg'
-    deps:
-      - 'assets/reddit-100k.jsonl'
-    outputs:
-      - 'pretrain/model100.bin'
-```
-
-The weights are then passed into the `training.init_tok2vec` argument:
-
-```bash
-spacy train \
-    corpus/train.spacy \
-    corpus/dev.spacy \
     configs/cnn.cfg \
-    --training.init_tok2vec pretrain/model100.bin
+    --training.vectors "assets/en_fasttext_vectors" \
+    --components.textcat.model.tok2vec.embed.also_use_static_vectors true
 ```
-
-This is one case where the outputs are a little awkward because we don't really
-know which checkpoint will be the actual artefact. I suppose the pretrain script
-needs to output a `model-best.bin`.
-
-It will be fairly standard to include pretrained weights as an asset, rather
-than asking the user to always retrain them.
-
-## Parallel training with Ray (TODO)
-
-TODO
-
-## Remote storage with DVC (TODO)

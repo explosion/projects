@@ -4,19 +4,11 @@
 
 # 🪐 spaCy Project: Streamlit integration
 
-> ⚠️ This project template uses the new
-> [**spaCy v3.0**](https://nightly.spacy.io), which is currently available as a
-> nightly pre-release. You can install it from pip as `spacy-nightly`:
+> ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
+> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
 > `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
 
-[Streamlit](https://streamlit.io) is a Python framework for building interactive
-data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit)
-package helps you integrate spaCy visualizations into your Streamlit apps and
-quickly spin up demos to explore your pipelines interactively. It includes a
-full embedded visualizer, as well as individual components. If you're training
-your own pipelines, you can integrate the `visualize` command into your
-`project.yml` and pass in the path to your exported pipeline to visualize it.
-See the tutorial project templates for examples.
+[Streamlit](https://streamlit.io) is a Python framework for building interactive data apps. The [`spacy-streamlit`](https://github.com/explosion/spacy-streamlit) package helps you integrate spaCy visualizations into your Streamlit apps and quickly spin up demos to explore your pipelines interactively. It includes a full embedded visualizer, as well as individual components. If you're training your own pipelines, you can integrate the `visualize` command into your `project.yml` and pass in the path to your exported pipeline to visualize it. See the tutorial project templates for examples.
 
 ## 📋 project.yml
 
@@ -26,13 +18,13 @@ project, as well as the available commands and workflows. For details, see the
 
 ### ⏯ Commands
 
-The following commands are defined by the project. They can be executed using
-[`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
+The following commands are defined by the project. They
+can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command     | Description                                        |
-| ----------- | -------------------------------------------------- |
-| `install`   | Install dependencies and download models           |
+| Command | Description |
+| --- | --- |
+| `install` | Install dependencies and download models |
 | `visualize` | Visualize a pipeline interactively using Streamlit |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
