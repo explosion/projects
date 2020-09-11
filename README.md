@@ -59,7 +59,7 @@ more about a command, add `--help`. For detailed instructions, see the
 ## 👷‍♀️Repository maintanance
 
 To keep the project templates and their documentation up to date, this repo
-containes several maintenance scripts:
+contains several scripts:
 
 | Script                                                       | Description                                                                                                                                                                                                                       |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
