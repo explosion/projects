@@ -27,6 +27,7 @@ Commands are only re-run if their inputs have changed.
 | `train` | Train a spaCy pipeline using the specified corpus and config |
 | `evaluate` | Evaluate on the test data and save the metrics |
 | `package` | Package the trained model so it can be installed |
+| `visualize` | Visualize the model's output interactively using Streamlit |
 
 ### ⏭ Workflows
 
