@@ -55,3 +55,14 @@ more about a command, add `--help`. For detailed instructions, see the
    ```
 5. **Adjust** the template for **your specific use case**, load in your own
    data, adjust the settings and model and share the result with your team.
+
+## 👷‍♀️Repository maintanance
+
+To keep the project templates and their documentation up to date, this repo
+containes several maintenance scripts:
+
+| Script                                                       | Description                                                                                                                                                                                                                       |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`update_docs.py`](.github/update_docs.py)                   | Update all auto-generated docs in the given root. Calls into [`spacy project document`](https://nightly.spacy.io/api/cli#project-document) and only replaces the auto-generated sections, not any custom content before or after. |
+| [`update_category_docs.py`](.github/update_category_docs.py) | Update the auto-generated `README.md` in the category directories listing the available project templates.                                                                                                                        |
+| [`update_configs.py`](.github/update_configs.py)             | Update and auto-fill all `config.cfg` files included in the repo, similar to [`spacy init fill-config`](https://nightly.spacy.io/api/cli#init-fill-config). Can be used to keep the configs up to date with changes in spaCy.     |
