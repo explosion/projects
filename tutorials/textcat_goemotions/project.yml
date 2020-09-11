@@ -54,6 +54,7 @@ commands:
       - "assets/vectors.zip"
     outputs_no_cache:
       - "assets/en_vectors_web_lg"
+
   - name: preprocess
     help: "Convert the corpus to spaCy's format"
     script:
@@ -67,6 +68,7 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
+
   - name: train
     help: "Train a spaCy pipeline using the specified corpus and config"
     script:
@@ -78,6 +80,7 @@ commands:
       - "configs/${vars.config}.cfg"
     outputs:
       - "training/${vars.config}/model-best"
+
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
@@ -87,8 +90,8 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
-  -
-    name: package
+
+  - name: package
     help: "Package the trained model so it can be installed"
     script:
       - "python -m spacy package ./training/${vars.config}/model-best packages/ --name ${vars.name} --force --version ${vars.version}"
@@ -96,3 +99,11 @@ commands:
       - "training/${vars.config}/model-best"
     outputs_no_cache:
       - "packages/${vars.name}-${vars.version}/dist/${vars.name}-${vars.version}.tar.gz"
+
+  - name: visualize
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/${vars.config}/model-best \"I’m sorry to hear that friend :(\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/${vars.config}/model-best"
