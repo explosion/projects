@@ -35,7 +35,8 @@ def generate_readme(path: Path):
     title = f"Project Templates: {path.name.capitalize()} ({len(templates)})"
     md.add(md.title(1, title, "🪐"))
     data = [(md.link(md.code(n), n), t) for n, t in templates.items()]
-    md.add(md.table(data, ["Template", "Description"]))
+    if data:
+        md.add(md.table(data, ["Template", "Description"]))
     readme_path = path / "README.md"
     with readme_path.open("w", encoding="utf8") as f:
         f.write(md.text)
