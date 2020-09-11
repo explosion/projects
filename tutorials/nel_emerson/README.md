@@ -8,7 +8,7 @@
 > is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
 > `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
 
-**This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=8u57WSXVpmw).** It uses [spaCy](https://spacy.io)'s entity linking functionality and [Prodigy](https://prodi.gy) to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider three different people called Emerson: [an Australian tennis player](https://www.wikidata.org/wiki/Q312545), [an American writer](https://www.wikidata.org/wiki/Q48226), and a [Brazilian footballer](https://www.wikidata.org/wiki/Q215952).
+**This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=8u57WSXVpmw).** It uses [spaCy](https://spacy.io)'s entity linking functionality and [Prodigy](https://prodi.gy) to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider three different people called Emerson: [an Australian tennis player](https://www.wikidata.org/wiki/Q312545), [an American writer](https://www.wikidata.org/wiki/Q48226), and a [Brazilian footballer](https://www.wikidata.org/wiki/Q215952). [See here](https://github.com/explosion/projects/tree/master/nel-emerson) for the previous scripts for spaCy v2.x.
 
 ## 📋 project.yml
 
