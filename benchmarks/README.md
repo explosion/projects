@@ -4,4 +4,4 @@
 
 | Template | Description |
 | --- | --- |
-| [`parsing_penn_treebank`](parsing_penn_treebank) |  |
+| [`parsing_penn_treebank`](parsing_penn_treebank) | Dependency Parsing (Penn Treebank) |

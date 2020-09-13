@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project
+# 🪐 spaCy Project: Dependency Parsing (Penn Treebank)
 
 > ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
 > is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:

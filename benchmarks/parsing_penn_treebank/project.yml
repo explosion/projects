@@ -1,4 +1,4 @@
-name: "Dependency Parsing (Penn Treebank)"
+title: "Dependency Parsing (Penn Treebank)"
 
 vars:
   name: "cnn_glove_small"
