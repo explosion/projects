@@ -1,3 +1,5 @@
+title: "Dependency Parsing (Penn Treebank)"
+
 vars:
   name: "cnn_glove_small"
   gpu: -1
@@ -10,15 +12,15 @@ remotes:
 directories: ["assets", "training", "configs", "metrics", "corpus"]
 
 assets:
-  - 
-    dest: "assets/PTB_SD_3_3_0/train.gold.json"
-  -
-    dest: "assets/PTB_SD_3_3_0/dev.gold.json"
-  -
-    dest: "assets/PTB_SD_3_3_0/test.gold.json"
-  - 
-    url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
+  - dest: "assets/PTB_SD_3_3_0/train.gold.json"
+    description: "Training data (not available publicly so you have to add the file yourself)"
+  - dest: "assets/PTB_SD_3_3_0/dev.gold.json"
+    description: "Development data (not available publicly so you have to add the file yourself)"
+  - dest: "assets/PTB_SD_3_3_0/test.gold.json"
+    description: "Test data (not available publicly so you have to add the file yourself)"
+  - url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
     dest: "assets/vectors.zip"
+    description: "GloVe vectors"
 
 workflows:
   all:
@@ -31,13 +33,12 @@ workflows:
     - push
 
 commands:
-  -
-    name: init-config
+  - name: init-config
     help: "Generate default config"
     script:
       - "python -m spacy init config --lang en --pipeline tagger,parser --optimize efficiency -C defaults.cfg"
-  -
-    name: corpus
+
+  - name: corpus
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
@@ -51,8 +52,8 @@ commands:
       - "corpus/PTB_SD_3_3_0/train.gold.spacy"
       - "corpus/PTB_SD_3_3_0/dev.gold.spacy"
       - "corpus/PTB_SD_3_3_0/test.gold.spacy"
-  -
-    name: vectors
+
+  - name: vectors
     help: "Convert, truncate and prune the vectors."
     script:
       - "python -m spacy init vocab -v assets/vectors.zip en corpus/en_vectors -vn en_glove840b_vectors_md"
@@ -60,20 +61,20 @@ commands:
       - "assets/vectors.zip"
     outputs:
       - "corpus/en_vectors"
-  -
-    name: pull
+
+  - name: pull
     help: "Fetch from cache if possible"
     script:
       - "python -m spacy project pull"
-  -
-    name: push
+
+  - name: push
     help: "Upload to cache if possible"
     script:
       - "python -m spacy project push"
-  -
-    name: train
+
+  - name: train
     help: "Train the full pipeline"
-    script: 
+    script:
       - python -m spacy train configs/${vars.name}.cfg -o training/ --gpu-id ${vars.gpu}
     deps:
       - "corpus/train.gold.spacy"
@@ -82,8 +83,8 @@ commands:
       - "corpus/en_vectors"
     outputs:
       - "training/${vars.name}/model-best"
-  -
-    name: evaluate
+
+  - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
       - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/acc.json --gpu-id ${vars.gpu}"
@@ -92,6 +93,7 @@ commands:
       - "corpus/test.gold.spacy"
     outputs:
       - "metrics/${vars.name}.json"
+
   - name: clean
     help: "Remove intermediate files"
     script:
