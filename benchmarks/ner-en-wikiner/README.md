@@ -1,10 +1,15 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project
+# 🪐 spaCy Project: Named Entity Recognition (WikiNER)
 
 > ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
 > is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
 > `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
+
+Simple example of downloading and converting source data and training a named entity recognition model. To get started, try running
+python -m spacy assets python -m spacy run init-config python -m spacy run all
+The example uses the WikiNER corpus, which was constructed semi-automatically. The main advantage of this corpus is that it's freely available, so the data can be downloaded as a project asset.
+The WikiNER corpus is distributed in IOB format, a fairly common text encoding for sequence data. The `corpus` subcommand splits the corpus into training, development and testing partitions, and uses `spacy convert` to convert them into spaCy's binary format. You can then edit the config to try out different settings, and trigger training with the `train` subcommand.
 
 ## 📋 project.yml
 
