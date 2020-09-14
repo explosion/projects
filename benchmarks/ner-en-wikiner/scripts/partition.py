@@ -5,10 +5,12 @@ import random
 import shutil
 
 
-def main(data_loc: Path, out_dir: Path, fraction: float=0.2, seed: int=0):
+def main(data_loc: Path, out_dir: Path, fraction: float = 0.2, seed: int = 0):
     """Partition the data into train/test/dev split."""
     random.seed(0)
-    lines = bz2.open(str(data_loc), mode="rt", encoding="utf8").read().strip().split("\n") 
+    lines = (
+        bz2.open(str(data_loc), mode="rt", encoding="utf8").read().strip().split("\n")
+    )
     lines = [line for line in lines if line.strip()]
     random.shuffle(lines)
     dev_size = int(fraction * len(lines))
@@ -23,7 +25,7 @@ def main(data_loc: Path, out_dir: Path, fraction: float=0.2, seed: int=0):
     with (out_dir / "dev.iob").open("w") as file_:
         file_.write("\n".join(lines[train_size : train_size + dev_size]))
     with (out_dir / "test.iob").open("w") as file_:
-        file_.write("\n".join(lines[train_size + dev_size: ]))
+        file_.write("\n".join(lines[train_size + dev_size :]))
 
 
 if __name__ == "__main__":
