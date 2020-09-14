@@ -4,4 +4,4 @@
 
 | Template | Description |
 | --- | --- |
-| [`ner_en_wikiner`](ner_en_wikiner) | Named Entity Recognition (WikiNER) |
+| [`ner_wikiner`](ner_wikiner) | Named Entity Recognition (WikiNER) |
