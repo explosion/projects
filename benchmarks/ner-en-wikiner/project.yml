@@ -1,0 +1,69 @@
+vars:
+  config: "default"
+  gpu: -1
+
+remotes:
+  default: gs://galaxy-state/spacy-v3-benchmarks
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "metrics", "corpus"]
+
+assets:
+  - 
+    dest: "assets/aij-wikiner-en-wp2.bz2"
+    url: "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/aij-wikiner-en-wp2.bz2"
+
+workflows:
+  all:
+    - corpus
+    - train
+    - evaluate
+
+commands:
+  -
+    name: init-config
+    help: "Generate a default English NER config."
+    script:
+      - "python -m spacy init config --lang en --pipeline ner --optimize efficiency -C configs/default.cfg"
+  -
+    name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
+    script:
+      - "python scripts/partition.py assets/aij-wikiner-en-wp2.bz2 assets/iob"
+      - "python -m spacy convert assets/iob corpus"
+    deps:
+      - "assets/aij-wikiner-en-wp2.bz2"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+  -
+    name: train
+    help: "Train the full pipeline"
+    script: 
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu}"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/${vars.config}/model-best"
+  -
+    name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
+    deps:
+      - "training/${vars.config}/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
+      - "rm -rf corpus/*"
