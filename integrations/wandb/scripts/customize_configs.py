@@ -11,8 +11,8 @@ def main(config_dir: Path, default_config: str):
     cfg["components"]["textcat"]["model"]["exclusive_classes"] = True
 
     # logging & evaluation
-    cfg["training"]["max_steps"] = 200
-    cfg["training"]["eval_frequency"] = 10
+    cfg["training"]["max_steps"] = 2000
+    cfg["training"]["eval_frequency"] = 100
     cfg["training"]["logger"] = {
         "@loggers": "spacy.WandbLogger.v1",
         "project_name": "IMDB_sentiment",
