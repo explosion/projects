@@ -1,5 +1,5 @@
 # TODO: update this when spaCy 3.0.0 is released
-spacy-nightly>=3.0.0a16
-ml_datasets>=0.2.0,<1.0.0
+spacy-nightly>=3.0.0a19
+ml_datasets==0.2.0a0
 thinc>=8.0.0a31,<8.0.0a40
 wandb>=0.10.0,<0.20.0

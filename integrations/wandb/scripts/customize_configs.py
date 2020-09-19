@@ -19,17 +19,11 @@ def main(config_dir: Path, default_config: str):
     }
 
     # corpus definition
-    cfg["training"]["train_corpus"] = {
+    cfg["corpora"] = {
         "@readers": "ml_datasets.imdb_sentiment.v1",
         "path": "assets/aclImdb",
-        "limit": 1000,
-        "train": True,
-    }
-    cfg["training"]["dev_corpus"] = {
-        "@readers": "ml_datasets.imdb_sentiment.v1",
-        "path": "assets/aclImdb",
-        "limit": 200,
-        "train": False,
+        "train_limit": 1000,
+        "dev_limit": 200,
     }
 
     # hyperparameter grid search
