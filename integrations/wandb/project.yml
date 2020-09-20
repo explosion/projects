@@ -52,7 +52,7 @@ commands:
   - name: "train"
     help: "Train a model using the default config"
     script:
-      - python -m spacy train configs/${vars.default_config} --output training/
+      - "python -m spacy train configs/${vars.default_config} --output training/"
 
   - name: "configs-search"
     help: "Create variations of the initial, default file for IMDB sentiment classification using different combinations of hyperparameters"
