@@ -8,11 +8,13 @@ vars:
   train_name: "en_ewt-ud-train"
   dev_name: "en_ewt-ud-dev"
   test_name: "en_ewt-ud-test"
+  name: "parser_ud"
+  version: "0.0.0"
   gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "metrics", "configs"]
+directories: ["assets", "training", "metrics", "configs", "packages"]
 
 assets:
   - dest: "assets/${vars.treebank}"
@@ -26,6 +28,7 @@ workflows:
     - convert
     - train
     - evaluate
+    - package
 
 commands:
   - name: convert
@@ -69,6 +72,15 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.treebank}.json"
+
+  - name: package
+    help: "Package the trained model so it can be installed"
+    script:
+      - "python -m spacy package training/${vars.treebank}/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/${vars.treebank}/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
   - name: clean
     help: "Remove intermediate files"
