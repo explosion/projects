@@ -6,7 +6,7 @@
 > is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
 > `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
 
-This project template lets you train a part-of-speech tagger and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it our for any other available treebank. Just make sure to adjust the `lang` setting in the `config.cfg` or use `xx` for multi-language if no language-specific tokenizer is available in spaCy.
+This project template lets you train a part-of-speech tagger and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it our for any other available treebank. Just make sure to adjust the `lang` setting in the config or use `xx` for multi-language if no language-specific tokenizer is available in spaCy.
 
 ## 📋 project.yml
 
