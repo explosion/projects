@@ -18,7 +18,7 @@ assets:
     description: "Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011."
 
 workflows:
-  log:
+  all:
     - data
     - train
 

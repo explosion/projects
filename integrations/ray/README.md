@@ -35,7 +35,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `log` | `data` &rarr; `train` |
+| `all` | `data` &rarr; `train` |
 
 ### 🗂 Assets
 
