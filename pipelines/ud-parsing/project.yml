@@ -1,0 +1,79 @@
+# These variables can be referenced in asset URLs and command scripts using
+# curly braces (like in Python's format strings)
+vars:
+  lang: "en"
+  gpu: "-1"
+  spacy: "python -m spacy"
+  treebank: "UD_English-EWT"
+  train_name: "en_ewt-ud-train"
+  dev_name: "en_ewt-ud-dev"
+  test_name: "en_ewt-ud-test"
+
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "metrics", "scripts"]
+
+assets:
+  - 
+    dest: "assets/${vars.treebank}"
+    git:
+      repo: "git@github.com:UniversalDependencies/${vars.treebank}"
+      branch: "master"
+      path: ""
+
+workflows:
+  all:
+    - convert
+    - train
+    - evaluate
+
+commands:
+  -
+    name: convert
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
+    script:
+      - "mkdir -p corpus/${vars.treebank}"
+      - "${vars.spacy} convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "${vars.spacy} convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "${vars.spacy} convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
+      - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
+      - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
+    deps:
+      - "assets/${vars.treebank}/${vars.train_name}.conllu"
+      - "assets/${vars.treebank}/${vars.dev_name}.conllu"
+      - "assets/${vars.treebank}/${vars.test_name}.conllu"
+    outputs:
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "corpus/${vars.treebank}/test.spacy"
+  -
+    name: train
+    help: "Train ${vars.treebank}"
+    script: 
+      - "${vars.spacy} train ./config.cfg -o training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
+    deps:
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "config.cfg"
+    outputs:
+      - "training/${vars.treebank}/model-best"
+  -
+    name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "${vars.spacy} evaluate ./training/${vars.treebank}/model-best ./corpus/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
+    deps:
+      - "training/${vars.treebank}/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/${vars.treebank}.json"
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
+      - "rm -rf corpus/*"
