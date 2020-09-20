@@ -30,8 +30,8 @@ commands:
     help: "Generate a default English NER config."
     script:
       - "python -m spacy init config --lang en --pipeline ner --optimize efficiency -C configs/default.cfg"
-  -
-    name: corpus
+
+  - name: corpus
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
@@ -44,8 +44,8 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
-  -
-    name: train
+
+  - name: train
     help: "Train the full pipeline"
     script:
       - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu}"
@@ -55,8 +55,8 @@ commands:
       - "configs/${vars.config}.cfg"
     outputs:
       - "training/${vars.config}/model-best"
-  -
-    name: evaluate
+
+  - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
       - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
@@ -65,6 +65,7 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
+
   - name: clean
     help: "Remove intermediate files"
     script:
