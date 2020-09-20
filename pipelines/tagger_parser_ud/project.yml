@@ -1,22 +1,21 @@
-# These variables can be referenced in asset URLs and command scripts using
-# curly braces (like in Python's format strings)
+title: "Part-of-speech Tagging & Dependency Parsing (Universal Dependencies)"
+description: "This project template lets you train a part-of-speech tagger and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it our for any other available treebank. Just make sure to adjust the `lang` setting in the `config.cfg` or use `xx` for multi-language if no language-specific tokenizer is available in spaCy."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  lang: "en"
-  gpu: "-1"
-  spacy: "python -m spacy"
+  config: "default"
   treebank: "UD_English-EWT"
   train_name: "en_ewt-ud-train"
   dev_name: "en_ewt-ud-dev"
   test_name: "en_ewt-ud-test"
-
+  gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "metrics", "scripts"]
+directories: ["assets", "training", "metrics", "configs"]
 
 assets:
-  - 
-    dest: "assets/${vars.treebank}"
+  - dest: "assets/${vars.treebank}"
     git:
       repo: "git@github.com:UniversalDependencies/${vars.treebank}"
       branch: "master"
@@ -29,16 +28,15 @@ workflows:
     - evaluate
 
 commands:
-  -
-    name: convert
+  - name: convert
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
       - "mkdir -p corpus/${vars.treebank}"
-      - "${vars.spacy} convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu"
-      - "${vars.spacy} convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu"
-      - "${vars.spacy} convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu"
       - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
       - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
       - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
@@ -50,27 +48,28 @@ commands:
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
       - "corpus/${vars.treebank}/test.spacy"
-  -
-    name: train
+
+  - name: train
     help: "Train ${vars.treebank}"
-    script: 
-      - "${vars.spacy} train ./config.cfg -o training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
     deps:
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
-      - "config.cfg"
+      - "configs/${vars.config}.cfg"
     outputs:
       - "training/${vars.treebank}/model-best"
-  -
-    name: evaluate
+
+  - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "${vars.spacy} evaluate ./training/${vars.treebank}/model-best ./corpus/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
+      - "python -m spacy evaluate ./training/${vars.treebank}/model-best ./corpus/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
     deps:
       - "training/${vars.treebank}/model-best"
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.treebank}.json"
+
   - name: clean
     help: "Remove intermediate files"
     script:
