@@ -3,7 +3,11 @@ description: "Use [Ray](https://ray.io) and the [`spacy-ray`](https://github.com
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  default_config: "default_config.cfg"
+  config: "default"
+  treebank: "UD_English-EWT"
+  train_name: "en_ewt-ud-train"
+  dev_name: "en_ewt-ud-dev"
+  test_name: "en_ewt-ud-test"
   n_workers: 2
 
 # These are the directories that the project needs. The project CLI will make
@@ -13,13 +17,15 @@ directories: ["scripts", "assets", "training", "configs"]
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
 assets:
-  - dest: "assets/aclImdb_v1.tar.gz"
-    url: "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-    description: "Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011."
+  - dest: "assets/${vars.treebank}"
+    git:
+      repo: "git@github.com:UniversalDependencies/${vars.treebank}"
+      branch: "master"
+      path: ""
 
 workflows:
   all:
-    - data
+    - convert
     - train
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -34,17 +40,34 @@ commands:
     deps:
       - "requirements.txt"
 
-  - name: "data"
-    help: "Extract the gold-standard annotations"
+  - name: convert
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
     script:
-      - "tar -xzf ./assets/aclImdb_v1.tar.gz -C ./assets/"
+      - "mkdir -p corpus/${vars.treebank}"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
+      - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
+      - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
     deps:
-      - "assets/aclImdb_v1.tar.gz"
+      - "assets/${vars.treebank}/${vars.train_name}.conllu"
+      - "assets/${vars.treebank}/${vars.dev_name}.conllu"
+      - "assets/${vars.treebank}/${vars.test_name}.conllu"
     outputs:
-      - "assets/aclImdb/train/"
-      - "assets/aclImdb/test/"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "corpus/${vars.treebank}/test.spacy"
 
-  - name: "train"
-    help: "Train a model using the default config"
+  - name: train
+    help: "Train ${vars.treebank}"
     script:
-      - "python -m spacy ray train configs/${vars.default_config} --output training/ --n-workers ${vars.n_workers}"
+      - "python -m spacy ray train configs/${vars.config}.cfg --output training/${vars.treebank} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --n-workers ${vars.n_workers}"
+    deps:
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/${vars.treebank}/model-best"
