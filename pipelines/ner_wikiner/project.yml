@@ -48,7 +48,7 @@ commands:
   - name: train
     help: "Train the full pipeline"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu}"
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
