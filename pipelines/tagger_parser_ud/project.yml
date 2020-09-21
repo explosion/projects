@@ -37,9 +37,9 @@ commands:
     # caching works correctly.
     script:
       - "mkdir -p corpus/${vars.treebank}"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10"
       - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
       - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
       - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
@@ -55,7 +55,7 @@ commands:
   - name: train
     help: "Train ${vars.treebank}"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg -o training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
+      - "python -m spacy train configs/${vars.config}.cfg --output training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
     deps:
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
