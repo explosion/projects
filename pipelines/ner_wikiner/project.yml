@@ -27,9 +27,9 @@ workflows:
 commands:
   -
     name: init-config
-    help: "Generate a default English NER config."
+    help: "Generate a default English NER config"
     script:
-      - "python -m spacy init config --lang en --pipeline ner --optimize efficiency -C configs/default.cfg"
+      - "python -m spacy init config --lang en --pipeline ner --optimize efficiency -C configs/${vars.config}.cfg"
 
   - name: corpus
     help: "Convert the data to spaCy's format"
