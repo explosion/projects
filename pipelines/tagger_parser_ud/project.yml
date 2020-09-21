@@ -66,10 +66,10 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.treebank}/model-best ./corpus/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
+      - "python -m spacy evaluate ./training/${vars.treebank}/model-best ./corpus/${vars.treebank}/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
     deps:
       - "training/${vars.treebank}/model-best"
-      - "corpus/test.spacy"
+      - "corpus/${vars.treebank}/test.spacy"
     outputs:
       - "metrics/${vars.treebank}.json"
 
