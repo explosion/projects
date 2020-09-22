@@ -19,7 +19,7 @@ directories: ["scripts", "assets", "training", "configs"]
 assets:
   - dest: "assets/${vars.treebank}"
     git:
-      repo: "git@github.com:UniversalDependencies/${vars.treebank}"
+      repo: "https://github.com/UniversalDependencies/${vars.treebank}"
       branch: "master"
       path: ""
 
