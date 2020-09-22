@@ -31,7 +31,7 @@ jobs:
                 architecture: 'x64'
 
           - script: |
-                pip install "spacy-nightly>=3.0.0a19"
+                pip install "spacy-nightly>=3.0.0a20"
                 pip install pytest
             displayName: 'Install dependencies'
 
