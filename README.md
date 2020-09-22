@@ -17,6 +17,8 @@ upload your outputs to a remote storage and share your results with your team.
 > See the [`master` branch](https://github.com/explosion/projects/tree/master)
 > for the previous version of this repo.
 
+[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/20/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=20)
+
 ## 🗃 Categories
 
 | Name                           | Description                                                                                                                                                                             |
