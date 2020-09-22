@@ -6,7 +6,7 @@ import spacy
 
 
 def main(nlp_dir: Path, output_test_set: Path):
-    """ Step 3: Evaluate the new Entity Linking component by applying it to unseen text. """
+    """ Step 4: Evaluate the new Entity Linking component by applying it to unseen text. """
     nlp = spacy.load(nlp_dir)
     with open(output_test_set, "rb") as f:
         test_dataset = pickle.load(f)

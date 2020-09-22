@@ -3,14 +3,15 @@ description: "**This project was created as part of a [step-by-step video tutori
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "nel_emerson"
-  config: "nel"
+  config: "nel.cfg"
   vectors: "en_vectors_web_model"
-  data: "emerson_annotated_text.jsonl"
+  annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"
   kb: "my_kb"
   nlp_1: "my_nlp"
   nlp_2: "my_nlp_el"
-  test: "test_set.pkl"
+  train: "train"
+  dev: "dev"
   version: "0.0.1"
 
 # These are the directories that the project needs. The project CLI will make
@@ -21,7 +22,7 @@ directories: ["assets", "training", "configs", "scripts", "corpus", "notebooks"]
 # some of them with the project, so they won't have to be downloaded. But the
 # 'project assets' command still lets you verify that the checksums match.
 assets:
-  - dest: "assets/${vars.data}"
+  - dest: "assets/${vars.annotations}"
     description: "The annotated data"
     checksum: "2863586d7b648536f84280648ab32490"
   - dest: "assets/${vars.entities}"
@@ -36,7 +37,7 @@ assets:
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
-# haven't changed, it won't be re-run.`
+# haven't changed, it won't be re-run.
 workflows:
   all:
     - data
@@ -49,6 +50,7 @@ workflows:
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
+# TODO: replace "data" and "vectors" with loading a vectors model
 commands:
   - name: data
     help: "Extract the vectors data"
@@ -63,7 +65,7 @@ commands:
   - name: vectors
     help: "Create a vectors model"
     script:
-      - "python -m spacy init-model en ./assets/${vars.vectors} -j ./assets/en-vectors-web/lexemes.jsonl -v ./assets/en-vectors-web/vectors.npz -V 20000"
+      - "python -m spacy init vocab en ./assets/${vars.vectors} -j ./assets/en-vectors-web/lexemes.jsonl -v ./assets/en-vectors-web/vectors.npz -V 20000"
     deps:
       - "assets/en-vectors-web/lexemes.jsonl"
       - "assets/en-vectors-web/vectors.npz"
@@ -73,33 +75,43 @@ commands:
   - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"
     script:
-      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./training/${vars.kb} ./training/${vars.nlp_1}/"
+      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./assets/${vars.kb} ./assets/${vars.nlp_1}/"
     deps:
       - "assets/${vars.vectors}"
       - "assets/${vars.entities}"
     outputs_no_cache:
-      - "training/${vars.kb}"
-      - "training/${vars.nlp_1}"
+      - "assets/${vars.kb}"
+      - "assets/${vars.nlp_1}"
+
+  - name: corpus
+    help: "Create a training and dev set from the manuallly annotated data"
+    script:
+      - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./assets/${vars.nlp_1}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
+    deps:
+      - "assets/${vars.annotations}"
+    outputs_no_cache:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
 
   - name: train
     help: "Train a new Entity Linking component"
     script:
-      - "python ./scripts/train_el.py ./assets/${vars.data} ./training/${vars.kb} ./training/${vars.nlp_1}/ ./training/${vars.nlp_2}/ ./corpus/${vars.test}" # ./configs/{CONFIG}.cfg
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb training/${vars.kb}"
     deps:
-      - "assets/${vars.data}"
-      - "training/${vars.kb}"
-      - "training/${vars.nlp_1}"
+      - "assets/${vars.kb}"
+      - "assets/${vars.nlp_1}"
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
     outputs_no_cache:
       - "training/${vars.nlp_2}"
-      - "corpus/${vars.test}"
 
   - name: evaluate
-    help: "Evaluate on the test data and print the results"
+    help: "Final evaluation on the dev data and printing the results"
     script:
-      - "python ./scripts/evaluate.py ./training/${vars.nlp_2}/ ./corpus/${vars.test}"
+      - "python ./scripts/evaluate.py ./training/${vars.nlp_2}/ ${vars.dev}"
     deps:
       - "training/${vars.nlp_2}"
-      - "corpus/${vars.test}"
+      - "corpus/${vars.dev}"
 
   # These are additional custom commands that are not run as part of the main
   # "run" list. They can depend on third-party libraries etc. Here are just
@@ -110,3 +122,11 @@ commands:
       - "python -m pip install -r requirements.txt"
     deps:
       - "requirements.txt"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpus/*"
+      - "rm -rf assets/${vars.kb}"
+      - "rm -rf assets/${vars.nlp_1}"
