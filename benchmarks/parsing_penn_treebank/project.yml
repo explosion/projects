@@ -4,9 +4,6 @@ vars:
   name: "cnn_glove_small"
   gpu: -1
 
-remotes:
-  default: gs://galaxy-state/spacy-v3-benchmarks
-
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "training", "configs", "metrics", "corpus"]
@@ -24,13 +21,10 @@ assets:
 
 workflows:
   all:
-    - pull
     - vectors
     - corpus
     - train
-    - push
     - evaluate
-    - push
 
 commands:
   - name: init-config
@@ -61,16 +55,6 @@ commands:
       - "assets/vectors.zip"
     outputs:
       - "corpus/en_vectors"
-
-  - name: pull
-    help: "Fetch from cache if possible"
-    script:
-      - "python -m spacy project pull"
-
-  - name: push
-    help: "Upload to cache if possible"
-    script:
-      - "python -m spacy project push"
 
   - name: train
     help: "Train the full pipeline"
