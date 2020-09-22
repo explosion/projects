@@ -50,8 +50,7 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  -
-    name: data
+  - name: data
     help: "Extract the vectors data"
     script:
       - "tar -xzf ./assets/en-vectors-web.tgz -C ./assets/"
@@ -60,8 +59,8 @@ commands:
     outputs_no_cache:
       - "assets/en-vectors-web/lexemes.jsonl"
       - "assets/en-vectors-web/vectors.npz"
-  -
-    name: vectors
+
+  - name: vectors
     help: "Create a vectors model"
     script:
       - "python -m spacy init-model en ./assets/${vars.vectors} -j ./assets/en-vectors-web/lexemes.jsonl -v ./assets/en-vectors-web/vectors.npz -V 20000"
@@ -70,8 +69,8 @@ commands:
       - "assets/en-vectors-web/vectors.npz"
     outputs_no_cache:
       - "assets/${vars.vectors}"
-  -
-    name: kb
+
+  - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"
     script:
       - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./training/${vars.kb} ./training/${vars.nlp_1}/"
@@ -81,8 +80,8 @@ commands:
     outputs_no_cache:
       - "training/${vars.kb}"
       - "training/${vars.nlp_1}"
-  -
-    name: train
+
+  - name: train
     help: "Train a new Entity Linking component"
     script:
       - "python ./scripts/train_el.py ./assets/${vars.data} ./training/${vars.kb} ./training/${vars.nlp_1}/ ./training/${vars.nlp_2}/ ./corpus/${vars.test}" # ./configs/{CONFIG}.cfg
@@ -93,8 +92,8 @@ commands:
     outputs_no_cache:
       - "training/${vars.nlp_2}"
       - "corpus/${vars.test}"
-  -
-    name: evaluate
+
+  - name: evaluate
     help: "Evaluate on the test data and print the results"
     script:
       - "python ./scripts/evaluate.py ./training/${vars.nlp_2}/ ./corpus/${vars.test}"
@@ -105,8 +104,7 @@ commands:
   # These are additional custom commands that are not run as part of the main
   # "run" list. They can depend on third-party libraries etc. Here are just
   # some examples of what's possible.
-  -
-    name: setup
+  - name: setup
     help: Install dependencies
     script:
       - "python -m pip install -r requirements.txt"
