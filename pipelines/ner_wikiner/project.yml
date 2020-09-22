@@ -54,14 +54,14 @@ commands:
       - "corpus/dev.spacy"
       - "configs/${vars.config}.cfg"
     outputs:
-      - "training/${vars.config}/model-best"
+      - "training/model-best"
 
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
+      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
     deps:
-      - "training/${vars.config}/model-best"
+      - "training/model-best"
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
