@@ -14,11 +14,10 @@ def main(entities_loc: Path, vectors: Path, kb_loc: Path, nlp_dir: Path):
     # First: create a simpel model from predefined vectors and a simpel EntityRuler component
     # A more realistic use-case would use a pretrained NER model instead
     nlp = spacy.load(vectors)
-    ruler = EntityRuler(nlp)
+    ruler = nlp.add_pipe("entity_ruler")
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
-    nlp.add_pipe(nlp.create_pipe('sentencizer'))
+    nlp.add_pipe("sentencizer")
 
     name_dict, desc_dict = _load_entities(entities_loc)
 
@@ -27,21 +26,25 @@ def main(entities_loc: Path, vectors: Path, kb_loc: Path, nlp_dir: Path):
     for qid, desc in desc_dict.items():
         desc_doc = nlp(desc)
         desc_enc = desc_doc.vector
-        kb.add_entity(entity=qid, entity_vector=desc_enc, freq=342)  # 342 is an arbitrary value here
+        kb.add_entity(
+            entity=qid, entity_vector=desc_enc, freq=342
+        )  # 342 is an arbitrary value here
 
     for qid, name in name_dict.items():
-        kb.add_alias(alias=name, entities=[qid], probabilities=[1])  # 100% prior probability P(entity|alias)
+        kb.add_alias(
+            alias=name, entities=[qid], probabilities=[1]
+        )  # 100% prior probability P(entity|alias)
 
     qids = name_dict.keys()
     probs = [0.3 for qid in qids]
-    kb.add_alias(alias="Emerson", entities=qids, probabilities=probs)  # sum([probs]) should be <= 1 !
+    kb.add_alias(
+        alias="Emerson", entities=qids, probabilities=probs
+    )  # sum([probs]) should be <= 1 !
 
     print(f"Entities in the KB: {kb.get_entity_strings()}")
     print(f"Aliases in the KB: {kb.get_alias_strings()}")
     print()
-
-    kb.dump(kb_loc)
-
+    kb.to_disk(kb_loc)
     if not os.path.exists(nlp_dir):
         os.mkdir(nlp_dir)
     nlp.to_disk(nlp_dir)

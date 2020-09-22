@@ -32,11 +32,11 @@ assets:
     checksum: "b5bc61375680396017337e3ebe830ada"
   - dest: "assets/en-vectors-web.tgz"
     description: "Vectors to initialize the model"
-    url: "gs://spacy-corpora/v2.2/en-vectors-web.tgz"
+    url: "https://github.com/explosion/projects/releases/download/en-vectors-web/v2.2_en-vectors-web.tgz"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
-# haven't changed, it won't be re-run.
+# haven't changed, it won't be re-run.`
 workflows:
   all:
     - data

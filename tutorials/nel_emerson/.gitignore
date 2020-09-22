@@ -1,3 +1,5 @@
 corpus
 training
 packages
+assets/en-vectors-web*
+assets/en_vectors_web*
