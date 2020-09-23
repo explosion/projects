@@ -16,7 +16,7 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "configs", "scripts", "corpus", "notebooks"]
+directories: ["assets", "training", "configs", "scripts", "corpus", "notebooks", "temp"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # some of them with the project, so they won't have to be downloaded. But the
@@ -75,18 +75,18 @@ commands:
   - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"
     script:
-      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./assets/${vars.kb} ./assets/${vars.nlp_1}/"
+      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./temp/${vars.kb} ./temp/${vars.nlp_1}/"
     deps:
       - "assets/${vars.vectors}"
       - "assets/${vars.entities}"
     outputs_no_cache:
-      - "assets/${vars.kb}"
-      - "assets/${vars.nlp_1}"
+      - "temp/${vars.kb}"
+      - "temp/${vars.nlp_1}"
 
   - name: corpus
     help: "Create a training and dev set from the manuallly annotated data"
     script:
-      - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./assets/${vars.nlp_1}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
+      - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp_1}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
     deps:
       - "assets/${vars.annotations}"
     outputs_no_cache:
@@ -96,10 +96,10 @@ commands:
   - name: train
     help: "Train a new Entity Linking component"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb training/${vars.kb}"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb training/${vars.kb} -c scripts/custom_functions.py"
     deps:
-      - "assets/${vars.kb}"
-      - "assets/${vars.nlp_1}"
+      - "temp/${vars.kb}"
+      - "temp/${vars.nlp_1}"
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
     outputs_no_cache:
@@ -128,5 +128,5 @@ commands:
     script:
       - "rm -rf training/*"
       - "rm -rf corpus/*"
-      - "rm -rf assets/${vars.kb}"
-      - "rm -rf assets/${vars.nlp_1}"
+      - "rm -rf temp/${vars.kb}"
+      - "rm -rf temp/${vars.nlp_1}"
