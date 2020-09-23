@@ -1,15 +1,20 @@
 import typer
-import pickle
 from pathlib import Path
 
 import spacy
+from spacy.tokens import DocBin
+from spacy.training import Example
 
 
-def main(nlp_dir: Path, output_test_set: Path):
+def main(nlp_dir: Path, dev_set: Path):
     """ Step 4: Evaluate the new Entity Linking component by applying it to unseen text. """
     nlp = spacy.load(nlp_dir)
-    with open(output_test_set, "rb") as f:
-        test_dataset = pickle.load(f)
+    examples = []
+    with open(dev_set, "rb") as f:
+        doc_bin = DocBin().from_disk(dev_set)
+        docs = doc_bin.get_docs(nlp.vocab)
+        for doc in docs:
+            examples.append(Example(nlp(doc.text), doc))
 
     text = "Tennis champion Emerson was expected to win Wimbledon."
     doc = nlp(text)
@@ -18,13 +23,13 @@ def main(nlp_dir: Path, output_test_set: Path):
         print(ent.text, ent.label_, ent.kb_id_)
     print()
 
-    for text, true_annot in test_dataset:
-        print(text)
-        print(f"Gold annotation: {true_annot}")
+    for example in examples:
+        print(example.text)
+        print(f"Gold annotation: {example.reference.ents[0].kb_id_}")
         doc = nlp(text)   # to make this more efficient, you can use nlp.pipe() just once for all the texts
         for ent in doc.ents:
             if ent.text == "Emerson":
-                print(f"Prediction: {ent.text}, {ent.label_}, {ent.kb_id_}")
+                print(f"Prediction: {ent.kb_id_}")
         print()
 
 

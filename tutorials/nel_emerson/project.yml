@@ -8,11 +8,10 @@ vars:
   annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"
   kb: "my_kb"
-  nlp_1: "my_nlp"
-  nlp_2: "my_nlp_el"
+  nlp: "my_nlp"
   train: "train"
   dev: "dev"
-  version: "0.0.1"
+  version: "0.0.2"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -39,9 +38,10 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  all:
+  preprocess:
     - data
     - vectors
+  training:
     - kb
     - corpus
     - train
@@ -76,18 +76,18 @@ commands:
   - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"
     script:
-      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./temp/${vars.kb} ./temp/${vars.nlp_1}/"
+      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./temp/${vars.kb} ./temp/${vars.nlp}/"
     deps:
       - "assets/${vars.vectors}"
       - "assets/${vars.entities}"
     outputs_no_cache:
       - "temp/${vars.kb}"
-      - "temp/${vars.nlp_1}"
+      - "temp/${vars.nlp}"
 
   - name: corpus
     help: "Create a training and dev set from the manuallly annotated data"
     script:
-      - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp_1}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
+      - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
     deps:
       - "assets/${vars.annotations}"
     outputs_no_cache:
@@ -97,22 +97,20 @@ commands:
   - name: train
     help: "Train a new Entity Linking component"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb training/${vars.kb} -c scripts/custom_functions.py"
+      - "python -m spacy train configs/${vars.config} --output training --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb temp/${vars.kb} --paths.base_nlp temp/${vars.nlp} -c scripts/custom_functions.py"
     deps:
       - "temp/${vars.kb}"
-      - "temp/${vars.nlp_1}"
+      - "temp/${vars.nlp}"
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
-    outputs_no_cache:
-      - "training/${vars.nlp_2}"
 
-  - name: evaluate
-    help: "Final evaluation on the dev data and printing the results"
-    script:
-      - "python ./scripts/evaluate.py ./training/${vars.nlp_2}/ ${vars.dev}"
-    deps:
-      - "training/${vars.nlp_2}"
-      - "corpus/${vars.dev}"
+  # - name: evaluate
+  #  help: "Final evaluation on the dev data and printing the results"
+  #  script:
+  #    - "python ./scripts/evaluate.py ./training/model-best/ corpus/${vars.dev}.spacy"
+  #  deps:
+  #    - "training/model-best"
+  #    - "corpus/${vars.dev}.spacy"
 
   # These are additional custom commands that are not run as part of the main
   # "run" list. They can depend on third-party libraries etc. Here are just
@@ -130,4 +128,4 @@ commands:
       - "rm -rf training/*"
       - "rm -rf corpus/*"
       - "rm -rf temp/${vars.kb}"
-      - "rm -rf temp/${vars.nlp_1}"
+      - "rm -rf temp/${vars.nlp}"
