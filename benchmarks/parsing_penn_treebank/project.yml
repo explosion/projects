@@ -71,7 +71,7 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/acc.json --gpu-id ${vars.gpu}"
+      - "python -m spacy evaluate ./training/${vars.name}/model-best ./corpus/test.fixed.spacy --output ./metrics/${vars.name}.json --gpu-id ${vars.gpu}"
     deps:
       - "training/${vars.name}/model-best"
       - "corpus/test.gold.spacy"
