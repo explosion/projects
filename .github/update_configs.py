@@ -13,7 +13,7 @@ def main(
     of spaCy. If --skip is set, errors will be logged but not raised.
     """
     msg.info(f"Updating configs in {root}")
-    for path in root.glob("**/*/*.cfg"):
+    for path in root.glob("**/configs/*.cfg"):
         rel_path = path.relative_to(root)
         if rel_path.parts[0].startswith("."):
             continue
