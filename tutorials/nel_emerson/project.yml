@@ -43,6 +43,7 @@ workflows:
     - data
     - vectors
     - kb
+    - corpus
     - train
     - evaluate
 

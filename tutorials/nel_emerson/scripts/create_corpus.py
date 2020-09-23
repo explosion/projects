@@ -14,10 +14,10 @@ def main(json_loc: Path, nlp_dir: Path, train_corpus: Path, test_corpus: Path):
     with json_loc.open("r", encoding="utf8") as jsonfile:
         for line in jsonfile:
             example = json.loads(line)
-            text = example["text"]
+            sentence = example["text"]
             if example["answer"] == "accept":
                 QID = example["accept"][0]
-                doc = nlp.make_doc(text)
+                doc = nlp.make_doc(sentence)
                 gold_ids.append(QID)
                 # we assume only 1 annotated span per sentence, and only 1 KB ID per span
                 entity = doc.char_span(
@@ -27,6 +27,8 @@ def main(json_loc: Path, nlp_dir: Path, train_corpus: Path, test_corpus: Path):
                     kb_id=QID,
                 )
                 doc.ents = [entity]
+                for i, t in enumerate(doc):
+                    doc[i].is_sent_start = i == 0
                 docs.append(doc)
 
     print("Statistics of manually annotated data:")
