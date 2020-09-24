@@ -19,6 +19,16 @@ def main(nlp_dir: Path, dev_set: Path):
         for doc in docs:
             examples.append(Example(nlp(doc.text), doc))
 
+    print()
+    print("RESULTS ON THE DEV SET:")
+    for example in examples:
+        print(example.text)
+        print(f"Gold annotation: {example.reference.ents[0].kb_id_}")
+        print(f"Predicted annotation: {example.predicted.ents[0].kb_id_}")
+        print()
+
+    print()
+    print("RUNNING THE PIPELINE ON UNSEEN TEXT:")
     text = "Tennis champion Emerson was expected to win Wimbledon."
     doc = nlp(text)
     print(text)
@@ -26,10 +36,6 @@ def main(nlp_dir: Path, dev_set: Path):
         print(ent.text, ent.label_, ent.kb_id_)
     print()
 
-    for example in examples:
-        print(example.text)
-        print(f"Gold annotation: {example.reference.ents[0].kb_id_}")
-        print(f"Predicted annotation: {example.predicted.ents[0].kb_id_}")
 
 
 if __name__ == "__main__":
