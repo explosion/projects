@@ -29,11 +29,7 @@ def main(nlp_dir: Path, dev_set: Path):
     for example in examples:
         print(example.text)
         print(f"Gold annotation: {example.reference.ents[0].kb_id_}")
-        doc = nlp(text)   # to make this more efficient, you can use nlp.pipe() just once for all the texts
-        for ent in doc.ents:
-            if ent.text == "Emerson":
-                print(f"Prediction: {ent.kb_id_}")
-        print()
+        print(f"Predicted annotation: {example.predicted.ents[0].kb_id_}")
 
 
 if __name__ == "__main__":
