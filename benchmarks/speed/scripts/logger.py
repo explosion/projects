@@ -8,7 +8,9 @@ def create_logger(results_dir: Path) -> Callable:
         f.write("name;gpu;articles;characters;words;seconds;k wps")
         f.write("\n")
 
-    def log_result(name: str, gpu: bool, articles: int, characters: int, words: int, seconds: int):
+    def log_result(
+        name: str, gpu: bool, articles: int, characters: int, words: int, seconds: int
+    ):
         wps = words / seconds
         wps = wps / 1000
         with results_file.open("a", encoding="utf8") as f:

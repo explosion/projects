@@ -19,13 +19,15 @@ def main(txt_dir: Path, result_dir: Path):
         nlp_function(data)
         end = timeit.default_timer()
 
-        s = end-start
-        log_run(name=name,
-                gpu=gpu,
-                articles=articles,
-                characters=chars,
-                words=words,
-                seconds=s)
+        s = end - start
+        log_run(
+            name=name,
+            gpu=gpu,
+            articles=articles,
+            characters=chars,
+            words=words,
+            seconds=s,
+        )
 
 
 if __name__ == "__main__":
