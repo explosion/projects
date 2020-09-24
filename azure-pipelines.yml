@@ -1,8 +1,9 @@
-trigger:
-    batch: true
-    branches:
-        include:
-            - 'v3'
+# TODO: enable again
+trigger: none
+# batch: true
+# branches:
+#     include:
+#         - 'v3'
 
 variables:
     # Make sure we're exiting training as early as possible
@@ -30,8 +31,9 @@ jobs:
                 versionSpec: '$(python.version)'
                 architecture: 'x64'
 
+          # TODO: update with stable version once it's released
           - script: |
-                pip install "spacy-nightly>=3.0.0a21"
+                pip install "spacy-nightly>=3.0.0a24"
                 pip install pytest
             displayName: 'Install dependencies'
 
