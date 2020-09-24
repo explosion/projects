@@ -1,6 +1,8 @@
 """
 Custom Prodigy recipe to perform manual annotation of entity links,
 given an existing NER model and a knowledge base performing candidate generation.
+You can run this project without having Prodigy or using this recipe:
+sample results are stored in assets/emerson_annotated_text.jsonl
 """
 
 import spacy

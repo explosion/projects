@@ -5,7 +5,6 @@ from pathlib import Path
 
 import spacy
 from spacy.kb import KnowledgeBase
-from spacy.pipeline import EntityRuler
 
 
 def main(entities_loc: Path, vectors: Path, kb_loc: Path, nlp_dir: Path):
@@ -26,20 +25,17 @@ def main(entities_loc: Path, vectors: Path, kb_loc: Path, nlp_dir: Path):
     for qid, desc in desc_dict.items():
         desc_doc = nlp(desc)
         desc_enc = desc_doc.vector
-        kb.add_entity(
-            entity=qid, entity_vector=desc_enc, freq=342
-        )  # 342 is an arbitrary value here
+        # Set arbitrary value for frequency
+        kb.add_entity(entity=qid, entity_vector=desc_enc, freq=342)
 
     for qid, name in name_dict.items():
-        kb.add_alias(
-            alias=name, entities=[qid], probabilities=[1]
-        )  # 100% prior probability P(entity|alias)
+        # set 100% prior probability P(entity|alias) for each unique name
+        kb.add_alias(alias=name, entities=[qid], probabilities=[1])
 
     qids = name_dict.keys()
     probs = [0.3 for qid in qids]
-    kb.add_alias(
-        alias="Emerson", entities=qids, probabilities=probs
-    )  # sum([probs]) should be <= 1 !
+    # ensure that sum([probs]) <= 1 when setting aliases
+    kb.add_alias(alias="Emerson", entities=qids, probabilities=probs)  #
 
     print(f"Entities in the KB: {kb.get_entity_strings()}")
     print(f"Aliases in the KB: {kb.get_alias_strings()}")
