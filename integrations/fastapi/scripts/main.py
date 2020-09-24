@@ -13,7 +13,8 @@ class ModelName(str, Enum):
     en_core_web_sm = "en_core_web_sm"
     en_core_web_md = "en_core_web_md"
     en_core_web_lg = "en_core_web_lg"
-    en_core_web_trf = "en_core_web_trf"
+    # TODO: add when model is uploaded
+    # en_core_web_trf = "en_core_web_trf"
 
 
 DEFAULT_MODEL = ModelName.en_core_web_sm
