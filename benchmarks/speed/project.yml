@@ -1,0 +1,53 @@
+title: 'Project for speed benchmarking of spaCy models and other libraries'
+description: "This project runs various models on unannotated text, to measure the average speed in words per second (WPS)."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "speed_benchmark"
+  txt_dir: "texts"
+  result_dir: "results"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "texts", "results"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# some of them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  setup:
+    - install
+    - download
+  benchmark:
+    - timing
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: install
+    help: "Install dependencies"
+    script:
+      - "python -m pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
+
+  - name: download
+    help: "Download models"
+    script:
+      - "python -m spacy download en_core_web_md"
+      - "python -m spacy download en_core_web_trf"
+
+  - name: timing
+    help: "Run a benchmark to time the processing time for different models"
+    script:
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir}"
+
+  - name: clean
+    help: "Remove output file(s)"
+    script:
+      - "rm -rf results/*"
