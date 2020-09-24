@@ -2,18 +2,18 @@ title: "Dependency Parsing (Penn Treebank)"
 
 vars:
   name: "cnn_glove_small"
-  gpu: -1
+  gpu: 0
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "training", "configs", "metrics", "corpus"]
 
 assets:
-  - dest: "assets/PTB_SD_3_3_0/train.gold.json"
+  - dest: "assets/PTB_SD_3_3_0/train.gold.conll"
     description: "Training data (not available publicly so you have to add the file yourself)"
-  - dest: "assets/PTB_SD_3_3_0/dev.gold.json"
+  - dest: "assets/PTB_SD_3_3_0/dev.gold.conll"
     description: "Development data (not available publicly so you have to add the file yourself)"
-  - dest: "assets/PTB_SD_3_3_0/test.gold.json"
+  - dest: "assets/PTB_SD_3_3_0/test.gold.conll"
     description: "Test data (not available publicly so you have to add the file yourself)"
   - url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
     dest: "assets/vectors.zip"
@@ -37,15 +37,19 @@ commands:
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
+      - "mkdir -p assets/PTB_SD_3_3_0_pos_fix"
+      - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/train.gold.conll assets/PTB_SD_3_3_0_pos_fix/train.conll"
+      - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/dev.gold.conll assets/PTB_SD_3_3_0_pos_fix/dev.conll"
+      - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/test.gold.conll assets/PTB_SD_3_3_0_pos_fix/test.conll"
       - "python -m spacy convert assets/PTB_SD_3_3_0 corpus/"
     deps:
-      - "assets/PTB_SD_3_3_0/train.gold.json"
-      - "assets/PTB_SD_3_3_0/dev.gold.json"
-      - "assets/PTB_SD_3_3_0/test.gold.json"
+      - "assets/PTB_SD_3_3_0/train.gold.conll"
+      - "assets/PTB_SD_3_3_0/dev.gold.conll"
+      - "assets/PTB_SD_3_3_0/test.gold.conll"
     outputs:
-      - "corpus/PTB_SD_3_3_0/train.gold.spacy"
-      - "corpus/PTB_SD_3_3_0/dev.gold.spacy"
-      - "corpus/PTB_SD_3_3_0/test.gold.spacy"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
 
   - name: vectors
     help: "Convert, truncate and prune the vectors."
@@ -59,7 +63,7 @@ commands:
   - name: train
     help: "Train the full pipeline"
     script:
-      - python -m spacy train configs/${vars.name}.cfg -o training/ --gpu-id ${vars.gpu}
+      - python -m spacy train configs/${vars.name}.cfg -o training/${vars.name} --gpu-id ${vars.gpu}
     deps:
       - "corpus/train.gold.spacy"
       - "corpus/dev.gold.spacy"
@@ -71,10 +75,10 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/acc.json --gpu-id ${vars.gpu}"
+      - "python -m spacy evaluate ./training/${vars.name}/model-best ./corpus/test.fixed.spacy --output ./metrics/${vars.name}.json --gpu-id ${vars.gpu} --gold-preproc"
     deps:
       - "training/${vars.name}/model-best"
-      - "corpus/test.gold.spacy"
+      - "corpus/test.fixed.spacy"
     outputs:
       - "metrics/${vars.name}.json"
 
