@@ -5,10 +5,13 @@ import spacy
 from spacy.tokens import DocBin
 from spacy.training import Example
 
+# we need to import this to parse the custom reader from the config
+from custom_functions import create_docbin_reader
+
 
 def main(nlp_dir: Path, dev_set: Path):
     """ Step 4: Evaluate the new Entity Linking component by applying it to unseen text. """
-    nlp = spacy.load(nlp_dir)
+    nlp = spacy.util.load_model_from_path(nlp_dir)
     examples = []
     with open(dev_set, "rb") as f:
         doc_bin = DocBin().from_disk(dev_set)

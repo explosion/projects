@@ -104,13 +104,13 @@ commands:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
 
-  # - name: evaluate
-  #  help: "Final evaluation on the dev data and printing the results"
-  #  script:
-  #    - "python ./scripts/evaluate.py ./training/model-best/ corpus/${vars.dev}.spacy"
-  #  deps:
-  #    - "training/model-best"
-  #    - "corpus/${vars.dev}.spacy"
+  - name: evaluate
+    help: "Final evaluation on the dev data and printing the results"
+    script:
+      - "python ./scripts/evaluate.py ./training/model-best/ corpus/${vars.dev}.spacy"
+    deps:
+      - "training/model-best"
+      - "corpus/${vars.dev}.spacy"
 
   # These are additional custom commands that are not run as part of the main
   # "run" list. They can depend on third-party libraries etc. Here are just
