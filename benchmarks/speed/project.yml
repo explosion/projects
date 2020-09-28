@@ -22,6 +22,7 @@ workflows:
     - install
     - download
   benchmark:
+    - clean
     - timing
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -41,12 +42,16 @@ commands:
     script:
       - "python -m spacy download en_core_web_md"
       # - "python -m spacy download en_core_web_trf"
-      - "python ./scripts/download_models.py"
+      - "python ./scripts/download_models.py en_ewt"
 
   - name: timing
     help: "Run a benchmark to time the processing time for different models"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py spacy_en_core_web_md True ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py spacy_en_core_web_md False ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py hf_trf_roberta-base True ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py stanza_en_ewt True ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py stanza_en_ewt False ${vars.txt_dir} ${vars.result_dir}"
 
   - name: clean
     help: "Remove output file(s)"
