@@ -4,6 +4,8 @@ import torch
 import typer
 import timeit
 from pathlib import Path
+import logging
+from wasabi import msg
 
 import spacy
 import stanza
@@ -16,21 +18,22 @@ from data_reader import read_data
 from logger import create_logger
 
 
-def main(txt_dir: Path, result_dir: Path ,model_name: str, gpu: bool):
+def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
     log_run = create_logger(result_dir)
     data = read_data(txt_dir)
     articles = len(data)
     chars = sum([len(d) for d in data])
     words = sum([len(d.split()) for d in data])
 
-    nlp_function = _get_run(model_name, gpu)
+    nlp_function = _get_run(library, name, gpu)
     start = timeit.default_timer()
     nlp_function(data)
     end = timeit.default_timer()
 
     s = end - start
     log_run(
-        name=model_name,
+        library=library,
+        name=name,
         gpu=gpu,
         articles=articles,
         characters=chars,
@@ -39,26 +42,23 @@ def main(txt_dir: Path, result_dir: Path ,model_name: str, gpu: bool):
     )
 
 
-def _get_run(model_name: str, gpu: bool) -> Callable[[List[str]], None]:
-    if model_name.startswith("spacy_"):
-        spacy_name = model_name.replace("spacy_", "")
-        return _run_spacy_model(spacy_name, gpu)
+def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
+    if library == "spacy":
+        return _run_spacy_model(name, gpu)
 
-    if model_name.startswith("stanza_"):
-        stanza_name = model_name.replace("stanza_", "")
-        return _run_stanza_model(stanza_name, gpu)
+    if library == "stanza":
+        return _run_stanza_model(name, gpu)
 
-    if model_name.startswith("hf_trf_"):
-        hf_trf_name = model_name.replace("hf_trf_", "")
-        return _run_transformer_model(hf_trf_name)
+    if library == "hf_trf":
+        return _run_transformer_model(name)
 
-    if model_name.startswith("flair_"):
-        flair_name = model_name.replace("flair_", "")
-        return _run_flair_model(flair_name, gpu)
+    if library == "flair":
+        return _run_flair_model(name, gpu)
 
     # TODO UDPipe
 
-    print(f"Can not parse model name {model_name}, prefix should be one of: [spacy_, stanza_, hf_trf_]")
+    msg.fail(f"Can not parse models for library {library}. "
+          f"Known libraries are: [spacy, stanza, hf_trf, flair]", exits=1)
 
 
 def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
@@ -101,12 +101,11 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
 
 def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     """Run a pretrained Flair pipeline"""
+    logging.getLogger("flair").setLevel(logging.ERROR)
     annot_list = name.split("_")
-    if gpu:
-        tagger = MultiTagger.load(annot_list)
-    else:
+    if not gpu:
         flair.device = torch.device('cpu')
-        tagger = MultiTagger.load(annot_list)
+    tagger = MultiTagger.load(annot_list)
 
     def run(texts: List[str]):
         # TODO: multi-document option?

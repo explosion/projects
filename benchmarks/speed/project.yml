@@ -1,10 +1,15 @@
-title: 'Project for speed benchmarking of spaCy models and other libraries'
-description: "This project runs various models on unannotated text, to measure the average speed in words per second (WPS)."
+title: 'Project for speed benchmarking of various pretrained models of different NLP libraries.'
+description: "This project runs various models on unannotated text, to measure the average speed in words per second (WPS). Note that a fair comparison should also take into account the type of annotations produced by each model, and the accuracy scores of the various pretrained NLP tasks. This example project only addresses the speed issue, but can be extended to perform more detailed comparisons on any data."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "speed_benchmark"
   txt_dir: "texts"
   result_dir: "results"
+  spacy_name: "en_core_web_md"
+  stanza_name: "en_ewt"
+  hf_trf_name: "roberta-base"
+  flair_cpu_name: "pos-fast_ner-fast"
+  flair_gpu_name: "pos_ner"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -40,20 +45,20 @@ commands:
   - name: download
     help: "Download models"
     script:
-      - "python -m spacy download en_core_web_md"
+      - "python -m spacy download ${vars.spacy_name}"
       # - "python -m spacy download en_core_web_trf"
-      - "python ./scripts/download_models.py en_ewt pos_ner,pos-fast_ner-fast"
+      - "python ./scripts/download_models.py ${vars.stanza_name} ${vars.flair_cpu_name},${vars.flair_gpu_name}"
 
   - name: timing
     help: "Run a benchmark to time the processing time for different models"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy_en_core_web_md True"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy_en_core_web_md False"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf_roberta-base True"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza_en_ewt True"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza_en_ewt False"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair_pos_ner True"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair_pos-fast_ner-fast False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False"
 
   - name: clean
     help: "Remove output file(s)"
