@@ -1,15 +1,22 @@
 from typing import Callable, List
+
+import torch
 import typer
 import timeit
 from pathlib import Path
-from data_reader import read_data
-from logger import create_logger
+
 import spacy
 import stanza
 from transformers import AutoTokenizer, AutoModel
+import flair
+from flair.models import MultiTagger
+from flair.tokenization import SegtokSentenceSplitter
+
+from data_reader import read_data
+from logger import create_logger
 
 
-def main(model_name: str, gpu: bool, txt_dir: Path, result_dir: Path):
+def main(txt_dir: Path, result_dir: Path ,model_name: str, gpu: bool):
     log_run = create_logger(result_dir)
     data = read_data(txt_dir)
     articles = len(data)
@@ -45,7 +52,10 @@ def _get_run(model_name: str, gpu: bool) -> Callable[[List[str]], None]:
         hf_trf_name = model_name.replace("hf_trf_", "")
         return _run_transformer_model(hf_trf_name)
 
-    # TODO Flair
+    if model_name.startswith("flair_"):
+        flair_name = model_name.replace("flair_", "")
+        return _run_flair_model(flair_name, gpu)
+
     # TODO UDPipe
 
     print(f"Can not parse model name {model_name}, prefix should be one of: [spacy_, stanza_, hf_trf_]")
@@ -82,8 +92,28 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False)
 
     def run(texts: List[str]):
+        # No multi-document option available in Stanza?
         for text in texts:
             nlp(text)
+
+    return run
+
+
+def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
+    """Run a pretrained Flair pipeline"""
+    annot_list = name.split("_")
+    if gpu:
+        tagger = MultiTagger.load(annot_list)
+    else:
+        flair.device = torch.device('cpu')
+        tagger = MultiTagger.load(annot_list)
+
+    def run(texts: List[str]):
+        # TODO: multi-document option?
+        for text in texts:
+            splitter = SegtokSentenceSplitter()
+            sentences = splitter.split(text)
+            tagger.predict(sentences, verbose=False)
 
     return run
 

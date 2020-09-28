@@ -42,16 +42,18 @@ commands:
     script:
       - "python -m spacy download en_core_web_md"
       # - "python -m spacy download en_core_web_trf"
-      - "python ./scripts/download_models.py en_ewt"
+      - "python ./scripts/download_models.py en_ewt pos_ner,pos-fast_ner-fast"
 
   - name: timing
     help: "Run a benchmark to time the processing time for different models"
     script:
-      - "python ./scripts/run_nlp.py spacy_en_core_web_md True ${vars.txt_dir} ${vars.result_dir}"
-      - "python ./scripts/run_nlp.py spacy_en_core_web_md False ${vars.txt_dir} ${vars.result_dir}"
-      - "python ./scripts/run_nlp.py hf_trf_roberta-base True ${vars.txt_dir} ${vars.result_dir}"
-      - "python ./scripts/run_nlp.py stanza_en_ewt True ${vars.txt_dir} ${vars.result_dir}"
-      - "python ./scripts/run_nlp.py stanza_en_ewt False ${vars.txt_dir} ${vars.result_dir}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy_en_core_web_md True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy_en_core_web_md False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf_roberta-base True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza_en_ewt True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza_en_ewt False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair_pos_ner True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair_pos-fast_ner-fast False"
 
   - name: clean
     help: "Remove output file(s)"
