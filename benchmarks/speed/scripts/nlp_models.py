@@ -1,15 +1,17 @@
 from typing import List, Callable, Tuple
 import spacy
-from spacy.lang.en import English
 from transformers import AutoTokenizer, AutoModel
+import stanza
+
+from download_models import SPACY_MODELS, STANZA_MODELS, HF_TRF_MODELS
 
 
-def spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
+def run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
+    """Run a pretrained spaCy pipeline"""
     if gpu:
         spacy.require_gpu(0)
 
-    # nlp = spacy.load("en_core_web_md")    TODO once we have v3 models
-    nlp = English()
+    nlp = spacy.load(name)
 
     def run(texts: List[str]):
         nlp.pipe(texts)
@@ -17,7 +19,7 @@ def spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     return run
 
 
-def transformer_model(name: str) -> Callable[[List[str]], None]:
+def run_transformer_model(name: str) -> Callable[[List[str]], None]:
     """Run bare transformer model, outputting raw hidden-states"""
     tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
     transformer = AutoModel.from_pretrained(name)
@@ -29,19 +31,36 @@ def transformer_model(name: str) -> Callable[[List[str]], None]:
     return run
 
 
+def run_stanza(name: str, gpu: bool) -> Callable[[List[str]], None]:
+    """Run Stanza pretrained model"""
+    lang = name.split("_")[0]
+    package = name.split("_")[1]
+    nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False)
+
+    def run(texts: List[str]):
+        for text in texts:
+            nlp(text)
+
+    return run
+
+
 def get_all_nlp_functions() -> List[Tuple[str, bool, Callable[[List[str]], None]]]:
     functions = []
 
     # spaCy functions
-    functions.append(("spacy_en_core_web_md", False, spacy_model("en_core_web_md", gpu=False)))
-    functions.append(("spacy_en_core_web_md", True, spacy_model("en_core_web_md", gpu=True)))
-    functions.append(("spacy_en_core_web_trf", False, spacy_model("en_core_web_trf", gpu=False)))
-    functions.append(("spacy_en_core_web_trf", True, spacy_model("en_core_web_trf", gpu=True)))
+    for name in SPACY_MODELS:
+        functions.append((f"spacy_{name}", True, run_spacy_model(name, gpu=True)))
+        functions.append((f"spacy_{name}", False, run_spacy_model(name, gpu=False)))
 
     # HF transformers
-    functions.append(("hf_trf_roberta-base", True, transformer_model("roberta-base")))
+    for name in HF_TRF_MODELS:
+        functions.append((f"hf_trf_{name}", True, run_transformer_model(name)))
 
-    # TODO Stanza
+    # Stanza models
+    for name in STANZA_MODELS:
+        functions.append((f"stanza_{name}", False, run_stanza(name, gpu=False)))
+        functions.append((f"stanza_{name}", True, run_stanza(name, gpu=True)))
+
     # TODO Flair
     # TODO UDPipe
 

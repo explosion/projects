@@ -40,7 +40,8 @@ commands:
     help: "Download models"
     script:
       - "python -m spacy download en_core_web_md"
-      - "python -m spacy download en_core_web_trf"
+      # - "python -m spacy download en_core_web_trf"
+      - "python ./scripts/download_models.py"
 
   - name: timing
     help: "Run a benchmark to time the processing time for different models"

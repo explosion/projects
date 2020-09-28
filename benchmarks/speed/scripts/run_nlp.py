@@ -33,5 +33,6 @@ def main(txt_dir: Path, result_dir: Path):
         )
 
 
+
 if __name__ == "__main__":
     typer.run(main)
