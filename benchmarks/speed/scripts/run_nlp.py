@@ -4,9 +4,11 @@ from pathlib import Path
 from data_reader import read_data
 from nlp_models import get_all_nlp_functions
 from logger import create_logger
+from wasabi import Printer
 
 
 def main(txt_dir: Path, result_dir: Path):
+    msg = Printer()
     log_run = create_logger(result_dir)
     data = read_data(txt_dir)
     articles = len(data)
@@ -15,6 +17,7 @@ def main(txt_dir: Path, result_dir: Path):
 
     # actual benchmark
     for name, gpu, nlp_function in get_all_nlp_functions():
+        msg.info(f"Running {name} with GPU={gpu}")
         start = timeit.default_timer()
         nlp_function(data)
         end = timeit.default_timer()

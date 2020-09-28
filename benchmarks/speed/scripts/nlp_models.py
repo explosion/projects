@@ -18,12 +18,13 @@ def spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
 
 
 def transformer_model(name: str) -> Callable[[List[str]], None]:
+    """Run bare transformer model, outputting raw hidden-states"""
     tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
-    # transformer = AutoModel.from_pretrained(name)
+    transformer = AutoModel.from_pretrained(name)
 
     def run(texts: List[str]):
-        batch = tokenizer(texts, padding=True, truncation=True)
-        # transformer(batch)
+        batch = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+        transformer(**batch)
 
     return run
 
@@ -32,23 +33,16 @@ def get_all_nlp_functions() -> List[Tuple[str, bool, Callable[[List[str]], None]
     functions = []
 
     # spaCy functions
-    functions.append(
-        ("spacy_en_core_web_md", False, spacy_model("en_core_web_md", gpu=False))
-    )
-    functions.append(
-        ("spacy_en_core_web_md", True, spacy_model("en_core_web_md", gpu=True))
-    )
-    functions.append(
-        ("spacy_en_core_web_trf", False, spacy_model("en_core_web_trf", gpu=False))
-    )
-    functions.append(
-        ("spacy_en_core_web_trf", True, spacy_model("en_core_web_trf", gpu=True))
-    )
+    functions.append(("spacy_en_core_web_md", False, spacy_model("en_core_web_md", gpu=False)))
+    functions.append(("spacy_en_core_web_md", True, spacy_model("en_core_web_md", gpu=True)))
+    functions.append(("spacy_en_core_web_trf", False, spacy_model("en_core_web_trf", gpu=False)))
+    functions.append(("spacy_en_core_web_trf", True, spacy_model("en_core_web_trf", gpu=True)))
 
     # HF transformers
     functions.append(("hf_trf_roberta-base", True, transformer_model("roberta-base")))
 
     # TODO Stanza
     # TODO Flair
+    # TODO UDPipe
 
     return functions
