@@ -10,6 +10,7 @@ vars:
   hf_trf_name: "roberta-base"
   flair_cpu_name: "pos-fast_ner-fast"
   flair_gpu_name: "pos_ner"
+  ud_pipe_name: "english-ewt-ud-2.5-191206.udpipe"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -48,17 +49,19 @@ commands:
       - "python -m spacy download ${vars.spacy_name}"
       # - "python -m spacy download en_core_web_trf"
       - "python ./scripts/download_models.py ${vars.stanza_name} ${vars.flair_cpu_name},${vars.flair_gpu_name}"
+      - "curl -O https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3131/${vars.ud_pipe_name}"
 
   - name: timing
     help: "Run a benchmark to time the processing time for different models"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
+    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
+    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True"
+    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
+    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} ud_pipe ${vars.ud_pipe_name} False"
 
   - name: clean
     help: "Remove output file(s)"

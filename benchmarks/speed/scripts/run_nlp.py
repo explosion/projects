@@ -7,13 +7,6 @@ from pathlib import Path
 import logging
 from wasabi import msg
 
-import spacy
-import stanza
-from transformers import AutoTokenizer, AutoModel
-import flair
-from flair.models import MultiTagger
-from flair.tokenization import SegtokSentenceSplitter
-
 from data_reader import read_data
 from logger import create_logger
 
@@ -55,26 +48,31 @@ def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
     if library == "flair":
         return _run_flair_model(name, gpu)
 
-    # TODO UDPipe
+    if library == "ud_pipe":
+        return _run_ud_pipe(name)
 
     msg.fail(f"Can not parse models for library {library}. "
-          f"Known libraries are: [spacy, stanza, hf_trf, flair]", exits=1)
+          f"Known libraries are: ['spacy', 'stanza', 'hf_trf', 'flair', 'ud_pipe']", exits=1)
 
 
 def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     """Run a pretrained spaCy pipeline"""
+    import spacy
+
     if gpu:
         spacy.require_gpu(0)
     nlp = spacy.load(name)
 
     def run(texts: List[str]):
-        nlp.pipe(texts)
+        list(nlp.pipe(texts))
 
     return run
 
 
 def _run_transformer_model(name: str) -> Callable[[List[str]], None]:
     """Run bare transformer model, outputting raw hidden-states"""
+    from transformers import AutoTokenizer, AutoModel
+
     tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
     transformer = AutoModel.from_pretrained(name)
 
@@ -87,6 +85,8 @@ def _run_transformer_model(name: str) -> Callable[[List[str]], None]:
 
 def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     """Run a Stanza pretrained model"""
+    import stanza
+
     lang = name.split("_")[0]
     package = name.split("_")[1]
     nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False)
@@ -101,6 +101,10 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
 
 def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     """Run a pretrained Flair pipeline"""
+    import flair
+    from flair.models import MultiTagger
+    from flair.tokenization import SegtokSentenceSplitter
+
     logging.getLogger("flair").setLevel(logging.ERROR)
     annot_list = name.split("_")
     if not gpu:
@@ -113,6 +117,28 @@ def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
             splitter = SegtokSentenceSplitter()
             sentences = splitter.split(text)
             tagger.predict(sentences, verbose=False)
+
+    return run
+
+
+def _run_ud_pipe(name: str):
+    from ufal.udpipe import Model, Sentence
+
+    model = Model.load(name)
+
+    def run(texts: List[str]):
+        # TODO: multi-document option?
+        for text in texts:
+            tokenizer = model.newTokenizer(model.DEFAULT)
+            tokenizer.setText(text)
+            sentences = []
+            sentence = Sentence()
+            while tokenizer.nextSentence(sentence):
+                sentences.append(sentence)
+                sentence = Sentence()
+            for s in sentences:
+                model.tag(s, model.DEFAULT)
+                model.parse(s, model.DEFAULT)
 
     return run
 
