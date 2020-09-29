@@ -6,6 +6,7 @@ vars:
   txt_dir: "texts"
   result_dir: "results"
   spacy_name: "en_core_web_md"
+  spacy_trf_name: "en_core_web_trf"
   stanza_name: "en_ewt"
   hf_trf_name: "roberta-base"
   flair_cpu_name: "pos-fast_ner-fast"
@@ -28,8 +29,8 @@ workflows:
     - install
     - download
   benchmark:
-    - clean
-    - timing
+    - timing_cpu
+    - timing_gpu
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -47,21 +48,27 @@ commands:
     help: "Download models"
     script:
       - "python -m spacy download ${vars.spacy_name}"
-      # - "python -m spacy download en_core_web_trf"
+     # - "python -m spacy download ${vars.spacy_trf_name}"
       - "python ./scripts/download_models.py ${vars.stanza_name} ${vars.flair_cpu_name},${vars.flair_gpu_name}"
       - "curl -O https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3131/${vars.ud_pipe_name}"
 
-  - name: timing
-    help: "Run a benchmark to time the processing time for different models"
+  - name: timing_cpu
+    help: "Run all timing benchmarks on CPU and add the numbers to output/results.csv"
     script:
-    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
-    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True"
-    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
+     # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
-    #  - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} ud_pipe ${vars.ud_pipe_name} False"
+
+  - name: timing_gpu
+    help: "Run all timing benchmarks on GPU and add the numbers to output/results.csv"
+    script:
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
+     # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True"
 
   - name: clean
     help: "Remove output file(s)"

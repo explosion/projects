@@ -12,9 +12,10 @@ from logger import create_logger
 
 
 def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
-    log_run = create_logger(result_dir)
     data = read_data(txt_dir)
     articles = len(data)
+    if articles == 0:
+        msg.fail(f"Could not read any data from {txt_dir}: make sure a corpus of .txt files is available.")
     chars = sum([len(d) for d in data])
     words = sum([len(d.split()) for d in data])
 
@@ -23,6 +24,7 @@ def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
     nlp_function(data)
     end = timeit.default_timer()
 
+    log_run = create_logger(result_dir)
     s = end - start
     log_run(
         library=library,
