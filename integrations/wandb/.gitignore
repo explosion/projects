@@ -1,0 +1,5 @@
+assets
+training
+wandb
+configs/*
+!configs/default_config.cfg

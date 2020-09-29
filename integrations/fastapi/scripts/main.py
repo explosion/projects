@@ -10,8 +10,10 @@ from spacy.tokens import Doc
 class ModelName(str, Enum):
     # Enum of the available models. This allows the API to raise a more specific
     # error if an invalid model is provided.
-    # TODO: fix this once we have models
     en_core_web_sm = "en_core_web_sm"
+    en_core_web_md = "en_core_web_md"
+    en_core_web_lg = "en_core_web_lg"
+    en_core_web_trf = "en_core_web_trf"
 
 
 DEFAULT_MODEL = ModelName.en_core_web_sm

@@ -6,7 +6,7 @@ vars:
   # The default text shown in the visualizer on load
   default_text: "Sundar Pichai is the CEO of Google."
   # A comma-separated list of paths or installed package names
-  models: "en_core_web_sm"
+  models: "en_core_web_sm, en_core_web_lg, en_core_web_trf"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -17,9 +17,9 @@ commands:
     help: "Install dependencies and download models"
     script:
       - "pip install -r requirements.txt"
-      # TODO: fix this once we have models
-      - "python -c \"import spacy;spacy.blank('en').to_disk('en_core_web_sm')\""
-      # - "python -m spacy download en_core_web_sm"
+      - "python -m spacy download en_core_web_sm"
+      - "python -m spacy download en_core_web_lg"
+      - "python -m spacy download en_core_web_trf"
   - name: visualize
     help: Visualize a pipeline interactively using Streamlit
     script:

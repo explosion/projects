@@ -1,0 +1,41 @@
+# TODO: enable again
+trigger: none
+# batch: true
+# branches:
+#     include:
+#         - 'v3'
+
+variables:
+    # Make sure we're exiting training as early as possible
+    SPACY_CONFIG_OVERRIDES: '--training.max_epochs=1 --training.max_steps=1'
+    WASABI_LOG_FRIENDLY: 1
+
+jobs:
+    - job: 'Test'
+      strategy:
+          matrix:
+              Python37Linux:
+                  imageName: 'ubuntu-16.04'
+                  python.version: '3.7'
+              # TODO: add this back
+              # Python37Windows:
+              #     imageName: 'vs2017-win2016'
+              #     python.version: '3.7'
+          maxParallel: 4
+      pool:
+          vmImage: $(imageName)
+
+      steps:
+          - task: UsePythonVersion@0
+            inputs:
+                versionSpec: '$(python.version)'
+                architecture: 'x64'
+
+          # TODO: update with stable version once it's released
+          - script: |
+                pip install "spacy-nightly>=3.0.0a24"
+                pip install pytest
+            displayName: 'Install dependencies'
+
+          - script: python -m pytest -s benchmarks experimental integrations pipelines tutorials
+            displayName: 'Run tests'
