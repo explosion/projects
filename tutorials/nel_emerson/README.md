@@ -22,16 +22,16 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command    | Description                                                     |
-| ---------- | --------------------------------------------------------------- |
-| `setup`    | Install dependencies                                            |
-| `data`     | Extract the vectors data                                        |
-| `vectors`  | Create a vectors model                                          |
-| `kb`       | Create the Knowledge Base in spaCy and write it to file         |
-| `corpus`   | Create a training and dev set from the manuallly annotated data |
-| `train`    | Train a new Entity Linking component                            |
-| `evaluate` | Final evaluation on the dev data and printing the results       |
-| `clean`    | Remove intermediate files                                       |
+| Command | Description |
+| --- | --- |
+| `data` | Extract the vectors data |
+| `vectors` | Create a vectors model |
+| `kb` | Create the Knowledge Base in spaCy and write it to file |
+| `corpus` | Create a training and dev set from the manuallly annotated data |
+| `train` | Train a new Entity Linking component |
+| `evaluate` | Final evaluation on the dev data and printing the results |
+| `setup` | Install dependencies |
+| `clean` | Remove intermediate files |
 
 ### ⏭ Workflows
 
@@ -40,10 +40,10 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow     | Steps                                                 |
-| ------------ | ----------------------------------------------------- |
-| `preprocess` | `data` &rarr; `vectors`                               |
-| `training`   | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
+| Workflow | Steps |
+| --- | --- |
+| `preprocess` | `data` &rarr; `vectors` |
+| `training` | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -51,12 +51,12 @@ The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
 in the project directory.
 
-| File                                                                         | Source | Description                        |
-| ---------------------------------------------------------------------------- | ------ | ---------------------------------- |
-| [`assets/emerson_annotated_text.jsonl`](assets/emerson_annotated_text.jsonl) | Local  | The annotated data                 |
-| [`assets/entities.csv`](assets/entities.csv)                                 | Local  | The entities in the knowledge base |
-| [`assets/emerson_input_text.txt`](assets/emerson_input_text.txt)             | Local  | The original input text            |
-| `assets/en-vectors-web.tgz`                                                  | URL    | Vectors to initialize the model    |
+| File | Source | Description |
+| --- | --- | --- |
+| [`assets/emerson_annotated_text.jsonl`](assets/emerson_annotated_text.jsonl) | Local | The annotated data |
+| [`assets/entities.csv`](assets/entities.csv) | Local | The entities in the knowledge base |
+| [`assets/emerson_input_text.txt`](assets/emerson_input_text.txt) | Local | The original input text |
+| `assets/en-vectors-web.tgz` | URL | Vectors to initialize the model |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
