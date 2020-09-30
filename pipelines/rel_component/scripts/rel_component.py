@@ -1,5 +1,5 @@
-from typing import Tuple, List, Iterable, Iterator, Optional, Dict, Callable
-
+from typing import Tuple, List, Iterable, Optional, Dict, Callable
+from thinc.types import Floats2d
 import numpy
 from spacy.training.example import Example
 from thinc.api import Model, Optimizer, Config
@@ -68,28 +68,29 @@ class RelationExtractor(Pipe):
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the pipe to a Doc."""
-        relations = self.predict([doc])
-        self.set_annotations([doc], relations)
+        rel_scores = self.predict([doc])
+        self.set_annotations([doc], rel_scores)
         return doc
 
-    def predict(self, docs: Iterable[Doc]) -> List[Tuple[str]]:
+    def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
         scores = self.model.predict(docs)
-        print("scores", scores)
-        scores = self.model.predict(docs)
+        print("predicted scores", scores)
         scores = self.model.ops.asarray(scores)
         return scores
 
-    def set_annotations(self, docs: Iterable[Doc], relations: List[Tuple[str]]) -> None:
+    def set_annotations(self, docs: Iterable[Doc], rel_scores: Floats2d) -> None:
         """Modify a batch of `Doc` objects, using pre-computed scores."""
-        for i, doc in enumerate(docs):
-            for (ent_1, ent_2, label) in relations:
-                offset = (ent_1, ent_2)
-                if offset in doc._.rel:
-                    # TODO: multi-label
-                    print(f" ! We already have a label {doc._.rel[offset]} for {offset}, so ignoring the new label {label}.")
-                else:
-                    doc._.rel[offset] = label
+        c = 0
+        for doc in docs:
+            for e1 in doc.ents:
+                for e2 in doc.ents:
+                    offset = (e1.start, e2.start)
+                    if offset not in doc._.rel:
+                        doc._.rel[offset] = {}
+                    for j, label in enumerate(self.labels):
+                        doc._.rel[offset][label] = rel_scores[c, j]
+                    c += 1
 
     def update(
         self,
@@ -151,8 +152,9 @@ class RelationExtractor(Pipe):
         examples = list(get_examples())
         for example in examples:
             relations = example.reference._.rel
-            for indices, label in relations.items():
-                self.add_label(label)
+            for indices, label_dict in relations.items():
+                for label in label_dict.keys():
+                    self.add_label(label)
 
         doc_sample = [eg.reference for eg in examples]
         label_sample = self._examples_to_truth(examples)
@@ -183,10 +185,10 @@ class RelationExtractor(Pipe):
         for eg in examples:
             for e1 in eg.reference.ents:
                 for e2 in eg.reference.ents:
-                    gold_label = eg.reference._.rel.get((e1.start, e2.start), "")
-                    print("candidate: ", (e1.start, e2.start), "-->", gold_label)
+                    gold_label_dict = eg.reference._.rel.get((e1.start, e2.start), {})
+                    print("candidate: ", (e1.start, e2.start), "-->", gold_label_dict)
                     for j, label in enumerate(self.labels):
-                        truths[c, j] = 1 if label == gold_label else 0
+                        truths[c, j] = gold_label_dict.get(label, 0)
                     c += 1
 
         truths = self.model.ops.asarray(truths)

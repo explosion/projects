@@ -65,10 +65,14 @@ def main(data_file: Path):
 
     nlp.begin_training(lambda: train_examples)
 
+    print()
+    print("PREDICTING")
+    print()
+
     text = "London is the capital of the united kingdom, just like the capital of the united states is new york."
     doc = nlp(text)
     ents = doc.ents
-    print([(e.text, e.label_) for e in ents])
+    print("spans", [(e.text, e.label_) for e in ents])
     print()
     print("rel", doc._.rel)
 

@@ -1,6 +1,6 @@
 from typing import List, Callable, Tuple
 from thinc.types import Floats2d
-from thinc.api import Model, Linear, Ops
+from thinc.api import Model, Linear, Ops, Softmax
 
 from spacy.util import registry
 
@@ -26,6 +26,7 @@ def create_relation_model(
 @registry.architectures.register("my_rel_candidate_generator.v1")
 def create_candidates() -> Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]]:
     def get_candidates(docs: List["Doc"], tokvecs: Floats2d, ops: Ops):
+        print()
         print("docs", len(docs))
         print("tokvecs", len(tokvecs))
         print("tokvecs", tokvecs)
@@ -37,14 +38,16 @@ def create_candidates() -> Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d
                     v1 = tokvecs[i][ent1.start:ent1.end].mean(axis=0)
                     v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
                     relations.append(ops.xp.hstack((v1, v2)))
-        print("relations", ops.asarray(relations))
+        print("candidate data", ops.asarray(relations))
         return ops.asarray(relations), None
     return get_candidates
 
 
 @registry.architectures.register("my_rel_output_layer.v1")
 def create_layer(nI, nO) -> Model[Floats2d, Floats2d]:
+    # """This output layer currently assumes max. 1 REL label between two (directed) entities."""
     return Linear(nO=nO, nI=nI)
+    # return Softmax(nO=nO, nI=nI)
 
 
 def forward(model, docs, is_train):
