@@ -13,7 +13,7 @@ from spacy.tokens import DocBin
 
 default_model_config = """
 [model]
-@architectures = "my_rel_model.v1"
+@architectures = "rel_model.v1"
 nO = 5
 
 [model.tok2vec]
@@ -27,12 +27,13 @@ maxout_pieces = 3
 subword_features = true
 
 [model.get_candidates]
-@architectures = "my_rel_candidate_generator.v1"
+@architectures = "rel_cand_generator.v1"
+
+[model.create_candidate_tensor]
+@architectures = "rel_cand_tensor.v1"
 
 [model.output_layer]
-@architectures = "my_rel_output_layer.v1"
-nI = null
-nO = null
+@architectures = "rel_output_layer.v1"
 """
 
 
@@ -63,18 +64,38 @@ def main(data_file: Path):
         example = Example(nlp.make_doc(doc.text), doc)
         train_examples.append(example)
 
-    nlp.begin_training(lambda: train_examples)
+    optimizer = nlp.begin_training(lambda: train_examples)
 
     print()
-    print("PREDICTING")
+    print("PREDICTING (0)")
+    print()
+    _evaluate(nlp)
     print()
 
+    print("TRAINING")
+    print()
+
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+        print(losses)
+
+    print()
+    print("PREDICTING (50)")
+    print()
+    _evaluate(nlp)
+    print()
+
+
+def _evaluate(nlp):
     text = "London is the capital of the united kingdom, just like the capital of the united states is new york."
     doc = nlp(text)
     ents = doc.ents
-    print("spans", [(e.text, e.label_) for e in ents])
     print()
-    print("rel", doc._.rel)
+    print("spans", [(e.start, e.text, e.label_) for e in ents])
+    print()
+    for value, rel_dict in doc._.rel.items():
+        print(f"rel for {value}: {rel_dict}")
 
 
 if __name__ == "__main__":

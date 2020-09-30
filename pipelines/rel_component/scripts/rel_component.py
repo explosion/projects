@@ -75,22 +75,23 @@ class RelationExtractor(Pipe):
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
         scores = self.model.predict(docs)
-        print("predicted scores", scores)
+        with numpy.printoptions(precision=2, suppress=True):
+            print(f"predicted scores: {scores}")
         scores = self.model.ops.asarray(scores)
         return scores
 
     def set_annotations(self, docs: Iterable[Doc], rel_scores: Floats2d) -> None:
         """Modify a batch of `Doc` objects, using pre-computed scores."""
         c = 0
+        get_candidates = self.model.attrs["get_candidates"]
         for doc in docs:
-            for e1 in doc.ents:
-                for e2 in doc.ents:
-                    offset = (e1.start, e2.start)
-                    if offset not in doc._.rel:
-                        doc._.rel[offset] = {}
-                    for j, label in enumerate(self.labels):
-                        doc._.rel[offset][label] = rel_scores[c, j]
-                    c += 1
+            for (e1, e2) in get_candidates(doc):
+                offset = (e1.start, e2.start)
+                if offset not in doc._.rel:
+                    doc._.rel[offset] = {}
+                for j, label in enumerate(self.labels):
+                    doc._.rel[offset][label] = rel_scores[c, j]
+                c += 1
 
     def update(
         self,
@@ -107,6 +108,20 @@ class RelationExtractor(Pipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
         set_dropout_rate(self.model, drop)
+
+        # mimic having an actual NER in the pipeline
+        for eg in examples:
+            eg.predicted.ents = eg.reference.ents
+
+        # check that there are actually any candidates in this batch of examples
+        total_candidates = 0
+        for eg in examples:
+            total_candidates += len(self.model.attrs["get_candidates"](eg.predicted))
+        if total_candidates == 0:
+            print("Could not determine any candidates in doc.")
+            return losses
+
+        # run the model
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         loss, d_scores = self.get_loss(examples, scores)
         bp_scores(d_scores)
@@ -121,11 +136,10 @@ class RelationExtractor(Pipe):
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores."""
-        truths, not_missing = self._examples_to_truth(examples)
-        not_missing = self.model.ops.asarray(not_missing)
-        d_scores = (scores - truths) / scores.shape[0]
-        d_scores *= not_missing
+        truths = self._examples_to_truth(examples)
+        d_scores = (scores - truths)
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
+        print(f"mean_square_error {mean_square_error}")
         return float(mean_square_error), d_scores
 
     def begin_training(
@@ -170,28 +184,22 @@ class RelationExtractor(Pipe):
         self, examples: List[Example]
     ) -> Optional[numpy.ndarray]:
         nr_candidates = 0
-        print()
-        print("example to truth")
         for eg in examples:
-            for e1 in eg.reference.ents:
-                for e2 in eg.reference.ents:
-                    nr_candidates += 1
+            nr_candidates += len(self.model.attrs["get_candidates"](eg.reference))
         if nr_candidates == 0:
             return None
-        print("labels", self.labels)
+        print(f"labels: {self.labels}")
 
         truths = numpy.zeros((nr_candidates, len(self.labels)), dtype="f")
         c = 0
-        for eg in examples:
-            for e1 in eg.reference.ents:
-                for e2 in eg.reference.ents:
-                    gold_label_dict = eg.reference._.rel.get((e1.start, e2.start), {})
-                    print("candidate: ", (e1.start, e2.start), "-->", gold_label_dict)
-                    for j, label in enumerate(self.labels):
-                        truths[c, j] = gold_label_dict.get(label, 0)
-                    c += 1
+        for i, eg in enumerate(examples):
+            for (e1, e2) in self.model.attrs["get_candidates"](eg.reference):
+                gold_label_dict = eg.reference._.rel.get((e1.start, e2.start), {})
+                for j, label in enumerate(self.labels):
+                    truths[c, j] = gold_label_dict.get(label, 0)
+                c += 1
 
         truths = self.model.ops.asarray(truths)
-        print("truths", truths)
+        print(f"truths: {truths}")
         print()
         return truths
