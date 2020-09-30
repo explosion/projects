@@ -38,6 +38,8 @@ subword_features = true
 
 
 def main(data_file: Path):
+    import numpy
+    numpy.random.seed(342)
     nlp = English()
 
     # set up dummy "NER"
@@ -46,6 +48,8 @@ def main(data_file: Path):
         {"label": "CITY", "pattern": [{"LOWER": "london"}]},
         {"label": "COUNTRY", "pattern": [{"LOWER": "united"}, {"LOWER": "states"}]},
         {"label": "COUNTRY", "pattern": [{"LOWER": "united"}, {"LOWER": "kingdom"}]},
+        # {"label": "COUNTRY", "pattern": [{"LOWER": "amsterdam"}]},
+        # {"label": "COUNTRY", "pattern": [{"LOWER": "netherlands"}]},
     ]
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
@@ -89,6 +93,7 @@ def main(data_file: Path):
 
 def _evaluate(nlp):
     text = "London is the capital of the united kingdom, just like the capital of the united states is new york."
+    # text = "Amsterdam is the capital of the Netherlands."
     doc = nlp(text)
     ents = doc.ents
     print()

@@ -68,6 +68,12 @@ class RelationExtractor(Pipe):
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the pipe to a Doc."""
+        # check that there are actually any candidates in this batch of examples
+        total_candidates = len(self.model.attrs["get_candidates"](doc))
+        if total_candidates == 0:
+            print("Could not determine any candidates in doc - returning doc as is.")
+            return doc
+
         rel_scores = self.predict([doc])
         self.set_annotations([doc], rel_scores)
         return doc

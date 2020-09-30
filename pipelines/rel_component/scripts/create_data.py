@@ -16,10 +16,11 @@ def main(data_file: Path):
                 Span(doc1, 6, 7, label="LOC")]
     doc1._.rel = {(0, 6): {"CAPITAL_OF": 1.0, "ALLY": 1.0}}
 
-    doc2 = nlp("I like Ghent and Berlin.")
+    doc2 = nlp("I like Ghent, London and Berlin")
     doc2.ents = [Span(doc2, 2, 3, label="LOC"),
-                Span(doc2, 4, 5, label="LOC")]
-    doc2._.rel = {(2, 4): {"UNRELATED": 1.0}, (4, 2): {"UNRELATED": 1.0}}
+                 Span(doc2, 4, 5, label="LOC"),
+                 Span(doc2, 6, 7, label="LOC")]
+    doc2._.rel = {(2, 4): {"UNRELATED": 1.0}, (4, 6): {"UNRELATED": 1.0}}
 
     doc3 = nlp("The United Kingdom and the US have made trade agreements.")
     doc3.ents = [Span(doc3, 1, 3, label="LOC"),

@@ -9,7 +9,7 @@ from spacy.util import registry
 
 @registry.architectures.register("rel_model.v1")
 def create_relation_model(
-    tok2vec: Model[List["Doc"], Floats2d],
+    tok2vec: Model[List["Doc"], List[Floats2d]],
     create_candidate_tensor: Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]],
     get_candidates: Callable[["Doc"], List[Tuple["Span", "Span"]]],
     output_layer: Model[Floats2d, Floats2d],
@@ -27,18 +27,53 @@ def create_relation_model(
 
 
 @registry.architectures.register("rel_cand_tensor.v1")
-def create_candidates() -> Callable[[List["Doc"], Callable, Floats2d, Ops], Tuple[Floats2d, Callable]]:
-    def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: Floats2d, ops: Ops):
+def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
+    def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: List[Floats2d], ops: Ops):
+        with numpy.printoptions(precision=2, suppress=True):
+            print(f"get candidate tensor, tokvecs {tokvecs}")
         relations = []
+        shapes = []
+        candidates = []
         for i, doc in enumerate(docs):
-            for (ent1, ent2) in get_candidates(doc):
+            ents = get_candidates(doc)
+            candidates.append(ents)
+            shapes.append(tokvecs[i].shape)
+            for (ent1, ent2) in ents:
+                print(" - c", ent1.start, ent1.end, ent2.start, ent2.end)
                 # take mean value of tokens within an entity
                 v1 = tokvecs[i][ent1.start:ent1.end].mean(axis=0)
+                print(" - v1", v1)
                 v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
+                print(" - v2", v2)
                 relations.append(ops.xp.hstack((v1, v2)))
         with numpy.printoptions(precision=2, suppress=True):
             print(f"candidate data: {ops.asarray(relations)}")
-        return ops.asarray(relations), lambda: None
+            print("shapes", shapes)
+
+        def backprop(d_candidates):
+            with numpy.printoptions(precision=2, suppress=True):
+                print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
+            result = []
+            d = 0
+            for i, shape in enumerate(shapes):
+                # TODO: make more efficient
+                d_tokvecs = ops.alloc2f(*shape)
+                ents = candidates[i]
+                with numpy.printoptions(precision=2, suppress=True):
+                    print()
+                    for (ent1, ent2) in ents:
+                        d_tokvecs[ent1.start:ent1.end] += d_candidates[d][0:d_tokvecs.shape[1]]
+                        print("ent1", ent1.start, ent1.end, "-->", d_tokvecs[ent1.start:ent1.end])
+                        d_tokvecs[ent2.start:ent2.end] += d_candidates[d][d_tokvecs.shape[1]:]
+                        print("ent2", ent2.start, ent2.end, "-->", d_tokvecs[ent2.start:ent2.end])
+                        d += 1
+                    print(i, "d_tokvecs", d_tokvecs)
+                result.append(d_tokvecs)
+            with numpy.printoptions(precision=2, suppress=True):
+                print("result", result)
+            return result
+
+        return ops.asarray(relations), backprop
     return get_candidate_tensor
 
 
@@ -55,9 +90,7 @@ def create_candidate_indices() -> Callable[["Doc"], List[Tuple["Span", "Span"]]]
 
 @registry.architectures.register("rel_output_layer.v1")
 def create_layer(nI: int = None, nO: int = None) -> Model[Floats2d, Floats2d]:
-    # """This output layer currently assumes max. 1 REL label between two (directed) entities."""
     return Linear(nO=nO, nI=nI)
-    # return Softmax(nO=nO, nI=nI)
 
 
 def forward(model, docs, is_train):
@@ -77,18 +110,6 @@ def forward(model, docs, is_train):
         return bp_tokvecs(bp_cand(bp_scores(d_scores)))
 
     return scores, backprop
-
-
-def _make_candidate_vectors(ops, tokvecs, cand_ids):
-    cand_vectors = ops.xp.vstack((tokvecs[cand_ids[:, 0]], tokvecs[cand_ids[:, 1]]))
-
-    def backprop(d_candidates):
-        d_tokvecs = ops.alloc2f(*tokvecs.shape)
-        # Ugh, this is probably wrong. I hate scatter add :(
-        ops.scatter_add(d_tokvecs, d_candidates, cand_ids)
-        return d_tokvecs
-
-    return cand_vectors, backprop
 
 
 def init(
