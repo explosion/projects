@@ -1,27 +1,36 @@
 from typing import Tuple, List, Iterable, Iterator, Optional, Dict, Callable
 
+import numpy
 from spacy.training.example import Example
-from thinc.api import Model, Optimizer
-from spacy.util import minibatch
+from thinc.api import Model, Optimizer, Config
 from spacy.tokens.doc import Doc
 from spacy.pipeline.pipe import Pipe
 from spacy.vocab import Vocab
 from spacy import Language
+from thinc.model import set_dropout_rate
+
+
+Doc.set_extension("rel", default={})
 
 
 @Language.factory(
     "relation_extractor",
+    requires=["doc.ents", "token.ent_iob", "token.ent_type"],
+    assigns=["doc._.rel"],
 )
 def make_relation_extractor(
     nlp: Language,
     name: str,
     model: Model,
+    *,
+    labels: List[str] = [],
 ):
-    """Construct an EntityLinker component."""
+    """Construct a RelationExtractor component."""
     return RelationExtractor(
         nlp.vocab,
         model,
-        name
+        name,
+        labels=labels,
     )
 
 
@@ -30,7 +39,7 @@ class RelationExtractor(Pipe):
         self,
         vocab: Vocab,
         model: Model,
-        name: str = "relex",
+        name: str = "rel",
         *,
         labels: List[str] = [],
     ) -> None:
@@ -57,18 +66,30 @@ class RelationExtractor(Pipe):
         self.cfg["labels"] = list(self.labels) + [label]
         return 1
 
-    def predict(self, docs: Iterable[Doc]):
+    def __call__(self, doc: Doc) -> Doc:
+        """Apply the pipe to a Doc."""
+        relations = self.predict([doc])
+        self.set_annotations([doc], relations)
+        return doc
+
+    def predict(self, docs: Iterable[Doc]) -> List[Tuple[str]]:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
+        scores = self.model.predict(docs)
+        print("scores", scores)
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
         return scores
 
-    def set_annotations(self, docs: Iterable[Doc], scores) -> None:
+    def set_annotations(self, docs: Iterable[Doc], relations: List[Tuple[str]]) -> None:
         """Modify a batch of `Doc` objects, using pre-computed scores."""
         for i, doc in enumerate(docs):
-            for j, label in enumerate(self.labels):
-                pass
-                # doc._[label] = float(scores[i, j])
+            for (ent_1, ent_2, label) in relations:
+                offset = (ent_1, ent_2)
+                if offset in doc._.rel:
+                    # TODO: multi-label
+                    print(f" ! We already have a label {doc._.rel[offset]} for {offset}, so ignoring the new label {label}.")
+                else:
+                    doc._.rel[offset] = label
 
     def update(
         self,
@@ -127,15 +148,48 @@ class RelationExtractor(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
-        subbatch = []  # Select a subbatch of examples to initialize the model
-        for example in islice(get_examples(), 10):
-            if len(subbatch) < 2:
-                subbatch.append(example)
-            for cat in example.y.cats:
-                self.add_label(cat)
-        doc_sample = [eg.reference for eg in subbatch]
-        label_sample, _ = self._examples_to_truth(subbatch)
+        examples = list(get_examples())
+        for example in examples:
+            relations = example.reference._.rel
+            for indices, label in relations.items():
+                self.add_label(label)
+
+        doc_sample = [eg.reference for eg in examples]
+        label_sample = self._examples_to_truth(examples)
+        if label_sample is None:
+            raise ValueError("Call begin_training with relevant entities and relations annotated in "
+                             "at least a few reference examples!")
         self.model.initialize(X=doc_sample, Y=label_sample)
         if sgd is None:
             sgd = self.create_optimizer()
         return sgd
+
+    def _examples_to_truth(
+        self, examples: List[Example]
+    ) -> Optional[numpy.ndarray]:
+        nr_candidates = 0
+        print()
+        print("example to truth")
+        for eg in examples:
+            for e1 in eg.reference.ents:
+                for e2 in eg.reference.ents:
+                    nr_candidates += 1
+        if nr_candidates == 0:
+            return None
+        print("labels", self.labels)
+
+        truths = numpy.zeros((nr_candidates, len(self.labels)), dtype="f")
+        c = 0
+        for eg in examples:
+            for e1 in eg.reference.ents:
+                for e2 in eg.reference.ents:
+                    gold_label = eg.reference._.rel.get((e1.start, e2.start), "")
+                    print("candidate: ", (e1.start, e2.start), "-->", gold_label)
+                    for j, label in enumerate(self.labels):
+                        truths[c, j] = 1 if label == gold_label else 0
+                    c += 1
+
+        truths = self.model.ops.asarray(truths)
+        print("truths", truths)
+        print()
+        return truths

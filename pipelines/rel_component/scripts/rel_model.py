@@ -1,22 +1,48 @@
 from typing import List, Callable
-from thinc.types import Floats2d, Ints2d
-from thinc.api import Model
+from thinc.types import Floats2d
+from thinc.api import Model, Linear, Ops
 
-from spacy.tokens.doc import Doc
+from spacy.util import registry
 
 
-def relation_model(
-    tok2vec: Model[List[Doc], Floats2d],
-    get_candidates: Callable[[List[Doc]], Ints2d],
+@registry.architectures.register("my_rel_model.v1")
+def create_relation_model(
+    tok2vec: Model[List["Doc"], Floats2d],
+    get_candidates: Callable[[Ops, List["Doc"], Floats2d], Floats2d],
     output_layer: Model[Floats2d, Floats2d],
-):
+    nO: int,
+) -> Model:
     return Model(
         "relations",
         layers=[tok2vec, output_layer],
         refs={"tok2vec": tok2vec, "output_layer": output_layer},
         attrs={"get_candidates": get_candidates},
-        forward=forward
+        dims={"nO": nO},
+        forward=forward,
     )
+
+
+@registry.architectures.register("my_rel_candidate_generator.v1")
+def create_candidates() -> Callable[[Ops, List["Doc"], Floats2d], Floats2d]:
+    def get_candidates(ops: Ops, docs: List["Doc"], tokvecs: Floats2d):
+        print("docs", len(docs))
+        print("tokvecs", tokvecs.shape)
+        relations = []
+        for doc in docs:
+            for ent1 in doc.ents:
+                for ent2 in doc.ents:
+                    v1 = tokvecs[ent1.start:ent1.end]
+                    print("v1", v1.shape)
+                    v2 = tokvecs[ent2.start:ent2.end]
+                    print("v2", v2.shape)
+                    relations.append(ops.xp.vstack(v1, v2))
+        return ops.asarray(relations)
+    return get_candidates
+
+
+@registry.architectures.register("my_rel_output_layer.v1")
+def create_layer(nI, nO) -> Model[Floats2d, Floats2d]:
+    return Linear(nO=nO, nI=nI)
 
 
 def forward(model, docs, is_train):

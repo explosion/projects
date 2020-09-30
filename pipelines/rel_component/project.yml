@@ -1,25 +1,20 @@
-title: "Weights & Biases logging integration"
-description: "Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments."
+title: "Example project of creating a novel nlp component to do relation extraction from scratch."
+description: "This example project shows how to define a custom model and wrap it as a spaCy component so it integrates easily in any `nlp` pipeline."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  default_config: "default_config_imdb.cfg"
+  i: 342
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["scripts", "assets", "results", "configs"]
+directories: ["scripts", "assets", "data"]
 
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
-assets:
-  - dest: "assets/aclImdb_v1.tar.gz"
-    url: "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-    description: "Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011."
 
 workflows:
   all:
     - data
-    - configs
     - train
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -28,34 +23,28 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "install"
-    help: "Install dependencies and login to Weights & Biases"
+    help: "Install dependencies"
     script:
       - "pip install -r requirements.txt"
-      - "wandb login"
     deps:
       - "requirements.txt"
 
   - name: "data"
-    help: "Extract the gold-standard annotations."
+    help: "Create some sample gold-standard annotations."
     script:
-      - "tar -xzf ./assets/aclImdb_v1.tar.gz -C ./assets/"
-    deps:
-      - "assets/aclImdb_v1.tar.gz"
+      - "python ./scripts/create_data.py data/train.spacy"
     outputs:
-      - "assets/aclImdb/train/"
-      - "assets/aclImdb/test/"
-
-  - name: "configs"
-    help: "Create variations on an initial, default config file for IMDB sentiment classification."
-    script:
-      - "python -m spacy init config -p textcat -l en ./configs/${vars.default_config} --cpu"
-      - "python ./scripts/customize_configs.py configs ${vars.default_config}"
+      - "data/train.spacy/"
 
   - name: "train"
-    help: "Run customized training runs."
+    help: "Run training - note that the small sample data will cause the model to overfit."
     script:
-      - "python ./scripts/run_configs.py configs ${vars.default_config} results"
+    # TODO spacy train script
+      - "python ./scripts/run_pipeline.py data/train.spacy"
     deps:
-      - "assets/aclImdb/train/"
-      - "assets/aclImdb/test/"
-      - "configs/"
+      - "data/train.spacy/"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf data/train.spacy"
