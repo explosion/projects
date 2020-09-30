@@ -19,7 +19,7 @@ nO = 5
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
 pretrained_vectors = null
-width = 96
+width = 5
 depth = 2
 embed_size = 300
 window_size = 1
@@ -31,8 +31,8 @@ subword_features = true
 
 [model.output_layer]
 @architectures = "my_rel_output_layer.v1"
-nI = 600
-nO = 3
+nI = null
+nO = null
 """
 
 
@@ -49,8 +49,8 @@ def main(data_file: Path):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
 
-    # set up the RELEX component
-    relex = nlp.add_pipe(
+    # set up the Relation Extraction component
+    nlp.add_pipe(
         "relation_extractor",
         config=Config().from_str(default_model_config),
     )

@@ -1,4 +1,4 @@
-from typing import List, Callable
+from typing import List, Callable, Tuple
 from thinc.types import Floats2d
 from thinc.api import Model, Linear, Ops
 
@@ -8,10 +8,10 @@ from spacy.util import registry
 @registry.architectures.register("my_rel_model.v1")
 def create_relation_model(
     tok2vec: Model[List["Doc"], Floats2d],
-    get_candidates: Callable[[Ops, List["Doc"], Floats2d], Floats2d],
+    get_candidates: Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]],
     output_layer: Model[Floats2d, Floats2d],
     nO: int,
-) -> Model:
+) -> Model[List["Doc"], Floats2d]:
     return Model(
         "relations",
         layers=[tok2vec, output_layer],
@@ -19,24 +19,26 @@ def create_relation_model(
         attrs={"get_candidates": get_candidates},
         dims={"nO": nO},
         forward=forward,
+        init=init,
     )
 
 
 @registry.architectures.register("my_rel_candidate_generator.v1")
-def create_candidates() -> Callable[[Ops, List["Doc"], Floats2d], Floats2d]:
-    def get_candidates(ops: Ops, docs: List["Doc"], tokvecs: Floats2d):
+def create_candidates() -> Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]]:
+    def get_candidates(docs: List["Doc"], tokvecs: Floats2d, ops: Ops):
         print("docs", len(docs))
-        print("tokvecs", tokvecs.shape)
+        print("tokvecs", len(tokvecs))
+        print("tokvecs", tokvecs)
         relations = []
-        for doc in docs:
+        for i, doc in enumerate(docs):
             for ent1 in doc.ents:
                 for ent2 in doc.ents:
-                    v1 = tokvecs[ent1.start:ent1.end]
-                    print("v1", v1.shape)
-                    v2 = tokvecs[ent2.start:ent2.end]
-                    print("v2", v2.shape)
-                    relations.append(ops.xp.vstack(v1, v2))
-        return ops.asarray(relations)
+                    # take mean value of tokens within an entity
+                    v1 = tokvecs[i][ent1.start:ent1.end].mean(axis=0)
+                    v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
+                    relations.append(ops.xp.hstack((v1, v2)))
+        print("relations", ops.asarray(relations))
+        return ops.asarray(relations), None
     return get_candidates
 
 
@@ -50,18 +52,17 @@ def forward(model, docs, is_train):
     get_candidates = model.attrs["get_candidates"]
     output_layer = model.get_ref("output_layer")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
-    cand_ids = get_candidates(docs)
-    candidates, bp_candidates = _make_candidate_vectors(model.ops, tokvecs, cand_ids)
-    scores, bp_scores = output_layer(candidates, is_train)
+    cand_vectors, bp_cand = get_candidates(docs, tokvecs, model.ops)
+    scores, bp_scores = output_layer(cand_vectors, is_train)
 
     def backprop(d_scores):
-        return bp_tokvecs(bp_candidates(bp_scores(d_scores)))
+        return bp_tokvecs(bp_cand(bp_scores(d_scores)))
 
     return scores, backprop
 
 
 def _make_candidate_vectors(ops, tokvecs, cand_ids):
-    candidates = ops.xp.vstack((tokvecs[cand_ids[:, 0]], tokvecs[cand_ids[:, 1]]))
+    cand_vectors = ops.xp.vstack((tokvecs[cand_ids[:, 0]], tokvecs[cand_ids[:, 1]]))
 
     def backprop(d_candidates):
         d_tokvecs = ops.alloc2f(*tokvecs.shape)
@@ -69,4 +70,18 @@ def _make_candidate_vectors(ops, tokvecs, cand_ids):
         ops.scatter_add(d_tokvecs, d_candidates, cand_ids)
         return d_tokvecs
 
-    return candidates, backprop
+    return cand_vectors, backprop
+
+
+def init(
+    model: Model, X: List["Doc"] = None, Y: Floats2d = None
+) -> Model:
+    tok2vec = model.get_ref("tok2vec")
+    get_candidates = model.attrs["get_candidates"]
+    output_layer = model.get_ref("output_layer")
+    if X is not None:
+        tok2vec.initialize(X=X)
+        tokvecs = tok2vec.predict(X)
+        cand_vectors, _ = get_candidates(X, tokvecs, model.ops)
+        output_layer.initialize(X=cand_vectors, Y=Y)
+    return model
