@@ -20,13 +20,13 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command       | Description                                    |
-| ------------- | ---------------------------------------------- |
-| `init-config` | Generate a default English NER config          |
-| `corpus`      | Convert the data to spaCy's format             |
-| `train`       | Train the full pipeline                        |
-| `evaluate`    | Evaluate on the test data and save the metrics |
-| `clean`       | Remove intermediate files                      |
+| Command | Description |
+| --- | --- |
+| `init-config` | Generate a default English NER config |
+| `corpus` | Convert the data to spaCy's format |
+| `train` | Train the full pipeline |
+| `evaluate` | Evaluate on the test data and save the metrics |
+| `clean` | Remove intermediate files |
 
 ### ⏭ Workflows
 
@@ -35,9 +35,9 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow | Steps                                     |
-| -------- | ----------------------------------------- |
-| `all`    | `corpus` &rarr; `train` &rarr; `evaluate` |
+| Workflow | Steps |
+| --- | --- |
+| `all` | `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -45,8 +45,8 @@ The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
 in the project directory.
 
-| File                            | Source | Description |
-| ------------------------------- | ------ | ----------- |
-| `assets/aij-wikiner-en-wp2.bz2` | URL    |             |
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/aij-wikiner-en-wp2.bz2` | URL |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

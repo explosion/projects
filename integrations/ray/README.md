@@ -20,11 +20,11 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command   | Description                        |
-| --------- | ---------------------------------- |
-| `install` | Install dependencies               |
+| Command | Description |
+| --- | --- |
+| `install` | Install dependencies |
 | `convert` | Convert the data to spaCy's format |
-| `train`   | Train UD_English-EWT               |
+| `train` | Train UD_English-EWT |
 
 ### ⏭ Workflows
 
@@ -33,9 +33,9 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow | Steps                    |
-| -------- | ------------------------ |
-| `all`    | `convert` &rarr; `train` |
+| Workflow | Steps |
+| --- | --- |
+| `all` | `convert` &rarr; `train` |
 
 ### 🗂 Assets
 
@@ -43,8 +43,8 @@ The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
 in the project directory.
 
-| File                    | Source | Description |
-| ----------------------- | ------ | ----------- |
-| `assets/UD_English-EWT` | Git    |             |
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/UD_English-EWT` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

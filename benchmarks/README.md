@@ -2,7 +2,7 @@
 
 # 🪐 Project Templates: Benchmarks (2)
 
-| Template                                         | Description                                                                             |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [`parsing_penn_treebank`](parsing_penn_treebank) | Dependency Parsing (Penn Treebank)                                                      |
-| [`speed`](speed)                                 | Project for speed benchmarking of various pretrained models of different NLP libraries. |
+| Template | Description |
+| --- | --- |
+| [`parsing_penn_treebank`](parsing_penn_treebank) | Dependency Parsing (Penn Treebank) |
+| [`speed`](speed) | Project for speed benchmarking of various pretrained models of different NLP libraries. |

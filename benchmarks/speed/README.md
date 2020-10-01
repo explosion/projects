@@ -20,13 +20,13 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command      | Description                                                                |
-| ------------ | -------------------------------------------------------------------------- |
-| `install`    | Install dependencies                                                       |
-| `download`   | Download models                                                            |
+| Command | Description |
+| --- | --- |
+| `install` | Install dependencies |
+| `download` | Download models |
 | `timing_cpu` | Run all timing benchmarks on CPU and add the numbers to output/results.csv |
 | `timing_gpu` | Run all timing benchmarks on GPU and add the numbers to output/results.csv |
-| `clean`      | Remove output file(s)                                                      |
+| `clean` | Remove output file(s) |
 
 ### ⏭ Workflows
 
@@ -35,9 +35,9 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow    | Steps                            |
-| ----------- | -------------------------------- |
-| `setup`     | `install` &rarr; `download`      |
+| Workflow | Steps |
+| --- | --- |
+| `setup` | `install` &rarr; `download` |
 | `benchmark` | `timing_cpu` &rarr; `timing_gpu` |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
