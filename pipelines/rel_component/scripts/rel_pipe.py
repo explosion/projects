@@ -150,11 +150,11 @@ class RelationExtractor(Pipe):
         # print(f"mean_square_error {mean_square_error}")
         return float(mean_square_error), d_scores
 
-    def begin_training(
+    def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        pipeline: Optional[List[Tuple[str, Callable[[Doc], Doc]]]] = None,
+        nlp: Language = None,
         sgd: Optional[Optimizer] = None,
     ) -> Optimizer:
         """Initialize the pipe for training, using a representative set

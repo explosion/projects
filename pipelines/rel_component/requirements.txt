@@ -1,3 +1,3 @@
-# TODO: update this when spaCy 3.0.0 is released
-spacy-nightly==3.0.0a26
-thinc>=8.0.0a41,<8.0.0a60
+# TODO: update pins
+spacy-nightly==3.0.0a29
+thinc==8.0.0a43
