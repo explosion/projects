@@ -117,7 +117,7 @@ class RelationExtractor(Pipe):
         losses.setdefault(self.name, 0.0)
         set_dropout_rate(self.model, drop)
 
-        # mimic having an actual NER in the pipeline
+        # mimic having an actual NER in the pipeline (TODO: solve this better)
         for eg in examples:
             eg.predicted.ents = eg.reference.ents
 
@@ -177,6 +177,7 @@ class RelationExtractor(Pipe):
             for indices, label_dict in relations.items():
                 for label in label_dict.keys():
                     self.add_label(label)
+        self._require_labels()
 
         doc_sample = [eg.reference for eg in examples]
         label_sample = self._examples_to_truth(examples)
@@ -196,7 +197,6 @@ class RelationExtractor(Pipe):
             nr_candidates += len(self.model.attrs["get_candidates"](eg.reference))
         if nr_candidates == 0:
             return None
-        # print(f"labels: {self.labels}")
 
         truths = numpy.zeros((nr_candidates, len(self.labels)), dtype="f")
         c = 0
@@ -208,6 +208,6 @@ class RelationExtractor(Pipe):
                 c += 1
 
         truths = self.model.ops.asarray(truths)
-        print(f"truths: {truths}")
-        print()
+        # print(f"truths: {truths}")
+        # print()
         return truths

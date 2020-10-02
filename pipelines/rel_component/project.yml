@@ -3,8 +3,12 @@ description: "This example project shows how to define a custom model and wrap i
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
+  patterns: "assets/patterns.jsonl"
   tok2vec_config: "configs/rel_tok2vec.cfg"
   train_file: "data/train.spacy"
+  dev_file: "data/dev.spacy"
+  test_file: "data/test.spacy"
+  trained_model: "training/model-final"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -12,11 +16,15 @@ directories: ["scripts", "configs", "assets", "data", "training"]
 
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
+assets:
+    - dest: patterns
+      description: "Custom patterns to mimic an NEL algorithm"
 
 workflows:
   all:
     - data
     - train
+    - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -33,19 +41,35 @@ commands:
   - name: "data"
     help: "Create some sample gold-standard annotations."
     script:
-      - "python ./scripts/create_data.py ${vars.train_file}"
+      - "python ./scripts/create_data.py ${vars.train_file} ${vars.dev_file} ${vars.test_file}"
     outputs:
       - ${vars.train_file}
+      - ${vars.dev_file}
+      - ${vars.test_file}
 
   - name: "train"
     help: "Run training - note that the small sample data will cause the model to overfit."
     script:
-      - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.train_file} -c ./scripts/custom_functions.py"
-     # - "python ./scripts/run_pipeline.py data/train.spacy"
+      - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py "
+     #  - "python ./scripts/run_pipeline.py ${vars.train_file} ${vars.patterns} ${vars.trained_model}"
     deps:
       - ${vars.train_file}
+      - ${vars.dev_file}
+      - ${vars.patterns}
+    outputs:
+      - ${vars.trained_model}
+
+  - name: "evaluate"
+    help: "Apply the trained model to some sample text."
+    script:
+      - "python ./scripts/evaluate.py ${vars.trained_model} ${vars.test_file}"
+    deps:
+      - ${vars.trained_model}
+      - ${vars.test_file}
+
 
   - name: clean
-    help: "Remove intermediate files"
+    help: "Remove intermediate files to start data preparation & training from a clean slate."
     script:
-      - "rm -rf data/train.spacy"
+      - "rm -rf data/*"
+      - "rm -rf training/*"

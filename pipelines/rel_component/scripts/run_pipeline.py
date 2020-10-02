@@ -1,3 +1,4 @@
+import srsly
 import typer
 from spacy.lang.en import English
 from pathlib import Path
@@ -60,21 +61,14 @@ grad_factor = 1.0
 """
 
 
-def main(data_file: Path):
+def main(data_file: Path, patterns_path: Path, trained_model: Path):
     import numpy
     numpy.random.seed(342)
     nlp = English()
 
     # set up dummy "NER"
-    patterns = [
-        {"label": "LOC", "pattern": [{"LOWER": "new"}, {"LOWER": "york"}]},
-        {"label": "LOC", "pattern": [{"LOWER": "london"}]},
-        {"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "states"}]},
-        {"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "kingdom"}]},
-        {"label": "LOC", "pattern": [{"LOWER": "amsterdam"}]},
-        {"label": "LOC", "pattern": [{"LOWER": "netherlands"}]},
-    ]
     ruler = nlp.add_pipe("entity_ruler")
+    patterns = srsly.read_jsonl(patterns_path)
     ruler.add_patterns(patterns)
 
     # nlp.add_pipe("transformer")
@@ -95,38 +89,13 @@ def main(data_file: Path):
 
     optimizer = nlp.begin_training(lambda: train_examples)
 
-    print()
-    print("PREDICTING (0)")
-    print()
-    _evaluate(nlp)
-    print()
-
-    print("TRAINING")
-    print()
-
-    for i in range(2):
+    for i in range(500):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
         if i % 50 == 0:
             print(i, losses)
 
-    print()
-    print("PREDICTING (50)")
-    print()
-    _evaluate(nlp)
-    print()
-
-
-def _evaluate(nlp):
-    # text = "London is the capital of the United Kingdom, just like the capital of the United States is New York."
-    text = "Amsterdam is the capital of the Netherlands."
-    doc = nlp(text)
-    ents = doc.ents
-    print()
-    print("spans", [(e.start, e.text, e.label_) for e in ents])
-    print()
-    for value, rel_dict in doc._.rel.items():
-        print(f"rel for {value}: {rel_dict}")
+    nlp.to_disk(trained_model)
 
 
 if __name__ == "__main__":

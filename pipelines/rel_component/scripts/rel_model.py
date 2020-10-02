@@ -48,8 +48,8 @@ def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops]
         #     print("shapes", shapes)
 
         def backprop(d_candidates):
-            with numpy.printoptions(precision=2, suppress=True):
-                print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
+            # with numpy.printoptions(precision=2, suppress=True):
+                # print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
             result = []
             d = 0
             for i, shape in enumerate(shapes):
@@ -59,7 +59,7 @@ def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops]
                 ents = candidates[i]
                 indices = {}
                 with numpy.printoptions(precision=2, suppress=True):
-                    print()
+                    # print()
                     for (ent1, ent2) in ents:
                         t1 = (ent1.start, ent1.end)
                         indices[t1] = indices.get(t1, [])
@@ -73,13 +73,13 @@ def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops]
                         start, end = token
                         for source in sources:
                             d_tokvecs[start:end] += d_candidates[source[0]][source[1]:source[2]]
-                            print("token", start, token[1], "-->", d_tokvecs[start:end])
+                            # print("token", start, token[1], "-->", d_tokvecs[start:end])
                         d_tokvecs[start:end] /= len(sources)
 
-                    print(i, "d_tokvecs", d_tokvecs)
+                    # print(i, "d_tokvecs", d_tokvecs)
                 result.append(d_tokvecs)
-            with numpy.printoptions(precision=2, suppress=True):
-                print("result", result)
+            # with numpy.printoptions(precision=2, suppress=True):
+            #     print("result", result)
             return result
 
         return ops.asarray(relations), backprop

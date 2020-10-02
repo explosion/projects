@@ -1,0 +1,12 @@
+{"label": "LOC", "pattern": [{"LOWER": "new"}, {"LOWER": "york"}]}
+{"label": "LOC", "pattern": [{"LOWER": "london"}]}
+{"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "states"}]}
+{"label": "LOC", "pattern": [{"LOWER": "us"}]}
+{"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "kingdom"}]}
+{"label": "LOC", "pattern": [{"LOWER": "amsterdam"}]}
+{"label": "LOC", "pattern": [{"LOWER": "netherlands"}]}
+{"label": "LOC", "pattern": [{"LOWER": "brussels"}]}
+{"label": "LOC", "pattern": [{"LOWER": "belgium"}]}
+{"label": "LOC", "pattern": [{"LOWER": "ghent"}]}
+{"label": "LOC", "pattern": [{"LOWER": "berlin"}]}
+{"label": "LOC", "pattern": [{"LOWER": "paris"}]}
