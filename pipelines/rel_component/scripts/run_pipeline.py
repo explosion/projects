@@ -5,8 +5,8 @@ from pathlib import Path
 from spacy.training.example import Example
 from thinc.api import Config
 
-from rel_module.rel_pipe import make_relation_extractor  # make the factory work
-from rel_module.rel_model import create_relation_model, create_candidates, create_layer  # make the config work
+from rel_pipe import make_relation_extractor  # make the factory work
+from rel_model import create_relation_model, create_candidates, create_layer  # make the config work
 
 from spacy.tokens import DocBin
 
