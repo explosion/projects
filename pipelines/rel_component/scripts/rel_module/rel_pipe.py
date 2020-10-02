@@ -14,6 +14,7 @@ from wasabi import Printer
 Doc.set_extension("rel", default={}, force=True)
 msg = Printer()
 
+
 @Language.factory(
     "relation_extractor",
     requires=["doc.ents", "token.ent_iob", "token.ent_type"],

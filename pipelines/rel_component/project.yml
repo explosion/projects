@@ -40,8 +40,8 @@ commands:
   - name: "train"
     help: "Run training - note that the small sample data will cause the model to overfit."
     script:
-     # - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.train_file} -c scripts/train_code.py"
-      - "python ./scripts/run_pipeline.py data/train.spacy"
+      - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.train_file} -c ./scripts/custom_functions.py"
+     # - "python ./scripts/run_pipeline.py data/train.spacy"
     deps:
       - ${vars.train_file}
 

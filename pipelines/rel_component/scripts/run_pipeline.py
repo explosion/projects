@@ -5,8 +5,8 @@ from pathlib import Path
 from spacy.training.example import Example
 from thinc.api import Config
 
-from rel_component import make_relation_extractor  # make the factory work
-from rel_model import create_relation_model, create_candidates, create_layer  # make the config work
+from rel_module.rel_pipe import make_relation_extractor  # make the factory work
+from rel_module.rel_model import create_relation_model, create_candidates, create_layer  # make the config work
 
 from spacy.tokens import DocBin
 
@@ -84,7 +84,6 @@ def main(data_file: Path):
         "relation_extractor",
         config=Config().from_str(default_model_config),
     )
-    # print(nlp.config.to_str(interpolate=False))
 
     # read example data
     train_examples = []
