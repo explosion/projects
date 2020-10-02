@@ -8,10 +8,11 @@ from spacy.pipeline.pipe import Pipe
 from spacy.vocab import Vocab
 from spacy import Language
 from thinc.model import set_dropout_rate
+from wasabi import Printer
 
 
-Doc.set_extension("rel", default={})
-
+Doc.set_extension("rel", default={}, force=True)
+msg = Printer()
 
 @Language.factory(
     "relation_extractor",
@@ -71,7 +72,7 @@ class RelationExtractor(Pipe):
         # check that there are actually any candidates in this batch of examples
         total_candidates = len(self.model.attrs["get_candidates"](doc))
         if total_candidates == 0:
-            print("Could not determine any candidates in doc - returning doc as is.")
+            msg.info("Could not determine any candidates in doc - returning doc as is.")
             return doc
 
         rel_scores = self.predict([doc])
@@ -81,8 +82,8 @@ class RelationExtractor(Pipe):
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
         scores = self.model.predict(docs)
-        with numpy.printoptions(precision=2, suppress=True):
-            print(f"predicted scores: {scores}")
+        # with numpy.printoptions(precision=2, suppress=True):
+        #     print(f"predicted scores: {scores}")
         scores = self.model.ops.asarray(scores)
         return scores
 
@@ -124,7 +125,7 @@ class RelationExtractor(Pipe):
         for eg in examples:
             total_candidates += len(self.model.attrs["get_candidates"](eg.predicted))
         if total_candidates == 0:
-            print("Could not determine any candidates in doc.")
+            msg.info("Could not determine any candidates in doc.")
             return losses
 
         # run the model
@@ -145,7 +146,7 @@ class RelationExtractor(Pipe):
         truths = self._examples_to_truth(examples)
         d_scores = (scores - truths)
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
-        print(f"mean_square_error {mean_square_error}")
+        # print(f"mean_square_error {mean_square_error}")
         return float(mean_square_error), d_scores
 
     def begin_training(
@@ -194,7 +195,7 @@ class RelationExtractor(Pipe):
             nr_candidates += len(self.model.attrs["get_candidates"](eg.reference))
         if nr_candidates == 0:
             return None
-        print(f"labels: {self.labels}")
+        # print(f"labels: {self.labels}")
 
         truths = numpy.zeros((nr_candidates, len(self.labels)), dtype="f")
         c = 0

@@ -14,7 +14,7 @@ from spacy.tokens import DocBin
 default_model_config = """
 [model]
 @architectures = "rel_model.v1"
-nO = 5
+nO = null
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -25,6 +25,29 @@ embed_size = 300
 window_size = 1
 maxout_pieces = 3
 subword_features = true
+
+[model.get_candidates]
+@architectures = "rel_cand_generator.v1"
+max_length = 6
+
+[model.create_candidate_tensor]
+@architectures = "rel_cand_tensor.v1"
+
+[model.output_layer]
+@architectures = "rel_output_layer.v1"
+"""
+
+bert_model_config = """
+[model]
+@architectures = "rel_model.v1"
+nO = null
+
+[model.tok2vec]
+@architectures = "spacy-transformers.TransformerListener.v1"
+grad_factor = 1.0
+
+[model.tok2vec.pooling]
+@layers = "reduce_mean.v1"
 
 [model.get_candidates]
 @architectures = "rel_cand_generator.v1"
@@ -44,21 +67,24 @@ def main(data_file: Path):
 
     # set up dummy "NER"
     patterns = [
-        {"label": "CITY", "pattern": [{"LOWER": "new"}, {"LOWER": "york"}]},
-        {"label": "CITY", "pattern": [{"LOWER": "london"}]},
-        {"label": "COUNTRY", "pattern": [{"LOWER": "united"}, {"LOWER": "states"}]},
-        {"label": "COUNTRY", "pattern": [{"LOWER": "united"}, {"LOWER": "kingdom"}]},
-        # {"label": "COUNTRY", "pattern": [{"LOWER": "amsterdam"}]},
-        # {"label": "COUNTRY", "pattern": [{"LOWER": "netherlands"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "new"}, {"LOWER": "york"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "london"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "states"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "united"}, {"LOWER": "kingdom"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "amsterdam"}]},
+        {"label": "LOC", "pattern": [{"LOWER": "netherlands"}]},
     ]
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
+
+    # nlp.add_pipe("transformer")
 
     # set up the Relation Extraction component
     nlp.add_pipe(
         "relation_extractor",
         config=Config().from_str(default_model_config),
     )
+    # print(nlp.config.to_str(interpolate=False))
 
     # read example data
     train_examples = []
@@ -82,7 +108,8 @@ def main(data_file: Path):
     for i in range(2):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-        print(losses)
+        if i % 50 == 0:
+            print(i, losses)
 
     print()
     print("PREDICTING (50)")
@@ -92,8 +119,8 @@ def main(data_file: Path):
 
 
 def _evaluate(nlp):
-    text = "London is the capital of the united kingdom, just like the capital of the united states is new york."
-    # text = "Amsterdam is the capital of the Netherlands."
+    # text = "London is the capital of the United Kingdom, just like the capital of the United States is New York."
+    text = "Amsterdam is the capital of the Netherlands."
     doc = nlp(text)
     ents = doc.ents
     print()
