@@ -23,8 +23,8 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `install` | Install dependencies |
-| `data` | Extract the gold-standard annotations |
-| `train` | Train a model using the default config |
+| `convert` | Convert the data to spaCy's format |
+| `train` | Train UD_English-EWT |
 
 ### ⏭ Workflows
 
@@ -35,7 +35,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `data` &rarr; `train` |
+| `all` | `convert` &rarr; `train` |
 
 ### 🗂 Assets
 
@@ -45,6 +45,6 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/aclImdb_v1.tar.gz` | URL | Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011. |
+| `assets/UD_English-EWT` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

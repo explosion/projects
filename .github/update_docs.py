@@ -9,7 +9,7 @@ def main(root: Path = typer.Argument(Path.cwd(), help="Root path to look in")):
     """
     Automatically update all auto-generated docs in the repo. If existing
     auto-generated docs are found, only that section is replaced. README.md
-    files include an ignore comment are skipped (e.g. to support projects
+    files including an ignore comment are skipped (e.g. to support projects
     without an auto-generated README and prevent those files from being
     auto-replaced).
     """

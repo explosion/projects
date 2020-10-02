@@ -22,7 +22,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `init-config` | Generate a default English NER config. |
+| `init-config` | Generate a default English NER config |
 | `corpus` | Convert the data to spaCy's format |
 | `train` | Train the full pipeline |
 | `evaluate` | Evaluate on the test data and save the metrics |
