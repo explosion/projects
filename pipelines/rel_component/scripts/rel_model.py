@@ -86,17 +86,17 @@ def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops]
     return get_candidate_tensor
 
 
-@registry.misc.register("rel_cand_generator.v1")
-def create_candidate_indices(max_length: int) -> Callable[["Doc"], List[Tuple["Span", "Span"]]]:
-    def get_candidate_indices(doc: "Doc"):
-        indices = []
+@registry.misc.register("rel_cand_generator.v2")
+def create_candidates(max_length: int) -> Callable[["Doc"], List[Tuple["Span", "Span"]]]:
+    def get_candidates(doc: "Doc") -> List[Tuple["Span", "Span"]]:
+        candidates = []
         for ent1 in doc.ents:
             for ent2 in doc.ents:
                 if ent1 != ent2:
                     if max_length and abs(ent2.start - ent1.start) <= max_length:
-                        indices.append((ent1, ent2))
-        return indices
-    return get_candidate_indices
+                        candidates.append((ent1, ent2))
+        return candidates
+    return get_candidates
 
 
 @registry.architectures.register("rel_output_layer.v1")

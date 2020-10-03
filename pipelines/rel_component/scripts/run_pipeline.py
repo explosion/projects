@@ -28,7 +28,7 @@ maxout_pieces = 3
 subword_features = true
 
 [model.get_candidates]
-@architectures = "rel_cand_generator.v1"
+@architectures = "rel_cand_generator.v2"
 max_length = 6
 
 [model.create_candidate_tensor]
