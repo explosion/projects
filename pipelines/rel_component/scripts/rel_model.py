@@ -26,7 +26,7 @@ def create_relation_model(
     )
 
 
-@registry.architectures.register("rel_cand_tensor.v1")
+@registry.misc.register("rel_cand_tensor.v1")
 def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
     def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: List[Floats2d], ops: Ops):
         # with numpy.printoptions(precision=2, suppress=True):
@@ -86,7 +86,7 @@ def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops]
     return get_candidate_tensor
 
 
-@registry.architectures.register("rel_cand_generator.v1")
+@registry.misc.register("rel_cand_generator.v1")
 def create_candidate_indices(max_length: int) -> Callable[["Doc"], List[Tuple["Span", "Span"]]]:
     def get_candidate_indices(doc: "Doc"):
         indices = []
