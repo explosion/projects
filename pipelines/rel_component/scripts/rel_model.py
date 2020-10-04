@@ -10,8 +10,8 @@ from spacy.util import registry
 @registry.architectures.register("rel_model.v1")
 def create_relation_model(
     tok2vec: Model[List["Doc"], List[Floats2d]],
-    create_candidate_tensor: Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]],
     get_candidates: Callable[["Doc"], List[Tuple["Span", "Span"]]],
+    create_candidate_tensor: Callable[[List["Doc"], Floats2d, Ops], Tuple[Floats2d, Callable]],
     output_layer: Model[Floats2d, Floats2d],
     nO: Optional[int],
 ) -> Model[List["Doc"], Floats2d]:
@@ -27,7 +27,7 @@ def create_relation_model(
 
 
 @registry.misc.register("rel_cand_tensor.v1")
-def create_candidates() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
+def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
     def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: List[Floats2d], ops: Ops):
         # with numpy.printoptions(precision=2, suppress=True):
         #     print(f"get candidate tensor, tokvecs {tokvecs}")

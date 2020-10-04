@@ -18,7 +18,7 @@ def main(trained_pipeline: Path, test_data: Path):
         print()
         ents = predicted_doc.ents
         print(f"Text:", text)
-        print(f"spans: {[(e.start, e.text, e.label_) for e in ents]}")
+        print(f"spans: [(e.start, e.text, e.label_) for e in ents]")
         for value, rel_dict in predicted_doc._.rel.items():
             print(f"rel for {value}: {rel_dict}")
 

@@ -1,3 +1,4 @@
+from itertools import islice
 from typing import Tuple, List, Iterable, Optional, Dict, Callable
 from thinc.types import Floats2d
 import numpy
@@ -76,8 +77,8 @@ class RelationExtractor(Pipe):
             msg.info("Could not determine any candidates in doc - returning doc as is.")
             return doc
 
-        rel_scores = self.predict([doc])
-        self.set_annotations([doc], rel_scores)
+        predictions = self.predict([doc])
+        self.set_annotations([doc], predictions)
         return doc
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
@@ -85,10 +86,9 @@ class RelationExtractor(Pipe):
         scores = self.model.predict(docs)
         # with numpy.printoptions(precision=2, suppress=True):
         #     print(f"predicted scores: {scores}")
-        scores = self.model.ops.asarray(scores)
-        return scores
+        return self.model.ops.asarray(scores)
 
-    def set_annotations(self, docs: Iterable[Doc], rel_scores: Floats2d) -> None:
+    def set_annotations(self, docs: Iterable[Doc], scores: Floats2d) -> None:
         """Modify a batch of `Doc` objects, using pre-computed scores."""
         c = 0
         get_candidates = self.model.attrs["get_candidates"]
@@ -98,7 +98,7 @@ class RelationExtractor(Pipe):
                 if offset not in doc._.rel:
                     doc._.rel[offset] = {}
                 for j, label in enumerate(self.labels):
-                    doc._.rel[offset][label] = rel_scores[c, j]
+                    doc._.rel[offset][label] = scores[c, j]
                 c += 1
 
     def update(
@@ -130,15 +130,15 @@ class RelationExtractor(Pipe):
             return losses
 
         # run the model
-        scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
-        loss, d_scores = self.get_loss(examples, scores)
+        predictions, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
+        loss, d_scores = self.get_loss(examples, predictions)
         bp_scores(d_scores)
         if sgd is not None:
             self.model.finish_update(sgd)
         losses[self.name] += loss
         if set_annotations:
             docs = [eg.predicted for eg in examples]
-            self.set_annotations(docs, scores=scores)
+            self.set_annotations(docs, predictions)
         return losses
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
@@ -155,8 +155,8 @@ class RelationExtractor(Pipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Language = None,
-        sgd: Optional[Optimizer] = None,
-    ) -> Optimizer:
+        labels: Optional[List[str]] = None,
+    ):
         """Initialize the pipe for training, using a representative set
         of data examples.
 
@@ -171,23 +171,27 @@ class RelationExtractor(Pipe):
 
         DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
-        examples = list(get_examples())
-        for example in examples:
-            relations = example.reference._.rel
-            for indices, label_dict in relations.items():
-                for label in label_dict.keys():
-                    self.add_label(label)
+        if labels is not None:
+            for label in labels:
+                self.add_label(label)
+        else:
+            for example in get_examples():
+                relations = example.reference._.rel
+                for indices, label_dict in relations.items():
+                    for label in label_dict.keys():
+                        self.add_label(label)
+        # self.add_label("CAPITAL_OF")
+        # self.add_label("ALLY")
+        # self.add_label("UNRELATED")
         self._require_labels()
 
-        doc_sample = [eg.reference for eg in examples]
-        label_sample = self._examples_to_truth(examples)
+        subbatch = list(islice(get_examples(), 10))
+        doc_sample = [eg.reference for eg in subbatch]
+        label_sample = self._examples_to_truth(subbatch)
         if label_sample is None:
             raise ValueError("Call begin_training with relevant entities and relations annotated in "
                              "at least a few reference examples!")
         self.model.initialize(X=doc_sample, Y=label_sample)
-        if sgd is None:
-            sgd = self.create_optimizer()
-        return sgd
 
     def _examples_to_truth(
         self, examples: List[Example]
