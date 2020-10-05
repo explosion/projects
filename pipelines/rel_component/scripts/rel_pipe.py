@@ -83,6 +83,9 @@ class RelationExtractor(Pipe):
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
+        total_candidates = sum([len(self.model.attrs["get_candidates"](doc)) for doc in docs])
+        if total_candidates == 0:
+            msg.info("Could not determine any candidates in any docs - can not make any predictions.")
         scores = self.model.predict(docs)
         # with numpy.printoptions(precision=2, suppress=True):
         #     print(f"predicted scores: {scores}")
@@ -180,9 +183,6 @@ class RelationExtractor(Pipe):
                 for indices, label_dict in relations.items():
                     for label in label_dict.keys():
                         self.add_label(label)
-        # self.add_label("CAPITAL_OF")
-        # self.add_label("ALLY")
-        # self.add_label("UNRELATED")
         self._require_labels()
 
         subbatch = list(islice(get_examples(), 10))

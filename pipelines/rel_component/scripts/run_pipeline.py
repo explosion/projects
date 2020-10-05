@@ -7,7 +7,7 @@ from spacy.training.example import Example
 from thinc.api import Config
 
 from rel_pipe import make_relation_extractor  # make the factory work
-from rel_model import create_relation_model, create_candidates, create_layer  # make the config work
+from rel_model import create_relation_model, create_candidates, create_tensors, create_layer  # make the config work
 
 from spacy.tokens import DocBin
 
@@ -28,11 +28,11 @@ maxout_pieces = 3
 subword_features = true
 
 [model.get_candidates]
-@architectures = "rel_cand_generator.v2"
+@misc = "rel_cand_generator.v2"
 max_length = 6
 
 [model.create_candidate_tensor]
-@architectures = "rel_cand_tensor.v1"
+@misc = "rel_cand_tensor.v1"
 
 [model.output_layer]
 @architectures = "rel_output_layer.v1"
