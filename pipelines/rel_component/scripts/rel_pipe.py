@@ -5,7 +5,7 @@ import numpy
 from spacy.training.example import Example
 from thinc.api import Model, Optimizer, Config
 from spacy.tokens.doc import Doc
-from spacy.pipeline.pipe import Pipe
+from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.vocab import Vocab
 from spacy import Language
 from thinc.model import set_dropout_rate
@@ -37,7 +37,7 @@ def make_relation_extractor(
     )
 
 
-class RelationExtractor(Pipe):
+class RelationExtractor(TrainablePipe):
     def __init__(
         self,
         vocab: Vocab,
@@ -147,6 +147,7 @@ class RelationExtractor(Pipe):
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores."""
+        # TODO: fix
         truths = self._examples_to_truth(examples)
         d_scores = (scores - truths)
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
