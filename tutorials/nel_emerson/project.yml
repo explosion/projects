@@ -30,6 +30,8 @@ assets:
   - dest: "assets/emerson_input_text.txt"
     description: "The original input text"
     checksum: "b5bc61375680396017337e3ebe830ada"
+  - dest: "configs/${vars.config}"
+    description: "The config file for training"
   - dest: "assets/en-vectors-web.tgz"
     description: "Vectors to initialize the model"
     url: "https://github.com/explosion/projects/releases/download/en-vectors-web/v2.2_en-vectors-web.tgz"
