@@ -8,7 +8,7 @@ vars:
   train_file: "data/train.spacy"
   dev_file: "data/dev.spacy"
   test_file: "data/test.spacy"
-  trained_model: "training/model-final"
+  trained_model: "training/model-best"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
