@@ -1,1 +1,2 @@
+spacy-nightly==3.0.0a36
 google-cloud-storage
