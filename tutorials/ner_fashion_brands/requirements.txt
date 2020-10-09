@@ -1,3 +1,2 @@
-spacy-nightly==3.0.0a36
 spacy-streamlit>=1.0.0a0
 streamlit

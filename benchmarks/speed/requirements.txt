@@ -1,5 +1,4 @@
 transformers>=3.0.0,<3.1.0
-spacy-nightly==3.0.0a36
 spacy-transformers==1.0.0a17
 stanza>=1.0.0,<1.2.0
 flair>=0.6.0,<1.0.0

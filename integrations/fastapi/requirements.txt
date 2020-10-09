@@ -3,4 +3,4 @@ fastapi>=0.61.1,<0.62.0
 aiofiles
 uvicorn>=0.11.6,<0.12.0
 # TODO: update this when spaCy 3.0.0 is released
-spacy-nightly==3.0.0a36
+spacy-nightly==3.0.0a37
