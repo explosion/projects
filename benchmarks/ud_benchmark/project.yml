@@ -69,7 +69,7 @@ commands:
   - name: train
     help: "Train without vectors"
     script:
-      - "python -m spacy train configs/${vars.ud_treebank}.cfg -o training/${vars.ud_treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --training.max_steps=0 --initialize.vectors=null --components.tok2vec.model.embed.also_use_static_vectors=false"
+      - "python -m spacy train configs/${vars.ud_treebank}.cfg -o training/${vars.ud_treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --training.max_steps=0 --initialize.vectors=null --components.tok2vec.model.embed.include_static_vectors=false"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
