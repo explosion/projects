@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 @pytest.mark.skip(reason="The CI is not happy about this test")
-def test_project():
+def test_fastapi_project():
     root = Path(__file__).parent
     project_assets(root)
     project_run(root, "install")

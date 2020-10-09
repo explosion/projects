@@ -3,7 +3,7 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-def test_project():
+def test_nel_emerson_project():
     root = Path(__file__).parent
     project_assets(root)
     project_run(root, "preprocess")
