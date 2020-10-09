@@ -1,8 +1,12 @@
+import sys
+
+import pytest
 from spacy.cli.project.run import project_run
 from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Currently doesn't run on Windows")
 def test_fastapi_project():
     root = Path(__file__).parent
     project_assets(root)
