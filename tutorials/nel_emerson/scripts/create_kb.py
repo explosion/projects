@@ -7,12 +7,12 @@ import spacy
 from spacy.kb import KnowledgeBase
 
 
-def main(entities_loc: Path, vectors: Path, kb_loc: Path, nlp_dir: Path):
+def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
     """ Step 1: create the Knowledge Base in spaCy and write it to file """
 
     # First: create a simpel model from predefined vectors and a simpel EntityRuler component
     # A more realistic use-case would use a pretrained NER model instead
-    nlp = spacy.load(vectors)
+    nlp = spacy.load(vectors_model)
     ruler = nlp.add_pipe("entity_ruler")
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
