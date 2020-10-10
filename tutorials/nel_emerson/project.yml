@@ -35,8 +35,6 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  preprocess:
-    - data
   training:
     - kb
     - corpus
@@ -48,8 +46,8 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: data
-    help: "Extract the vectors data"
+  - name: download
+    help: "Download a spaCy model with pretrained vectors"
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
