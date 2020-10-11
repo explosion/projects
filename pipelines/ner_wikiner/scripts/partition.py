@@ -20,11 +20,11 @@ def main(data_loc: Path, out_dir: Path, fraction: float = 0.2, seed: int = 0):
         shutil.rmtree(out_dir)
 
     out_dir.mkdir(parents=True)
-    with (out_dir / "train.iob").open("w") as file_:
+    with (out_dir / "train.iob").open("w", encoding="utf8") as file_:
         file_.write("\n".join(lines[:train_size]))
-    with (out_dir / "dev.iob").open("w") as file_:
+    with (out_dir / "dev.iob").open("w", encoding="utf8") as file_:
         file_.write("\n".join(lines[train_size : train_size + dev_size]))
-    with (out_dir / "test.iob").open("w") as file_:
+    with (out_dir / "test.iob").open("w", encoding="utf8") as file_:
         file_.write("\n".join(lines[train_size + dev_size :]))
 
 

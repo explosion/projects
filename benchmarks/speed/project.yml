@@ -40,7 +40,7 @@ commands:
   - name: install
     help: "Install dependencies"
     script:
-      - "python -m pip install -r requirements.txt"
+      - "python -m pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html"
     deps:
       - "requirements.txt"
 
@@ -55,7 +55,7 @@ commands:
   - name: timing_cpu
     help: "Run all timing benchmarks on CPU and add the numbers to output/results.csv"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
+     # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
      # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False"
@@ -64,7 +64,7 @@ commands:
   - name: timing_gpu
     help: "Run all timing benchmarks on GPU and add the numbers to output/results.csv"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
+     # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} True"
      # - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"

@@ -17,10 +17,9 @@ jobs:
               Python37Linux:
                   imageName: 'ubuntu-16.04'
                   python.version: '3.7'
-              # TODO: add this back
-              # Python37Windows:
-              #     imageName: 'vs2017-win2016'
-              #     python.version: '3.7'
+              Python37Windows:
+                  imageName: 'vs2017-win2016'
+                  python.version: '3.7'
           maxParallel: 4
       pool:
           vmImage: $(imageName)
@@ -33,7 +32,7 @@ jobs:
 
           # TODO: update with stable version once it's released
           - script: |
-                pip install "spacy-nightly>=3.0.0a24"
+                pip install "spacy-nightly==3.0.0a39"
                 pip install pytest
             displayName: 'Install dependencies'
 
