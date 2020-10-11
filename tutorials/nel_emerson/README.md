@@ -24,8 +24,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `data` | Extract the vectors data |
-| `vectors` | Create a vectors model |
+| `download` | Download a spaCy model with pretrained vectors |
 | `kb` | Create the Knowledge Base in spaCy and write it to file |
 | `corpus` | Create a training and dev set from the manuallly annotated data |
 | `train` | Train a new Entity Linking component |
@@ -42,7 +41,6 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `preprocess` | `data` &rarr; `vectors` |
 | `training` | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
@@ -56,7 +54,6 @@ in the project directory.
 | [`assets/emerson_annotated_text.jsonl`](assets/emerson_annotated_text.jsonl) | Local | The annotated data |
 | [`assets/entities.csv`](assets/entities.csv) | Local | The entities in the knowledge base |
 | [`assets/emerson_input_text.txt`](assets/emerson_input_text.txt) | Local | The original input text |
-| `assets/en-vectors-web.tgz` | URL | Vectors to initialize the model |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
