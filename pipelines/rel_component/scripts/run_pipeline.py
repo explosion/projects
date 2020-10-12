@@ -51,10 +51,11 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 
 [model.get_candidates]
-@architectures = "rel_cand_generator.v1"
+@misc = "rel_cand_generator.v2"
+max_length = 6
 
 [model.create_candidate_tensor]
-@architectures = "rel_cand_tensor.v1"
+@misc = "rel_cand_tensor.v1"
 
 [model.output_layer]
 @architectures = "rel_output_layer.v1"
@@ -71,12 +72,12 @@ def main(data_file: Path, patterns_path: Path, trained_model: Path):
     patterns = srsly.read_jsonl(patterns_path)
     ruler.add_patterns(patterns)
 
-    # nlp.add_pipe("transformer")
+    nlp.add_pipe("transformer")
 
     # set up the Relation Extraction component
     nlp.add_pipe(
         "relation_extractor",
-        config=Config().from_str(default_model_config),
+        config=Config().from_str(bert_model_config),
     )
 
     # read example data
@@ -89,7 +90,7 @@ def main(data_file: Path, patterns_path: Path, trained_model: Path):
 
     optimizer = nlp.begin_training(lambda: train_examples)
 
-    for i in range(500):
+    for i in range(100):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
         if i % 50 == 0:
