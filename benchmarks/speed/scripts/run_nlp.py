@@ -12,7 +12,7 @@ from logger import create_logger
 from spacy.util import minibatch
 
 
-def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
+def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool, batch_size: int=256):
     data = read_data(txt_dir)
     articles = len(data)
     if articles == 0:
@@ -22,7 +22,7 @@ def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
 
     nlp_function = _get_run(library, name, gpu)
     start = timeit.default_timer()
-    nlp_function(data)
+    nlp_function(data, batch_size)
     end = timeit.default_timer()
 
     log_run = create_logger(result_dir)
