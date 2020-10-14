@@ -7,8 +7,9 @@ from pathlib import Path
 import logging
 from wasabi import msg
 
-from data_reader import read_data
+from data_reader import read_data, rebatch_texts
 from logger import create_logger
+from spacy.util import minibatch
 
 
 def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool):
@@ -78,9 +79,10 @@ def _run_transformer_model(name: str) -> Callable[[List[str]], None]:
     tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
     transformer = AutoModel.from_pretrained(name)
 
-    def run(texts: List[str]):
-        batch = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
-        transformer(**batch)
+    def run(texts: List[str], batch_size: int):
+        for batch in minibatch(texts, batch_size):
+            batch = tokenizer(batch, padding=True, truncation=True, return_tensors="pt")
+            transformer(**batch)
 
     return run
 
@@ -93,11 +95,11 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     package = name.split("_")[1]
     nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False)
 
-    def run(texts: List[str]):
-        # No multi-document option available in Stanza?
-        for text in texts:
-            nlp(text)
-
+    def run(texts: List[str], batch_size: int):
+        # No batch parsing option available in Stanza I think? instead we have to
+        # re-batch, concatenating with \n\n
+        for text in rebatch_texts(texts, size=batch_size):
+            nlp(batch)
     return run
 
 
@@ -112,11 +114,12 @@ def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     if not gpu:
         flair.device = torch.device('cpu')
     tagger = MultiTagger.load(annot_list)
+    splitter = SegtokSentenceSplitter()
 
-    def run(texts: List[str]):
-        # TODO: multi-document option?
-        for text in texts:
-            splitter = SegtokSentenceSplitter()
+    def run(texts: List[str], batch_size: int):
+        # No batch parsing option available in Flair I think? instead we have to
+        # re-batch, concatenating with \n\n
+        for text in rebatch_texts(texts, batch_size):
             sentences = splitter.split(text)
             tagger.predict(sentences, verbose=False)
 
@@ -127,11 +130,11 @@ def _run_ud_pipe(name: str):
     from ufal.udpipe import Model, Sentence
 
     model = Model.load(name)
+    tokenizer = model.newTokenizer(model.DEFAULT)
 
-    def run(texts: List[str]):
+    def run(texts: List[str], batch_size: int):
         # TODO: multi-document option?
-        for text in texts:
-            tokenizer = model.newTokenizer(model.DEFAULT)
+        for text in rebatch_texts(texts, batch_size):
             tokenizer.setText(text)
             sentences = []
             sentence = Sentence()
