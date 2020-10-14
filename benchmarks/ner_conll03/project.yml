@@ -13,11 +13,11 @@ assets:
     dest: "assets/vectors.zip"
     description: "GloVe vectors"
   - 
-    dest: "assets/conll2003/eng.testa"
+    dest: "assets/conll2003/dev.iob"
   - 
-    dest: "assets/conll2003/eng.testb"
+    dest: "assets/conll2003/test.iob"
   - 
-    dest: "assets/conll2003/eng.train"
+    dest: "assets/conll2003/train.iob"
 
 
 
@@ -40,12 +40,11 @@ commands:
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
-      - "python scripts/repartition.py  assets/conll2003/ assets/conll2003-repartition"
-      - "python -m spacy convert assets/conll2003-repartition corpus/"
+      - "python -m spacy convert assets/conll2003 corpus/"
     deps:
-      - "assets/conll2003/eng.testa"
-      - "assets/conll2003/eng.testb"
-      - "assets/conll2003/eng.train"
+      - "assets/conll2003/dev.iob"
+      - "assets/conll2003/test.iob"
+      - "assets/conll2003/train.iob"
     outputs:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
