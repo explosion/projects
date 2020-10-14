@@ -13,11 +13,11 @@ assets:
     dest: "assets/vectors.zip"
     description: "GloVe vectors"
   - dest: "assets/conll2003/dev.iob"
-    description: "Development data"
+    description: "Development data (not available publicly so you have to add the file yourself)"
   - dest: "assets/conll2003/test.iob"
-    description: "Test data"
+    description: "Test data (not available publicly so you have to add the file yourself)"
   - dest: "assets/conll2003/train.iob"
-    description: "Training data"
+    description: "Training data (not available publicly so you have to add the file yourself)"
 
 workflows:
   all:
