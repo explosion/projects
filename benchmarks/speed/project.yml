@@ -36,7 +36,7 @@ workflows:
 assets:
   # TODO: Replace this with a URL others can access
   - 
-    dest: "assets/reddit-100k.jsonl"
+    dest: "texts/reddit-100k.jsonl"
     url: "gs://galaxy-state/reddit-100k.jsonl"
  
 # Project commands, specified in a style similar to CI config files (e.g. Azure
