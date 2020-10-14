@@ -16,8 +16,10 @@ def create_logger(results_dir: Path) -> Callable:
     ):
         wps = words / seconds
         wps = wps / 1000
+
+        result = f"{library};{name};{gpu};{articles};{characters};{words};{seconds};{wps};{datetime.now()}"
+        print(result)
         with results_file.open("a", encoding="utf8") as f:
-            f.write(f"{library};{name};{gpu};{articles};{characters};{words};{seconds};{wps};{datetime.now()}")
-            f.write("\n")
+            f.write(result + "\n")
 
     return log_result
