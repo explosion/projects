@@ -35,8 +35,9 @@ workflows:
 
 assets:
   - 
-    dest: "texts/reddit-100k.jsonl"
-    url: "https://github.com/explosion/projects/releases/download/v3/reddit-100k.jsonl"
+    dest: "texts/reddit-1k.jsonl"
+    url: "gs://galaxy-state/reddit-1k-eval.jsonl"
+    #url: "https://github.com/explosion/projects/releases/download/v3/reddit-100k.jsonl"
  
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
