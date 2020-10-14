@@ -1,8 +1,8 @@
 title: "Dependency Parsing (Penn Treebank)"
 
 vars:
-  name: "transformer"
-  gpu: 0
+  name: "cnn_glove_small"
+  gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
