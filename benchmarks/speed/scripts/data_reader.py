@@ -10,4 +10,5 @@ def read_data(txt_dir: Path) -> List[str]:
             texts.extend(record["text"] for record in srsly.read_jsonl(file))
         else:
             texts.append(file.read_text())
+    texts = [text.strip() for text in texts if len(text.split()) >= 5]
     return texts
