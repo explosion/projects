@@ -3,8 +3,7 @@ steps:
     command:
       - rm -rf $WORK
       - mkdir -p $WORK
-      - export TMP_DIR=\$WORK
-      - cp -r benchmarks/speed/* \$WORK
+      - cp -r benchmarks/speed/* $WORK
       - cd $WORK
       - python3.8 -m venv env3.8
       - env3.8/bin/pip install -U setuptools wheel pip
@@ -15,6 +14,7 @@ steps:
 
     env:
       WORK: "/mnt/scratch/tmp/speed-benchmark/" 
+      TMP_DIR: "/mnt/scratch/tmp/speed-benchmark/" 
     retry:
       automatic:
         - exit_status: -1
