@@ -1,7 +1,7 @@
-title: "Dependency Parsing (Penn Treebank)"
+title: "Named Entity Recognition (CoNLL-2003)"
 
 vars:
-  name: "cnn_glove_small"
+  config: "cnn_glove_small"
   gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
@@ -12,15 +12,12 @@ assets:
   - url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
     dest: "assets/vectors.zip"
     description: "GloVe vectors"
-  - 
-    dest: "assets/conll2003/dev.iob"
-  - 
-    dest: "assets/conll2003/test.iob"
-  - 
-    dest: "assets/conll2003/train.iob"
-
-
-
+  - dest: "assets/conll2003/dev.iob"
+    description: "Development data"
+  - dest: "assets/conll2003/test.iob"
+    description: "Test data"
+  - dest: "assets/conll2003/train.iob"
+    description: "Training data"
 
 workflows:
   all:
@@ -62,22 +59,22 @@ commands:
   - name: train
     help: "Train the full pipeline"
     script:
-      - python -m spacy train configs/${vars.name}.cfg -o training/${vars.name} --gpu-id ${vars.gpu}
+      - python -m spacy train configs/${vars.config}.cfg -o training/${vars.config} --gpu-id ${vars.gpu}
     deps:
-      - "configs/${vars.name}.cfg"
+      - "configs/${vars.config}.cfg"
       - "corpus/en_vectors"
     outputs:
-      - "training/${vars.name}/model-best"
+      - "training/${vars.config}/model-best"
 
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.name}/model-best ./corpus/testb.spacy --output ./metrics/${vars.name}.json --gpu-id ${vars.gpu} --gold-preproc"
+      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/testb.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --gold-preproc"
     deps:
-      - "training/${vars.name}/model-best"
+      - "training/${vars.config}/model-best"
       - "corpus/testb.spacy"
     outputs:
-      - "metrics/${vars.name}.json"
+      - "metrics/${vars.config}.json"
 
   - name: clean
     help: "Remove intermediate files"

@@ -32,12 +32,11 @@ workflows:
     - timing_cpu
     - timing_gpu
 
-
 assets:
-  - 
-    dest: "texts/reddit-100k.jsonl"
+  - dest: "texts/reddit-100k.jsonl"
     url: "https://github.com/explosion/projects/releases/download/v3/reddit-100k.jsonl"
- 
+    description: "The texts to process"
+
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
