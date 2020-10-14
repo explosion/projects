@@ -1,7 +1,6 @@
 steps:
   - label: "Benchmark speed"
     command:
-      - export WORK="/mnt/scratch/tmp/speed-benchmark/" 
       - rm -rf $WORK
       - mkdir -p $WORK
       - export TMP_DIR=\$WORK
@@ -13,6 +12,9 @@ steps:
       - env3.8/bin/python -m spacy project assets
       - env3.8/bin/python -m spacy project run setup
       - env3.8/bin/python -m spacy project run benchmark
+
+    env:
+      WORK: "/mnt/scratch/tmp/speed-benchmark/" 
     retry:
       automatic:
         - exit_status: -1
