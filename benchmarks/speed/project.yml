@@ -34,7 +34,7 @@ workflows:
 
 assets:
   - dest: "texts/reddit-100k.jsonl"
-    url: "https://github.com/explosion/projects/releases/download/v3/reddit-100k.jsonl"
+    url: "https://github.com/explosion/projects/releases/download/reddit/reddit-100k.jsonl"
     description: "The texts to process"
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
