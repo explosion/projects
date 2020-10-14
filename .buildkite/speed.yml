@@ -8,7 +8,7 @@ steps:
       - python3.8 -m venv env3.8
       - env3.8/bin/pip install -U setuptools wheel pip
       - env3.8/bin/pip install -r requirements.txt
-      - env3.8/bin/pip install smart_open[gcs]
+      - env3.8/bin/pip install pathy[gcs]
       - env3.8/bin/python -m spacy project assets
       - env3.8/bin/python -m spacy project run setup
       - env3.8/bin/python -m spacy project run benchmark
