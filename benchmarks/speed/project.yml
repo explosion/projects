@@ -32,6 +32,13 @@ workflows:
     - timing_cpu
     - timing_gpu
 
+
+assets:
+  # TODO: Replace this with a URL others can access
+  - 
+    dest: "assets/reddit-100k.jsonl"
+    url: "gs://galaxy-state/reddit-100k.jsonl"
+ 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
