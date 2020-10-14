@@ -1,5 +1,6 @@
 from typing import Callable, List
 
+import re
 import torch
 import typer
 import timeit
