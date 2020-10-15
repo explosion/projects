@@ -69,8 +69,6 @@ commands:
     script:
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg False"
-      - "env-spacy2.3/bin/python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm False"
-      - "env-spacy2.3/bin/python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
@@ -83,8 +81,6 @@ commands:
     script:
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg True"
-      - "env-spacy2.3/bin/python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm True"
-      - "env-spacy2.3/bin/python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True"
