@@ -56,7 +56,7 @@ def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
         return _run_stanza_model(name, gpu)
 
     if library == "hf_trf":
-        return _run_transformer_model(name)
+        return _run_transformer_model(name, gpu)
 
     if library == "flair":
         return _run_flair_model(name, gpu)
@@ -85,16 +85,24 @@ def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     return run
 
 
-def _run_transformer_model(name: str) -> Callable[[List[str]], None]:
+def _run_transformer_model(name: str, gpu) -> Callable[[List[str]], None]:
     """Run bare transformer model, outputting raw hidden-states"""
     from transformers import AutoTokenizer, AutoModel
+    import torch
+    if gpu:
+        torch.device("cuda:0")
 
     tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
     transformer = AutoModel.from_pretrained(name)
+    if gpu:
+        transformer = transformer.cuda()
 
     def run(texts: List[str], batch_size: int):
-        for batch in minibatch(texts, batch_size):
+        transformer.eval()
+        for batch in minibatch(texts, batch_size // 20):
             batch = tokenizer(batch, padding=True, truncation=True, return_tensors="pt")
+            batch["input_ids"] = batch["input_ids"].to("cuda:0")
+            batch["attention_mask"] = batch["attention_mask"].to("cuda:0")
             transformer(**batch)
 
     return run
