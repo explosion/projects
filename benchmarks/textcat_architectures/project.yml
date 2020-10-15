@@ -1,0 +1,67 @@
+title: "Textcat experiments"
+description: "TODO"
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  TODO: "var"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "assets", "results", "configs"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+  - dest: "assets/MovieSummaries.tar.gz"
+    url: "http://www.cs.cmu.edu/~ark/personas/data/MovieSummaries.tar.gz"
+    description: "CMU Movie Summary Corpus by Bamman et al., ACL 2013."
+
+  - dest: "assets/aclImdb_v1.tar.gz"
+    url: "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+    description: "Movie Review Dataset by Maas et al., ACL 2011."
+
+  - dest: "assets/dbpedia_csv.tgz"
+    url: "https://s3.amazonaws.com/fast-ai-nlp/dbpedia_csv.tgz"
+    description: "DBPedia ontology with 14 nonoverlapping classes by Zhang et al., 2015."
+
+workflows:
+  all:
+    - data
+    - train
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "data"
+    help: "Extract the gold-standard annotations."
+    script:
+      - "tar -xzf ./assets/MovieSummaries.tar.gz -C ./assets/"
+      - "tar -xzf ./assets/aclImdb_v1.tar.gz -C ./assets/"
+      - "tar -xzf ./assets/dbpedia_csv.tgz -C ./assets/"
+    deps:
+      - "assets/MovieSummaries.tar.gz"
+      - "assets/aclImdb_v1.tar.gz"
+      - "assets/dbpedia_csv.tgz"
+    outputs:
+      - "assets/MovieSummaries/movie.metadata.tsv"
+      - "assets/MovieSummaries/plot_summaries.txt"
+      - "assets/aclImdb/train/"
+      - "assets/aclImdb/test/"
+      - "assets/dbpedia_csv/train.csv"
+      - "assets/dbpedia_csv/test.csv"
+
+  - name: "train"
+    help: "Run customized training runs."
+    script:
+      - "python -m spacy train configs/config_imdb.cfg --output results/imdb/ -c scripts/functions.py"
+      - "python -m spacy train configs/config_cmu.cfg --output results/cmu/ -c scripts/functions.py"
+      - "python -m spacy train configs/config_dbpedia.cfg --output results/dbpedia/ -c scripts/functions.py"
+    deps:
+      - "assets/MovieSummaries/movie.metadata.tsv"
+      - "assets/MovieSummaries/plot_summaries.txt"
+      - "assets/aclImdb/train/"
+      - "assets/aclImdb/test/"
+      - "assets/dbpedia_csv/train.csv"
+      - "assets/dbpedia_csv/test.csv"
