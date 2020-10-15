@@ -47,9 +47,6 @@ commands:
     help: "Install dependencies"
     script:
       - "python -m pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html"
-      - "python -m venv env-spacy2.3"
-      - "env-spacy2.3/bin/pip install -U setuptools pip wheel"
-      - "env-spacy2.3/bin/pip install 'spacy>=2.3,<3.0' cupy-cuda102"
     deps:
       - "requirements.txt"
 
@@ -59,8 +56,6 @@ commands:
       - "python -m spacy download en_core_web_sm"
       - "python -m spacy download en_core_web_lg"
       - "python -m spacy download ${vars.spacy_trf_name}"
-      - "env-spacy2.3/bin/python -m spacy download en_core_web_sm"
-      - "env-spacy2.3/bin/python -m spacy download en_core_web_lg"
       - "python ./scripts/download_models.py ${vars.stanza_name} ${vars.flair_cpu_name},${vars.flair_gpu_name}"
       - "curl -O https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3131/${vars.ud_pipe_name}"
 
