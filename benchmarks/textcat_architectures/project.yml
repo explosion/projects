@@ -3,7 +3,7 @@ description: "TODO"
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  TODO: "var"
+  epochs: 1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -55,9 +55,18 @@ commands:
   - name: "train"
     help: "Run customized training runs."
     script:
-      - "python -m spacy train configs/config_imdb.cfg --output results/imdb/ -c scripts/functions.py"
-      - "python -m spacy train configs/config_cmu.cfg --output results/cmu/ -c scripts/functions.py"
-      - "python -m spacy train configs/config_dbpedia.cfg --output results/dbpedia/ -c scripts/functions.py"
+      - "python -m spacy train configs/config_imdb_bow.cfg --output results/imdb/bow/ -c scripts/functions.py --max_epochs ${epochs}"
+      - "python -m spacy train configs/config_dbpedia_bow.cfg --output results/dbpedia/bow/ -c scripts/functions.py --max_epochs ${epochs"
+      # - "python -m spacy train configs/config_cmu_bow.cfg --output results/cmu/bow/ -c scripts/functions.py --max_epochs ${epochs"
+
+      - "python -m spacy train configs/config_imdb_cnn.cfg --output results/imdb/cnn/ -c scripts/functions.py --max_epochs ${epochs}"
+      - "python -m spacy train configs/config_dbpedia_cnn.cfg --output results/dbpedia/cnn/ -c scripts/functions.py --max_epochs ${epochs"
+      # - "python -m spacy train configs/config_cmu_cnn.cfg --output results/cmu/cnn/ -c scripts/functions.py --max_epochs ${epochs"
+
+      - "python -m spacy train configs/config_imdb_ensemble.cfg --output results/imdb/ensemble/ -c scripts/functions.py --max_epochs ${epochs}"
+      - "python -m spacy train configs/config_dbpedia_ensemble.cfg --output results/dbpedia/ensemble/ -c scripts/functions.py --max_epochs ${epochs"
+      # - "python -m spacy train configs/config_cmu_ensemble.cfg --output results/cmu/ensemble/ -c scripts/functions.py --max_epochs ${epochs"
+
     deps:
       - "assets/MovieSummaries/movie.metadata.tsv"
       - "assets/MovieSummaries/plot_summaries.txt"
