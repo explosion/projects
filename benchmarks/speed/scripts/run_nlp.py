@@ -100,7 +100,7 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
         # No batch parsing option available in Stanza I think? instead we have to
         # re-batch, concatenating with \n\n
         for text in rebatch_texts(texts, batch_size):
-            nlp(batch)
+            nlp(text)
     return run
 
 
