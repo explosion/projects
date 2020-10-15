@@ -12,6 +12,8 @@ steps:
       - env3.8/bin/pip install pathy[gcs]
       - env-spacy2.3/bin/pip install -U setuptools wheel pip
       - env-spacy2.3/bin/pip install 'spacy>=2.3,<3.0'
+      - env-spacy2.3/bin/python -m spacy download en_core_web_sm
+      - env-spacy2.3/bin/python -m spacy download en_core_web_lg
       - env3.8/bin/python -m spacy project assets
       - env3.8/bin/python -m spacy project run setup
       - env3.8/bin/python -m spacy project run benchmark
