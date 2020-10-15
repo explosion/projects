@@ -20,6 +20,7 @@ def custom_logger(log_path):
         log_file.write("score\t")
         for pipe in nlp.pipe_names:
             log_file.write(f"loss_{pipe}\t")
+        log_file.write("other_scores\t")
         log_file.write("\n")
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 
@@ -30,6 +31,7 @@ def custom_logger(log_path):
                 log_file.write(f"{info['score']}\t")
                 for pipe in nlp.pipe_names:
                     log_file.write(f"{info['losses'][pipe]}\t")
+                log_file.write(f"{info['other_scores']}\t")
                 log_file.write("\n")
 
         def finalize():
