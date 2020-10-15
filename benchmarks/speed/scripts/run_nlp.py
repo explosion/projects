@@ -79,8 +79,8 @@ def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
         spacy.require_gpu(0)
     nlp = spacy.load(name)
 
-    def run(texts: List[str]):
-        list(nlp.pipe(texts))
+    def run(texts: List[str], batch_size: int):
+        list(nlp.pipe(texts, batch_size=batch_size))
 
     return run
 
