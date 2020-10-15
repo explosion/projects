@@ -57,15 +57,15 @@ commands:
     help: "Run customized training runs."
     script:
       - "python -m spacy train configs/config_imdb_bow.cfg --output results/imdb/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      - "python -m spacy train configs/config_imdb_cnn.cfg --output results/imdb/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      - "python -m spacy train configs/config_imdb_ensemble.cfg --output results/imdb/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+
       - "python -m spacy train configs/config_dbpedia_bow.cfg --output results/dbpedia/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      - "python -m spacy train configs/config_dbpedia_cnn.cfg --output results/dbpedia/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      - "python -m spacy train configs/config_dbpedia_ensemble.cfg --output results/dbpedia/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+
       # - "python -m spacy train configs/config_cmu_bow.cfg --output results/cmu/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
-
-      # - "python -m spacy train configs/config_imdb_cnn.cfg --output results/imdb/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
-      # - "python -m spacy train configs/config_dbpedia_cnn.cfg --output results/dbpedia/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
       # - "python -m spacy train configs/config_cmu_cnn.cfg --output results/cmu/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
-
-      # - "python -m spacy train configs/config_imdb_ensemble.cfg --output results/imdb/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
-      # - "python -m spacy train configs/config_dbpedia_ensemble.cfg --output results/dbpedia/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
       # - "python -m spacy train configs/config_cmu_ensemble.cfg --output results/cmu/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
 
     deps:
