@@ -64,7 +64,6 @@ commands:
     script:
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg False"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False"
       - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False"
