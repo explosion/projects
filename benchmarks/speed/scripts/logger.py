@@ -8,11 +8,19 @@ def create_logger(results_dir: Path) -> Callable:
     write_header = not results_file.exists()
     with results_file.open("a", encoding="utf8") as f:
         if write_header:
-            f.write("library;name;gpu;articles;characters;words;seconds;k wps;time stamp")
+            f.write(
+                "library;name;gpu;articles;characters;words;seconds;k wps;time stamp"
+            )
             f.write("\n")
 
     def log_result(
-        library: str, name: str, gpu: bool, articles: int, characters: int, words: int, seconds: int
+        library: str,
+        name: str,
+        gpu: bool,
+        articles: int,
+        characters: int,
+        words: int,
+        seconds: int,
     ):
         wps = words / seconds
         wps = wps / 1000

@@ -5,7 +5,7 @@ import srsly
 from spacy.util import minibatch
 
 
-def read_data(txt_dir: Path, limit: int=10000) -> List[str]:
+def read_data(txt_dir: Path, limit: int = 10000) -> List[str]:
     texts = []
     for file in txt_dir.iterdir():
         if file.parts[-1].endswith("jsonl"):

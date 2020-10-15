@@ -13,11 +13,20 @@ from logger import create_logger
 from spacy.util import minibatch
 
 
-def main(txt_dir: Path, result_dir: Path, library, name: str, gpu: bool, batch_size: int=256):
+def main(
+    txt_dir: Path,
+    result_dir: Path,
+    library,
+    name: str,
+    gpu: bool,
+    batch_size: int = 256,
+):
     data = read_data(txt_dir)
     articles = len(data)
     if articles == 0:
-        msg.fail(f"Could not read any data from {txt_dir}: make sure a corpus of .txt files is available.")
+        msg.fail(
+            f"Could not read any data from {txt_dir}: make sure a corpus of .txt files is available."
+        )
     chars = sum([len(d) for d in data])
     words = sum([len(d.split()) for d in data])
 
@@ -55,8 +64,11 @@ def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
     if library == "ud_pipe":
         return _run_ud_pipe(name)
 
-    msg.fail(f"Can not parse models for library {library}. "
-          f"Known libraries are: ['spacy', 'stanza', 'hf_trf', 'flair', 'ud_pipe']", exits=1)
+    msg.fail(
+        f"Can not parse models for library {library}. "
+        f"Known libraries are: ['spacy', 'stanza', 'hf_trf', 'flair', 'ud_pipe']",
+        exits=1,
+    )
 
 
 def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
@@ -101,6 +113,7 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
         # re-batch, concatenating with \n\n
         for text in rebatch_texts(texts, batch_size):
             nlp(text)
+
     return run
 
 
@@ -113,7 +126,7 @@ def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     logging.getLogger("flair").setLevel(logging.ERROR)
     annot_list = name.split("_")
     if not gpu:
-        flair.device = torch.device('cpu')
+        flair.device = torch.device("cpu")
     tagger = MultiTagger.load(annot_list)
     splitter = SegtokSentenceSplitter()
 
