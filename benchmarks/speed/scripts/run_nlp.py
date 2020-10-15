@@ -102,8 +102,9 @@ def _run_transformer_model(name: str, gpu) -> Callable[[List[str]], None]:
         transformer.eval()
         for batch in minibatch(texts, batch_size // 20):
             batch = tokenizer(batch, padding=True, truncation=True, return_tensors="pt")
-            batch["input_ids"] = batch["input_ids"].to("cuda:0")
-            batch["attention_mask"] = batch["attention_mask"].to("cuda:0")
+            if gpu:
+                batch["input_ids"] = batch["input_ids"].to("cuda:0")
+                batch["attention_mask"] = batch["attention_mask"].to("cuda:0")
             transformer(**batch)
 
     return run
