@@ -20,8 +20,9 @@ def main(
     name: str,
     gpu: bool,
     batch_size: int = 256,
+    n_texts: int=0
 ):
-    data = read_data(txt_dir)
+    data = read_data(txt_dir, limit=n_texts)
     articles = len(data)
     if articles == 0:
         msg.fail(
