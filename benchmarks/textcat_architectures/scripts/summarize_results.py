@@ -1,23 +1,22 @@
 import typer
 import csv
-import os
 from pathlib import Path
 
 
 def main(root_dir: Path):
     for dataset in root_dir.iterdir():
         print()
-        print("dataset", dataset)
+        print(f"DATASET: {dataset.name}")
         for architecture in dataset.iterdir():
             print()
-            print("architecture", architecture)
+            print(f" architecture: {architecture.name}")
             results = architecture / "results.tab"
             with results.open("r", encoding="utf8") as csvfile:
                 csvreader = csv.reader(csvfile, delimiter="\t")
                 header = next(csvreader)
                 epoch_index = header.index("epoch")
                 step_index = header.index("step")
-                metrics = ["cats_micro_f", "cats_macro_f", "cats_macro_auc", ]
+                metrics = ["cats_micro_f", "cats_macro_f", "cats_macro_auc"]
                 indices = {}
                 for metric in metrics:
                     indices[metric] = header.index(metric)
@@ -34,12 +33,12 @@ def main(root_dir: Path):
                         max_values[metric] = current_value if current_value > current_max else current_max
                         last_values[metric] = current_value
 
-                print(f"total steps: {step}")
-                print(f"total epochs: {epoch}")
+                print(f"  total steps: {step}")
+                print(f"  total epochs: {epoch}")
+                print(f"  best results:")
                 for metric, value in max_values.items():
-                    print(f" BEST {metric}: {round(value, 4)}")
-                for metric, value in last_values.items():
-                    print(f" LAST {metric}: {round(value, 4)}")
+                    print(f"   {metric}: {round(value, 4)}   (LAST: {round(last_values[metric], 4)})")
+            print()
 
 
 if __name__ == "__main__":
