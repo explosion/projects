@@ -1,6 +1,7 @@
 from typing import List
-import srsly
+import re
 from pathlib import Path
+import srsly
 from spacy.util import minibatch
 
 
