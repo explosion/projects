@@ -72,6 +72,7 @@ class RelationExtractor(TrainablePipe):
     def __call__(self, doc: Doc) -> Doc:
         """Apply the pipe to a Doc."""
         # check that there are actually any candidates in this batch of examples
+        print("<<<< rel_pipe.call")
         total_candidates = len(self.model.attrs["get_candidates"](doc))
         if total_candidates == 0:
             msg.info("Could not determine any candidates in doc - returning doc as is.")
@@ -79,16 +80,21 @@ class RelationExtractor(TrainablePipe):
 
         predictions = self.predict([doc])
         self.set_annotations([doc], predictions)
+        print("rel_pipe.call >>>>")
         return doc
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
+        print(" <<<< rel_pipe.predict")
         total_candidates = sum([len(self.model.attrs["get_candidates"](doc)) for doc in docs])
         if total_candidates == 0:
             msg.info("Could not determine any candidates in any docs - can not make any predictions.")
+        print("  <<<< rel_pipe.predict")
         scores = self.model.predict(docs)
-        # with numpy.printoptions(precision=2, suppress=True):
-        #     print(f"predicted scores: {scores}")
+        print("  rel_pipe.model.predict >>>>>")
+        with numpy.printoptions(precision=2, suppress=True):
+            print(f"predicted scores: {scores}")
+        print(" rel_pipe.predict >>>>")
         return self.model.ops.asarray(scores)
 
     def set_annotations(self, docs: Iterable[Doc], scores: Floats2d) -> None:
@@ -115,6 +121,7 @@ class RelationExtractor(TrainablePipe):
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss."""
+        print("<<<< rel_pipe.update")
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -142,6 +149,7 @@ class RelationExtractor(TrainablePipe):
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, predictions)
+        print("rel_pipe.update >>>")
         return losses
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
@@ -192,7 +200,9 @@ class RelationExtractor(TrainablePipe):
         if label_sample is None:
             raise ValueError("Call begin_training with relevant entities and relations annotated in "
                              "at least a few reference examples!")
+        print("<<<< self.model.initialize")
         self.model.initialize(X=doc_sample, Y=label_sample)
+        print("self.model.initialize >>>>")
 
     def _examples_to_truth(
         self, examples: List[Example]
@@ -213,6 +223,6 @@ class RelationExtractor(TrainablePipe):
                 c += 1
 
         truths = self.model.ops.asarray(truths)
-        # print(f"truths: {truths}")
-        # print()
+        print(f"truths: {truths}")
+        print()
         return truths

@@ -51,9 +51,8 @@ commands:
   - name: "train"
     help: "Run training - note that the small sample data will cause the model to overfit."
     script:
-    #  - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py"
-    #  - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py"
-      - "python ./scripts/run_pipeline.py ${vars.train_file} ${vars.patterns} ${vars.trained_model}"
+      - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py"
+      # - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py --gpu-id 0"
     deps:
       - ${vars.train_file}
       - ${vars.dev_file}

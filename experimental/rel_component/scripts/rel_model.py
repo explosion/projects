@@ -29,8 +29,9 @@ def create_relation_model(
 @registry.misc.register("rel_cand_tensor.v1")
 def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
     def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: List[Floats2d], ops: Ops):
-        # with numpy.printoptions(precision=2, suppress=True):
-        #     print(f"get candidate tensor, tokvecs {tokvecs}")
+        with numpy.printoptions(precision=2, suppress=True):
+            print()
+            print(f"get candidate tensor, tokvecs {tokvecs}")
         relations = []
         shapes = []
         candidates = []
@@ -43,13 +44,13 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
                 v1 = tokvecs[i][ent1.start:ent1.end].mean(axis=0)
                 v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
                 relations.append(ops.xp.hstack((v1, v2)))
-        # with numpy.printoptions(precision=2, suppress=True):
-        #     print(f"candidate data: {ops.asarray(relations)}")
-        #     print("shapes", shapes)
+        with numpy.printoptions(precision=2, suppress=True):
+            print(f"candidate data: {ops.asarray(relations)}")
+            print("shapes", shapes)
 
         def backprop(d_candidates):
-            # with numpy.printoptions(precision=2, suppress=True):
-                # print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
+            with numpy.printoptions(precision=2, suppress=True):
+                print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
             result = []
             d = 0
             for i, shape in enumerate(shapes):
@@ -78,8 +79,8 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
 
                     # print(i, "d_tokvecs", d_tokvecs)
                 result.append(d_tokvecs)
-            # with numpy.printoptions(precision=2, suppress=True):
-            #     print("result", result)
+            with numpy.printoptions(precision=2, suppress=True):
+                print("result", result)
             return result
 
         return ops.asarray(relations), backprop
@@ -105,17 +106,24 @@ def create_layer(nI: int = None, nO: int = None) -> Model[Floats2d, Floats2d]:
 
 
 def forward(model, docs, is_train):
+    print()
+    print("FORWARD")
     tok2vec = model.get_ref("tok2vec")
     get_candidates = model.attrs["get_candidates"]
     create_candidate_tensor = model.attrs["create_candidate_tensor"]
     output_layer = model.get_ref("output_layer")
+    for doc in docs:
+        print(doc.text)
+        print(tok2vec([doc], is_train=False))
+    print()
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
+    print("tokvecs", tokvecs)
     cand_vectors, bp_cand = create_candidate_tensor(docs, get_candidates, tokvecs, model.ops)
-    # with numpy.printoptions(precision=2, suppress=True):
-    #     print(" cand_vectors", cand_vectors)
+    with numpy.printoptions(precision=2, suppress=True):
+        print(" cand_vectors", cand_vectors)
     scores, bp_scores = output_layer(cand_vectors, is_train)
-    # with numpy.printoptions(precision=2, suppress=True):
-    #     print(" scores", scores)
+    with numpy.printoptions(precision=2, suppress=True):
+        print(" scores", scores)
 
     def backprop(d_scores):
         return bp_tokvecs(bp_cand(bp_scores(d_scores)))
@@ -126,15 +134,26 @@ def forward(model, docs, is_train):
 def init(
     model: Model, X: List["Doc"] = None, Y: Floats2d = None
 ) -> Model:
-    tok2vec = model.get_ref("tok2vec")
+    print()
+    print("INIT rel_model")
+    print("before")
     get_candidates = model.attrs["get_candidates"]
     create_candidate_tensor = model.attrs["create_candidate_tensor"]
     output_layer = model.get_ref("output_layer")
+    tok2vec = model.get_ref("tok2vec")
     if X is not None:
         tok2vec.initialize(X=X)
+        for doc in X:
+            print(doc.text)
+            print(tok2vec([doc], is_train=False))
         tokvecs = tok2vec.predict(X)
         cand_vectors, _ = create_candidate_tensor(X, get_candidates, tokvecs, model.ops)
         output_layer.initialize(X=cand_vectors, Y=Y)
+
     if model.has_dim("nO") is None:
         model.set_dim("nO", output_layer.get_dim("nO"))
+    print("after")
+    for doc in X:
+        print(doc.text)
+        print(tok2vec([doc], is_train=False))
     return model
