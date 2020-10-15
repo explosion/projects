@@ -62,23 +62,23 @@ commands:
   - name: timing_cpu
     help: "Run all timing benchmarks on CPU and add the numbers to output/results.csv"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} ud_pipe ${vars.ud_pipe_name} False --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} False --n-texts ${var.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_cpu_name} False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} ud_pipe ${vars.ud_pipe_name} False --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} False --n-texts ${vars.n_texts}"
 
   - name: timing_gpu
     help: "Run all timing benchmarks on GPU and add the numbers to output/results.csv"
     script:
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm True --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg True --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} True --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True --n-texts ${var.n_texts}"
-      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True --n-texts ${var.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_sm True --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy en_core_web_lg True --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} spacy ${vars.spacy_trf_name} True --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} stanza ${vars.stanza_name} True --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} flair ${vars.flair_gpu_name} True --n-texts ${vars.n_texts}"
+      - "python ./scripts/run_nlp.py ${vars.txt_dir} ${vars.result_dir} hf_trf ${vars.hf_trf_name} True --n-texts ${vars.n_texts}"
 
   - name: clean
     help: "Remove output file(s)"
