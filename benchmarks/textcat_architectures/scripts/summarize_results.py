@@ -30,14 +30,20 @@ def main(root_dir: Path):
                         index = indices[metric]
                         current_max = max_values.get(metric, 0)
                         current_value = float(row[index])
-                        max_values[metric] = current_value if current_value > current_max else current_max
+                        max_values[metric] = (
+                            current_value
+                            if current_value > current_max
+                            else current_max
+                        )
                         last_values[metric] = current_value
 
                 print(f"  total steps: {step}")
                 print(f"  total epochs: {epoch}")
                 print(f"  best results:")
                 for metric, value in max_values.items():
-                    print(f"   {metric}: {round(value, 4)}   (LAST: {round(last_values[metric], 4)})")
+                    print(
+                        f"   {metric}: {round(value, 4)}   (LAST: {round(last_values[metric], 4)})"
+                    )
             print()
 
 
