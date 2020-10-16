@@ -26,7 +26,7 @@ Commands are only re-run if their inputs have changed.
 | --- | --- |
 | `download` | Download a spaCy model with pretrained vectors |
 | `kb` | Create the Knowledge Base in spaCy and write it to file |
-| `corpus` | Create a training and dev set from the manuallly annotated data |
+| `corpus` | Create a training and dev set from the manually annotated data |
 | `train` | Train a new Entity Linking component |
 | `evaluate` | Final evaluation on the dev data and printing the results |
 | `setup` | Install dependencies |
@@ -41,6 +41,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
+| `all` | `setup` &rarr; `download` &rarr; `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 | `training` | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
