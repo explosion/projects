@@ -12,7 +12,8 @@ steps:
       - env3.8/bin/python -m spacy project assets
       - env3.8/bin/python -m spacy project run setup
       - env3.8/bin/python -m spacy project run benchmark
-
+      #- "env-spacy2.3/bin/python ./scripts/run_nlp.py texts results spacy en_core_web_sm True"
+      #- "env-spacy2.3/bin/python ./scripts/run_nlp.py texts results spacy en_core_web_lg True"
     env:
       WORK: "/mnt/scratch/tmp/speed-benchmark/" 
       TMP_DIR: "/mnt/scratch/tmp/speed-benchmark/" 
@@ -21,4 +22,4 @@ steps:
         - exit_status: -1
           limit: 5
     agents:
-      queue: short-gpu
+      queue: long-gpu

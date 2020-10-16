@@ -6,4 +6,4 @@ def test_benchmark_speed_project():
     root = Path(__file__).parent
     # project_assets(root)   # there are currently no assets defined for this project
     project_run(root, "setup")
-    project_run(root, "benchmark")
+    project_run(root, "timing_cpu")

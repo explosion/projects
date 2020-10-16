@@ -35,6 +35,13 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
+  all:
+    - setup
+    - download
+    - kb
+    - corpus
+    - train
+    - evaluate
   training:
     - kb
     - corpus
@@ -62,7 +69,7 @@ commands:
       - "temp/${vars.nlp}"
 
   - name: corpus
-    help: "Create a training and dev set from the manuallly annotated data"
+    help: "Create a training and dev set from the manually annotated data"
     script:
       - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
     deps:
