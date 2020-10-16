@@ -3,7 +3,7 @@ description: "TODO"
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  epochs: 50
+  epochs: 10
   dropout: 0.1
 
 # These are the directories that the project needs. The project CLI will make
@@ -13,9 +13,9 @@ directories: ["scripts", "assets", "results", "configs"]
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
 assets:
-  - dest: "assets/MovieSummaries.tar.gz"
-    url: "http://www.cs.cmu.edu/~ark/personas/data/MovieSummaries.tar.gz"
-    description: "CMU Movie Summary Corpus by Bamman et al., ACL 2013."
+  # - dest: "assets/MovieSummaries.tar.gz"
+  #  url: "http://www.cs.cmu.edu/~ark/personas/data/MovieSummaries.tar.gz"
+  #  description: "CMU Movie Summary Corpus by Bamman et al., ACL 2013."
 
   - dest: "assets/aclImdb_v1.tar.gz"
     url: "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
@@ -39,16 +39,16 @@ commands:
   - name: "data"
     help: "Extract the gold-standard annotations."
     script:
-      - "tar -xzf ./assets/MovieSummaries.tar.gz -C ./assets/"
+     # - "tar -xzf ./assets/MovieSummaries.tar.gz -C ./assets/"
       - "tar -xzf ./assets/aclImdb_v1.tar.gz -C ./assets/"
       - "tar -xzf ./assets/dbpedia_csv.tgz -C ./assets/"
     deps:
-      - "assets/MovieSummaries.tar.gz"
+     # - "assets/MovieSummaries.tar.gz"
       - "assets/aclImdb_v1.tar.gz"
       - "assets/dbpedia_csv.tgz"
     outputs:
-      - "assets/MovieSummaries/movie.metadata.tsv"
-      - "assets/MovieSummaries/plot_summaries.txt"
+     # - "assets/MovieSummaries/movie.metadata.tsv"
+     # - "assets/MovieSummaries/plot_summaries.txt"
       - "assets/aclImdb/train/"
       - "assets/aclImdb/test/"
       - "assets/dbpedia_csv/train.csv"
@@ -70,8 +70,8 @@ commands:
       # - "python -m spacy train configs/config_cmu_ensemble.cfg --output results/cmu/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
 
     deps:
-      - "assets/MovieSummaries/movie.metadata.tsv"
-      - "assets/MovieSummaries/plot_summaries.txt"
+     # - "assets/MovieSummaries/movie.metadata.tsv"
+     # - "assets/MovieSummaries/plot_summaries.txt"
       - "assets/aclImdb/train/"
       - "assets/aclImdb/test/"
       - "assets/dbpedia_csv/train.csv"
