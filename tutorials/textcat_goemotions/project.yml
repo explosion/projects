@@ -73,7 +73,7 @@ commands:
     help: "Train a spaCy pipeline using the specified corpus and config"
     script:
       - "mkdir -p training/${vars.config}"
-      - "python -m spacy train ./configs/${vars.config}.cfg -o training/${vars.config} --system.gpu ${vars.gpu_id}"
+      - "python -m spacy train ./configs/${vars.config}.cfg -o training/${vars.config} --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
