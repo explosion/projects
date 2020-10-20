@@ -1,0 +1,84 @@
+title: "Named Entity Recognition (CoNLL-2003)"
+
+vars:
+  config: "cnn_glove_small"
+  gpu: -1
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "metrics", "corpus"]
+
+assets:
+  - url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
+    dest: "assets/vectors.zip"
+    description: "GloVe vectors"
+  - dest: "assets/conll2003/dev.iob"
+    description: "Development data (not available publicly so you have to add the file yourself)"
+  - dest: "assets/conll2003/test.iob"
+    description: "Test data (not available publicly so you have to add the file yourself)"
+  - dest: "assets/conll2003/train.iob"
+    description: "Training data (not available publicly so you have to add the file yourself)"
+
+workflows:
+  all:
+    - vectors
+    - corpus
+    - train
+    - evaluate
+
+commands:
+  - name: init-config
+    help: "Generate default config"
+    script:
+      - "python -m spacy init config --lang en --pipeline tagger,parser --optimize efficiency -C defaults.cfg"
+
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
+    script:
+      - "python -m spacy convert assets/conll2003 corpus/"
+    deps:
+      - "assets/conll2003/dev.iob"
+      - "assets/conll2003/test.iob"
+      - "assets/conll2003/train.iob"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+
+  - name: vectors
+    help: "Convert, truncate and prune the vectors."
+    script:
+      - "python -m spacy init vocab -v assets/vectors.zip en corpus/en_vectors -vn en_glove840b_vectors_md"
+    deps:
+      - "assets/vectors.zip"
+    outputs:
+      - "corpus/en_vectors"
+
+  - name: train
+    help: "Train the full pipeline"
+    script:
+      - python -m spacy train configs/${vars.config}.cfg -o training/${vars.config} --gpu-id ${vars.gpu}
+    deps:
+      - "configs/${vars.config}.cfg"
+      - "corpus/en_vectors"
+    outputs:
+      - "training/${vars.config}/model-best"
+
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/testb.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --gold-preproc"
+    deps:
+      - "training/${vars.config}/model-best"
+      - "corpus/testb.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
+      - "rm -rf corpus/*"

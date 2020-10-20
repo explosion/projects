@@ -1,0 +1,25 @@
+steps:
+  - label: "Benchmark speed"
+    command:
+      - rm -rf $WORK
+      - mkdir -p $WORK
+      - cp -r benchmarks/speed/* $WORK
+      - cd $WORK
+      - python3.8 -m venv env3.8
+      - env3.8/bin/pip install -U setuptools wheel pip
+      - env3.8/bin/pip install -r requirements.txt
+      - env3.8/bin/pip install pathy[gcs]
+      - env3.8/bin/python -m spacy project assets
+      - env3.8/bin/python -m spacy project run setup
+      - env3.8/bin/python -m spacy project run benchmark
+      #- "env-spacy2.3/bin/python ./scripts/run_nlp.py texts results spacy en_core_web_sm True"
+      #- "env-spacy2.3/bin/python ./scripts/run_nlp.py texts results spacy en_core_web_lg True"
+    env:
+      WORK: "/mnt/scratch/tmp/speed-benchmark/" 
+      TMP_DIR: "/mnt/scratch/tmp/speed-benchmark/" 
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 5
+    agents:
+      queue: long-gpu

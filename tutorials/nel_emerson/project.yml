@@ -4,7 +4,7 @@ description: "**This project was created as part of a [step-by-step video tutori
 vars:
   name: "nel_emerson"
   config: "nel.cfg"
-  vectors: "en_vectors_web_model"
+  vectors_model: "en_core_web_md"
   annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"
   kb: "my_kb"
@@ -30,17 +30,18 @@ assets:
   - dest: "assets/emerson_input_text.txt"
     description: "The original input text"
     checksum: "b5bc61375680396017337e3ebe830ada"
-  - dest: "assets/en-vectors-web.tgz"
-    description: "Vectors to initialize the model"
-    url: "https://github.com/explosion/projects/releases/download/en-vectors-web/v2.2_en-vectors-web.tgz"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  preprocess:
-    - data
-    - vectors
+  all:
+    - setup
+    - download
+    - kb
+    - corpus
+    - train
+    - evaluate
   training:
     - kb
     - corpus
@@ -51,41 +52,24 @@ workflows:
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
-# TODO: replace "data" and "vectors" with loading a vectors model
 commands:
-  - name: data
-    help: "Extract the vectors data"
+  - name: download
+    help: "Download a spaCy model with pretrained vectors"
     script:
-      - "tar -xzf ./assets/en-vectors-web.tgz -C ./assets/"
-    deps:
-      - "assets/en-vectors-web.tgz"
-    outputs_no_cache:
-      - "assets/en-vectors-web/lexemes.jsonl"
-      - "assets/en-vectors-web/vectors.npz"
-
-  - name: vectors
-    help: "Create a vectors model"
-    script:
-      - "python -m spacy init vocab en ./assets/${vars.vectors} -j ./assets/en-vectors-web/lexemes.jsonl -v ./assets/en-vectors-web/vectors.npz -V 20000"
-    deps:
-      - "assets/en-vectors-web/lexemes.jsonl"
-      - "assets/en-vectors-web/vectors.npz"
-    outputs_no_cache:
-      - "assets/${vars.vectors}"
+      - "python -m spacy download ${vars.vectors_model}"
 
   - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"
     script:
-      - "python ./scripts/create_kb.py ./assets/${vars.entities} ./assets/${vars.vectors} ./temp/${vars.kb} ./temp/${vars.nlp}/"
+      - "python ./scripts/create_kb.py ./assets/${vars.entities} ${vars.vectors_model} ./temp/${vars.kb} ./temp/${vars.nlp}/"
     deps:
-      - "assets/${vars.vectors}"
       - "assets/${vars.entities}"
     outputs_no_cache:
       - "temp/${vars.kb}"
       - "temp/${vars.nlp}"
 
   - name: corpus
-    help: "Create a training and dev set from the manuallly annotated data"
+    help: "Create a training and dev set from the manually annotated data"
     script:
       - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
     deps:

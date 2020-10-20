@@ -40,7 +40,7 @@ def main(assets_dir: Path=ASSETS_DIR, corpus_dir: Path=CORPUS_DIR, lang: str="en
     for tsv_file in assets_dir.iterdir():
         if not tsv_file.parts[-1].endswith(".tsv"):
             continue
-        records = read_tsv(tsv_file.open())
+        records = read_tsv(tsv_file.open(encoding="utf8"))
         docs = [convert_record(nlp, record, categories) for record in records]
         out_file = corpus_dir / tsv_file.with_suffix(".spacy").parts[-1]
         out_data = DocBin(docs=docs).to_bytes()

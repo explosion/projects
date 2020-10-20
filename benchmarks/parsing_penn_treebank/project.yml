@@ -65,8 +65,8 @@ commands:
     script:
       - python -m spacy train configs/${vars.name}.cfg -o training/${vars.name} --gpu-id ${vars.gpu}
     deps:
-      - "corpus/train.gold.spacy"
-      - "corpus/dev.gold.spacy"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
       - "configs/${vars.name}.cfg"
       - "corpus/en_vectors"
     outputs:

@@ -8,7 +8,7 @@ from spacy.tokens import DocBin, Span
 
 def main(json_loc: Path, nlp_dir: Path, train_corpus: Path, test_corpus: Path):
     """ Step 2: Once we have done the manual annotations with Prodigy, create corpora in spaCy format. """
-    nlp = spacy.load(nlp_dir)
+    nlp = spacy.load(nlp_dir, exclude="parser, tagger")
     docs = []
     gold_ids = []
     with json_loc.open("r", encoding="utf8") as jsonfile:

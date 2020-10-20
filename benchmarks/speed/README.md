@@ -40,4 +40,14 @@ inputs have changed.
 | `setup` | `install` &rarr; `download` |
 | `benchmark` | `timing_cpu` &rarr; `timing_gpu` |
 
+### 🗂 Assets
+
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
+in the project directory.
+
+| File | Source | Description |
+| --- | --- | --- |
+| `texts/reddit-100k.jsonl` | URL | The texts to process |
+
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
