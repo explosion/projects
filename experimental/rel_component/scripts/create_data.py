@@ -45,30 +45,48 @@ def _create_train_data(nlp, data_file: Path):
     doc3.ents = [Span(doc3, 1, 3, label="LOC"), Span(doc3, 5, 6, label="LOC")]
     doc3._.rel = {(1, 5): {"ALLY": 1.0}}
 
-    docs = [doc1, doc2, doc3]
+    # docs = [doc1, doc2, doc3]
+    docs = [doc1, doc2]
     docbin = DocBin(docs=docs, store_user_data=True)
     docbin.to_disk(data_file)
     msg.info(f"Wrote {len(docs)} training articles to {data_file}")
 
 
 def _create_dev_data(nlp, data_file: Path):
-    doc = nlp("Brussels is the capital of Belgium. I like Paris and New York.")
-    doc.ents = [
-        Span(doc, 0, 1, label="LOC"),
-        Span(doc, 5, 6, label="LOC"),
-        Span(doc, 9, 10, label="LOC"),
-        Span(doc, 11, 13, label="LOC"),
+    doc1 = nlp("Brussels is the capital of Belgium. I like Paris and New York.")
+    doc1.ents = [
+        Span(doc1, 0, 1, label="LOC"),
+        Span(doc1, 5, 6, label="LOC"),
+        Span(doc1, 9, 10, label="LOC"),
+        Span(doc1, 11, 13, label="LOC"),
     ]
-    doc._.rel = {
+    doc1._.rel = {
         (0, 5): {"CAPITAL_OF": 1.0, "ALLY": 1.0},
         (5, 0): {"ALLY": 1.0},
         (9, 11): {"UNRELATED": 1.0},
         (11, 9): {"UNRELATED": 1.0},
     }
 
-    docbin = DocBin(docs=[doc], store_user_data=True)
+    doc2 = nlp("I like Ghent, London and Berlin")
+    doc2.ents = [
+        Span(doc2, 2, 3, label="LOC"),
+        Span(doc2, 4, 5, label="LOC"),
+        Span(doc2, 6, 7, label="LOC"),
+    ]
+    doc2._.rel = {
+        (2, 4): {"UNRELATED": 1.0},
+        (4, 6): {"UNRELATED": 1.0},
+        (2, 6): {"UNRELATED": 1.0},
+        (4, 2): {"UNRELATED": 1.0},
+        (6, 4): {"UNRELATED": 1.0},
+        (6, 2): {"UNRELATED": 1.0},
+    }
+
+    #docs = [doc1, doc2]
+    docs = [doc1]
+    docbin = DocBin(docs=docs, store_user_data=True)
     docbin.to_disk(data_file)
-    msg.info(f"Wrote 1 dev articles to {data_file}")
+    msg.info(f"Wrote {len(docs)} dev articles to {data_file}")
 
 
 def _create_test_data(nlp, data_file: Path):

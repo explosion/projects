@@ -2,9 +2,11 @@ from typing import List, Callable, Tuple, Optional
 
 import numpy
 from thinc.types import Floats2d
-from thinc.api import Model, Linear, Ops, Softmax
+from thinc.api import Model, Linear, Ops, chain, Logistic
 
 from spacy.util import registry
+
+DEBUG = False
 
 
 @registry.architectures.register("rel_model.v1")
@@ -29,14 +31,17 @@ def create_relation_model(
 @registry.misc.register("rel_cand_tensor.v1")
 def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], Tuple[Floats2d, Callable]]:
     def get_candidate_tensor(docs: List["Doc"], get_candidates: Callable, tokvecs: List[Floats2d], ops: Ops):
-        with numpy.printoptions(precision=2, suppress=True):
-            print()
-            print(f"get candidate tensor, tokvecs {tokvecs}")
         relations = []
         shapes = []
         candidates = []
         for i, doc in enumerate(docs):
             ents = get_candidates(doc)
+            if DEBUG:
+                print()
+                print("doc", doc.text)
+                print("candidate pairs", [(ent1.start, ent2.start) for (ent1, ent2) in ents])
+                with numpy.printoptions(precision=2, suppress=True):
+                    print(f"tokvec {tokvecs[i]}")
             candidates.append(ents)
             shapes.append(tokvecs[i].shape)
             for (ent1, ent2) in ents:
@@ -45,12 +50,14 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
                 v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
                 relations.append(ops.xp.hstack((v1, v2)))
         with numpy.printoptions(precision=2, suppress=True):
-            print(f"candidate data: {ops.asarray(relations)}")
-            print("shapes", shapes)
+            if DEBUG:
+                print()
+                print(f"candidate data: {ops.asarray(relations)}")
 
         def backprop(d_candidates):
-            with numpy.printoptions(precision=2, suppress=True):
-                print(f"calling backprop for: {d_candidates} {type(d_candidates)}")
+            if DEBUG:
+                with numpy.printoptions(precision=2, suppress=True):
+                    print(f"calling backprop for: {d_candidates}")
             result = []
             d = 0
             for i, shape in enumerate(shapes):
@@ -81,8 +88,10 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
 
                     # print(i, "d_tokvecs", d_tokvecs)
                 result.append(d_tokvecs)
-            with numpy.printoptions(precision=2, suppress=True):
-                print("result", result)
+            if DEBUG:
+                with numpy.printoptions(precision=2, suppress=True):
+                    print()
+                    print("backprop result", result)
             return result
 
         return ops.asarray(relations), backprop
@@ -109,23 +118,43 @@ def create_layer(nI: int = None, nO: int = None) -> Model[Floats2d, Floats2d]:
 
 
 def forward(model, docs, is_train):
-    print()
-    print("FORWARD")
+    if DEBUG:
+        print()
+        print("FORWARD", is_train)
     tok2vec = model.get_ref("tok2vec")
     get_candidates = model.attrs["get_candidates"]
     create_candidate_tensor = model.attrs["create_candidate_tensor"]
     output_layer = model.get_ref("output_layer")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
-    print("tokvecs", tokvecs)
+    if DEBUG:
+        print("tokvecs", tokvecs)
     cand_vectors, bp_cand = create_candidate_tensor(docs, get_candidates, tokvecs, model.ops)
-    with numpy.printoptions(precision=2, suppress=True):
-        print(" cand_vectors", cand_vectors)
     scores, bp_scores = output_layer(cand_vectors, is_train)
-    with numpy.printoptions(precision=2, suppress=True):
-        print(" scores", scores)
+    if DEBUG:
+        with numpy.printoptions(precision=2, suppress=True):
+            print()
+            print("scores", scores)
 
     def backprop(d_scores):
-        return bp_tokvecs(bp_cand(bp_scores(d_scores)))
+        with numpy.printoptions(precision=2, suppress=True):
+            if DEBUG:
+                print()
+                print("backprop rel_model with d_scores", d_scores)
+                print()
+            bp_1 = bp_scores(d_scores)
+            if DEBUG:
+                print("bp1", bp_1)
+                print()
+            bp_2 = bp_cand(bp_1)
+            if DEBUG:
+                print("bp_2", bp_2)
+                print()
+            bp_3 = bp_tokvecs(bp_2)
+            if DEBUG:
+                print("bp_3", bp_3)
+                print()
+        return bp_3
+        #return bp_tokvecs(bp_cand(bp_scores(d_scores)))
 
     return scores, backprop
 
