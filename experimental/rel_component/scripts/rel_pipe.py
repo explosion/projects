@@ -1,5 +1,5 @@
 from itertools import islice
-from typing import Tuple, List, Iterable, Optional, Dict, Callable
+from typing import Tuple, List, Iterable, Optional, Dict, Callable, Any
 from thinc.types import Floats2d
 import numpy
 from spacy.training.example import Example
@@ -8,6 +8,7 @@ from spacy.tokens.doc import Doc
 from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.vocab import Vocab
 from spacy import Language
+from spacy.scorer import PRFScore
 from thinc.model import set_dropout_rate
 from wasabi import Printer
 
@@ -22,6 +23,11 @@ DEBUG = False
     "relation_extractor",
     requires=["doc.ents", "token.ent_iob", "token.ent_type"],
     assigns=["doc._.rel"],
+    default_score_weights={
+        "rel_micro_p": None,
+        "rel_micro_r": None,
+        "rel_micro_f": None,
+    },
 )
 def make_relation_extractor(
     nlp: Language,
@@ -29,6 +35,7 @@ def make_relation_extractor(
     model: Model,
     *,
     labels: List[str] = [],
+    threshold: float,
 ):
     """Construct a RelationExtractor component."""
     return RelationExtractor(
@@ -36,6 +43,7 @@ def make_relation_extractor(
         model,
         name,
         labels=labels,
+        threshold=threshold,
     )
 
 
@@ -47,6 +55,7 @@ class RelationExtractor(TrainablePipe):
         name: str = "rel",
         *,
         labels: List[str] = [],
+        threshold: float
     ) -> None:
         """Initialize a relation extractor."""
         self.vocab = vocab
@@ -54,6 +63,7 @@ class RelationExtractor(TrainablePipe):
         self.name = name
         cfg = {
             "labels": labels,
+            "threshold": threshold,
         }
         self.cfg = dict(cfg)
 
@@ -61,6 +71,11 @@ class RelationExtractor(TrainablePipe):
     def labels(self) -> Tuple[str]:
         """Returns the labels currently added to the component."""
         return tuple(self.cfg["labels"])
+
+    @property
+    def threshold(self) -> float:
+        """Returns the threshold above which a prediction is seen as 'True'."""
+        return self.cfg["threshold"]
 
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe."""
@@ -198,8 +213,6 @@ class RelationExtractor(TrainablePipe):
         sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
             create_optimizer if it doesn't exist.
         RETURNS (thinc.api.Optimizer): The optimizer.
-
-        DOCS: https://nightly.spacy.io/api/textcategorizer#begin_training
         """
         if labels is not None:
             for label in labels:
@@ -244,3 +257,30 @@ class RelationExtractor(TrainablePipe):
         # print(f"truths: {truths}")
         # print()
         return truths
+
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores.
+        """
+        micro_prf = PRFScore()
+        for example in examples:
+            gold = example.reference._.rel
+            pred = example.predicted._.rel
+            for key, pred_dict in pred.items():
+                gold_labels = [k for (k, v) in gold[key].items() if v == 1.0]
+                for k, v in pred_dict.items():
+                    if v >= self.threshold:
+                        if k in gold_labels:
+                            micro_prf.tp += 1
+                        else:
+                            micro_prf.fp += 1
+                    else:
+                        if k in gold_labels:
+                            micro_prf.fn += 1
+        return {
+            f"rel_micro_p": micro_prf.precision,
+            f"rel_micro_r": micro_prf.recall,
+            f"rel_micro_f": micro_prf.fscore,
+        }
