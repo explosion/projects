@@ -3,7 +3,7 @@ description: "This example project shows how to define a custom model and wrap i
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  patterns: "assets/patterns.jsonl"
+  annotations: "assets/annotations.jsonl"
   tok2vec_config: "configs/rel_tok2vec.cfg"
   trf_config: "configs/rel_trf.cfg"
   train_file: "data/train.spacy"
@@ -18,8 +18,8 @@ directories: ["scripts", "configs", "assets", "data", "training"]
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
 assets:
-    - dest: patterns
-      description: "Custom patterns to mimic an NEL algorithm"
+    - dest: annotations
+      description: "Gold-standard REL annotations created with Prodigy"
 
 workflows:
   all:
@@ -40,23 +40,25 @@ commands:
       - "requirements.txt"
 
   - name: "data"
-    help: "Create some sample gold-standard annotations."
+    help: "Parse the gold-standard annotations from the Prodigy annotations."
     script:
-      - "python ./scripts/create_data.py ${vars.train_file} ${vars.dev_file} ${vars.test_file}"
+      - "python ./scripts/parse_data.py ${vars.annotations} ${vars.train_file} ${vars.dev_file} ${vars.test_file}"
+    deps:
+      - ${vars.annotations}
     outputs:
       - ${vars.train_file}
       - ${vars.dev_file}
       - ${vars.test_file}
 
   - name: "train"
-    help: "Run training - note that the small sample data will cause the model to overfit."
+    help: "Train the REL model on the training corpus and evaluate on the dev corpus."
     script:
       # - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py"
-      - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py --gpu-id 0"
+      # - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} --paths.patterns ${vars.patterns}  -c ./scripts/custom_functions.py --gpu-id 0"
+      - "rm -rf training/*"
     deps:
       - ${vars.train_file}
       - ${vars.dev_file}
-      - ${vars.patterns}
     outputs:
       - ${vars.trained_model}
 
