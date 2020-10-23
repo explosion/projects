@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
+from typing import Iterable, Callable
 from spacy import registry
 from spacy.training import Example
 from spacy.tokens import DocBin

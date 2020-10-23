@@ -4,7 +4,11 @@ import spacy
 from spacy.tokens import DocBin
 
 from rel_pipe import make_relation_extractor  # make the factory work
-from rel_model import create_relation_model, create_candidates, create_layer  # make the config work
+from rel_model import (
+    create_relation_model,
+    create_candidates,
+    create_layer,
+)  # make the config work
 
 
 def main(trained_pipeline: Path, test_data: Path):
@@ -12,15 +16,24 @@ def main(trained_pipeline: Path, test_data: Path):
 
     doc_bin = DocBin(store_user_data=True).from_disk(test_data)
     docs = doc_bin.get_docs(nlp.vocab)
-    for doc in docs:
-        text = doc.text
-        predicted_doc = nlp(text)
+    for gold in docs:
+        text = gold.text
+        pred = nlp.make_doc(text)
+        pred.ents = gold.ents
+        for name, proc in nlp.pipeline:
+            pred = proc(pred)
         print()
-        ents = predicted_doc.ents
         print(f"Text: {text}")
-        print(f"spans: {[(e.start, e.text, e.label_) for e in ents]}")
-        for value, rel_dict in predicted_doc._.rel.items():
-            print(f"rel for {value}: {rel_dict}")
+        print(f"spans: {[(e.start, e.text, e.label_) for e in pred.ents]}")
+        print()
+        for value, rel_dict in pred._.rel.items():
+            gold_labels = [k for (k, v) in gold._.rel[value].items() if v == 1.0]
+            # only printing cases where there is a gold label
+            if gold_labels:
+                print(f"pair: {value}")
+                print(f"gold labels: {gold_labels}")
+                print(f"predicted values: {rel_dict}")
+                print()
 
 
 if __name__ == "__main__":
