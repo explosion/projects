@@ -25,17 +25,18 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
     Doc.set_extension("rel", default={})
     vocab = Vocab()
 
-    train_docs = []
-    dev_docs = []
-    test_docs = []
-    train_ids = set()
-    dev_ids = set()
-    test_ids = set()
+    docs = {"train": [], "dev": [], "test": []}
+    ids = {"train": set(), "dev": set(), "test": set()}
+    count_all = {"train": 0, "dev": 0, "test": 0}
+    count_pos = {"train": 0, "dev": 0, "test": 0}
+
     with json_loc.open("r", encoding="utf8") as jsonfile:
         for line in jsonfile:
             example = json.loads(line)
             span_starts = set()
             if example["answer"] == "accept":
+                all = 0
+                pos = 0
                 try:
                     # Parse the tokens
                     words = [t["text"] for t in example["tokens"]]
@@ -64,15 +65,20 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                         end = relation["child_span"]["token_start"]
                         label = relation["label"]
                         label = MAP_LABELS[label]
-                        rels[(start, end)][label] = 1.0
+                        if label not in rels[(start, end)]:
+                            rels[(start, end)][label] = 1.0
+                            pos += 1
                         if label in SYMM_LABELS:
-                            rels[(end, start)][label] = 1.0
+                            if label not in rels[(end, start)]:
+                                rels[(end, start)][label] = 1.0
+                                pos += 1
 
                     # The annotation is complete, so fill in zero's where the data is missing
                     for x1 in span_starts:
                         for x2 in span_starts:
                             for label in MAP_LABELS.values():
-                                if rels[(x1, x2)].get(label, None) is None:
+                                if label not in rels[(x1, x2)]:
+                                    all += 1
                                     rels[(x1, x2)][label] = 0.0
                     doc._.rel = rels
 
@@ -82,33 +88,42 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                     article_id = article_id.replace(".txt", "")
                     article_id = article_id.split("-")[1]
                     if article_id.endswith("4"):
-                        dev_ids.add(article_id)
-                        dev_docs.append(doc)
+                        ids["dev"].add(article_id)
+                        docs["dev"].append(doc)
+                        count_pos["dev"] += pos
+                        count_all["dev"] += all
                     elif article_id.endswith("3"):
-                        test_ids.add(article_id)
-                        test_docs.append(doc)
+                        ids["test"].add(article_id)
+                        docs["test"].append(doc)
+                        count_pos["test"] += pos
+                        count_all["test"] += all
                     else:
-                        train_ids.add(article_id)
-                        train_docs.append(doc)
+                        ids["train"].add(article_id)
+                        docs["train"].append(doc)
+                        count_pos["train"] += pos
+                        count_all["train"] += all
                 except KeyError as e:
                     msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
 
-    docbin = DocBin(docs=train_docs, store_user_data=True)
+    docbin = DocBin(docs=docs["train"], store_user_data=True)
     docbin.to_disk(train_file)
     msg.info(
-        f"Wrote {len(train_docs)} training sentences from {len(train_ids)} articles to {train_file}"
+        f"{len(docs['train'])} training sentences from {len(ids['train'])} articles, "
+        f"{count_pos['train']}/{count_all['train']} pos instances."
     )
 
-    docbin = DocBin(docs=dev_docs, store_user_data=True)
+    docbin = DocBin(docs=docs["dev"], store_user_data=True)
     docbin.to_disk(dev_file)
     msg.info(
-        f"Wrote {len(dev_docs)} dev sentences from {len(dev_ids)} articles to {dev_file}"
+        f"{len(docs['dev'])} dev sentences from {len(ids['dev'])} articles, "
+        f"{count_pos['dev']}/{count_all['dev']} pos instances."
     )
 
-    docbin = DocBin(docs=test_docs, store_user_data=True)
+    docbin = DocBin(docs=docs['test'], store_user_data=True)
     docbin.to_disk(test_file)
     msg.info(
-        f"Wrote {len(test_docs)} test sentences from {len(test_ids)} articles to {test_file}"
+        f"{len(docs['test'])} test sentences from {len(ids['test'])} articles, "
+        f"{count_pos['test']}/{count_all['test']} pos instances."
     )
 
 
