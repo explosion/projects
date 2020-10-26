@@ -18,7 +18,7 @@ directories: ["scripts", "configs", "assets", "data", "training"]
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
 assets:
-    - dest: annotations
+    - dest: ${vars.annotations}
       description: "Gold-standard REL annotations created with Prodigy"
 
 workflows:

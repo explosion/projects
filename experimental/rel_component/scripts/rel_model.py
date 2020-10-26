@@ -47,7 +47,7 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
             result = []
             d = 0
             for i, shape in enumerate(shapes):
-                # TODO: make more efficient / succint
+                # TODO: make more efficient / succinct
                 d_tokvecs = ops.alloc2f(*shape)
                 row_dim = d_tokvecs.shape[1]
                 ents = candidates[i]

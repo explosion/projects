@@ -171,15 +171,6 @@ class RelationExtractor(TrainablePipe):
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
-
-        get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a representative sample of gold-standard Example objects.
-        pipeline (List[Tuple[str, Callable]]): Optional list of pipeline
-            components that this component is part of. Corresponds to
-            nlp.pipeline.
-        sgd (thinc.api.Optimizer): Optional optimizer. Will be created with
-            create_optimizer if it doesn't exist.
-        RETURNS (thinc.api.Optimizer): The optimizer.
         """
         if labels is not None:
             for label in labels:
@@ -222,11 +213,7 @@ class RelationExtractor(TrainablePipe):
         return truths
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-        """
+        """Score a batch of examples."""
         return score_relations(examples, self.threshold)
 
 
