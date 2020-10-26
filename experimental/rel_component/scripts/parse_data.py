@@ -35,7 +35,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
             example = json.loads(line)
             span_starts = set()
             if example["answer"] == "accept":
-                all = 0
+                neg = 0
                 pos = 0
                 try:
                     # Parse the tokens
@@ -78,30 +78,32 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                         for x2 in span_starts:
                             for label in MAP_LABELS.values():
                                 if label not in rels[(x1, x2)]:
-                                    all += 1
+                                    neg += 1
                                     rels[(x1, x2)][label] = 0.0
                     doc._.rel = rels
 
-                    # use the original PMID/PMCID to decide on train/dev/test split
-                    article_id = example["meta"]["source"]
-                    article_id = article_id.replace("BioNLP 2011 Genia Shared Task, ", "")
-                    article_id = article_id.replace(".txt", "")
-                    article_id = article_id.split("-")[1]
-                    if article_id.endswith("4"):
-                        ids["dev"].add(article_id)
-                        docs["dev"].append(doc)
-                        count_pos["dev"] += pos
-                        count_all["dev"] += all
-                    elif article_id.endswith("3"):
-                        ids["test"].add(article_id)
-                        docs["test"].append(doc)
-                        count_pos["test"] += pos
-                        count_all["test"] += all
-                    else:
-                        ids["train"].add(article_id)
-                        docs["train"].append(doc)
-                        count_pos["train"] += pos
-                        count_all["train"] += all
+                    # only keeping documents with at least 1 positive case
+                    if pos > 0:
+                        # use the original PMID/PMCID to decide on train/dev/test split
+                        article_id = example["meta"]["source"]
+                        article_id = article_id.replace("BioNLP 2011 Genia Shared Task, ", "")
+                        article_id = article_id.replace(".txt", "")
+                        article_id = article_id.split("-")[1]
+                        if article_id.endswith("4"):
+                            ids["dev"].add(article_id)
+                            docs["dev"].append(doc)
+                            count_pos["dev"] += pos
+                            count_all["dev"] += pos+neg
+                        elif article_id.endswith("3"):
+                            ids["test"].add(article_id)
+                            docs["test"].append(doc)
+                            count_pos["test"] += pos
+                            count_all["test"] += pos+neg
+                        else:
+                            ids["train"].add(article_id)
+                            docs["train"].append(doc)
+                            count_pos["train"] += pos
+                            count_all["train"] += pos+neg
                 except KeyError as e:
                     msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
 

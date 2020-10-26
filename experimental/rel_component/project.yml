@@ -64,7 +64,7 @@ commands:
   - name: "evaluate"
     help: "Apply the trained model to some sample text."
     script:
-      - "python ./scripts/evaluate.py ${vars.trained_model} ${vars.test_file}"
+      - "python ./scripts/evaluate.py ${vars.trained_model} ${vars.test_file} False"
     deps:
       - ${vars.trained_model}
       - ${vars.test_file}
