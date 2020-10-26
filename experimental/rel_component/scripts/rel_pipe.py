@@ -280,7 +280,7 @@ class RelationExtractor(TrainablePipe):
                         if k in gold_labels:
                             micro_prf.fn += 1
         return {
-            f"rel_micro_p": micro_prf.precision,
-            f"rel_micro_r": micro_prf.recall,
-            f"rel_micro_f": micro_prf.fscore,
+            "rel_micro_p": micro_prf.precision,
+            "rel_micro_r": micro_prf.recall,
+            "rel_micro_f": micro_prf.fscore,
         }
