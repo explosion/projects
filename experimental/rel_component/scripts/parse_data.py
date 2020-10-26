@@ -1,7 +1,6 @@
 import json
 
 import typer
-from spacy.lang.en import English
 from pathlib import Path
 
 from spacy.tokens import Span, DocBin, Doc
@@ -93,17 +92,17 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                             ids["dev"].add(article_id)
                             docs["dev"].append(doc)
                             count_pos["dev"] += pos
-                            count_all["dev"] += pos+neg
+                            count_all["dev"] += pos + neg
                         elif article_id.endswith("3"):
                             ids["test"].add(article_id)
                             docs["test"].append(doc)
                             count_pos["test"] += pos
-                            count_all["test"] += pos+neg
+                            count_all["test"] += pos + neg
                         else:
                             ids["train"].add(article_id)
                             docs["train"].append(doc)
                             count_pos["train"] += pos
-                            count_all["train"] += pos+neg
+                            count_all["train"] += pos + neg
                 except KeyError as e:
                     msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
 
@@ -121,7 +120,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
         f"{count_pos['dev']}/{count_all['dev']} pos instances."
     )
 
-    docbin = DocBin(docs=docs['test'], store_user_data=True)
+    docbin = DocBin(docs=docs["test"], store_user_data=True)
     docbin.to_disk(test_file)
     msg.info(
         f"{len(docs['test'])} test sentences from {len(ids['test'])} articles, "

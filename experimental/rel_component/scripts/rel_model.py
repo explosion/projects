@@ -1,12 +1,8 @@
 from typing import List, Callable, Tuple, Optional
-
-import numpy
 from thinc.types import Floats2d
 from thinc.api import Model, Linear, Ops, chain, Logistic
 
 from spacy.util import registry
-
-DEBUG = False
 
 
 @registry.architectures.register("rel_model.v1")
@@ -21,7 +17,10 @@ def create_relation_model(
         "relations",
         layers=[tok2vec, output_layer],
         refs={"tok2vec": tok2vec, "output_layer": output_layer},
-        attrs={"create_candidate_tensor": create_candidate_tensor, "get_candidates": get_candidates},
+        attrs={
+            "create_candidate_tensor": create_candidate_tensor,
+            "get_candidates": get_candidates,
+        },
         dims={"nO": nO},
         forward=forward,
         init=init,
@@ -36,28 +35,15 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
         candidates = []
         for i, doc in enumerate(docs):
             ents = get_candidates(doc)
-            if DEBUG:
-                print()
-                print("doc", doc.text)
-                print("candidate pairs", [(ent1.start, ent2.start) for (ent1, ent2) in ents])
-                with numpy.printoptions(precision=2, suppress=True):
-                    print(f"tokvec {tokvecs[i]}")
             candidates.append(ents)
             shapes.append(tokvecs[i].shape)
             for (ent1, ent2) in ents:
                 # take mean value of tokens within an entity
-                v1 = tokvecs[i][ent1.start:ent1.end].mean(axis=0)
-                v2 = tokvecs[i][ent2.start:ent2.end].mean(axis=0)
+                v1 = tokvecs[i][ent1.start : ent1.end].mean(axis=0)
+                v2 = tokvecs[i][ent2.start : ent2.end].mean(axis=0)
                 relations.append(ops.xp.hstack((v1, v2)))
-        with numpy.printoptions(precision=2, suppress=True):
-            if DEBUG:
-                print()
-                print(f"candidate data: {ops.asarray(relations)}")
 
         def backprop(d_candidates):
-            if DEBUG:
-                with numpy.printoptions(precision=2, suppress=True):
-                    print(f"calling backprop for: {d_candidates}")
             result = []
             d = 0
             for i, shape in enumerate(shapes):
@@ -66,40 +52,36 @@ def create_tensors() -> Callable[[List["Doc"], Callable, List[Floats2d], Ops], T
                 row_dim = d_tokvecs.shape[1]
                 ents = candidates[i]
                 indices = {}
-                with numpy.printoptions(precision=2, suppress=True):
-                    # print()
-                    # collect all relevant indices for each entity
-                    for (ent1, ent2) in ents:
-                        t1 = (ent1.start, ent1.end)
-                        indices[t1] = indices.get(t1, [])
-                        indices[t1].append((d, 0, row_dim))
+                # collect all relevant indices for each entity
+                for (ent1, ent2) in ents:
+                    t1 = (ent1.start, ent1.end)
+                    indices[t1] = indices.get(t1, [])
+                    indices[t1].append((d, 0, row_dim))
 
-                        t2 = (ent2.start, ent2.end)
-                        indices[t2] = indices.get(t2, [])
-                        indices[t2].append((d, row_dim, len(d_candidates[d])))
-                        d += 1
-                    # for each entity, take the mean of its values
-                    for token, sources in indices.items():
-                        start, end = token
-                        for source in sources:
-                            d_tokvecs[start:end] += d_candidates[source[0]][source[1]:source[2]]
-                            # print("token", start, token[1], "-->", d_tokvecs[start:end])
-                        d_tokvecs[start:end] /= len(sources)
-
-                    # print(i, "d_tokvecs", d_tokvecs)
+                    t2 = (ent2.start, ent2.end)
+                    indices[t2] = indices.get(t2, [])
+                    indices[t2].append((d, row_dim, len(d_candidates[d])))
+                    d += 1
+                # for each entity, take the mean of its values
+                for token, sources in indices.items():
+                    start, end = token
+                    for source in sources:
+                        d_tokvecs[start:end] += d_candidates[source[0]][
+                            source[1] : source[2]
+                        ]
+                    d_tokvecs[start:end] /= len(sources)
                 result.append(d_tokvecs)
-            if DEBUG:
-                with numpy.printoptions(precision=2, suppress=True):
-                    print()
-                    print("backprop result", result)
             return result
 
         return ops.asarray(relations), backprop
+
     return get_candidate_tensor
 
 
 @registry.misc.register("rel_cand_generator.v2")
-def create_candidates(max_length: int) -> Callable[["Doc"], List[Tuple["Span", "Span"]]]:
+def create_candidates(
+    max_length: int
+) -> Callable[["Doc"], List[Tuple["Span", "Span"]]]:
     def get_candidates(doc: "Doc") -> List[Tuple["Span", "Span"]]:
         candidates = []
         for ent1 in doc.ents:
@@ -108,6 +90,7 @@ def create_candidates(max_length: int) -> Callable[["Doc"], List[Tuple["Span", "
                     if max_length and abs(ent2.start - ent1.start) <= max_length:
                         candidates.append((ent1, ent2))
         return candidates
+
     return get_candidates
 
 
@@ -118,50 +101,23 @@ def create_layer(nI: int = None, nO: int = None) -> Model[Floats2d, Floats2d]:
 
 
 def forward(model, docs, is_train):
-    if DEBUG:
-        print()
-        print("FORWARD", is_train)
     tok2vec = model.get_ref("tok2vec")
     get_candidates = model.attrs["get_candidates"]
     create_candidate_tensor = model.attrs["create_candidate_tensor"]
     output_layer = model.get_ref("output_layer")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
-    if DEBUG:
-        print("tokvecs", tokvecs)
-    cand_vectors, bp_cand = create_candidate_tensor(docs, get_candidates, tokvecs, model.ops)
+    cand_vectors, bp_cand = create_candidate_tensor(
+        docs, get_candidates, tokvecs, model.ops
+    )
     scores, bp_scores = output_layer(cand_vectors, is_train)
-    if DEBUG:
-        with numpy.printoptions(precision=2, suppress=True):
-            print()
-            print("scores", scores)
 
     def backprop(d_scores):
-        with numpy.printoptions(precision=2, suppress=True):
-            if DEBUG:
-                print()
-                print("backprop rel_model with d_scores", d_scores)
-                print()
-            bp_1 = bp_scores(d_scores)
-            if DEBUG:
-                print("bp1", bp_1)
-                print()
-            bp_2 = bp_cand(bp_1)
-            if DEBUG:
-                print("bp_2", bp_2)
-                print()
-            bp_3 = bp_tokvecs(bp_2)
-            if DEBUG:
-                print("bp_3", bp_3)
-                print()
-        return bp_3
-        #return bp_tokvecs(bp_cand(bp_scores(d_scores)))
+        return bp_tokvecs(bp_cand(bp_scores(d_scores)))
 
     return scores, backprop
 
 
-def init(
-    model: Model, X: List["Doc"] = None, Y: Floats2d = None
-) -> Model:
+def init(model: Model, X: List["Doc"] = None, Y: Floats2d = None) -> Model:
     get_candidates = model.attrs["get_candidates"]
     create_candidate_tensor = model.attrs["create_candidate_tensor"]
     output_layer = model.get_ref("output_layer")

@@ -17,8 +17,6 @@ from wasabi import Printer
 Doc.set_extension("rel", default={}, force=True)
 msg = Printer()
 
-DEBUG = False
-
 
 @Language.factory(
     "relation_extractor",
@@ -90,7 +88,6 @@ class RelationExtractor(TrainablePipe):
     def __call__(self, doc: Doc) -> Doc:
         """Apply the pipe to a Doc."""
         # check that there are actually any candidates in this batch of examples
-        # print("<<<< rel_pipe.call")
         total_candidates = len(self.model.attrs["get_candidates"](doc))
         if total_candidates == 0:
             msg.info("Could not determine any candidates in doc - returning doc as is.")
@@ -98,21 +95,14 @@ class RelationExtractor(TrainablePipe):
 
         predictions = self.predict([doc])
         self.set_annotations([doc], predictions)
-        # print("rel_pipe.call >>>>")
         return doc
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
-        # print(" <<<< rel_pipe.predict")
         total_candidates = sum([len(self.model.attrs["get_candidates"](doc)) for doc in docs])
         if total_candidates == 0:
             msg.info("Could not determine any candidates in any docs - can not make any predictions.")
-        # print("  <<<< rel_pipe.predict")
         scores = self.model.predict(docs)
-        # print("  rel_pipe.model.predict >>>>>")
-        # with numpy.printoptions(precision=2, suppress=True):
-        #     print(f"predicted scores: {scores}")
-        # print(" rel_pipe.predict >>>>")
         return self.model.ops.asarray(scores)
 
     def set_annotations(self, docs: Iterable[Doc], scores: Floats2d) -> None:
@@ -139,17 +129,10 @@ class RelationExtractor(TrainablePipe):
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss."""
-        if DEBUG:
-            print()
-            print("<<<< rel_pipe.update")
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
         set_dropout_rate(self.model, drop)
-
-        # mimic having an actual NER in the pipeline (TODO: solve this better)
-        for eg in examples:
-            eg.predicted.ents = eg.reference.ents
 
         # check that there are actually any candidates in this batch of examples
         total_candidates = 0
@@ -169,31 +152,14 @@ class RelationExtractor(TrainablePipe):
         if set_annotations:
             docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, predictions)
-        if DEBUG:
-            print("rel_pipe.update >>>")
         return losses
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores."""
-        # TODO: fix
-        if DEBUG:
-            print()
-            print("Getting loss")
         truths = self._examples_to_truth(examples)
-        if DEBUG:
-            print()
-            print("labels", self.labels)
-            print("truths", truths)
         d_scores = (scores - truths)
-        if DEBUG:
-            with numpy.printoptions(precision=2, suppress=True):
-                print()
-                print("d_scores", d_scores)
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
-        if DEBUG:
-            print(f"mean_square_error {mean_square_error}")
-            print()
         return float(mean_square_error), d_scores
 
     def initialize(
@@ -232,9 +198,7 @@ class RelationExtractor(TrainablePipe):
         if label_sample is None:
             raise ValueError("Call begin_training with relevant entities and relations annotated in "
                              "at least a few reference examples!")
-        # print("<<<< self.model.initialize")
         self.model.initialize(X=doc_sample, Y=label_sample)
-        # print("self.model.initialize >>>>")
 
     def _examples_to_truth(
         self, examples: List[Example]
@@ -255,8 +219,6 @@ class RelationExtractor(TrainablePipe):
                 c += 1
 
         truths = self.model.ops.asarray(truths)
-        # print(f"truths: {truths}")
-        # print()
         return truths
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:

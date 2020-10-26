@@ -19,7 +19,11 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
     docs = doc_bin.get_docs(nlp.vocab)
     examples = []
     for gold in docs:
-        pred = Doc(nlp.vocab, words=[t.text for t in gold], spaces=[t.whitespace_ for t in gold])
+        pred = Doc(
+            nlp.vocab,
+            words=[t.text for t in gold],
+            spaces=[t.whitespace_ for t in gold],
+        )
         pred.ents = gold.ents
         for name, proc in nlp.pipeline:
             pred = proc(pred)
@@ -33,13 +37,19 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
             for value, rel_dict in pred._.rel.items():
                 gold_labels = [k for (k, v) in gold._.rel[value].items() if v == 1.0]
                 if gold_labels:
-                    print(f" pair: {value} --> gold labels: {gold_labels} --> predicted values: {rel_dict}")
+                    print(
+                        f" pair: {value} --> gold labels: {gold_labels} --> predicted values: {rel_dict}"
+                    )
             print()
 
     random_examples = []
     docs = doc_bin.get_docs(nlp.vocab)
     for gold in docs:
-        pred = Doc(nlp.vocab, words=[t.text for t in gold], spaces=[t.whitespace_ for t in gold])
+        pred = Doc(
+            nlp.vocab,
+            words=[t.text for t in gold],
+            spaces=[t.whitespace_ for t in gold],
+        )
         pred.ents = gold.ents
         relation_extractor = nlp.get_pipe("relation_extractor")
         get_candidates = relation_extractor.model.attrs["get_candidates"]
@@ -64,7 +74,7 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
 def _score_and_format(examples, thresholds):
     for threshold in thresholds:
         r = score_relations(examples, threshold)
-        results = {k: "{:.2f}".format(v*100) for k,v in r.items()}
+        results = {k: "{:.2f}".format(v * 100) for k, v in r.items()}
         print(f"threshold {'{:.2f}'.format(threshold)} \t {results}")
 
 

@@ -5,8 +5,11 @@ from spacy import registry
 from spacy.training import Example
 from spacy.tokens import DocBin, Doc
 
-from scripts.rel_pipe import make_relation_extractor  # make the factory work
-from scripts.rel_model import create_relation_model, create_candidates, create_layer  # make the config work
+# make the factory work
+from scripts.rel_pipe import make_relation_extractor
+
+# make the config work
+from scripts.rel_model import create_relation_model, create_candidates, create_layer
 
 
 @registry.readers("Gold_ents_Corpus.v1")
