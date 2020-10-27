@@ -36,6 +36,13 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: "install"
+    help: "Install dependencies."
+    script:
+      - "pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
+
   - name: "data"
     help: "Extract the datasets from their archives."
     script:
