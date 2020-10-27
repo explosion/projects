@@ -45,10 +45,12 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                     # Parse the GGP entities
                     spans = example["spans"]
                     entities = []
+                    span_end_to_start = {}
                     for span in spans:
                         entity = doc.char_span(
                             span["start"], span["end"], label=span["label"]
                         )
+                        span_end_to_start[span["token_end"]] = span["token_start"]
                         entities.append(entity)
                         span_starts.add(span["token_start"])
                     doc.ents = entities
@@ -60,8 +62,10 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                             rels[(x1, x2)] = {}
                     relations = example["relations"]
                     for relation in relations:
-                        start = relation["head_span"]["token_start"]
-                        end = relation["child_span"]["token_start"]
+                        # the 'head' and 'child' annotations refer to the end token in the span
+                        # but we want the first token
+                        start = span_end_to_start[relation["head"]]
+                        end = span_end_to_start[relation["child"]]
                         label = relation["label"]
                         label = MAP_LABELS[label]
                         if label not in rels[(start, end)]:
