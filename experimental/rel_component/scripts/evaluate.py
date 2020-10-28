@@ -9,7 +9,8 @@ from spacy.training.example import Example
 from rel_pipe import make_relation_extractor, score_relations
 
 # make the config work
-from rel_model import create_relation_model, create_candidates, create_layer
+from rel_model import create_relation_model, create_classification_layer
+from rel_instances import create_candidates, create_tensors
 
 
 def main(trained_pipeline: Path, test_data: Path, print_details: bool):
