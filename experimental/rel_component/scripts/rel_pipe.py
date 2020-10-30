@@ -87,10 +87,10 @@ class RelationExtractor(TrainablePipe):
 
     def __call__(self, doc: Doc) -> Doc:
         """Apply the pipe to a Doc."""
-        # check that there are actually any candidates in this batch of examples
-        total_candidates = len(self.model.attrs["get_candidates"](doc))
-        if total_candidates == 0:
-            msg.info("Could not determine any candidates in doc - returning doc as is.")
+        # check that there are actually any candidate instances in this batch of examples
+        total_instances = len(self.model.attrs["get_instances"](doc))
+        if total_instances == 0:
+            msg.info("Could not determine any instances in doc - returning doc as is.")
             return doc
 
         predictions = self.predict([doc])
@@ -99,18 +99,18 @@ class RelationExtractor(TrainablePipe):
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
-        total_candidates = sum([len(self.model.attrs["get_candidates"](doc)) for doc in docs])
-        if total_candidates == 0:
-            msg.info("Could not determine any candidates in any docs - can not make any predictions.")
+        total_instances = sum([len(self.model.attrs["get_instances"](doc)) for doc in docs])
+        if total_instances == 0:
+            msg.info("Could not determine any instances in any docs - can not make any predictions.")
         scores = self.model.predict(docs)
         return self.model.ops.asarray(scores)
 
     def set_annotations(self, docs: Iterable[Doc], scores: Floats2d) -> None:
         """Modify a batch of `Doc` objects, using pre-computed scores."""
         c = 0
-        get_candidates = self.model.attrs["get_candidates"]
+        get_instances = self.model.attrs["get_instances"]
         for doc in docs:
-            for (e1, e2) in get_candidates(doc):
+            for (e1, e2) in get_instances(doc):
                 offset = (e1.start, e2.start)
                 if offset not in doc._.rel:
                     doc._.rel[offset] = {}
@@ -134,12 +134,12 @@ class RelationExtractor(TrainablePipe):
         losses.setdefault(self.name, 0.0)
         set_dropout_rate(self.model, drop)
 
-        # check that there are actually any candidates in this batch of examples
-        total_candidates = 0
+        # check that there are actually any candidate instances in this batch of examples
+        total_instances = 0
         for eg in examples:
-            total_candidates += len(self.model.attrs["get_candidates"](eg.predicted))
-        if total_candidates == 0:
-            msg.info("Could not determine any candidates in doc.")
+            total_instances += len(self.model.attrs["get_instances"](eg.predicted))
+        if total_instances == 0:
+            msg.info("Could not determine any instances in doc.")
             return losses
 
         # run the model
@@ -194,16 +194,17 @@ class RelationExtractor(TrainablePipe):
     def _examples_to_truth(
         self, examples: List[Example]
     ) -> Optional[numpy.ndarray]:
-        nr_candidates = 0
+        # check that there are actually any candidate instances in this batch of examples
+        nr_instances = 0
         for eg in examples:
-            nr_candidates += len(self.model.attrs["get_candidates"](eg.reference))
-        if nr_candidates == 0:
+            nr_instances += len(self.model.attrs["get_instances"](eg.reference))
+        if nr_instances == 0:
             return None
 
-        truths = numpy.zeros((nr_candidates, len(self.labels)), dtype="f")
+        truths = numpy.zeros((nr_instances, len(self.labels)), dtype="f")
         c = 0
         for i, eg in enumerate(examples):
-            for (e1, e2) in self.model.attrs["get_candidates"](eg.reference):
+            for (e1, e2) in self.model.attrs["get_instances"](eg.reference):
                 gold_label_dict = eg.reference._.rel.get((e1.start, e2.start), {})
                 for j, label in enumerate(self.labels):
                     truths[c, j] = gold_label_dict.get(label, 0)

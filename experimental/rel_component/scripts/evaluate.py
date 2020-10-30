@@ -9,7 +9,7 @@ from spacy.training.example import Example
 from rel_pipe import make_relation_extractor, score_relations
 
 # make the config work
-from rel_model import create_relation_model, create_classification_layer, create_candidates, create_tensors
+from rel_model import create_relation_model, create_classification_layer, create_instances, create_tensors
 
 
 def main(trained_pipeline: Path, test_data: Path, print_details: bool):
@@ -52,8 +52,8 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
         )
         pred.ents = gold.ents
         relation_extractor = nlp.get_pipe("relation_extractor")
-        get_candidates = relation_extractor.model.attrs["get_candidates"]
-        for (e1, e2) in get_candidates(pred):
+        get_instances = relation_extractor.model.attrs["get_instances"]
+        for (e1, e2) in get_instances(pred):
             offset = (e1.start, e2.start)
             if offset not in pred._.rel:
                 pred._.rel[offset] = {}
