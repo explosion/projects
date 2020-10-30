@@ -19,7 +19,7 @@ def create_relation_model(
 
 
 @registry.architectures.register("rel_classification_layer.v1")
-def create_classification_layer(nI: int = None, nO: int = None) -> Model[Floats2d, Floats2d]:
+def create_classification_layer(nO: int = None, nI: int = None) -> Model[Floats2d, Floats2d]:
     with Model.define_operators({">>": chain}):
         return Linear(nO=nO, nI=nI) >> Logistic()
 
@@ -47,18 +47,18 @@ def create_tensors(
 ) -> Model[List[Doc], Floats2d]:
 
     return Model(
-        "create_tensors",
-        cand_forward,
+        "instance_tensors",
+        instance_forward,
         layers=[tok2vec],
         refs={"tok2vec": tok2vec},
         attrs={
             "get_instances": get_instances,
         },
-        init=cand_init,
+        init=instance_init,
     )
 
 
-def cand_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool) -> Tuple[Floats2d, Callable]:
+def instance_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool) -> Tuple[Floats2d, Callable]:
     relations = []
     shapes = []
     instances = []
@@ -108,7 +108,7 @@ def cand_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: b
     return model.ops.asarray(relations), backprop
 
 
-def cand_init(model: Model, X: List[Doc] = None, Y: Floats2d = None) -> Model:
+def instance_init(model: Model, X: List[Doc] = None, Y: Floats2d = None) -> Model:
     tok2vec = model.get_ref("tok2vec")
     if X is not None:
         tok2vec.initialize(X)
