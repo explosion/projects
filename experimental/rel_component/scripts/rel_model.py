@@ -1,13 +1,12 @@
-from typing import List, Optional, Tuple, Callable
+from typing import List, Tuple, Callable
 
+import spacy
 from spacy.tokens import Doc, Span
 from thinc.types import Floats2d
 from thinc.api import Model, Linear, chain, Logistic
 
-from spacy.util import registry
 
-
-@registry.architectures.register("rel_model.v1")
+@spacy.registry.architectures.register("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
     classification_layer: Model[Floats2d, Floats2d],
@@ -18,16 +17,16 @@ def create_relation_model(
     return model
 
 
-@registry.architectures.register("rel_classification_layer.v1")
-def create_classification_layer(nO: int = None, nI: int = None) -> Model[Floats2d, Floats2d]:
+@spacy.registry.architectures.register("rel_classification_layer.v1")
+def create_classification_layer(
+    nO: int = None, nI: int = None
+) -> Model[Floats2d, Floats2d]:
     with Model.define_operators({">>": chain}):
         return Linear(nO=nO, nI=nI) >> Logistic()
 
 
-@registry.misc.register("rel_instance_generator.v2")
-def create_instances(
-    max_length: int
-) -> Callable[[Doc], List[Tuple[Span, Span]]]:
+@spacy.registry.misc.register("rel_instance_generator.v2")
+def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_instances(doc: Doc) -> List[Tuple[Span, Span]]:
         instances = []
         for ent1 in doc.ents:
@@ -40,10 +39,10 @@ def create_instances(
     return get_instances
 
 
-@registry.misc.register("rel_instance_tensor.v1")
+@spacy.registry.misc.register("rel_instance_tensor.v1")
 def create_tensors(
-        tok2vec: Model[List[Doc], List[Floats2d]],
-        get_instances: Callable[[Doc], List[Tuple[Span, Span]]],
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    get_instances: Callable[[Doc], List[Tuple[Span, Span]]],
 ) -> Model[List[Doc], Floats2d]:
 
     return Model(
@@ -51,14 +50,14 @@ def create_tensors(
         instance_forward,
         layers=[tok2vec],
         refs={"tok2vec": tok2vec},
-        attrs={
-            "get_instances": get_instances,
-        },
+        attrs={"get_instances": get_instances},
         init=instance_init,
     )
 
 
-def instance_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool) -> Tuple[Floats2d, Callable]:
+def instance_forward(
+    model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool
+) -> Tuple[Floats2d, Callable]:
     relations = []
     shapes = []
     instances = []

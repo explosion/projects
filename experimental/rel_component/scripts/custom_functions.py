@@ -1,7 +1,7 @@
 from functools import partial
 from pathlib import Path
 from typing import Iterable, Callable
-from spacy import registry
+import spacy
 from spacy.training import Example
 from spacy.tokens import DocBin, Doc
 
@@ -12,7 +12,7 @@ from scripts.rel_pipe import make_relation_extractor
 from scripts.rel_model import create_relation_model, create_classification_layer, create_instances, create_tensors
 
 
-@registry.readers("Gold_ents_Corpus.v1")
+@spacy.registry.readers("Gold_ents_Corpus.v1")
 def create_docbin_reader(file: Path) -> Callable[["Language"], Iterable[Example]]:
     return partial(read_files, file)
 
