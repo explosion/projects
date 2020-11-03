@@ -29,21 +29,10 @@ msg = Printer()
     },
 )
 def make_relation_extractor(
-    nlp: Language,
-    name: str,
-    model: Model,
-    *,
-    labels: List[str] = [],
-    threshold: float,
+    nlp: Language, name: str, model: Model, *, labels: List[str] = [], threshold: float
 ):
     """Construct a RelationExtractor component."""
-    return RelationExtractor(
-        nlp.vocab,
-        model,
-        name,
-        labels=labels,
-        threshold=threshold,
-    )
+    return RelationExtractor(nlp.vocab, model, name, labels=labels, threshold=threshold)
 
 
 class RelationExtractor(TrainablePipe):
@@ -54,17 +43,13 @@ class RelationExtractor(TrainablePipe):
         name: str = "rel",
         *,
         labels: List[str] = [],
-        threshold: float
+        threshold: float,
     ) -> None:
         """Initialize a relation extractor."""
         self.vocab = vocab
         self.model = model
         self.name = name
-        cfg = {
-            "labels": labels,
-            "threshold": threshold,
-        }
-        self.cfg = dict(cfg)
+        self.cfg = {"labels": labels, "threshold": threshold}
 
     @property
     def labels(self) -> Tuple[str]:
@@ -99,7 +84,8 @@ class RelationExtractor(TrainablePipe):
 
     def predict(self, docs: Iterable[Doc]) -> Floats2d:
         """Apply the pipeline's model to a batch of docs, without modifying them."""
-        total_instances = sum([len(self.model.attrs["get_instances"](doc)) for doc in docs])
+        get_instances = self.model.attrs["get_instances"]
+        total_instances = sum([len(get_instances(doc)) for doc in docs])
         if total_instances == 0:
             msg.info("Could not determine any instances in any docs - can not make any predictions.")
         scores = self.model.predict(docs)
@@ -143,14 +129,14 @@ class RelationExtractor(TrainablePipe):
             return losses
 
         # run the model
-        predictions, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
-        loss, d_scores = self.get_loss(examples, predictions)
-        bp_scores(d_scores)
+        docs = [eg.predicted for eg in examples]
+        predictions, backprop = self.model.begin_update(docs)
+        loss, gradient = self.get_loss(examples, predictions)
+        backprop(gradient)
         if sgd is not None:
             self.model.finish_update(sgd)
         losses[self.name] += loss
         if set_annotations:
-            docs = [eg.predicted for eg in examples]
             self.set_annotations(docs, predictions)
         return losses
 
@@ -158,9 +144,9 @@ class RelationExtractor(TrainablePipe):
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores."""
         truths = self._examples_to_truth(examples)
-        d_scores = (scores - truths)
-        mean_square_error = (d_scores ** 2).sum(axis=1).mean()
-        return float(mean_square_error), d_scores
+        gradient = scores - truths
+        mean_square_error = (gradient ** 2).sum(axis=1).mean()
+        return float(mean_square_error), gradient
 
     def initialize(
         self,
@@ -191,9 +177,7 @@ class RelationExtractor(TrainablePipe):
                              "at least a few reference examples!")
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    def _examples_to_truth(
-        self, examples: List[Example]
-    ) -> Optional[numpy.ndarray]:
+    def _examples_to_truth(self, examples: List[Example]) -> Optional[numpy.ndarray]:
         # check that there are actually any candidate instances in this batch of examples
         nr_instances = 0
         for eg in examples:
