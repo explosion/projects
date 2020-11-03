@@ -41,7 +41,9 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
+| `all` | `setup` &rarr; `download` &rarr; `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 | `training` | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
+
 
 ### 🗂 Assets
 
