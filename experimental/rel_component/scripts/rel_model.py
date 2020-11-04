@@ -6,8 +6,6 @@ from spacy.tokens import Doc, Span
 from thinc.types import Floats2d, Ints1d, Ragged, cast
 from thinc.api import Model, Linear, chain, Logistic
 
-DEBUG = False
-
 
 @spacy.registry.architectures.register("rel_model.v1")
 def create_relation_model(
@@ -62,13 +60,6 @@ def create_tensors(
 def instance_forward(
     model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool
 ) -> Tuple[Floats2d, Callable]:
-    if DEBUG:
-        print()
-        print("instance forward")
-        print("docs", docs)
-        for doc in docs:
-            for ent in doc.ents:
-                print(ent.text, ent.start, ent.end)
 
     pooling: Model[Ragged, Floats2d] = model.get_ref("pooling")
     tok2vec: Model[List[Doc], List[Floats2d]] = model.get_ref("tok2vec")
@@ -80,10 +71,6 @@ def instance_forward(
 
     with numpy.printoptions(precision=2, suppress=True):
         for doc_nr, (instances, tokvec) in enumerate(zip(all_instances, tokvecs)):
-            if DEBUG:
-                print()
-                print("doc", doc_nr)
-                print("tokvec", tokvec)
             token_indices = []
             for instance in instances:
                 for ent in instance:
@@ -93,47 +80,23 @@ def instance_forward(
             ents.append(entity_array)
         array = model.ops.flatten(ents)
 
-        if DEBUG:
-            print("DONE")
-            print("ents", ents)
-            print("array", array)
-            print("lenghts", lengths)
-
         entities = Ragged(array, cast(Ints1d, model.ops.asarray(lengths, dtype="int32")))
         pooled, bp_pooled = pooling(entities, is_train)
 
         # Reshape so that pairs of rows are concatenated.
         relations = model.ops.reshape2f(pooled, -1, pooled.shape[1] * 2)
-        if DEBUG:
-            print("entities", entities)
-            print("pooled", pooled)
-            print("relations", relations.shape)
-            print(relations)
-            print()
 
     def backprop(d_relations: Floats2d) -> List[Doc]:
         with numpy.printoptions(precision=2, suppress=True):
-            if DEBUG:
-                print()
-                print("instance backprop")
-                print("d_relations", d_relations.shape)
-                print(d_relations)
 
             d_pooled = model.ops.reshape2f(d_relations, d_relations.shape[0] * 2, -1)
             d_ents = bp_pooled(d_pooled).data
             d_tokvecs = []
             t = 0
-            if DEBUG:
-                print("d_pooled", d_pooled)
-                print("d_ents", d_ents)
             for doc_nr, instances in enumerate(all_instances):
                 shape = tokvecs[doc_nr].shape
                 d_tokvec = model.ops.alloc2f(*shape)
                 count_occ = model.ops.alloc2f(*shape)
-                if DEBUG:
-                    print("doc_nr", doc_nr)
-                    print("shape", shape)
-                    print("d_tokvec", d_tokvec)
                 for instance in instances:
                     for ent in instance:
                         d_tokvec[ent.start: ent.end] += d_ents[t]
@@ -141,11 +104,7 @@ def instance_forward(
                         t += (ent.end - ent.start)
                 d_tokvec /= (count_occ+0.00000000001)
                 d_tokvecs.append(d_tokvec)
-                if DEBUG:
-                    print(" --> d_tokvec", d_tokvec)
 
-            if DEBUG:
-                print(" ---> d_tokvecs", d_tokvecs)
             d_docs = bp_tokvecs(d_tokvecs)
         return d_docs
 
