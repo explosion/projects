@@ -99,7 +99,7 @@ def instance_forward(
             print("array", array)
             print("lenghts", lengths)
 
-        entities = Ragged(array, cast(Ints1d, model.ops.asarray(lengths)))
+        entities = Ragged(array, cast(Ints1d, model.ops.asarray(lengths, dtype="int32")))
         pooled, bp_pooled = pooling(entities, is_train)
 
         # Reshape so that pairs of rows are concatenated.
