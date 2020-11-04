@@ -56,10 +56,7 @@ def create_tensors(
     )
 
 
-def instance_forward(
-    model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool
-) -> Tuple[Floats2d, Callable]:
-
+def instance_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool) -> Tuple[Floats2d, Callable]:
     pooling: Model[Ragged, Floats2d] = model.get_ref("pooling")
     tok2vec: Model[List[Doc], List[Floats2d]] = model.get_ref("tok2vec")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
@@ -74,8 +71,7 @@ def instance_forward(
             for ent in instance:
                 token_indices.extend([i for i in range(ent.start, ent.end)])
                 lengths.append(ent.end - ent.start)
-        entity_array = tokvec[token_indices]
-        ents.append(entity_array)
+        ents.append(tokvec[token_indices])
     lengths = cast(Ints1d, model.ops.asarray(lengths, dtype="int32"))
     entities = Ragged(model.ops.flatten(ents), lengths)
     pooled, bp_pooled = pooling(entities, is_train)
@@ -103,7 +99,7 @@ def instance_forward(
         d_docs = bp_tokvecs(d_tokvecs)
         return d_docs
 
-    return model.ops.asarray(relations), backprop
+    return relations, backprop
 
 
 def instance_init(model: Model, X: List[Doc] = None, Y: Floats2d = None) -> Model:
