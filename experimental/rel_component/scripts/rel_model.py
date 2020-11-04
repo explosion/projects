@@ -1,9 +1,12 @@
 from typing import List, Tuple, Callable
 
+import numpy
 import spacy
 from spacy.tokens import Doc, Span
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Ints1d, Ragged, cast
 from thinc.api import Model, Linear, chain, Logistic
+
+DEBUG = False
 
 
 @spacy.registry.architectures.register("rel_model.v1")
@@ -42,14 +45,15 @@ def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]
 @spacy.registry.misc.register("rel_instance_tensor.v1")
 def create_tensors(
     tok2vec: Model[List[Doc], List[Floats2d]],
+    pooling: Model[Ragged, Floats2d],
     get_instances: Callable[[Doc], List[Tuple[Span, Span]]],
 ) -> Model[List[Doc], Floats2d]:
 
     return Model(
         "instance_tensors",
         instance_forward,
-        layers=[tok2vec],
-        refs={"tok2vec": tok2vec},
+        layers=[tok2vec, pooling],
+        refs={"tok2vec": tok2vec, "pooling": pooling},
         attrs={"get_instances": get_instances},
         init=instance_init,
     )
@@ -58,51 +62,92 @@ def create_tensors(
 def instance_forward(
     model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool
 ) -> Tuple[Floats2d, Callable]:
-    relations = []
-    shapes = []
-    instances = []
-    tok2vec = model.get_ref("tok2vec")
+    if DEBUG:
+        print()
+        print("instance forward")
+        print("docs", docs)
+        for doc in docs:
+            for ent in doc.ents:
+                print(ent.text, ent.start, ent.end)
+
+    pooling: Model[Ragged, Floats2d] = model.get_ref("pooling")
+    tok2vec: Model[List[Doc], List[Floats2d]] = model.get_ref("tok2vec")
     tokvecs, bp_tokvecs = tok2vec(docs, is_train)
     get_instances = model.attrs["get_instances"]
-    for doc, tokvec in zip(docs, tokvecs):
-        ents = get_instances(doc)
-        instances.append(ents)
-        shapes.append(tokvec.shape)
-        for (ent1, ent2) in ents:
-            # take mean value of tokens within an entity
-            v1 = tokvec[ent1.start : ent1.end].mean(axis=0)
-            v2 = tokvec[ent2.start : ent2.end].mean(axis=0)
-            relations.append(model.ops.xp.hstack((v1, v2)))
+    all_instances = [get_instances(doc) for doc in docs]
+    ents = []
+    lengths = []
 
-    def backprop(d_instances: Floats2d) -> List[Doc]:
-        result = []
-        d = 0
-        for i, shape in enumerate(shapes):
-            # TODO: make more efficient / succinct
-            d_tokvecs = model.ops.alloc2f(*shape)
-            row_dim = d_tokvecs.shape[1]
-            ents = instances[i]
-            indices = {}
-            # collect all relevant indices for each entity
-            for (ent1, ent2) in ents:
-                t1 = (ent1.start, ent1.end)
-                indices[t1] = indices.get(t1, [])
-                indices[t1].append((d, 0, row_dim))
+    with numpy.printoptions(precision=2, suppress=True):
+        for doc_nr, (instances, tokvec) in enumerate(zip(all_instances, tokvecs)):
+            if DEBUG:
+                print()
+                print("doc", doc_nr)
+                print("tokvec", tokvec)
+            token_indices = []
+            for instance in instances:
+                for ent in instance:
+                    token_indices.extend([i for i in range(ent.start, ent.end)])
+                    lengths.append(ent.end - ent.start)
+            entity_array = tokvec[token_indices]
+            ents.append(entity_array)
+        array = model.ops.flatten(ents)
 
-                t2 = (ent2.start, ent2.end)
-                indices[t2] = indices.get(t2, [])
-                indices[t2].append((d, row_dim, len(d_instances[d])))
-                d += 1
-            # for each entity, take the mean of its values
-            for token, sources in indices.items():
-                start, end = token
-                for source in sources:
-                    d_tokvecs[start:end] += d_instances[source[0]][
-                        source[1] : source[2]
-                    ]
-                d_tokvecs[start:end] /= len(sources)
-            result.append(d_tokvecs)
-        return bp_tokvecs(result)
+        if DEBUG:
+            print("DONE")
+            print("ents", ents)
+            print("array", array)
+            print("lenghts", lengths)
+
+        entities = Ragged(array, cast(Ints1d, model.ops.asarray(lengths)))
+        pooled, bp_pooled = pooling(entities, is_train)
+
+        # Reshape so that pairs of rows are concatenated.
+        relations = model.ops.reshape2f(pooled, -1, pooled.shape[1] * 2)
+        if DEBUG:
+            print("entities", entities)
+            print("pooled", pooled)
+            print("relations", relations.shape)
+            print(relations)
+            print()
+
+    def backprop(d_relations: Floats2d) -> List[Doc]:
+        with numpy.printoptions(precision=2, suppress=True):
+            if DEBUG:
+                print()
+                print("instance backprop")
+                print("d_relations", d_relations.shape)
+                print(d_relations)
+
+            d_pooled = model.ops.reshape2f(d_relations, d_relations.shape[0] * 2, -1)
+            d_ents = bp_pooled(d_pooled).data
+            d_tokvecs = []
+            t = 0
+            if DEBUG:
+                print("d_pooled", d_pooled)
+                print("d_ents", d_ents)
+            for doc_nr, instances in enumerate(all_instances):
+                shape = tokvecs[doc_nr].shape
+                d_tokvec = model.ops.alloc2f(*shape)
+                count_occ = model.ops.alloc2f(*shape)
+                if DEBUG:
+                    print("doc_nr", doc_nr)
+                    print("shape", shape)
+                    print("d_tokvec", d_tokvec)
+                for instance in instances:
+                    for ent in instance:
+                        d_tokvec[ent.start: ent.end] += d_ents[t]
+                        count_occ[ent.start: ent.end] += 1
+                        t += (ent.end - ent.start)
+                d_tokvec /= (count_occ+0.00000000001)
+                d_tokvecs.append(d_tokvec)
+                if DEBUG:
+                    print(" --> d_tokvec", d_tokvec)
+
+            if DEBUG:
+                print(" ---> d_tokvecs", d_tokvecs)
+            d_docs = bp_tokvecs(d_tokvecs)
+        return d_docs
 
     return model.ops.asarray(relations), backprop
 

@@ -24,7 +24,11 @@ assets:
 workflows:
   all:
     - data
-    - train
+    - train_cpu
+    - evaluate
+  all_gpu:
+    - data
+    - train_gpu
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -50,11 +54,20 @@ commands:
       - ${vars.dev_file}
       - ${vars.test_file}
 
-  - name: "train"
-    help: "Train the REL model on the training corpus and evaluate on the dev corpus."
+  - name: "train_cpu"
+    help: "Train the REL model on the CP and evaluate on the dev corpus."
     script:
       - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py"
-      # - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py --gpu-id 0"
+    deps:
+      - ${vars.train_file}
+      - ${vars.dev_file}
+    outputs:
+      - ${vars.trained_model}
+
+  - name: "train_gpu"
+    help: "Train the REL model with a Transformer on a GPU and evaluate on the dev corpus."
+    script:
+      - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py --gpu-id 0"
     deps:
       - ${vars.train_file}
       - ${vars.dev_file}
@@ -70,7 +83,7 @@ commands:
       - ${vars.test_file}
 
 
-  - name: clean
+  - name: "clean"
     help: "Remove intermediate files to start data preparation & training from a clean slate."
     script:
       - "rm -rf data/*"
