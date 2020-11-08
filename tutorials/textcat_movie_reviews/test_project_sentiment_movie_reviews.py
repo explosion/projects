@@ -3,8 +3,10 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-def test_ner_drugs_project():
+def test_project_sentiment_movie_reviews():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "all")
-    project_run(root, "package")
+    project_run(root, "download")
+    project_run(root, "convert")
+    project_run(root, "train")
+    project_run(root, "evaluate")
