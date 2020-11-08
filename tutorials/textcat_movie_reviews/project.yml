@@ -1,0 +1,129 @@
+title: "Sentiment Analysis on the Rottoen Tomatoes movie reviews dataset (Sentiment Analysis)"
+description: "This project born as Kaggle competition [https://www.kaggle.com/c/sentiment-analysis-on-movie-reviews]."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config.cfg"
+  name: "sentiment_movie_reviews"
+  version: "0.0.1"
+  training: "training_set"
+  validation: "validation_set"
+  test: "test_set"
+  
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "scripts", "corpus", "packages", "metrics"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/${vars.training}.tsv.zip"
+    #checksum: "d610562e898591f36f4f426fb34f1e09"
+    git:
+      repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
+      branch: 'main'
+      path: 'train.tsv.zip'
+    description: "Tab-Separated Values (TSV) Zipped (ZIP) file which contains the training data, exported from Kaggle Dataset (8.529 examples)."
+  - dest: "assets/${vars.validation}.tsv.zip"
+    #checksum: "2d965f772ac55404cc22bac891b129c2"
+    git:
+      repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
+      branch: 'main'
+      path: 'test.tsv.zip'
+    
+    description: "Tab-Separated Values (TSV) Zipped (ZIP) file which contains the test data (without labels), exported from Kaggle Dataset (3.310 examples)."
+  - dest: "assets/${vars.test}.csv"
+    #checksum: "e2b35cdcebfd41fb18f24e04af2ab601"
+    git:
+      repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
+      branch: 'main'
+      path: 'sampleSubmission.csv'
+    description: "Comma-Separated Values (CSV) file which contains labels of the the test data, exported from Kaggle Dataset (3.310 examples)."
+  - dest: "assets/categories.json"
+    #checksum: "e2b35cdcebfd41fb18f24e04af2ab601"
+    git:
+      repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
+      branch: 'main'
+      path: 'categories.json'
+    description: "JSON file which contains the list of labels (5 in total)."
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+#workflows:
+#  all:
+#    - preprocess
+#    - train
+#    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "download"
+    help: "Download the input dataset (i.e. training set and test set) and the list of categories."
+    script:
+      - "python -m spacy project assets -S"
+      - "python scripts/split_dataset.py -i ./assets/ -o ./assets/"
+    outputs:
+      - "assets/training_set.tsv"
+      - "assets/validation_set.tsv"
+      - "assets/test_set.tsv"
+      - "assets/categories.json"
+
+  - name: "convert"
+    help: "Convert the input dataset (i.e. training set, validation set and test set) to spaCy's binary format."
+    script:
+      - "python scripts/dataset_conversion.py -i assets/training_set.tsv -o corpus/training_set.spacy -c assets/categories.json"
+      - "python scripts/dataset_conversion.py -i assets/validation_set.tsv -o corpus/validation_set.spacy -c assets/categories.json"
+      - "python scripts/dataset_conversion.py -i assets/test_set.tsv -o corpus/test_set.spacy -c assets/categories.json"
+    deps:
+      - "scripts/dataset_conversion.py"
+    outputs:
+      - "corpus/training_set.spacy"
+      - "corpus/validation_set.spacy"
+      - "corpus/test_set.spacy"
+      
+  - name: "init"
+    help: "Create a config.cfg file which contains all the settings needed for training a Text Classifier."
+    script:
+      - "python -m spacy init config config.cfg --lang en --pipeline textcat --optimize efficiency --cpu"
+      - "python scripts/move_file.py -i ./config.cfg -o ./configs/"
+    deps:
+      - "scripts/move_file.py"
+    outputs:
+      - "configs/configs.cfg"
+  
+  - name: "train"
+    help: "Train a Text Classification model."
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/training_set.spacy --paths.dev corpus/validation_set.spacy"
+    deps:
+      - "corpus/training_set.spacy"
+      - "corpus/validation_set.spacy"
+      - "configs/config.cfg"
+    outputs:
+      - "training/model-best"
+   
+  - name: "evaluate"
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/model-best ./corpus/training_set.spacy --output ./metrics/training_set_results.json"
+      - "python -m spacy evaluate ./training/model-best ./corpus/validation_set.spacy --output ./metrics/validation_set_results.json"
+    deps:
+      - "training/model-last"
+      - "training/model-best"
+      - "corpus/training_set.spacy"
+      - "corpus/validation_set.spacy"
+    outputs:
+      - "metrics/training_set_results.json"
+      - "metrics/validation_set_results.json"
+   
+  - name: "use"
+    help: "Use the best trained Text Classification model for testing purposes."
+    script:
+      - "python scripts/use_model.py -m ./training/model-best"
+    deps:
+      - "training/model-best"
