@@ -39,7 +39,7 @@ def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]
     return get_instances
 
 
-@spacy.registry.misc.register("rel_instance_tensor.v1")
+@spacy.registry.architectures.register("rel_instance_tensor.v1")
 def create_tensors(
     tok2vec: Model[List[Doc], List[Floats2d]],
     pooling: Model[Ragged, Floats2d],
@@ -57,11 +57,12 @@ def create_tensors(
 
 
 def instance_forward(model: Model[List[Doc], Floats2d], docs: List[Doc], is_train: bool) -> Tuple[Floats2d, Callable]:
-    pooling: Model[Ragged, Floats2d] = model.get_ref("pooling")
-    tok2vec: Model[List[Doc], List[Floats2d]] = model.get_ref("tok2vec")
-    tokvecs, bp_tokvecs = tok2vec(docs, is_train)
+    pooling = model.get_ref("pooling")
+    tok2vec = model.get_ref("tok2vec")
     get_instances = model.attrs["get_instances"]
     all_instances = [get_instances(doc) for doc in docs]
+    tokvecs, bp_tokvecs = tok2vec(docs, is_train)
+
     ents = []
     lengths = []
 
