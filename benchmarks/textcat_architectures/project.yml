@@ -1,0 +1,91 @@
+title: "Textcat performance benchmarks"
+description: "Benchmarking different textcat architectures on different datasets."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  epochs: 10
+  dropout: 0.1
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "assets", "results", "configs"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+  # - dest: "assets/MovieSummaries.tar.gz"
+  #  url: "http://www.cs.cmu.edu/~ark/personas/data/MovieSummaries.tar.gz"
+  #  description: "CMU Movie Summary Corpus by Bamman et al., ACL 2013."
+
+  - dest: "assets/aclImdb_v1.tar.gz"
+    url: "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+    description: "Movie Review Dataset by Maas et al., ACL 2011."
+
+  - dest: "assets/dbpedia_csv.tgz"
+    url: "https://s3.amazonaws.com/fast-ai-nlp/dbpedia_csv.tgz"
+    description: "DBPedia ontology with 14 nonoverlapping classes by Zhang et al., 2015."
+
+workflows:
+  all:
+    - data
+    - train
+    - summarize
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "install"
+    help: "Install dependencies."
+    script:
+      - "pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
+
+  - name: "data"
+    help: "Extract the datasets from their archives."
+    script:
+     # - "tar -xzf ./assets/MovieSummaries.tar.gz -C ./assets/"
+      - "tar -xzf ./assets/aclImdb_v1.tar.gz -C ./assets/"
+      - "tar -xzf ./assets/dbpedia_csv.tgz -C ./assets/"
+    deps:
+     # - "assets/MovieSummaries.tar.gz"
+      - "assets/aclImdb_v1.tar.gz"
+      - "assets/dbpedia_csv.tgz"
+    outputs:
+     # - "assets/MovieSummaries/movie.metadata.tsv"
+     # - "assets/MovieSummaries/plot_summaries.txt"
+      - "assets/aclImdb/train/"
+      - "assets/aclImdb/test/"
+      - "assets/dbpedia_csv/train.csv"
+      - "assets/dbpedia_csv/test.csv"
+
+  - name: "train"
+    help: "Run customized training runs: 3 textcat architectures trained on 2 datasets."
+    script:
+      - "python -m spacy train configs/config_imdb_bow.cfg --output results/imdb/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+      - "python -m spacy train configs/config_imdb_cnn.cfg --output results/imdb/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+      - "python -m spacy train configs/config_imdb_ensemble.cfg --output results/imdb/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+
+      - "python -m spacy train configs/config_dbpedia_bow.cfg --output results/dbpedia/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+      - "python -m spacy train configs/config_dbpedia_cnn.cfg --output results/dbpedia/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+      - "python -m spacy train configs/config_dbpedia_ensemble.cfg --output results/dbpedia/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs} --training.dropout ${vars.dropout}"
+
+      # - "python -m spacy train configs/config_cmu_bow.cfg --output results/cmu/bow/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      # - "python -m spacy train configs/config_cmu_cnn.cfg --output results/cmu/cnn/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+      # - "python -m spacy train configs/config_cmu_ensemble.cfg --output results/cmu/ensemble/ -c scripts/functions.py --training.max_epochs ${vars.epochs}"
+
+    deps:
+     # - "assets/MovieSummaries/movie.metadata.tsv"
+     # - "assets/MovieSummaries/plot_summaries.txt"
+      - "assets/aclImdb/train/"
+      - "assets/aclImdb/test/"
+      - "assets/dbpedia_csv/train.csv"
+      - "assets/dbpedia_csv/test.csv"
+
+
+  - name: "summarize"
+    help: "Summarize the results from the runs and print the best & last scores for each run."
+    script:
+      - "python ./scripts/summarize_results.py results/"

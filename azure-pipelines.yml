@@ -32,7 +32,7 @@ jobs:
 
           # TODO: update with stable version once it's released
           - script: |
-                pip install "spacy-nightly>=3.0.0a41,<3.1.0"
+                pip install "spacy-nightly>=3.0.0rc2,<3.1.0"
                 pip install pytest
             displayName: 'Install dependencies'
 
