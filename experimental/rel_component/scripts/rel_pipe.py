@@ -29,10 +29,10 @@ msg = Printer()
     },
 )
 def make_relation_extractor(
-    nlp: Language, name: str, model: Model, *, labels: List[str] = [], threshold: float
+    nlp: Language, name: str, model: Model, *, threshold: float
 ):
     """Construct a RelationExtractor component."""
-    return RelationExtractor(nlp.vocab, model, name, labels=labels, threshold=threshold)
+    return RelationExtractor(nlp.vocab, model, name, threshold=threshold)
 
 
 class RelationExtractor(TrainablePipe):
@@ -42,14 +42,13 @@ class RelationExtractor(TrainablePipe):
         model: Model,
         name: str = "rel",
         *,
-        labels: List[str] = [],
         threshold: float,
     ) -> None:
         """Initialize a relation extractor."""
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.cfg = {"labels": labels, "threshold": threshold}
+        self.cfg = {"labels": [], "threshold": threshold}
 
     @property
     def labels(self) -> Tuple[str]:
