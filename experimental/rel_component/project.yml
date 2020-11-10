@@ -84,7 +84,7 @@ commands:
 
 
   - name: "clean"
-    help: "Remove intermediate files to start data preparation & training from a clean slate."
+    help: "Remove intermediate files to start data preparation and training from a clean slate."
     script:
       - "rm -rf data/*"
       - "rm -rf training/*"
