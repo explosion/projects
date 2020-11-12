@@ -23,14 +23,14 @@ assets:
     git:
       repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
       branch: 'main'
-      path: 'train.tsv.zip'
+      path: 'raw_data/train.tsv.zip'
     description: "Tab-Separated Values (TSV) Zipped (ZIP) file which contains the training data, exported from Kaggle Dataset (8.529 examples)."
   - dest: "assets/${vars.validation}.tsv.zip"
     #checksum: "2d965f772ac55404cc22bac891b129c2"
     git:
       repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
       branch: 'main'
-      path: 'test.tsv.zip'
+      path: 'raw_data/test.tsv.zip'
     
     description: "Tab-Separated Values (TSV) Zipped (ZIP) file which contains the test data (without labels), exported from Kaggle Dataset (3.310 examples)."
   - dest: "assets/${vars.test}.csv"
@@ -38,15 +38,8 @@ assets:
     git:
       repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
       branch: 'main'
-      path: 'sampleSubmission.csv'
+      path: 'raw_data/sampleSubmission.csv'
     description: "Comma-Separated Values (CSV) file which contains labels of the the test data, exported from Kaggle Dataset (3.310 examples)."
-  - dest: "assets/categories.json"
-    #checksum: "e2b35cdcebfd41fb18f24e04af2ab601"
-    git:
-      repo: 'https://github.com/TheEdoardo93/SentimentAnalysis-Rottoen-Tomatoes'
-      branch: 'main'
-      path: 'categories.json'
-    description: "JSON file which contains the list of labels (5 in total)."
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
