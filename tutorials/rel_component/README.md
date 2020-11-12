@@ -20,14 +20,13 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies |
-| `data` | Parse the gold-standard annotations from the Prodigy annotations. |
-| `train_cpu` | Train the REL model on the CPU and evaluate on the dev corpus. |
-| `train_gpu` | Train the REL model with a Transformer on a GPU and evaluate on the dev corpus. |
-| `evaluate` | Apply the trained model to some sample text. |
-| `clean` | Remove intermediate files to start data preparation & training from a clean slate. |
+| Command     | Description                                                                        |
+| ----------- | ---------------------------------------------------------------------------------- |
+| `data`      | Parse the gold-standard annotations from the Prodigy annotations.                  |
+| `train_cpu` | Train the REL model on the CPU and evaluate on the dev corpus.                     |
+| `train_gpu` | Train the REL model with a Transformer on a GPU and evaluate on the dev corpus.    |
+| `evaluate`  | Apply the trained model to some sample text.                                       |
+| `clean`     | Remove intermediate files to start data preparation & training from a clean slate. |
 
 ### ⏭ Workflows
 
@@ -36,9 +35,9 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow | Steps |
-| --- | --- |
-| `all` | `data` &rarr; `train_cpu` &rarr; `evaluate` |
+| Workflow  | Steps                                       |
+| --------- | ------------------------------------------- |
+| `all`     | `data` &rarr; `train_cpu` &rarr; `evaluate` |
 | `all_gpu` | `data` &rarr; `train_gpu` &rarr; `evaluate` |
 
 ### 🗂 Assets
@@ -47,8 +46,8 @@ The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
 in the project directory.
 
-| File | Source | Description |
-| --- | --- | --- |
-| `annotations` | Local | Gold-standard REL annotations created with Prodigy |
+| File          | Source | Description                                        |
+| ------------- | ------ | -------------------------------------------------- |
+| `annotations` | Local  | Gold-standard REL annotations created with Prodigy |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

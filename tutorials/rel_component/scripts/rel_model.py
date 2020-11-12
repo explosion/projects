@@ -25,7 +25,7 @@ def create_classification_layer(
         return Linear(nO=nO, nI=nI) >> Logistic()
 
 
-@spacy.registry.misc.register("rel_instance_generator.v2")
+@spacy.registry.misc.register("rel_instance_generator.v1")
 def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_instances(doc: Doc) -> List[Tuple[Span, Span]]:
         instances = []

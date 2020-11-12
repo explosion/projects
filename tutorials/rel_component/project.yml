@@ -1,5 +1,5 @@
 title: "Example project of creating a novel nlp component to do relation extraction from scratch."
-description: "This example project shows how to define a custom model and wrap it as a spaCy component so it integrates easily in any `nlp` pipeline."
+description: "This example project shows how to implement a spaCy component with a custom Machine Learning model, how to train it with and without a transformer, and how to apply it on an evaluation dataset."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -36,13 +36,6 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install dependencies"
-    script:
-      - "pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
   - name: "data"
     help: "Parse the gold-standard annotations from the Prodigy annotations."
     script:
@@ -55,7 +48,7 @@ commands:
       - ${vars.test_file}
 
   - name: "train_cpu"
-    help: "Train the REL model on the CP and evaluate on the dev corpus."
+    help: "Train the REL model on the CPU and evaluate on the dev corpus."
     script:
       - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py"
     deps:
@@ -75,7 +68,7 @@ commands:
       - ${vars.trained_model}
 
   - name: "evaluate"
-    help: "Apply the trained model to some sample text."
+    help: "Apply the best model to new, unseen text, and measure accuracy at different thresholds."
     script:
       - "python ./scripts/evaluate.py ${vars.trained_model} ${vars.test_file} False"
     deps:

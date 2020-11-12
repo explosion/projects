@@ -1,2 +1,0 @@
-# TODO: update pins
-thinc==8.0.0a43
