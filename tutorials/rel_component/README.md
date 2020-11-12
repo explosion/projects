@@ -24,7 +24,7 @@ Commands are only re-run if their inputs have changed.
 | --- | --- |
 | `install` | Install dependencies |
 | `data` | Parse the gold-standard annotations from the Prodigy annotations. |
-| `train_cpu` | Train the REL model on the CP and evaluate on the dev corpus. |
+| `train_cpu` | Train the REL model on the CPU and evaluate on the dev corpus. |
 | `train_gpu` | Train the REL model with a Transformer on a GPU and evaluate on the dev corpus. |
 | `evaluate` | Apply the trained model to some sample text. |
 | `clean` | Remove intermediate files to start data preparation & training from a clean slate. |
