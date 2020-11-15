@@ -1,12 +1,12 @@
 from functools import partial
 from pathlib import Path
-from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
-from spacy import registry
+from typing import Iterable, Callable
+import spacy
 from spacy.training import Example
 from spacy.tokens import DocBin
 
 
-@registry.readers("MyCorpus.v1")
+@spacy.registry.readers("MyCorpus.v1")
 def create_docbin_reader(file: Path) -> Callable[["Language"], Iterable[Example]]:
     return partial(read_files, file)
 

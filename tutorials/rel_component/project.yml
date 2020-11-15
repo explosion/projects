@@ -1,0 +1,83 @@
+title: "Example project of creating a novel nlp component to do relation extraction from scratch."
+description: "This example project shows how to implement a spaCy component with a custom Machine Learning model, how to train it with and without a transformer, and how to apply it on an evaluation dataset."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  annotations: "assets/annotations.jsonl"
+  tok2vec_config: "configs/rel_tok2vec.cfg"
+  trf_config: "configs/rel_trf.cfg"
+  train_file: "data/train.spacy"
+  dev_file: "data/dev.spacy"
+  test_file: "data/test.spacy"
+  trained_model: "training/model-best"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "configs", "assets", "data", "training"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+    - dest: ${vars.annotations}
+      description: "Gold-standard REL annotations created with Prodigy"
+
+workflows:
+  all:
+    - data
+    - train_cpu
+    - evaluate
+  all_gpu:
+    - data
+    - train_gpu
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "data"
+    help: "Parse the gold-standard annotations from the Prodigy annotations."
+    script:
+      - "python ./scripts/parse_data.py ${vars.annotations} ${vars.train_file} ${vars.dev_file} ${vars.test_file}"
+    deps:
+      - ${vars.annotations}
+    outputs:
+      - ${vars.train_file}
+      - ${vars.dev_file}
+      - ${vars.test_file}
+
+  - name: "train_cpu"
+    help: "Train the REL model on the CPU and evaluate on the dev corpus."
+    script:
+      - "python -m spacy train ${vars.tok2vec_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py"
+    deps:
+      - ${vars.train_file}
+      - ${vars.dev_file}
+    outputs:
+      - ${vars.trained_model}
+
+  - name: "train_gpu"
+    help: "Train the REL model with a Transformer on a GPU and evaluate on the dev corpus."
+    script:
+      - "python -m spacy train ${vars.trf_config} --output training --paths.train ${vars.train_file} --paths.dev ${vars.dev_file} -c ./scripts/custom_functions.py --gpu-id 0"
+    deps:
+      - ${vars.train_file}
+      - ${vars.dev_file}
+    outputs:
+      - ${vars.trained_model}
+
+  - name: "evaluate"
+    help: "Apply the best model to new, unseen text, and measure accuracy at different thresholds."
+    script:
+      - "python ./scripts/evaluate.py ${vars.trained_model} ${vars.test_file} False"
+    deps:
+      - ${vars.trained_model}
+      - ${vars.test_file}
+
+
+  - name: "clean"
+    help: "Remove intermediate files to start data preparation and training from a clean slate."
+    script:
+      - "rm -rf data/*"
+      - "rm -rf training/*"
