@@ -69,7 +69,7 @@ You can choose your GPU by setting the `gpu_id` variable in the
 
 ### Tuning a hyper-parameter in the config
 
-To change hyperparameters, you can edit the [config](conigs) (or create a new
+To change hyperparameters, you can edit the [config](configs) (or create a new
 custom config). For instance, you could edit the
 `components.textcat.model.tok2vec.encode.width` value, changing it to `32`:
 
