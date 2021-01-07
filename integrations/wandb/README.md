@@ -20,13 +20,14 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies and log in to Weights & Biases |
-| `data` | Extract the gold-standard annotations |
-| `train` | Train a model using the default config |
+| Command          | Description                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `install`        | Install dependencies and log in to Weights & Biases                                                                              |
+| `data`           | Extract the gold-standard annotations                                                                                            |
+| `train`          | Train a model using the default config                                                                                           |
 | `configs-search` | Create variations of the initial, default file for IMDB sentiment classification using different combinations of hyperparameters |
-| `train-search` | Run customized training runs for hyperparameter search using the created configs |
+| `train-search`   | Run customized training runs for hyperparameter search using the created configs                                                 |
+| `clean`          | Remove intermediate files to start config preparation & training from a clean slate.                                             |
 
 ### ⏭ Workflows
 
@@ -35,9 +36,9 @@ can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow | Steps |
-| --- | --- |
-| `log` | `data` &rarr; `train` |
+| Workflow           | Steps                                                |
+| ------------------ | ---------------------------------------------------- |
+| `log`              | `data` &rarr; `train`                                |
 | `parameter-search` | `data` &rarr; `configs-search` &rarr; `train-search` |
 
 ### 🗂 Assets
@@ -46,8 +47,8 @@ The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
 in the project directory.
 
-| File | Source | Description |
-| --- | --- | --- |
-| `assets/aclImdb_v1.tar.gz` | URL | Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011. |
+| File                       | Source | Description                                                           |
+| -------------------------- | ------ | --------------------------------------------------------------------- |
+| `assets/aclImdb_v1.tar.gz` | URL    | Movie Review Dataset for sentiment analysis by Maas et al., ACL 2011. |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
