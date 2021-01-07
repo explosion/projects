@@ -57,7 +57,8 @@ commands:
   - name: "configs-search"
     help: "Create variations of the initial, default file for IMDB sentiment classification using different combinations of hyperparameters"
     script:
-      - "python ./scripts/customize_configs.py configs ${vars.default_config}"
+      - "mkdir -p configs/search"
+      - "python ./scripts/customize_configs.py configs/search configs/${vars.default_config}"
     deps:
       - "scripts/customize_configs.py"
       - "configs/${vars.default_config}"
@@ -65,8 +66,15 @@ commands:
   - name: "train-search"
     help: "Run customized training runs for hyperparameter search using the created configs"
     script:
-      - "python ./scripts/run_configs.py configs ${vars.default_config} training/"
+      - "python ./scripts/run_configs.py configs/search training/"
     deps:
       - "assets/aclImdb/train/"
       - "assets/aclImdb/test/"
       - "configs/"
+
+  - name: "clean"
+    help: "Remove intermediate files to start config preparation and training from a clean slate."
+    script:
+      - "rm -rf configs/search/*"
+      - "rm -rf training/*"
+      - "rm -rf wandb/*"
