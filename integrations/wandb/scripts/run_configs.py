@@ -1,6 +1,6 @@
 import typer
 from pathlib import Path
-from spacy.cli.train import train
+from spacy.training.loop import train
 from spacy.training.initialize import init_nlp
 from spacy.util import load_config
 
