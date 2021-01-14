@@ -3,8 +3,8 @@ from pathlib import Path
 from thinc.api import Config
 
 
-def main(config_dir: Path, default_config: str):
-    cfg = Config().from_disk(config_dir / default_config, interpolate=False)
+def main(config_dir: Path, default_config: Path):
+    cfg = Config().from_disk(default_config, interpolate=False)
     # hyperparameter grid search
     i = 0
     for depth in [2, 4]:
@@ -17,7 +17,7 @@ def main(config_dir: Path, default_config: str):
                     cfg["components"]["textcat"]["model"]["ngram_size"] = ngram
                     cfg["components"]["tok2vec"]["model"]["encode"]["depth"] = depth
                     cfg.to_disk(config_dir / f"config_{i}.cfg")
-    print(f"Saved {i} configs")
+    print(f"Saved {i} configs to {config_dir}")
 
 
 if __name__ == "__main__":
