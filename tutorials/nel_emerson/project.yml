@@ -71,7 +71,7 @@ commands:
   - name: corpus
     help: "Create a training and dev set from the manually annotated data"
     script:
-      - "mkdir corpus"
+      - "mkdir -p corpus"
       - "python ./scripts/create_corpus.py ./assets/${vars.annotations} ./temp/${vars.nlp}/ corpus/${vars.train}.spacy corpus/${vars.dev}.spacy"
     deps:
       - "assets/${vars.annotations}"
