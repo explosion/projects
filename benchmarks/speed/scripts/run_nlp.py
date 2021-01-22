@@ -131,7 +131,7 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
 
     lang = name.split("_")[0]
     package = name.split("_")[1]
-    # Stanza requires too much GPU memory if we don't limit the POS & NER batch size
+    # Stanza requires too much GPU memory if we don't limit the batch sizes
     nlp = stanza.Pipeline(
         lang,
         package=package,
