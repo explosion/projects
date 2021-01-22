@@ -47,8 +47,8 @@ in the project directory.
 | File | Source | Description |
 | --- | --- | --- |
 | `assets/vectors.zip` | URL | GloVe vectors |
-| `assets/conll2003/dev.iob` | Local | Development data |
-| `assets/conll2003/test.iob` | Local | Test data |
-| `assets/conll2003/train.iob` | Local | Training data |
+| `assets/conll2003/dev.iob` | Local | Development data (not available publicly so you have to add the file yourself) |
+| `assets/conll2003/test.iob` | Local | Test data (not available publicly so you have to add the file yourself) |
+| `assets/conll2003/train.iob` | Local | Training data (not available publicly so you have to add the file yourself) |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
