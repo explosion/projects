@@ -12,6 +12,8 @@ from data_reader import read_data, rebatch_texts
 from logger import create_logger
 from spacy.util import minibatch
 
+DEFAULT_BATCH_SIZE = 256
+
 
 def main(
     txt_dir: Path,
@@ -19,7 +21,7 @@ def main(
     library,
     name: str,
     gpu: bool,
-    batch_size: int = 256,
+    batch_size: int = DEFAULT_BATCH_SIZE,
     n_texts: int = 0,
 ):
     try:
@@ -53,7 +55,6 @@ def main(
     except Exception as e:
         msg.info(f"Could not run model {name} with library {library} on GPU={gpu}:")
         msg.info(traceback.format_exc())
-
 
 
 def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
@@ -129,7 +130,9 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
 
     lang = name.split("_")[0]
     package = name.split("_")[1]
-    nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False)
+    # Stanza requires too much GPU memory if we don't limit the POS & NER batch size
+    nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False,
+                          pos_batch_size=DEFAULT_BATCH_SIZE, ner_batch_size=DEFAULT_BATCH_SIZE)
 
     def run(texts: List[str], batch_size: int):
         # No batch parsing option available in Stanza I think? instead we have to
