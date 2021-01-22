@@ -1,9 +1,9 @@
 from typing import Callable, List
 
-import re
 import torch
 import typer
 import timeit
+import traceback
 from pathlib import Path
 import logging
 from wasabi import msg
@@ -20,33 +20,40 @@ def main(
     name: str,
     gpu: bool,
     batch_size: int = 256,
-    n_texts: int=0
+    n_texts: int = 0,
 ):
-    data = read_data(txt_dir, limit=n_texts)
-    articles = len(data)
-    if articles == 0:
-        msg.fail(
-            f"Could not read any data from {txt_dir}: make sure a corpus of .txt files is available."
+    try:
+        data = read_data(txt_dir, limit=n_texts)
+        articles = len(data)
+        if articles == 0:
+            msg.fail(
+                f"Could not read any data from {txt_dir}: make sure a corpus of .txt files is available."
+            )
+        chars = sum([len(d) for d in data])
+        words = sum([len(d.split()) for d in data])
+
+        nlp_function = _get_run(library, name, gpu)
+        start = timeit.default_timer()
+        nlp_function(data, batch_size)
+        end = timeit.default_timer()
+
+        log_run = create_logger(result_dir)
+        s = end - start
+        log_run(
+            library=library,
+            name=name,
+            gpu=gpu,
+            articles=articles,
+            characters=chars,
+            words=words,
+            seconds=s,
         )
-    chars = sum([len(d) for d in data])
-    words = sum([len(d.split()) for d in data])
+    # Usually we avoid these kind of long try-except blocks, but here we just want to ensure
+    # that the script can continue benchmarking the speed of other libraries if one fails
+    except Exception as e:
+        msg.info(f"Could not run model {name} with library {library} on GPU={gpu}:")
+        msg.info(traceback.format_exc())
 
-    nlp_function = _get_run(library, name, gpu)
-    start = timeit.default_timer()
-    nlp_function(data, batch_size)
-    end = timeit.default_timer()
-
-    log_run = create_logger(result_dir)
-    s = end - start
-    log_run(
-        library=library,
-        name=name,
-        gpu=gpu,
-        articles=articles,
-        characters=chars,
-        words=words,
-        seconds=s,
-    )
 
 
 def _get_run(library: str, name: str, gpu: bool) -> Callable[[List[str]], None]:
@@ -79,6 +86,11 @@ def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     if gpu:
         spacy.require_gpu(0)
     nlp = spacy.load(name)
+    # quick hack
+    if "trf" in name:
+        max_length = nlp.get_pipe("transformer").model.attrs["tokenizer"].model_max_length
+        config = {"min_length": max_length, "split_length": 2}
+        nlp.add_pipe("token_splitter", config=config, first=True)
 
     def run(texts: List[str], batch_size: int):
         list(nlp.pipe(texts, batch_size=batch_size))
@@ -90,6 +102,7 @@ def _run_transformer_model(name: str, gpu) -> Callable[[List[str]], None]:
     """Run bare transformer model, outputting raw hidden-states"""
     from transformers import AutoTokenizer, AutoModel
     import torch
+
     if gpu:
         torch.device("cuda:0")
 
