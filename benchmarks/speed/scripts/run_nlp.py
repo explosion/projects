@@ -89,7 +89,8 @@ def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     nlp = spacy.load(name)
     # quick hack
     if "trf" in name:
-        max_length = nlp.get_pipe("transformer").model.attrs["tokenizer"].model_max_length
+        trf_model = nlp.get_pipe("transformer").model
+        max_length = trf_model.attrs["tokenizer"].model_max_length
         config = {"min_length": max_length, "split_length": 2}
         nlp.add_pipe("token_splitter", config=config, first=True)
 
@@ -131,8 +132,15 @@ def _run_stanza_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     lang = name.split("_")[0]
     package = name.split("_")[1]
     # Stanza requires too much GPU memory if we don't limit the POS & NER batch size
-    nlp = stanza.Pipeline(lang, package=package, use_gpu=gpu, verbose=False,
-                          pos_batch_size=DEFAULT_BATCH_SIZE, ner_batch_size=DEFAULT_BATCH_SIZE)
+    nlp = stanza.Pipeline(
+        lang,
+        package=package,
+        use_gpu=gpu,
+        verbose=False,
+        pos_batch_size=DEFAULT_BATCH_SIZE,
+        ner_batch_size=DEFAULT_BATCH_SIZE,
+        depparse_batch_size=DEFAULT_BATCH_SIZE,
+    )
 
     def run(texts: List[str], batch_size: int):
         # No batch parsing option available in Stanza I think? instead we have to
