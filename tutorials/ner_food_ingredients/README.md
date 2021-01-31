@@ -4,22 +4,18 @@
 
 # 🪐 spaCy Project: Analyzing how mentions of ingredients change over time (Named Entity Recognition)
 
-> ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
-> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
-> `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
-
 **This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=59BKHO_xBPA).** It uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect ingredients [Reddit comments](https://files.pushshift.io/reddit/comments/) and to calculate how mentions change over time. The results were then used to create a [bar chart race visualization](https://public.flourish.studio/visualisation/1532208/) of selected ingredients.
 
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://nightly.spacy.io/usage/projects).
+[spaCy projects documentation](https://spacy.io/usage/projects).
 
 ### 🗂 Assets
 
 The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
 in the project directory.
 
 | File | Source | Description |
