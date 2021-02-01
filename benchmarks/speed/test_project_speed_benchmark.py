@@ -1,3 +1,4 @@
+import pytest
 from spacy.cli.project.run import project_run
 from pathlib import Path
 
