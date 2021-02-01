@@ -53,9 +53,9 @@ commands:
   - name: download
     help: "Download models"
     script:
-      - "python -m spacy download en_core_web_sm"
-      - "python -m spacy download en_core_web_lg"
-      - "python -m spacy download ${vars.spacy_trf_name}"
+      - "python -m spacy download en_core_web_sm -S"
+      - "python -m spacy download en_core_web_lg -S"
+      - "python -m spacy download ${vars.spacy_trf_name} -S"
       - "python ./scripts/download_models.py ${vars.stanza_name} ${vars.flair_cpu_name},${vars.flair_gpu_name}"
       - "curl -O https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3131/${vars.ud_pipe_name}"
 
