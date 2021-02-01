@@ -4,22 +4,18 @@
 
 # 🪐 spaCy Project: Disambiguation of "Emerson" mentions in sentences (Entity Linking)
 
-> ⚠️ This project template uses the new [**spaCy v3.0**](https://nightly.spacy.io), which
-> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
-> `pip install spacy-nightly`. Make sure to use a fresh virtual environment.
-
 **This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=8u57WSXVpmw).** It uses [spaCy](https://spacy.io)'s entity linking functionality and [Prodigy](https://prodi.gy) to disambiguate "Emerson" mentions in text to unique identifiers from Wikidata. As an example use-case, we consider three different people called Emerson: [an Australian tennis player](https://www.wikidata.org/wiki/Q312545), [an American writer](https://www.wikidata.org/wiki/Q48226), and a [Brazilian footballer](https://www.wikidata.org/wiki/Q215952). [See here](https://github.com/explosion/projects/tree/master/nel-emerson) for the previous scripts for spaCy v2.x.
 
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://nightly.spacy.io/usage/projects).
+[spaCy projects documentation](https://spacy.io/usage/projects).
 
 ### ⏯ Commands
 
 The following commands are defined by the project. They
-can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run).
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
 | Command | Description |
@@ -35,7 +31,7 @@ Commands are only re-run if their inputs have changed.
 ### ⏭ Workflows
 
 The following workflows are defined by the project. They
-can be executed using [`spacy project run [name]`](https://nightly.spacy.io/api/cli#project-run)
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
@@ -44,11 +40,10 @@ inputs have changed.
 | `all` | `setup` &rarr; `download` &rarr; `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 | `training` | `kb` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
-
 ### 🗂 Assets
 
 The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://nightly.spacy.io/api/cli#project-assets)
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
 in the project directory.
 
 | File | Source | Description |
