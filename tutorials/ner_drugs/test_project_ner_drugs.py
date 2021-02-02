@@ -3,10 +3,8 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-import pytest
-@pytest.mark.skip(reason="temp")
 def test_ner_drugs_project():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "all")
-    project_run(root, "package")
+    project_run(root, "all", capture=True)
+    project_run(root, "package", capture=True)
