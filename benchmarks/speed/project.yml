@@ -11,7 +11,7 @@ vars:
   flair_cpu_name: "pos-fast_ner-fast"
   flair_gpu_name: "pos_ner"
   ud_pipe_name: "english-ewt-ud-2.5-191206.udpipe"
-  n_texts: 10000
+  n_texts: 1000
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.

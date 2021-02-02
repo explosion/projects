@@ -3,6 +3,8 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
+import pytest
+@pytest.mark.skip(reason="temp")
 def test_benchmark_textcat_project():
     root = Path(__file__).parent
     project_assets(root)
