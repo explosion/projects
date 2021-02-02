@@ -6,4 +6,4 @@ from pathlib import Path
 def test_rel_project():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "all")
+    project_run(root, "all", capture=True)
