@@ -56,7 +56,7 @@ commands:
   - name: download
     help: "Download a spaCy model with pretrained vectors"
     script:
-      - "python -m spacy download ${vars.vectors_model} --sdist --no-cache-dir"
+      - "python -m spacy download ${vars.vectors_model}"
 
   - name: kb
     help: "Create the Knowledge Base in spaCy and write it to file"

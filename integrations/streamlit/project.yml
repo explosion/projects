@@ -17,9 +17,9 @@ commands:
     help: "Install dependencies and download models"
     script:
       - "pip install -r requirements.txt"
-      - "python -m spacy download en_core_web_sm --sdist --no-cache-dir"
-      - "python -m spacy download en_core_web_lg --sdist --no-cache-dir"
-      - "python -m spacy download en_core_web_trf --sdist --no-cache-dir"
+      - "python -m spacy download en_core_web_sm"
+      - "python -m spacy download en_core_web_lg"
+      - "python -m spacy download en_core_web_trf"
   - name: visualize
     help: Visualize a pipeline interactively using Streamlit
     script:
