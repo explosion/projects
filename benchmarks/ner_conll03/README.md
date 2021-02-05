@@ -16,6 +16,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `install` | Install dependencies |
 | `corpus` | Convert the data to spaCy's format |
 | `vectors` | Convert, truncate and prune the vectors. |
 | `train` | Train the full pipeline |
@@ -31,7 +32,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `vectors` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
+| `all` | `install` &rarr; `vectors` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
