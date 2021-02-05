@@ -43,9 +43,9 @@ in the project directory.
 | File | Source | Description |
 | --- | --- | --- |
 | `assets/vectors.zip` | URL | GloVe vectors |
-| [`assets/conll2003/dev.iob`](assets/conll2003/dev.iob) | Local | Development data (not available publicly so you have to add the file yourself) |
-| [`assets/conll2003/test.iob`](assets/conll2003/test.iob) | Local | Test data (not available publicly so you have to add the file yourself) |
-| [`assets/conll2003/train.iob`](assets/conll2003/train.iob) | Local | Training data (not available publicly so you have to add the file yourself) |
+| `assets/conll2003/dev.iob` | Local | Development data (not available publicly so you have to add the file yourself) |
+| `assets/conll2003/test.iob` | Local | Test data (not available publicly so you have to add the file yourself) |
+| `assets/conll2003/train.iob` | Local | Training data (not available publicly so you have to add the file yourself) |
 | `assets/orth_variants.json` | URL | A file containing orth variants for data augmentation |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
