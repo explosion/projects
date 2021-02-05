@@ -27,11 +27,6 @@ workflows:
     - evaluate
 
 commands:
-  - name: init-config
-    help: "Generate default config"
-    script:
-      - "python -m spacy init config --lang en --pipeline tagger,parser --optimize efficiency -C defaults.cfg"
-
   - name: corpus
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the
@@ -50,7 +45,7 @@ commands:
   - name: vectors
     help: "Convert, truncate and prune the vectors."
     script:
-      - "python -m spacy init vocab -v assets/vectors.zip en corpus/en_vectors -vn en_glove840b_vectors_md"
+      - "python -m spacy init vectors en assets/vectors.zip corpus/en_vectors -n en_glove840b_vectors_md"
     deps:
       - "assets/vectors.zip"
     outputs:

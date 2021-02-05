@@ -16,7 +16,6 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `init-config` | Generate default config |
 | `corpus` | Convert the data to spaCy's format |
 | `vectors` | Convert, truncate and prune the vectors. |
 | `train` | Train the full pipeline |
