@@ -1,7 +1,7 @@
 title: "Dependency Parsing (Penn Treebank)"
 
 vars:
-  name: "cnn_glove_small"
+  name: "cnn_glove_small"   # pick between "transformer" or "cnn_glove_small"
   gpu: 0
 
 # These are the directories that the project needs. The project CLI will make
@@ -18,19 +18,25 @@ assets:
   - url: "http://nlp.stanford.edu/data/glove.840B.300d.zip"
     dest: "assets/vectors.zip"
     description: "GloVe vectors"
+  - url: "https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json"
+    dest: "assets/orth_variants.json"
+    description: "A file containing orth variants for data augmentation"
 
 workflows:
   all:
+    - install
     - vectors
     - corpus
     - train
     - evaluate
 
 commands:
-  - name: init-config
-    help: "Generate default config"
+  - name: install
+    help: "Install dependencies"
     script:
-      - "python -m spacy init config --lang en --pipeline tagger,parser --optimize efficiency -C defaults.cfg"
+      - "python -m pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
 
   - name: corpus
     help: "Convert the data to spaCy's format"
@@ -54,7 +60,7 @@ commands:
   - name: vectors
     help: "Convert, truncate and prune the vectors."
     script:
-      - "python -m spacy init vocab -v assets/vectors.zip en corpus/en_vectors -vn en_glove840b_vectors_md"
+      - "python -m spacy init vectors en assets/vectors.zip corpus/en_vectors -n en_glove840b_vectors_md"
     deps:
       - "assets/vectors.zip"
     outputs:
@@ -75,10 +81,10 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.name}/model-best ./corpus/test.fixed.spacy --output ./metrics/${vars.name}.json --gpu-id ${vars.gpu} --gold-preproc"
+      - "python -m spacy evaluate ./training/${vars.name}/model-best ./corpus/test.spacy --output ./metrics/${vars.name}.json --gpu-id ${vars.gpu} --gold-preproc"
     deps:
       - "training/${vars.name}/model-best"
-      - "corpus/test.fixed.spacy"
+      - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.name}.json"
 

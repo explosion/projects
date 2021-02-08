@@ -16,7 +16,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `init-config` | Generate default config |
+| `install` | Install dependencies |
 | `corpus` | Convert the data to spaCy's format |
 | `vectors` | Convert, truncate and prune the vectors. |
 | `train` | Train the full pipeline |
@@ -32,7 +32,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `vectors` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
+| `all` | `install` &rarr; `vectors` &rarr; `corpus` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -46,5 +46,6 @@ in the project directory.
 | `assets/conll2003/dev.iob` | Local | Development data (not available publicly so you have to add the file yourself) |
 | `assets/conll2003/test.iob` | Local | Test data (not available publicly so you have to add the file yourself) |
 | `assets/conll2003/train.iob` | Local | Training data (not available publicly so you have to add the file yourself) |
+| `assets/orth_variants.json` | URL | A file containing orth variants for data augmentation |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
