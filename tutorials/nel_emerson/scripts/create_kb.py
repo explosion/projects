@@ -12,7 +12,7 @@ def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
 
     # First: create a simpel model from predefined vectors and a simpel EntityRuler component
     # A more realistic use-case would use a pretrained NER model instead
-    nlp = spacy.load(vectors_model, exclude="parser, tagger, ner")
+    nlp = spacy.load(vectors_model, exclude="parser, tagger, ner, lemmatizer")
     ruler = nlp.add_pipe("entity_ruler")
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
