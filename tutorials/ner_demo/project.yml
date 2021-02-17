@@ -1,0 +1,94 @@
+title: "Demo NER (Named Entity Recognition)"
+description: "A minimal demo NER project for spaCy v3 adapted from the spaCy v2 [`train_ner.py`](https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/train_ner.py) example script."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "ner_demo"
+  lang: "en"
+  train: "train.json"
+  dev: "dev.json"
+  config: "config.cfg"
+  version: "0.0.0"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "assets/train.json"
+    description: "Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json(\"train.json\", TRAIN_DATA)`"
+  - dest: "assets/dev.json"
+    description: "Demo development data"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - convert
+    - create-config
+    - train
+    - evaluate
+    - package
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
+    deps:
+      - "assets/${vars.train}"
+      - "assets/${vars.dev}"
+      - "scripts/convert.py"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+
+  - name: "create-config"
+    help: "Create a new config with an NER pipeline component"
+    script:
+      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/${vars.config} --force"
+    outputs:
+      - "configs/${vars.config}"
+  - name: "train"
+    help: "Train the NER model"
+    script:
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the model and export metrics"
+    script:
+      - "python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json"
+    deps:
+      - "corpus/dev.spacy"
+      - "training/model-best"
+    outputs:
+      - "training/metrics.json"
+
+  - name: package
+    help: "Package the trained model as a pip package"
+    script:
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
+  - name: visualize-model
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/model-best"
