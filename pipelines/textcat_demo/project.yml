@@ -3,17 +3,21 @@ description: "A minimal demo textcat project for spaCy v3. The demo data comes f
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "textcat_demo"
+  # Supported languages: all except ja, ko, th, vi, and zh, which would require
+  # custom tokenizer settings in config.cfg
   lang: "en"
+  # Set your GPU ID, -1 is CPU
+  gpu_id: -1
   version: "0.0.0"
   # Option 1: default data/config with textcat (exclusive classes)
-  #train: "docs_issues_training.jsonl"
-  #dev: "docs_issues_eval.jsonl"
-  #config: "config.cfg"
+  train: "docs_issues_training.jsonl"
+  dev: "docs_issues_eval.jsonl"
+  config: "config.cfg"
   # Option 2: alternate data/config with textcat_multilabel
   #   (non-exclusive classes: same data as above with 1 class instead of 2)
-  train: "docs_issues_training_multilabel.jsonl"
-  dev: "docs_issues_eval_multilabel.jsonl"
-  config: "config_multilabel.cfg"
+  #train: "docs_issues_training_multilabel.jsonl"
+  #dev: "docs_issues_eval_multilabel.jsonl"
+  #config: "config_multilabel.cfg"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -58,7 +62,7 @@ commands:
   - name: "train"
     help: "Train the textcat model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
     deps:
       - "configs/${vars.config}"
       - "corpus/train.spacy"
