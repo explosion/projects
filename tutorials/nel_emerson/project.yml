@@ -54,7 +54,7 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: download
-    help: "Download a spaCy model with pretrained vectors"
+    help: "Download a spaCy model with pretrained vectors and NER component"
     script:
       - "python -m spacy download ${vars.vectors_model}"
 

@@ -6,7 +6,7 @@ sample results are stored in assets/emerson_annotated_text.jsonl
 """
 
 import spacy
-from spacy.kb import KnowledgeBase
+from spacy.kb import KnowledgeBase, get_candidates
 
 import prodigy
 from prodigy.models.ner import EntityRecognizer
@@ -30,7 +30,7 @@ def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     # Load the NLP and KB objects from file
     nlp = spacy.load(nlp_dir)
     kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=1)
-    kb.load_bulk(kb_loc)
+    kb.from_disk(kb_loc)
     model = EntityRecognizer(nlp)
 
     # Read the pre-defined CSV file into dictionaries mapping QIDs to the full names and descriptions
@@ -46,7 +46,7 @@ def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     stream = (eg for score, eg in model(stream))
 
     # For each NER mention, add the candidates from the KB to the annotation task
-    stream = _add_options(stream, kb, id_dict)
+    stream = _add_options(stream, kb, nlp, id_dict)
     stream = filter_duplicates(stream, by_input=True, by_task=False)
 
     return {
@@ -57,16 +57,17 @@ def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     }
 
 
-def _add_options(stream, kb, id_dict):
+def _add_options(stream, kb, nlp, id_dict):
     """ Define the options the annotator will be given, by consulting the candidates from the KB for each NER span. """
     for task in stream:
         text = task["text"]
-        for span in task["spans"]:
-            start_char = int(span["start"])
-            end_char = int(span["end"])
-            mention = text[start_char:end_char]
+        for mention in task["spans"]:
+            start_char = int(mention["start"])
+            end_char = int(mention["end"])
+            doc = nlp(text)
+            span = doc.char_span(start_char, end_char, mention["label"])
 
-            candidates = kb.get_candidates(mention)
+            candidates = get_candidates(kb, span)
             if candidates:
                 options = [{"id": c.entity_, "html": _print_url(c.entity_, id_dict)} for c in candidates]
 
