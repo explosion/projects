@@ -8,6 +8,8 @@ vars:
   dev: "dev.json"
   config: "config.cfg"
   version: "0.0.0"
+  # Set your GPU ID, -1 is CPU
+  gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -59,7 +61,7 @@ commands:
   - name: "train"
     help: "Train the NER model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100 --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
