@@ -152,6 +152,6 @@ trained model over the data and create the final counts.
 
 | File                                                                   | Description                                                          |
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [`01_Preprocess_Reddit.ipynb`](01_Preprocess_Reddit.ipynb)             | Preprocess and clean Reddit data and export JSONL for annotation.    |
-| [`02_Process_text_and_counts.ipynb`](02_Process_text_and_counts.ipynb) | Use the trained model to count entities.                             |
-| [`03_Generate_counts.ipynb`](03_Generate_counts.ipynb)                 | Generate the final counts for the visualization and select examples. |
+| [`01_Preprocess_Reddit.ipynb`](notebooks/01_Preprocess_Reddit.ipynb)             | Preprocess and clean Reddit data and export JSONL for annotation.    |
+| [`02_Process_text_and_counts.ipynb`](notebooks/02_Process_text_and_counts.ipynb) | Use the trained model to count entities.                             |
+| [`03_Generate_counts.ipynb`](notebooks/03_Generate_counts.ipynb)                 | Generate the final counts for the visualization and select examples. |
