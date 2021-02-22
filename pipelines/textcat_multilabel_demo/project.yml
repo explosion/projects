@@ -1,0 +1,92 @@
+title: "Demo Textcat (Text Classification)"
+description: "A minimal demo textcat_multilabel project for spaCy v3."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "textcat_multilabel_demo"
+  # Supported languages: all except ja, ko, th, vi, and zh, which would require
+  # custom tokenizer settings in config.cfg
+  lang: "en"
+  # Set your GPU ID, -1 is CPU
+  gpu_id: -1
+  version: "0.0.0"
+  train: "cooking-train.jsonl"
+  dev: "cooking-dev.jsonl"
+  config: "config.cfg"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "assets/${vars.train}"
+    description: "Training data from cooking.stackexchange.com"
+  - dest: "assets/${vars.dev}"
+    description: "Development data from cooking.stackexchange.com"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - convert
+    - train
+    - evaluate
+    - package
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
+    deps:
+      - "assets/${vars.train}"
+      - "assets/${vars.dev}"
+      - "scripts/convert.py"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+
+  - name: "train"
+    help: "Train the textcat model"
+    script:
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/${vars.config}"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the model and export metrics"
+    script:
+      - "python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json"
+    deps:
+      - "corpus/dev.spacy"
+      - "training/model-best"
+    outputs:
+      - "training/metrics.json"
+
+  - name: package
+    help: "Package the trained model as a pip package"
+    script:
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
+  - name: visualize-model
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/model-best \"How can I get chewy chocolate chip cookies?\n<p>My chocolate chips cookies are always too crisp. How can I get chewy cookies, like those of Starbucks?</p>\n<hr/>\n<p>Thank you to everyone who has answered. So far the tip that had the biggest impact was to chill and rest the dough, however I also increased the brown sugar ratio and increased a bit the butter. Also adding maple syrup helped. </p>\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/model-best"
