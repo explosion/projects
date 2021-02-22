@@ -9,15 +9,9 @@ vars:
   # Set your GPU ID, -1 is CPU
   gpu_id: -1
   version: "0.0.0"
-  # Option 1: default data/config with textcat (exclusive classes)
   train: "docs_issues_training.jsonl"
   dev: "docs_issues_eval.jsonl"
   config: "config.cfg"
-  # Option 2: alternate data/config with textcat_multilabel
-  #   (non-exclusive classes: same data as above with 1 class instead of 2)
-  #train: "docs_issues_training_multilabel.jsonl"
-  #dev: "docs_issues_eval_multilabel.jsonl"
-  #config: "config_multilabel.cfg"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.

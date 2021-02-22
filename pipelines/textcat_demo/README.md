@@ -43,7 +43,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/docs_issues_training_multilabel.jsonl`](assets/docs_issues_training_multilabel.jsonl) | Local | Demo training data |
-| [`assets/docs_issues_eval_multilabel.jsonl`](assets/docs_issues_eval_multilabel.jsonl) | Local | Demo development data |
+| [`assets/docs_issues_training.jsonl`](assets/docs_issues_training.jsonl) | Local | Demo training data |
+| [`assets/docs_issues_eval.jsonl`](assets/docs_issues_eval.jsonl) | Local | Demo development data |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
