@@ -28,7 +28,6 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
-    - download
     - convert
     - create-config
     - train
