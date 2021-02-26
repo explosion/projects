@@ -6,7 +6,6 @@ vars:
   lang: "en"
   train: "train.json"
   dev: "dev.json"
-  config: "config.cfg"
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
   gpu_id: -1
@@ -55,14 +54,15 @@ commands:
   - name: "create-config"
     help: "Create a new config with an NER pipeline component"
     script:
-      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/${vars.config} --force"
+      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/config.cfg --force"
     outputs:
-      - "configs/${vars.config}"
+      - "configs/config.cfg"
   - name: "train"
     help: "Train the NER model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100 --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100 --gpu-id ${vars.gpu_id}"
     deps:
+      - "configs/config.cfg"
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
     outputs:
