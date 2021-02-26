@@ -18,7 +18,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `download-pipeline` | Download the pretrained pipeline |
+| `download` | Download the pretrained pipeline |
 | `convert` | Convert the data to spaCy's binary format |
 | `create-config` | Create a config for replacing only NER from an existing pipeline |
 | `train` | Train the NER model |
@@ -35,7 +35,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `convert` &rarr; `create-config` &rarr; `train` &rarr; `evaluate` |
+| `all` | `download` &rarr; `convert` &rarr; `create-config` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -45,7 +45,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/train.json`](assets/train.json) | Local | Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json("train.json", TRAIN_DATA)` |
+| [`assets/train.json`](assets/train.json) | Local | Demo training data converted from the v2 example scripts with `srsly.write_json("train.json", TRAIN_DATA)` |
 | [`assets/dev.json`](assets/dev.json) | Local | Demo development data |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

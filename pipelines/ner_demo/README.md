@@ -34,7 +34,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `convert` &rarr; `create-config` &rarr; `train` &rarr; `evaluate` &rarr; `package` |
+| `all` | `convert` &rarr; `create-config` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 

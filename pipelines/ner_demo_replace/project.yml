@@ -19,7 +19,7 @@ directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
 # them with the project, so they won't have to be downloaded.
 assets:
   - dest: "assets/train.json"
-    description: "Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json(\"train.json\", TRAIN_DATA)`"
+    description: "Demo training data converted from the v2 example scripts with `srsly.write_json(\"train.json\", TRAIN_DATA)`"
   - dest: "assets/dev.json"
     description: "Demo development data"
 
