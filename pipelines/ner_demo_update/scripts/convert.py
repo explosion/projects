@@ -11,7 +11,7 @@ from spacy.tokens import DocBin
 
 def convert(lang: str, input_path: Path, output_path: Path):
     nlp = spacy.blank(lang)
-    docs = []
+    db = DocBin()
     for text, annot in srsly.read_json(input_path):
         doc = nlp.make_doc(text)
         ents = []
@@ -23,8 +23,7 @@ def convert(lang: str, input_path: Path, output_path: Path):
             else:
                 ents.append(span)
         doc.ents = ents
-        docs.append(doc)
-    db = DocBin(docs=docs)
+        db.add(doc)
     db.to_disk(output_path)
 
 
