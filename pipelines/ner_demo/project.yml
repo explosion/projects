@@ -31,7 +31,6 @@ workflows:
     - create-config
     - train
     - evaluate
-    - package
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
