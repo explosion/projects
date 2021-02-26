@@ -28,6 +28,7 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
+    - download
     - convert
     - create-config
     - train
@@ -38,7 +39,7 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "download-pipeline"
+  - name: "download"
     help: "Download the pretrained pipeline"
     script:
       - "python -m spacy download ${vars.pipeline}"
