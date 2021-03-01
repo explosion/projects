@@ -18,7 +18,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `convert` | Convert the data to spaCy's format |
+| `preprocess` | Convert the data to spaCy's format |
 | `train` | Train UD_English-EWT |
 | `evaluate` | Evaluate on the test data and save the metrics |
 | `package` | Package the trained model so it can be installed |
@@ -33,7 +33,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `convert` &rarr; `train` &rarr; `evaluate` &rarr; `package` |
+| `all` | `preprocess` &rarr; `train` &rarr; `evaluate` &rarr; `package` |
 
 ### 🗂 Assets
 
