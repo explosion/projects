@@ -2,7 +2,6 @@ import typer
 from pathlib import Path
 
 import spacy
-from thinc.api import Config
 
 
 def create_config(model_name: str, component_to_replace: str, output_path: Path):
@@ -13,7 +12,7 @@ def create_config(model_name: str, component_to_replace: str, output_path: Path)
     nlp.add_pipe(component_to_replace)
 
     # create a new config as a copy of the loaded pipeline's config
-    config = Config(nlp.config)
+    config = nlp.config.copy()
 
     # revert most training settings to the current defaults
     default_config = spacy.blank(nlp.lang).config
