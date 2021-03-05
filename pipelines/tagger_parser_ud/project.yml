@@ -26,16 +26,14 @@ assets:
 
 workflows:
   all:
-    - convert
+    - preprocess
     - train
     - evaluate
     - package
 
 commands:
-  - name: convert
+  - name: preprocess
     help: "Convert the data to spaCy's format"
-    # Make sure we specify the branch in the command string, so that the
-    # caching works correctly.
     script:
       - "mkdir -p corpus/${vars.treebank}"
       - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
