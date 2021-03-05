@@ -43,7 +43,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/cooking-train.jsonl`](assets/cooking-train.jsonl) | Local | Demo training data |
-| [`assets/cooking-dev.jsonl`](assets/cooking-dev.jsonl) | Local | Demo development data |
+| [`assets/cooking-train.jsonl`](assets/cooking-train.jsonl) | Local | Training data from cooking.stackexchange.com |
+| [`assets/cooking-dev.jsonl`](assets/cooking-dev.jsonl) | Local | Development data from cooking.stackexchange.com |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
