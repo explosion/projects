@@ -30,10 +30,10 @@ jobs:
                 versionSpec: '$(python.version)'
                 architecture: 'x64'
 
-          # TODO: update with stable version once it's released
           - script: |
                 pip install "spacy>=3.0.1,<3.1.0"
                 pip install pytest
+                pip install "numpy<1.20.0"
             displayName: 'Install dependencies'
 
           - script: python -m pytest -s benchmarks experimental integrations pipelines tutorials
