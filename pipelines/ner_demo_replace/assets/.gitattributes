@@ -1,6 +1,0 @@
-# This is needed to ensure that text-based assets included with project
-# templates and cloned via Git end up with consistent line endings and
-# the same checksums. It will prevent Git from converting line endings.
-# Otherwise, a user cloning assets on Windows may end up with a different
-# checksum due to different line endings.
-*	-text
