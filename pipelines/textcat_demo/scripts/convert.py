@@ -10,12 +10,11 @@ from spacy.tokens import DocBin
 
 def convert(lang: str, input_path: Path, output_path: Path):
     nlp = spacy.blank(lang)
-    docs = []
+    db = DocBin()
     for line in srsly.read_jsonl(input_path):
         doc = nlp.make_doc(line["text"])
         doc.cats = line["cats"]
-        docs.append(doc)
-    db = DocBin(docs=docs)
+        db.add(doc)
     db.to_disk(output_path)
 
 
