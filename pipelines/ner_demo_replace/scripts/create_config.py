@@ -19,6 +19,10 @@ def create_config(model_name: str, component_to_replace: str, output_path: Path)
     config["corpora"] = default_config["corpora"]
     config["training"] = default_config["training"]
 
+    # set the vectors if the loaded pipeline has vectors
+    if len(nlp.vocab.vectors) > 0:
+        config["paths"]["vectors"] = model_name
+
     # source all components from the loaded pipeline and freeze all except the
     # component to replace
     config["training"]["frozen_components"] = []
