@@ -1,5 +1,5 @@
-title: "Demo NER (Named Entity Recognition)"
-description: "A minimal demo NER project for spaCy v3 adapted from the spaCy v2 [`train_ner.py`](https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/train_ner.py) example script."
+title: "Demo NER in a new pipeline (Named Entity Recognition)"
+description: "A minimal demo NER project for spaCy v3 adapted from the spaCy v2 [`train_ner.py`](https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/train_ner.py) example script for creating an NER component in a new pipeline."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "ner_demo"

@@ -4,10 +4,10 @@
 
 | Template | Description |
 | --- | --- |
-| [`ner_demo`](ner_demo) | Demo NER (Named Entity Recognition) |
-| [`ner_demo_replace`](ner_demo_replace) | Demo NER Replace |
-| [`ner_demo_update`](ner_demo_update) | Demo NER Update |
+| [`ner_demo`](ner_demo) | Demo NER in a new pipeline (Named Entity Recognition) |
+| [`ner_demo_replace`](ner_demo_replace) | Demo replacing an NER component in a pretrained pipeline |
+| [`ner_demo_update`](ner_demo_update) | Demo updating an NER component in a pretrained pipeline |
 | [`ner_wikiner`](ner_wikiner) | Named Entity Recognition (WikiNER) |
 | [`tagger_parser_ud`](tagger_parser_ud) | Part-of-speech Tagging & Dependency Parsing (Universal Dependencies) |
 | [`textcat_demo`](textcat_demo) | Demo Textcat (Text Classification) |
-| [`textcat_multilabel_demo`](textcat_multilabel_demo) | Demo Textcat (Text Classification) |
+| [`textcat_multilabel_demo`](textcat_multilabel_demo) | Demo Multilabel Textcat (Text Classification) |

@@ -1,4 +1,4 @@
-title: "Demo NER Update"
+title: "Demo updating an NER component in a pretrained pipeline"
 description: "A demo NER project that updates the NER component in an existing pretrained pipeline. All other pipeline components are preserved and frozen during training."
 spacy_version: ">=3.0.5,<4.0.0"
 # Variables can be referenced across the project.yml using ${vars.var_name}
