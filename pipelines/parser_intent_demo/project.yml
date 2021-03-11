@@ -1,4 +1,4 @@
-title: "Demo Intent Parser"
+title: "Demo Intent Parser (Dependency Parser)"
 description: "A minimal demo parser project for spaCy v3 adapted from the spaCy v2 [`train_intent_parser.py`](https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/train_intent_parser.py) example script."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:

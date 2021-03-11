@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo Parser
+# 🪐 spaCy Project: Demo Dependency Parser
 
 A minimal demo parser project for spaCy v3 adapted from the spaCy v2 [`train_parser.py`](https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/train_parser.py) example script.
 
