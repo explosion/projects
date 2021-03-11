@@ -9,6 +9,8 @@ vars:
   version: "0.0.0"
   # Set your GPU ID, -1 is CPU
   gpu_id: -1
+  # Vectors model for train-with-vectors
+  vectors_model: "en_core_web_md"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -30,6 +32,7 @@ workflows:
     - convert
     - create-config
     - train
+    # - train-with-vectors
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -37,6 +40,11 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: "download"
+    help: "Download a spaCy model with pretrained vectors"
+    script:
+      - "python -m spacy download ${vars.vectors_model}"
+
   - name: "convert"
     help: "Convert the data to spaCy's binary format"
     script:
@@ -59,7 +67,18 @@ commands:
   - name: "train"
     help: "Train the NER model"
     script:
-      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100 --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience 50 --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: "train-with-vectors"
+    help: "Train the NER model with vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience 50 --gpu-id ${vars.gpu_id} --initialize.vectors ${vars.vectors_model} --components.tok2vec.model.embed.include_static_vectors true"
     deps:
       - "configs/config.cfg"
       - "corpus/train.spacy"
