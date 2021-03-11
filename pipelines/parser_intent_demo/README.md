@@ -18,9 +18,11 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `download` | Download a spaCy model with pretrained vectors |
 | `convert` | Convert the data to spaCy's binary format |
 | `create-config` | Create a new config with a parser pipeline component |
 | `train` | Train the parser model |
+| `train-with-vectors` | Train the parser model with vectors |
 | `evaluate` | Evaluate the model and export metrics |
 | `package` | Package the trained model as a pip package |
 | `visualize-model` | Visualize the model's output interactively using Streamlit |
