@@ -1,4 +1,4 @@
-title: "Demo Textcat (Text Classification)"
+title: "Demo Multilabel Textcat (Text Classification)"
 description: "A minimal demo textcat_multilabel project for spaCy v3."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -81,7 +81,7 @@ commands:
     deps:
       - "training/model-best"
     outputs_no_cache:
-      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+      - "packages/${vars.lang}_${vars.name}-${vars.version}/dist/${vars.lang}_${vars.name}-${vars.version}.tar.gz"
 
   - name: visualize-model
     help: Visualize the model's output interactively using Streamlit
