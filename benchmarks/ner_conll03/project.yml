@@ -75,10 +75,10 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/testb.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --gold-preproc"
+      - "python -m spacy evaluate ./training/${vars.config}/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --gold-preproc"
     deps:
       - "training/${vars.config}/model-best"
-      - "corpus/testb.spacy"
+      - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
 
