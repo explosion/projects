@@ -11,7 +11,7 @@ vars:
   nlp: "my_nlp"
   train: "train"
   dev: "dev"
-  version: "0.0.2"
+  version: "0.0.3"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
