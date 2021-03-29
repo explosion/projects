@@ -27,8 +27,8 @@ def create_config(model_name: str, component_to_replace: str, output_path: Path)
     # component to replace
     config["training"]["frozen_components"] = []
     for pipe_name in nlp.component_names:
-        config["components"][pipe_name] = {"source": model_name}
         if pipe_name != component_to_replace:
+            config["components"][pipe_name] = {"source": model_name}
             config["training"]["frozen_components"].append(pipe_name)
 
     # save the config
