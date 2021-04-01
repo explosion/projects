@@ -10,13 +10,13 @@ from spacy.kb import KnowledgeBase
 def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
     """ Step 1: create the Knowledge Base in spaCy and write it to file """
 
-    # First: create a simpel model from predefined vectors and a simpel EntityRuler component
-    # A more realistic use-case would use a pretrained NER model instead
-    nlp = spacy.load(vectors_model, exclude="parser, tagger, ner")
-    ruler = nlp.add_pipe("entity_ruler")
+    # First: create a simpel model from a model with an NER component
+    # To ensure we get the correct entities for this demo, add a simple entity_ruler as well.
+    nlp = spacy.load(vectors_model, exclude="parser, tagger, lemmatizer")
+    ruler = nlp.add_pipe("entity_ruler", after="ner")
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
-    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("sentencizer", first=True)
 
     name_dict, desc_dict = _load_entities(entities_loc)
 

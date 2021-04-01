@@ -11,7 +11,7 @@ vars:
   nlp: "my_nlp"
   train: "train"
   dev: "dev"
-  version: "0.0.2"
+  version: "0.0.3"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -54,7 +54,7 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: download
-    help: "Download a spaCy model with pretrained vectors"
+    help: "Download a spaCy model with pretrained vectors and NER component"
     script:
       - "python -m spacy download ${vars.vectors_model}"
 

@@ -6,7 +6,7 @@ from thinc.types import Floats2d, Ints1d, Ragged, cast
 from thinc.api import Model, Linear, chain, Logistic
 
 
-@spacy.registry.architectures.register("rel_model.v1")
+@spacy.registry.architectures("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
     classification_layer: Model[Floats2d, Floats2d],
@@ -17,7 +17,7 @@ def create_relation_model(
     return model
 
 
-@spacy.registry.architectures.register("rel_classification_layer.v1")
+@spacy.registry.architectures("rel_classification_layer.v1")
 def create_classification_layer(
     nO: int = None, nI: int = None
 ) -> Model[Floats2d, Floats2d]:
@@ -25,7 +25,7 @@ def create_classification_layer(
         return Linear(nO=nO, nI=nI) >> Logistic()
 
 
-@spacy.registry.misc.register("rel_instance_generator.v1")
+@spacy.registry.misc("rel_instance_generator.v1")
 def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_instances(doc: Doc) -> List[Tuple[Span, Span]]:
         instances = []
@@ -39,7 +39,7 @@ def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]
     return get_instances
 
 
-@spacy.registry.architectures.register("rel_instance_tensor.v1")
+@spacy.registry.architectures("rel_instance_tensor.v1")
 def create_tensors(
     tok2vec: Model[List[Doc], List[Floats2d]],
     pooling: Model[Ragged, Floats2d],

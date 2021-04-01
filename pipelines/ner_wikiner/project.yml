@@ -25,12 +25,6 @@ workflows:
     - evaluate
 
 commands:
-  -
-    name: init-config
-    help: "Generate a default English NER config"
-    script:
-      - "python -m spacy init config --lang en --pipeline ner --optimize efficiency -C configs/${vars.config}.cfg"
-
   - name: corpus
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the

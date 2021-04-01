@@ -20,7 +20,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `download` | Download a spaCy model with pretrained vectors |
+| `download` | Download a spaCy model with pretrained vectors and NER component |
 | `kb` | Create the Knowledge Base in spaCy and write it to file |
 | `corpus` | Create a training and dev set from the manually annotated data |
 | `train` | Train a new Entity Linking component |
