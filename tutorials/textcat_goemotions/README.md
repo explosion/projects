@@ -130,11 +130,16 @@ models from the tagger and NER. This requires three changes to the config.
 
 ### Using embeddings from a spaCy package
 
+First, download an existing trained pipeline with word vectors. 
+The word vectors of this model can then be specified in `paths.vectors` 
+or `initialize.vectors`.
+
 ```bash
+spacy download en_core_web_lg
 spacy train \
     configs/cnn.cfg \
-    --training.vectors "en_vectors_web_lg" \
-    --components.textcat.model.tok2vec.embed.also_use_static_vectors true
+    --paths.vectors "en_core_web_lg" \
+    --components.textcat.model.tok2vec.embed.include_static_vectors true
 ```
 
 ### Making and using new embeddings
@@ -159,6 +164,6 @@ Use the vectors:
 ```bash
 spacy train \
     configs/cnn.cfg \
-    --training.vectors "assets/en_fasttext_vectors" \
-    --components.textcat.model.tok2vec.embed.also_use_static_vectors true
+    --paths.vectors "assets/en_fasttext_vectors" \
+    --components.textcat.model.tok2vec.embed.include_static_vectors true
 ```
