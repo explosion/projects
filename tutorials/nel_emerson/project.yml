@@ -67,6 +67,7 @@ commands:
     outputs_no_cache:
       - "temp/${vars.kb}"
       - "temp/${vars.nlp}"
+      - "scripts/create_kb.py"
 
   - name: corpus
     help: "Create a training and dev set from the manually annotated data"
