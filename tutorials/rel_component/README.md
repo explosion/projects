@@ -1,3 +1,6 @@
+<a href="https://www.youtube.com/watch?v=8HL-Ap5_Axo" target="_blank"><img src="https://user-images.githubusercontent.com/8796347/117116338-8566cc00-ad8e-11eb-9cd3-e88e94fadb6a.jpg" width="300" height="auto" align="right" /></a>
+
+
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
 # 🪐 spaCy Project: Example project of creating a novel nlp component to do relation extraction from scratch.
