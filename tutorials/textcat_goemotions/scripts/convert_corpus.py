@@ -17,7 +17,7 @@ def read_tsv(file_):
         text, labels, annotator = line.split("\t")
         yield {
             "text": text,
-            "labels": [int(label) for label in labels.split(",")],
+            "labels": [int(label) for label in labels.split(",") if label != ''],
             "annotator": annotator
         }
 
