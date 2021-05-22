@@ -1,0 +1,124 @@
+title: "Detecting fashion brands in online comments (Named Entity Recognition)"
+description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config.cfg"
+  pytorch_config: "pytorch_config.cfg"
+  name: "ner_fashion"
+  version: "0.0.0"
+  train: "train"
+  dev: "dev"
+  test: "test"
+  patterns: "fashion_brands_patterns"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "scripts", "corpus", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/${vars.train}.jsonl"
+    checksum: "63373dd656daa1fd3043ce166a59474c"
+    description: "JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples)"
+  - dest: "assets/${vars.dev}.jsonl"
+    checksum: "5113dc04e03f079525edd8df3f4f39e3"
+    description: "JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples)"
+  # Patterns are not used for training but we distribute them for reference
+  - dest: "assets/${vars.patterns}.jsonl"
+    checksum: "4070316032ce36a01b7d1e8ecb387a8b"
+    description: "Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns)"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - preprocess
+    - train
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "preprocess"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python scripts/preprocess.py assets/n2c2_2011 corpus"
+    deps:
+      - "assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz"
+      - "assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz"
+      - "assets/n2c2_2011/Task_1C.zip"
+    outputs:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+      - "corpus/${vars.test}.spacy"
+
+  - name: "train"
+    help: "Train a named entity recognition model"
+    script:
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy"
+    deps:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: "train-pytorch"
+    help: "Train a custom PyTorch named entity recognition model"
+    script:
+      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch_better/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
+    deps:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+    outputs:
+      - "training_pytorch/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the model and export metrics"
+    script:
+      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json"
+    deps:
+      - "corpus/${vars.dev}.spacy"
+      - "training/model-best"
+    outputs:
+      - "training/metrics.json"
+    
+  - name: "evaluate-pytorch"
+    help: "Evaluate the custom PyTorch model and export metrics"
+    script:
+      - "python -m spacy evaluate training_pytorch/model-best corpus/${vars.test}.spacy --output training_pytorch/metrics.json --code scripts/custom_functions.py"
+    deps:
+      - "corpus/${vars.dev}.spacy"
+      - "training_pytorch/model-best"
+    outputs:
+      - "training_pytorch/metrics.json"
+
+  - name: package
+    help: "Package the trained model so it can be installed"
+    script:
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
+  - name: visualize-model
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/model-best \"I like Adidas shoes.\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/model-best"
+
+  - name: "visualize-data"
+    help: "Explore the annotated data in an interactive Streamlit app"
+    script:
+      - "streamlit run scripts/visualize_data.py assets/${vars.train}.jsonl,assets/${vars.dev}.jsonl"
+    deps:
+      - "scripts/visualize_data.py"
+      - "assets/${vars.train}.jsonl"
+      - "assets/${vars.dev}.jsonl"
