@@ -1,0 +1,353 @@
+from typing import Dict, Iterable, List, Tuple
+import numpy
+from thinc.api import (
+    Model,
+    set_dropout_rate,
+    SequenceCategoricalCrossentropy,
+    Optimizer,
+)
+from thinc.types import Floats2d
+import warnings
+from itertools import islice
+
+from spacy.tokens.doc import Doc
+from spacy.morphology import Morphology
+from spacy.vocab import Vocab
+
+from spacy.training import Example
+from spacy.training.iob_utils import biluo_tags_to_spans, biluo_to_iob, iob_to_biluo
+from spacy.pipeline.trainable_pipe import TrainablePipe
+from spacy.pipeline.pipe import deserialize_config
+from spacy.language import Language
+from spacy.attrs import POS, ID
+from spacy.parts_of_speech import X
+from spacy.errors import Errors, Warnings
+from spacy.scorer import Scorer, get_ner_prf
+from spacy.training import validate_examples, validate_get_examples
+from spacy import util
+
+
+from typing import cast, Optional, Union
+from thinc.loss import Loss, IntsOrFloatsOrStrs, IntsOrFloats 
+from thinc.util import get_array_module, to_categorical
+from thinc.types import Ints1d
+from thinc.config import registry
+
+
+def _make_mask(missing, guesses) -> Floats2d:
+    xp = get_array_module(guesses)
+    mask = xp.ones(guesses.shape, dtype="f")
+    mask[missing] = 0
+    return mask
+
+def argmax(vec):
+    xp = get_array_module(vec)
+    return xp.argmax(vec).item()
+
+
+def log_sum_exp(vec):
+    xp = get_array_module(vec)
+    max_score = vec[0, argmax(vec)]
+    max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])
+    return max_score + \
+        xp.log(xp.sum(xp.exp(vec - max_score_broadcast)))
+
+
+class NegLogLikelihood(Loss):
+    names: Optional[List[str]]
+    missing_value: Optional[Union[str, int]]
+    _name_to_i: Dict[str, int]
+
+    def __init__(
+        self,
+        *,
+        normalize: bool = True,
+        names: Optional[List[str]] = None,
+        missing_value: Optional[Union[str, int]] = None,
+    ):
+        self.normalize = normalize
+        self.names = names
+        self.missing_value = missing_value
+        if names is not None:
+            self._name_to_i = {name: i for i, name in enumerate(names)}
+        else:
+            self._name_to_i = {}
+
+    def convert_truths(self, truths, guesses: Floats2d) -> Tuple[Floats2d, Floats2d]:
+        xp = get_array_module(guesses)
+        missing = []
+        missing_value = self.missing_value
+        # Convert list of ints or list of strings
+        if isinstance(truths, list):
+            truths = list(truths)
+            if len(truths) and not isinstance(truths[0], int):
+                if self.names is None:
+                    msg = (
+                        "Cannot calculate loss from list of strings without names. "
+                        "You can pass the names as a keyword argument when you "
+                        "create the loss object, "
+                        "e.g. CategoricalCrossentropy(names=['dog', 'cat'])"
+                    )
+                    raise ValueError(msg)
+                for i, value in enumerate(truths):
+                    if value == missing_value:
+                        truths[i] = self.names[0]
+                        missing.append(i)
+                truths = [self._name_to_i[name] for name in truths]
+            truths = xp.asarray(truths, dtype="i")
+        else:
+            missing = []
+        mask = _make_mask(missing, guesses)
+        return truths, mask
+
+    def __call__(
+        self, guesses: Floats2d, truths: IntsOrFloatsOrStrs
+    ) -> Tuple[Floats2d, float]:
+        d_truth = self.get_grad(guesses, truths)
+        return (d_truth, self._get_loss_from_grad(d_truth))
+
+    def get_grad(self, guesses: Floats2d, truths: IntsOrFloatsOrStrs) -> Floats2d:
+        target, mask = self.convert_truths(truths, guesses)
+        if guesses.shape != target.shape:  # pragma: no cover
+            err = f"Cannot calculate CategoricalCrossentropy loss: mismatched shapes: {guesses.shape} vs {target.shape}."
+            raise ValueError(err)
+        if guesses.any() > 1 or guesses.any() < 0:  # pragma: no cover
+            err = f"Cannot calculate CategoricalCrossentropy loss with guesses outside the [0,1] interval."
+            raise ValueError(err)
+        if target.any() > 1 or target.any() < 0:  # pragma: no cover
+            err = f"Cannot calculate CategoricalCrossentropy loss with truth values outside the [0,1] interval."
+            raise ValueError(err)
+        difference = guesses - target
+        difference *= mask
+        if self.normalize:
+            difference = difference / guesses.shape[0]
+        return difference
+
+    def get_loss(self, guesses: Floats2d, truths: IntsOrFloats) -> float:
+        d_truth = self.get_grad(guesses, truths)
+        return self._get_loss_from_grad(d_truth)
+
+    def _get_loss_from_grad(self, d_truth: Floats2d) -> float:
+        # TODO: Add overload for axis=None case to sum
+        return (d_truth ** 2).sum()  # type: ignore
+
+
+@registry.losses("NegLogLikelihood.v1")
+def configure_NegLogLikelihood(
+    *,
+    normalize: bool = True,
+    names: Optional[List[str]] = None,
+    missing_value: Optional[Union[str, int]] = None,
+) -> NegLogLikelihood:
+    return NegLogLikelihood(
+        normalize=normalize, names=names, missing_value=missing_value
+    )
+
+
+
+@Language.factory(
+    "torch_ner",
+    assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
+)
+def make_torch_entity_recognizer(nlp: Language, name: str, model: Model):
+    """Construct a PyTorch based Named Entity Recognition model
+    model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
+        the tag probabilities. The output vectors should match the number of tags
+        in size, and be normalized as probabilities (all scores between 0 and 1,
+        with the rows summing to 1).
+    """
+    return TorchEntityRecognizer(nlp.vocab, model, name)
+
+
+class TorchEntityRecognizer(TrainablePipe):
+    """Pipeline component Named Entity Recognition using PyTorch"""
+
+    def __init__(self, vocab: Vocab, model: Model, name: str = "torch_ner"):
+        """Initialize a part-of-speech tagger.
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        """
+        self.vocab = vocab
+        self.model = model
+        self.name = name
+        cfg = {"labels": []}
+        self.cfg = dict(sorted(cfg.items()))
+
+    @property
+    def labels(self) -> Tuple[str, ...]:
+        """The labels currently added to the component.
+        RETURNS (Tuple[str]): The labels.
+        """
+        return tuple(self.cfg["labels"])
+
+    def predict(self, docs: Iterable[Doc]):
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS: The models prediction for each document.
+        """
+        if not any(len(doc) for doc in docs):
+            # Handle cases where there are no tokens in any docs.
+            n_labels = len(self.labels)
+            guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
+            assert len(guesses) == len(docs)
+            return guesses
+        scores = self.model.predict(docs)
+
+        assert len(scores) == len(docs), (len(scores), len(docs))
+        guesses = self._scores2guesses(scores)
+        assert len(guesses) == len(docs)
+        return guesses
+
+    def _scores2guesses(self, scores):
+        guesses = []
+        for doc_scores in scores:
+            doc_guesses = doc_scores.argmax(axis=1)
+            if not isinstance(doc_guesses, numpy.ndarray):
+                doc_guesses = doc_guesses.get()
+            guesses.append(doc_guesses)
+        return guesses
+
+    def set_annotations(self, docs: Iterable[Doc], batch_tag_ids: Iterable[List[str]]):
+        """Modify a batch of documents, using pre-computed scores.
+        docs (Iterable[Doc]): The documents to modify.
+        batch_tag_ids: The IDs to set, produced by TorchEntityRecognizer.predict.
+        """
+        if isinstance(docs, Doc):
+            docs = [docs]
+        for i, doc in enumerate(docs):
+            doc_tag_ids = batch_tag_ids[i]
+
+            labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
+            try:
+                spans = biluo_tags_to_spans(doc, labels)
+            except ValueError:
+                # biluo_tags_to_spans will raise an exception for an invalid tag sequence
+                # this could be fixed using a more complex transition system
+                # (e.g. a Conditional Random Field model head)
+                spans = []
+
+            doc.ents = spans
+
+    def update(
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optimizer = None,
+        losses: Dict[str, float] = None,
+    ) -> Dict[str, float]:
+        """Learn from a batch of documents and gold-standard information,
+        updating the pipe's model. Delegates to predict and get_loss.
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+        """
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
+        validate_examples(examples, "TorchEntityRecognizer.update")
+        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+            # Handle cases where there are no tokens in any docs.
+            return losses
+        set_dropout_rate(self.model, drop)
+        tag_scores, bp_tag_scores = self.model.begin_update(
+            [eg.predicted for eg in examples]
+        )
+        for sc, seq in tag_scores:
+            if self.model.ops.xp.isnan(sc):
+                raise ValueError(Errors.E940)
+        loss, d_tag_scores = self.get_loss(examples, tag_scores)
+        bp_tag_scores(d_tag_scores)
+        if sgd not in (None, False):
+            self.finish_update(sgd)
+
+        losses[self.name] += loss
+        return losses
+
+    def get_loss(self, examples, scores):
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+        examples (Iterable[Examples]): The batch of examples.
+        scores: Scores representing the model's predictions.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+        """
+        validate_examples(examples, "TorchEntityRecognizer.get_loss")
+        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        # Convert empty tag "" to missing value None so that both misaligned
+        # tokens and tokens with missing annotation have the default missing
+        # value None.
+        truths = []
+        for eg in examples:
+            eg_truths = [
+                tag if tag != "" else None for tag in biluo_to_iob(eg.get_aligned_ner())
+            ]
+            truths.append(eg_truths)
+        print("SCORES AND TRUTHS", scores, truths)
+        d_scores, loss = loss_func(scores, truths)
+        if self.model.ops.xp.isnan(loss):
+            raise ValueError(Errors.E910.format(name=self.name))
+        return float(loss), d_scores
+
+    def initialize(self, get_examples, *, nlp=None, labels=None):
+        """Initialize the pipe for training, using a representative set
+        of data examples.
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects..
+        nlp (Language): The current nlp object the component is part of.
+        labels: The labels to add to the component, typically generated by the
+            `init labels` command. If no labels are provided, the get_examples
+            callback is used to extract the labels from the data.
+        """
+        validate_get_examples(get_examples, "TorchEntityRecognizer.initialize")
+        util.check_lexeme_norms(self.vocab, "torch_ner")
+        if labels is not None:
+            for tag in labels:
+                self.add_label(tag)
+        else:
+            tags = {"O"}
+            for example in get_examples():
+                for token in example.y:
+                    if token.ent_type_:
+                        tags.add(f"{token.ent_iob_}-{token.ent_type_}")
+            for tag in sorted(tags):
+                self.add_label(tag)
+        doc_sample = []
+        for example in islice(get_examples(), 10):
+            doc_sample.append(example.x)
+
+        self._require_labels()
+        assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
+        self.model.initialize(X=doc_sample, Y=self.labels)
+
+    def add_label(self, label):
+        """Add a new label to the pipe.
+        label (str): The label to add.
+        RETURNS (int): 0 if label is already present, otherwise 1.
+        """
+        if not isinstance(label, str):
+            raise ValueError(Errors.E187)
+        if label in self.labels:
+            return 0
+        self._allow_extra_label()
+        self.cfg["labels"].append(label)
+        self.vocab.strings.add(label)
+        return 1
+
+    def score(self, examples, **kwargs):
+        """Score a batch of examples.
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
+        """
+        validate_examples(examples, "TorchEntityRecognizer.score")
+        return get_ner_prf(examples)
