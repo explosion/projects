@@ -35,14 +35,10 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  spacy:
+  all:
     - preprocess
     - train
     - evaluate
-  pytorch:
-    - preprocess
-    - train-pytorch
-    - evaluate-pytorch
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -63,54 +59,34 @@ commands:
       - "corpus/${vars.test}.spacy"
 
   - name: "train"
-    help: "Train a named entity recognition model"
+    help: "Train a custom PyTorch named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy"
+      - "python -m spacy train configs/${vars.pytorch_config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
     outputs:
       - "training/model-best"
-
-  - name: "train-pytorch"
-    help: "Train a custom PyTorch named entity recognition model"
-    script:
-      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
-    deps:
-      - "corpus/${vars.train}.spacy"
-      - "corpus/${vars.dev}.spacy"
-    outputs:
-      - "training_pytorch/model-best"
     
-  - name: "train-pytorch-trf"
+  - name: "train-trf"
     help: "Train a custom PyTorch named entity recognition model with transformer"
     script:
-      - "python -m spacy train configs/${vars.pytorch_trf_config} --output training_pytorch_trf/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --gpu-id 0"
+      - "python -m spacy train configs/${vars.pytorch_trf_config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --gpu-id 0"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
     outputs:
-      - "training_pytorch_trf/model-best"
-
+      - "training/model-best"
+    
   - name: "evaluate"
-    help: "Evaluate the model and export metrics"
+    help: "Evaluate the custom PyTorch model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json"
+      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json --code scripts/custom_functions.py"
     deps:
-      - "corpus/${vars.dev}.spacy"
+      - "corpus/${vars.test}.spacy"
       - "training/model-best"
     outputs:
       - "training/metrics.json"
-    
-  - name: "evaluate-pytorch"
-    help: "Evaluate the custom PyTorch model and export metrics"
-    script:
-      - "python -m spacy evaluate training_pytorch/model-best corpus/${vars.test}.spacy --output training_pytorch/metrics.json --code scripts/custom_functions.py"
-    deps:
-      - "corpus/${vars.dev}.spacy"
-      - "training_pytorch/model-best"
-    outputs:
-      - "training_pytorch/metrics.json"
 
   - name: package
     help: "Package the trained model so it can be installed"
@@ -124,16 +100,7 @@ commands:
   - name: visualize-model
     help: Visualize the model's output interactively using Streamlit
     script:
-      - "streamlit run scripts/visualize_model.py training/model-best \"I like Adidas shoes.\""
+      - "streamlit run scripts/visualize_model.py training/model-best \"The patient had surgery.\""
     deps:
       - "scripts/visualize_model.py"
       - "training/model-best"
-
-  - name: "visualize-data"
-    help: "Explore the annotated data in an interactive Streamlit app"
-    script:
-      - "streamlit run scripts/visualize_data.py assets/${vars.train}.jsonl,assets/${vars.dev}.jsonl"
-    deps:
-      - "scripts/visualize_data.py"
-      - "assets/${vars.train}.jsonl"
-      - "assets/${vars.dev}.jsonl"
