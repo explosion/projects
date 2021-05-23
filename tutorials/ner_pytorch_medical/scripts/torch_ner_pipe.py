@@ -22,30 +22,13 @@ from spacy.training import validate_examples, validate_get_examples
 from spacy import util
 
 
-default_model_config = """
-[model]
-@architectures = "TorchEntityRecognizer.v1"
-[model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v2"
-pretrained_vectors = null
-width = 96
-depth = 4
-embed_size = 2000
-window_size = 1
-maxout_pieces = 3
-subword_features = true
-"""
-DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
-
-
 @Language.factory(
     "torch_ner",
     assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
-    default_config={"model": DEFAULT_TAGGER_MODEL},
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 )
 def make_torch_entity_recognizer(nlp: Language, name: str, model: Model):
-    """Construct a part-of-speech tagger component.
+    """Construct a PyTorch based Named Entity Recognition model
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         the tag probabilities. The output vectors should match the number of tags
         in size, and be normalized as probabilities (all scores between 0 and 1,
@@ -55,8 +38,7 @@ def make_torch_entity_recognizer(nlp: Language, name: str, model: Model):
 
 
 class TorchEntityRecognizer(TrainablePipe):
-    """Pipeline component for part-of-speech tagging.
-    DOCS: https://spacy.io/api/tagger
+    """Pipeline component Named Entity Recognition using PyTorch
     """
     def __init__(self, vocab, model, name="torch_ner"):
         """Initialize a part-of-speech tagger.
@@ -64,22 +46,17 @@ class TorchEntityRecognizer(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        DOCS: https://spacy.io/api/tagger#init
         """
         self.vocab = vocab
         self.model = model
         self.name = name
-        self._rehearsal_model = None
         cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
     def labels(self):
-        """The labels currently added to the component. Note that even for a
-        blank component, this will always include the built-in coarse-grained
-        part-of-speech tags by default.
+        """The labels currently added to the component.
         RETURNS (Tuple[str]): The labels.
-        DOCS: https://spacy.io/api/tagger#labels
         """
         return tuple(self.cfg["labels"])
 
@@ -92,7 +69,6 @@ class TorchEntityRecognizer(TrainablePipe):
         """Apply the pipeline's model to a batch of docs, without modifying them.
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
-        DOCS: https://spacy.io/api/tagger#predict
         """
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -124,8 +100,6 @@ class TorchEntityRecognizer(TrainablePipe):
         """
         if isinstance(docs, Doc):
             docs = [docs]
-        # cdef Doc doc
-        # cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
@@ -134,11 +108,11 @@ class TorchEntityRecognizer(TrainablePipe):
             labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
             try:
                 spans = biluo_tags_to_spans(doc, labels)
-            except:
+            except ValueError:
+                # biluo_tags_to_spans will raise an exception for an invalid tag sequence
+                # this could be fixed using a more complex transition system (e.g. a Conditional Random Field model head)
                 spans = []
 
-            # print("DOC TAG IDS", labels)
-            # print("SPANS", spans)
             doc.ents = spans
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
@@ -189,8 +163,6 @@ class TorchEntityRecognizer(TrainablePipe):
         for eg in examples:
             eg_truths = [tag if tag is not "" else None for tag in biluo_to_iob(eg.get_aligned_ner())]
             truths.append(eg_truths)
-        # print(scores, truths)
-        # raise
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
@@ -221,16 +193,12 @@ class TorchEntityRecognizer(TrainablePipe):
             for tag in sorted(tags):
                 self.add_label(tag)
         doc_sample = []
-        label_sample = []
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)
-            gold_tags = biluo_to_iob(example.get_aligned_ner())
-            gold_array = [[1.0 if tag == gold_tag else 0.0 for tag in self.labels] for gold_tag in gold_tags]
-            label_sample.append(self.model.ops.asarray(gold_array, dtype="float32"))
+
         self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
-        assert len(label_sample) > 0, Errors.E923.format(name=self.name)
-        self.model.initialize(X=doc_sample, Y=label_sample)
+        self.model.initialize(X=doc_sample, Y=self.labels)
 
     def add_label(self, label):
         """Add a new label to the pipe.

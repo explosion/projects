@@ -16,8 +16,8 @@ random.seed(42)
 
 
 def main(
-    input_dir: Path = typer.Argument(..., exists=True, dir_okay=False),
-    output_dir: Path = typer.Argument(..., dir_okay=False),
+    input_dir: Path = typer.Argument(..., exists=True),
+    output_dir: Path = typer.Argument(...),
     beth_train_tar_name: str = "i2b2_Beth_Train_Release.tar.gz",
     partners_train_tar_name: str = "i2b2_Partners_Train_Release.tar.gz",
     test_zip_name: str = "Task_1C.zip",
@@ -33,6 +33,7 @@ def main(
     """
 
     # Unpack compressed data files
+    print("Extracting raw data.")
     beth_train_tar_path = input_dir / beth_train_tar_name
     partners_train_tar_path = input_dir / partners_train_tar_name
     test_zip_path = input_dir / test_zip_name
@@ -45,15 +46,16 @@ def main(
                 f"Create an account and download the data packages to {input_dir}"
             )
 
-    for fname in [beth_train_tar_path, partners_train_tar_path]:
-        if fname.endswith("tar.gz"):
-            tar = tarfile.open(fname, "r:gz")
+    for path in [beth_train_tar_path, partners_train_tar_path]:
+        if path.name.endswith("tar.gz"):
+            tar = tarfile.open(path, "r:gz")
             tar.extractall()
             tar.close()
 
     shutil.unpack_archive(test_zip_path, input_dir / test_zip_name.replace(".zip", ""))
     
     # preprocess data
+    print("Converting to spaCy Doc objects.")
     beth_train_docs = docs_from_many_clinical_records(input_dir / "Beth_Train")
     partners_train_docs = docs_from_many_clinical_records(input_dir / "Partners_Train")
     train_docs = beth_train_docs + partners_train_docs
@@ -71,20 +73,19 @@ def main(
     print(f"Num Dev Docs: {len(dev_docs)}")
     print(f"Num Test Docs: {len(test_docs)}")
 
-    print(f"Saving docs to {output_dir}")
+    print(f"Saving docs to: {output_dir}")
     DocBin(docs=train_docs).to_disk(output_dir / "train.spacy")
     DocBin(docs=dev_docs).to_disk(output_dir / "dev.spacy")
     DocBin(docs=test_docs).to_disk(output_dir / "test.spacy")
 
 
-
-
-def docs_from_clinical_record(lines: List[str], annotations: List[str], merge_docs: bool = False) -> List[Doc]:
+def docs_from_clinical_record(lines: List[str], annotations: List[str], nlp: Language, merge_docs: bool = False) -> List[Doc]:
     """Create spaCy docs from a single annotated medical record in the n2c2 2011 format
 
     Args:
         lines (List[str]): Text of the clinical record as a list separated by newlines
-        annotations (List[str]): Raw entity annotations in the n2c2 2011 format 
+        annotations (List[str]): Raw entity annotations in the n2c2 2011 format
+        nlp (Language, optional): spaCy Language object. Defaults to spacy.blank("en").
         merge_docs (bool, optional): If True: merge all lines into a single spaCy doc so 
             there is only 1 element in the output array.
             If False: create a spaCy doc for each line in the original record
@@ -154,7 +155,7 @@ def docs_from_many_clinical_records(base_path: Path, nlp: Language = spacy.blank
         annotations = con_path.open().read().splitlines()
         lines = doc_path.open().read().splitlines()
 
-        docs = docs_from_clinical_record(lines, annotations, merge_docs=merge_docs)
+        docs = docs_from_clinical_record(lines, annotations, nlp, merge_docs=merge_docs)
         all_docs += docs
 
     return all_docs

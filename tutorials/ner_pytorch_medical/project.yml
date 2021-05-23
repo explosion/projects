@@ -4,6 +4,7 @@ description: "This project uses [`sense2vec`](https://github.com/explosion/sense
 vars:
   config: "config.cfg"
   pytorch_config: "pytorch_config.cfg"
+  pytorch_trf_config: "pytorch_trf_config.cfg"
   name: "ner_fashion"
   version: "0.0.0"
   train: "train"
@@ -34,10 +35,14 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  all:
+  spacy:
     - preprocess
     - train
     - evaluate
+  pytorch:
+    - preprocess
+    - train-pytorch
+    - evaluate-pytorch
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -70,12 +75,22 @@ commands:
   - name: "train-pytorch"
     help: "Train a custom PyTorch named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch_better/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
+      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch_v3/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
     outputs:
       - "training_pytorch/model-best"
+    
+  - name: "train-pytorch-trf"
+    help: "Train a custom PyTorch named entity recognition model with transformer"
+    script:
+      - "python -m spacy train configs/${vars.pytorch_trf_config} --output training_pytorch_trf/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py"
+    deps:
+      - "corpus/${vars.train}.spacy"
+      - "corpus/${vars.dev}.spacy"
+    outputs:
+      - "training_pytorch_trf/model-best"
 
   - name: "evaluate"
     help: "Evaluate the model and export metrics"
