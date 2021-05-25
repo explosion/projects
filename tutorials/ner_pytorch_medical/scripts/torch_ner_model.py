@@ -1,12 +1,18 @@
 from re import M
-from typing import Callable, Optional, List, Tuple, Union
-from spacy.ml.models import tok2vec
-from thinc.api import zero_init, with_array, Softmax, chain, Model, PyTorchWrapper, PyTorchLSTM, with_padded, list2ragged
+from typing import Optional, List
+from thinc.api import (
+    with_array,
+    chain,
+    Model,
+    PyTorchWrapper,
+    PyTorchLSTM,
+    with_padded,
+    list2ragged,
+)
 from thinc.types import Floats2d, List2d, Ints2d
 from thinc.util import get_width
 
 import spacy
-from spacy.ml import CharacterEmbed, MultiHashEmbed
 from spacy.tokens import Doc
 from spacy.util import registry
 import torch
@@ -78,6 +84,7 @@ def init(
 
 class TorchEntityRecognizer(nn.Module):
     """Torch Entity Recognizer Model Head"""
+
     def __init__(self, nI: int, nH: int, nO: int, dropout: float):
         """Initialize TorchEntityRecognizer.
 
@@ -86,33 +93,29 @@ class TorchEntityRecognizer(nn.Module):
             nH (int): Hidden Dimension Width
             nO (int): Output Dimension Width
             dropout (float): Dropout ratio (0 - 1.0)
-        """        
+        """
         super(TorchEntityRecognizer, self).__init__()
         if not nO:
-            nO = 1 # Just for initialization of PyTorch layer. Output shape set during Model.init
+            nO = 1  # Just for initialization of PyTorch layer. Output shape set during Model.init
 
         self.nH = nH
-        self.model = nn.Sequential(
-            nn.Linear(nI, nH),
-            nn.ReLU(),
-            nn.Dropout2d(dropout)
-        )
+        self.model = nn.Sequential(nn.Linear(nI, nH), nn.ReLU(), nn.Dropout2d(dropout))
         self.output_layer = nn.Linear(nH, nO or 1)
         self.dropout = nn.Dropout2d(dropout)
         self.softmax = nn.Softmax(dim=1)
-        
+
     def forward(self, x: torch.Tensor):
         x = self.model(x)
         x = self.output_layer(x)
         x = self.dropout(x)
         return self.softmax(x)
-    
+
     def set_output_shape(self, nO: int):
         """Dynamically set the shape of the output layer
 
         Args:
-            nO (int): New output layer shape 
-        """        
+            nO (int): New output layer shape
+        """
         with torch.no_grad():
             self.output_layer.out_features = nO
             self.output_layer.weight = nn.Parameter(torch.Tensor(nO, self.nH))

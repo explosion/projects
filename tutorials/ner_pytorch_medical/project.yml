@@ -75,7 +75,7 @@ commands:
   - name: "train-pytorch"
     help: "Train a custom PyTorch named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch_v3/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
+      - "python -m spacy train configs/${vars.pytorch_config} --output training_pytorch/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg --gpu-id 0"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
@@ -85,7 +85,7 @@ commands:
   - name: "train-pytorch-trf"
     help: "Train a custom PyTorch named entity recognition model with transformer"
     script:
-      - "python -m spacy train configs/${vars.pytorch_trf_config} --output training_pytorch_trf/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py"
+      - "python -m spacy train configs/${vars.pytorch_trf_config} --output training_pytorch_trf/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --gpu-id 0"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"

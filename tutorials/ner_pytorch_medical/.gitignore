@@ -1,6 +1,6 @@
 assets/n2c2_2011/*
 corpus
-training
-training_pytorch
+notebooks
 packages
-scripts/torch_ner_model_v2.py
+training*
+scripts/torch_ner_model_*.py

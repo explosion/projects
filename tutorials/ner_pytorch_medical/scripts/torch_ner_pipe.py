@@ -1,7 +1,11 @@
-# cython: infer_types=True, profile=True, binding=True
+from typing import Dict, Iterable, List, Tuple
 import numpy
-import srsly
-from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
+from thinc.api import (
+    Model,
+    set_dropout_rate,
+    SequenceCategoricalCrossentropy,
+    Optimizer,
+)
 from thinc.types import Floats2d
 import warnings
 from itertools import islice
@@ -10,6 +14,7 @@ from spacy.tokens.doc import Doc
 from spacy.morphology import Morphology
 from spacy.vocab import Vocab
 
+from spacy.training import Example
 from spacy.training.iob_utils import biluo_tags_to_spans, biluo_to_iob, iob_to_biluo
 from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.pipeline.pipe import deserialize_config
@@ -25,7 +30,12 @@ from spacy import util
 @Language.factory(
     "torch_ner",
     assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_torch_entity_recognizer(nlp: Language, name: str, model: Model):
     """Construct a PyTorch based Named Entity Recognition model
@@ -38,9 +48,9 @@ def make_torch_entity_recognizer(nlp: Language, name: str, model: Model):
 
 
 class TorchEntityRecognizer(TrainablePipe):
-    """Pipeline component Named Entity Recognition using PyTorch
-    """
-    def __init__(self, vocab, model, name="torch_ner"):
+    """Pipeline component Named Entity Recognition using PyTorch"""
+
+    def __init__(self, vocab: Vocab, model: Model, name: str = "torch_ner"):
         """Initialize a part-of-speech tagger.
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
@@ -54,18 +64,13 @@ class TorchEntityRecognizer(TrainablePipe):
         self.cfg = dict(sorted(cfg.items()))
 
     @property
-    def labels(self):
+    def labels(self) -> Tuple[str, ...]:
         """The labels currently added to the component.
         RETURNS (Tuple[str]): The labels.
         """
         return tuple(self.cfg["labels"])
 
-    @property
-    def label_data(self):
-        """Data about the labels currently added to the component."""
-        return tuple(self.cfg["labels"])
-
-    def predict(self, docs):
+    def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
@@ -77,7 +82,7 @@ class TorchEntityRecognizer(TrainablePipe):
             assert len(guesses) == len(docs)
             return guesses
         scores = self.model.predict(docs)
-        
+
         assert len(scores) == len(docs), (len(scores), len(docs))
         guesses = self._scores2guesses(scores)
         assert len(guesses) == len(docs)
@@ -92,30 +97,35 @@ class TorchEntityRecognizer(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs: Iterable[Doc], batch_tag_ids: Iterable[List[str]]):
         """Modify a batch of documents, using pre-computed scores.
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by Tagger.predict.
-        DOCS: https://spacy.io/api/tagger#set_annotations
+        batch_tag_ids: The IDs to set, produced by TorchEntityRecognizer.predict.
         """
         if isinstance(docs, Doc):
             docs = [docs]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
-            if hasattr(doc_tag_ids, "get"):
-                doc_tag_ids = doc_tag_ids.get()
 
             labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
             try:
                 spans = biluo_tags_to_spans(doc, labels)
             except ValueError:
                 # biluo_tags_to_spans will raise an exception for an invalid tag sequence
-                # this could be fixed using a more complex transition system (e.g. a Conditional Random Field model head)
+                # this could be fixed using a more complex transition system
+                # (e.g. a Conditional Random Field model head)
                 spans = []
 
             doc.ents = spans
 
-    def update(self, examples, *, drop=0., sgd=None, losses=None):
+    def update(
+        self,
+        examples: Iterable[Example],
+        *,
+        drop: float = 0.0,
+        sgd: Optimizer = None,
+        losses: Dict[str, float] = None,
+    ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
         examples (Iterable[Example]): A batch of Example objects.
@@ -124,7 +134,6 @@ class TorchEntityRecognizer(TrainablePipe):
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
-        DOCS: https://spacy.io/api/tagger#update
         """
         if losses is None:
             losses = {}
@@ -134,7 +143,9 @@ class TorchEntityRecognizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             return losses
         set_dropout_rate(self.model, drop)
-        tag_scores, bp_tag_scores = self.model.begin_update([eg.predicted for eg in examples])
+        tag_scores, bp_tag_scores = self.model.begin_update(
+            [eg.predicted for eg in examples]
+        )
         for sc in tag_scores:
             if self.model.ops.xp.isnan(sc.sum()):
                 raise ValueError(Errors.E940)
@@ -152,16 +163,17 @@ class TorchEntityRecognizer(TrainablePipe):
         examples (Iterable[Examples]): The batch of examples.
         scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
-        DOCS: https://spacy.io/api/tagger#get_loss
         """
-        validate_examples(examples, "Tagger.get_loss")
+        validate_examples(examples, "TorchEntityRecognizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
         # Convert empty tag "" to missing value None so that both misaligned
         # tokens and tokens with missing annotation have the default missing
         # value None.
         truths = []
         for eg in examples:
-            eg_truths = [tag if tag is not "" else None for tag in biluo_to_iob(eg.get_aligned_ner())]
+            eg_truths = [
+                tag if tag != "" else None for tag in biluo_to_iob(eg.get_aligned_ner())
+            ]
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
@@ -177,7 +189,6 @@ class TorchEntityRecognizer(TrainablePipe):
         labels: The labels to add to the component, typically generated by the
             `init labels` command. If no labels are provided, the get_examples
             callback is used to extract the labels from the data.
-        DOCS: https://spacy.io/api/tagger#initialize
         """
         validate_get_examples(get_examples, "TorchEntityRecognizer.initialize")
         util.check_lexeme_norms(self.vocab, "torch_ner")
@@ -204,7 +215,6 @@ class TorchEntityRecognizer(TrainablePipe):
         """Add a new label to the pipe.
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
-        DOCS: https://spacy.io/api/tagger#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -219,7 +229,6 @@ class TorchEntityRecognizer(TrainablePipe):
         """Score a batch of examples.
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
-        DOCS: https://spacy.io/api/entityrecognizer#score
         """
-        validate_examples(examples, "EntityRecognizer.score")
+        validate_examples(examples, "TorchEntityRecognizer.score")
         return get_ner_prf(examples)
