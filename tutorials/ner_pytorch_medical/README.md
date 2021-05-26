@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition)
+# 🪐 spaCy Project: Detecting entities in Medical Records
 
-This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
+This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap an NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy).
 
 ## 📋 project.yml
 
@@ -19,11 +19,11 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `preprocess` | Convert the data to spaCy's binary format |
-| `train` | Train a named entity recognition model |
-| `evaluate` | Evaluate the model and export metrics |
+| `train` | Train a custom PyTorch named entity recognition model |
+| `train-trf` | Train a custom PyTorch named entity recognition model with transformer |
+| `evaluate` | Evaluate the custom PyTorch model and export metrics |
 | `package` | Package the trained model so it can be installed |
 | `visualize-model` | Visualize the model's output interactively using Streamlit |
-| `visualize-data` | Explore the annotated data in an interactive Streamlit app |
 
 ### ⏭ Workflows
 
@@ -36,87 +36,29 @@ inputs have changed.
 | --- | --- |
 | `all` | `preprocess` &rarr; `train` &rarr; `evaluate` |
 
-### 🗂 Assets
-
-The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
-in the project directory.
-
-| File | Source | Description |
-| --- | --- | --- |
-| [`assets/fashion_brands_training.jsonl`](assets/fashion_brands_training.jsonl) | Local | JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples) |
-| [`assets/fashion_brands_eval.jsonl`](assets/fashion_brands_eval.jsonl) | Local | JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples) |
-| [`assets/fashion_brands_patterns.jsonl`](assets/fashion_brands_patterns.jsonl) | Local | Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns) |
-
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
-
----
 
 ## 📚 Data
 
-[Labelling the data](https://explosion.ai/blog/sense2vec-reloaded#annotation-bootstrap)
-took about 2 hours and was done manually using the patterns to pre-highlight
-suggestions. The raw text was sourced from the from the
-[r/MaleFashionAdvice](https://www.reddit.com/r/malefashionadvice/) and
-[r/FemaleFashionAdvice](https://www.reddit.com/r/femalefashionadvice/)
-subreddits.
+The main data source is the i2b2 2011 Co-Reference Challenge Dataset. This dataset has annotations for Named Entity Recognition in Medical Records and co-references between each entity. For the purpose of this tutorial, we focus solely on extracting the labeled entities.
 
-| File                                                                    | Count | Description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------------------------------------------------------------------- | ----: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`fashion_brands_patterns.jsonl`](assets/fashion_brands_patterns.jsonl) |   100 | Match patterns created with [`sense2vec.teach`](https://github.com/explosion/sense2vec/tree/master#recipe-sense2vecteach) and [`sense2vec.to-patterns`](https://github.com/explosion/sense2vec/tree/master#recipe-sense2vecto-patterns). Can be used with spaCy's [`EntityRuler`](https://spacy.io/usage/rule-based-matching#entityruler) for a rule-based baseline and faster NER annotation. |
-| [`fashion_brands_training.jsonl`](assets/fashion_brands_training.jsonl) |  1235 | Training data annotated with `FASHION_BRAND` entities.                                                                                                                                                                                                                                                                                                                                         |
-| [`fashion_brands_eval.jsonl`](assets/fashion_brands_eval.jsonl)         |   500 | Evaluation data annotated with `FASHION_BRAND` entities.                                                                                                                                                                                                                                                                                                                                       |
+There are no defined assets for this project due to the User Agreement for the Dataset. In order to use this data, you must create an account through the [Harvard DBMI Portal](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/).
 
-<img width="250" src="https://user-images.githubusercontent.com/13643239/69343953-d6eccb00-0c6e-11ea-96ed-ea1833eb3902.png" alt="" align="right">
+Once you have an account, navigate to the n2c2 NLP Datasets page. https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/
 
-### Visualize the data and model
+Under the 2011 Coreference Challenge Downloads section,Download the Beth Israel Portion, Partners Portion, and Test Data to the `assets/n2c2_2011` folder. 
 
-The [`visualize_data.py`](scripts/visualize_data.py) script lets you visualize
-the training and evaluation datasets with
-[displaCy](https://spacy.io/usage/visualizers).
+![Dataset Downloads](img/n2c2_asset_downloads_screenshot.png)
 
-```bash
-python -m spacy project run visualize-data
+Your `assets/n2c2_2011` should look like after download:
+
+```
+assets
+└─── n2c2_2011
+        i2b2_Beth_Train_Release.tar.gz
+        i2b2_Partners_Train_Release.tar.gz
+        Task_1.zip
 ```
 
-The [`visualize_model.py`](scripts/visualize_model.py) script is powered by
-[`spacy-streamlit`](https://github.com/explosion/spacy-streamlit) and lets you
-explore the trained model interactively.
+Once you have this data downloaded, the `preprocess` project command will build `*.spacy` dataset files for you.
 
-```bash
-python -m spacy project run visualize-model
-```
-
-### Training and evaluation data format
-
-The training and evaluation datasets are distributed in Prodigy's simple JSONL
-(newline-delimited JSON) format. Each entry contains a `"text"` and a list of
-`"spans"` with the `"start"` and `"end"` character offsets and the `"label"` of
-the annotated entities. The data also includes the tokenization. Here's a
-simplified example entry:
-
-```json
-{
-  "text": "Bonobos has some long sizes.",
-  "tokens": [
-    { "text": "Bonobos", "start": 0, "end": 7, "id": 0 },
-    { "text": "has", "start": 8, "end": 11, "id": 1 },
-    { "text": "some", "start": 12, "end": 16, "id": 2 },
-    { "text": "long", "start": 17, "end": 21, "id": 3 },
-    { "text": "sizes", "start": 22, "end": 27, "id": 4 },
-    { "text": ".", "start": 27, "end": 28, "id": 5 }
-  ],
-  "spans": [
-    {
-      "start": 0,
-      "end": 7,
-      "token_start": 0,
-      "token_end": 0,
-      "label": "FASHION_BRAND"
-    }
-  ],
-  "_input_hash": -874614165,
-  "_task_hash": 2136869442,
-  "answer": "accept"
-}
-```

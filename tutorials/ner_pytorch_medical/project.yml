@@ -1,35 +1,19 @@
-title: "Detecting fashion brands in online comments (Named Entity Recognition)"
-description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)."
+title: "Detecting entities in Medical Records"
+description: "This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap an NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy)."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
   pytorch_config: "pytorch_config.cfg"
   pytorch_trf_config: "pytorch_trf_config.cfg"
-  name: "ner_fashion"
+  name: "ner_pytorch_medical"
   version: "0.0.0"
   train: "train"
   dev: "dev"
   test: "test"
-  patterns: "fashion_brands_patterns"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "training", "configs", "scripts", "corpus", "packages"]
-
-# Assets that should be downloaded or available in the directory. We're shipping
-# them with the project, so they won't have to be downloaded. But the
-# 'project assets' command still lets you verify that the checksums match.
-assets:
-  - dest: "assets/${vars.train}.jsonl"
-    checksum: "63373dd656daa1fd3043ce166a59474c"
-    description: "JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples)"
-  - dest: "assets/${vars.dev}.jsonl"
-    checksum: "5113dc04e03f079525edd8df3f4f39e3"
-    description: "JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples)"
-  # Patterns are not used for training but we distribute them for reference
-  - dest: "assets/${vars.patterns}.jsonl"
-    checksum: "4070316032ce36a01b7d1e8ecb387a8b"
-    description: "Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns)"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
