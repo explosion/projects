@@ -2,9 +2,9 @@ title: "Detecting entities in Medical Records"
 description: "This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap an NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy)."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
+  spacy_config: "spacy_config.cfg"
   config: "config.cfg"
-  pytorch_config: "pytorch_config.cfg"
-  pytorch_trf_config: "pytorch_trf_config.cfg"
+  config_trf: "config_trf.cfg"
   name: "ner_pytorch_medical"
   version: "0.0.0"
   train: "train"
