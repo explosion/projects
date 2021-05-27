@@ -46,7 +46,7 @@ dropout = 0.1
 nO = 3
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v2"
+@architectures = "spacy.HashEmbedCNN.v1"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -92,7 +92,7 @@ class TorchEntityRecognizer(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        cfg = {"labels": []}
+        cfg = {"labels": ["O"]}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
@@ -107,11 +107,13 @@ class TorchEntityRecognizer(TrainablePipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
         """
+        print("DOCS", docs)
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
+            print("GUESSES", guesses, docs)
             return guesses
         scores = self.model.predict(docs)
 
@@ -132,7 +134,7 @@ class TorchEntityRecognizer(TrainablePipe):
             docs = [docs]
         for i, doc in enumerate(docs):
             doc_tag_ids = preds[i]
-            labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
+            labels = [self.labels[tag_id] for tag_id in doc_tag_ids]
             try:
                 spans = biluo_tags_to_spans(doc, labels)
             except ValueError:
@@ -196,7 +198,7 @@ class TorchEntityRecognizer(TrainablePipe):
         truths = []
         for eg in examples:
             eg_truths = [
-                tag if tag != "" else None for tag in biluo_to_iob(eg.get_aligned_ner())
+                tag if tag != "" else None for tag in eg.get_aligned_ner()
             ]
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
@@ -215,16 +217,14 @@ class TorchEntityRecognizer(TrainablePipe):
             callback is used to extract the labels from the data.
         """
         validate_get_examples(get_examples, "TorchEntityRecognizer.initialize")
-        util.check_lexeme_norms(self.vocab, "torch_ner")
         if labels is not None:
             for tag in labels:
                 self.add_label(tag)
         else:
-            tags = {"O"}
+            tags = set()
             for example in get_examples():
                 for token in example.y:
-                    if token.ent_type_:
-                        tags.add(f"{token.ent_iob_}-{token.ent_type_}")
+                    tags.add(token.ent_type_)
             for tag in sorted(tags):
                 self.add_label(tag)
         doc_sample = []
@@ -245,8 +245,10 @@ class TorchEntityRecognizer(TrainablePipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        self.cfg["labels"].append(label)
-        self.vocab.strings.add(label)
+        for iob in ["B", "I", "U", "L"]:
+            iob_label = f"{iob}-{label}"
+            self.cfg["labels"].append(iob_label)
+            self.vocab.strings.add(iob_label)
         return 1
 
     def score(self, examples, **kwargs):
