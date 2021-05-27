@@ -23,15 +23,12 @@ def main(
     test_zip_name: str = "Task_1C.zip",
 ):
     """Extract and preprocess raw n2c2 2011 Challenge data into spaCy DocBin format.
-
-    Args:
-        input_dir (Path, optional): Input directory with raw downloads from Harvard DBMI Portal.
-        output_dir (Path, optional): Output directory to save spaCy .docbin files to.
-        beth_train_tar_name (str, optional): Filename of downloaded tarfile for Beth Training Data.
-        partners_train_tar_name (str, optional): Filename of downloaded tarfile for Partners Training Data.
-        test_zip_name (str, optional): Filename of downloaded tarfile for n2c2 Test Data.
+    input_dir (Path, optional): Input directory with raw downloads from Harvard DBMI Portal.
+    output_dir (Path, optional): Output directory to save spaCy .docbin files to.
+    beth_train_tar_name (str, optional): Filename of downloaded tarfile for Beth Training Data.
+    partners_train_tar_name (str, optional): Filename of downloaded tarfile for Partners Training Data.
+    test_zip_name (str, optional): Filename of downloaded tarfile for n2c2 Test Data.
     """
-
     # Unpack compressed data files
     print("Extracting raw data.")
     beth_train_tar_path = input_dir / beth_train_tar_name
@@ -87,17 +84,13 @@ def docs_from_clinical_record(
     lines: List[str], annotations: List[str], nlp: Language, merge_docs: bool = False
 ) -> List[Doc]:
     """Create spaCy docs from a single annotated medical record in the n2c2 2011 format
-
-    Args:
-        lines (List[str]): Text of the clinical record as a list separated by newlines
-        annotations (List[str]): Raw entity annotations in the n2c2 2011 format
-        nlp (Language, optional): spaCy Language object. Defaults to spacy.blank("en").
-        merge_docs (bool, optional): If True: merge all lines into a single spaCy doc so
-            there is only 1 element in the output array.
-            If False: create a spaCy doc for each line in the original record
-
-    Returns:
-        List[Doc]: List of spaCy Doc objects with entity spans set
+    lines (List[str]): Text of the clinical record as a list separated by newlines
+    annotations (List[str]): Raw entity annotations in the n2c2 2011 format
+    nlp (Language, optional): spaCy Language object. Defaults to spacy.blank("en").
+    merge_docs (bool, optional): If True: merge all lines into a single spaCy doc so
+        there is only 1 element in the output array.
+        If False: create a spaCy doc for each line in the original record
+    RETURNS (List[Doc]): List of spaCy Doc objects with entity spans set
     """
     docs = []
     spans_by_line = defaultdict(list)
@@ -149,19 +142,15 @@ def docs_from_many_clinical_records(
     base_path: Path, nlp: Language = spacy.blank("en"), merge_docs: bool = True
 ) -> List[Doc]:
     """Convert raw n2c2 annotated clinical records into a list of
-    spaCy Doc objects to be ready to be used in training
+        spaCy Doc objects to be ready to be used in training
+    base_path (Path): Root path to the raw data
+    nlp (Language, optional): spaCy Language object. Defaults to spacy.blank("en").
+    merge_docs (bool, optional): If True: merge all lines into a single spaCy doc so
+        there is only 1 element in the output array.
+        If False: create a spaCy doc for each line in the original record
 
-    Args:
-        base_path (Path): Root path to the raw data
-        nlp (Language, optional): spaCy Language object. Defaults to spacy.blank("en").
-        merge_docs (bool, optional): If True: merge all lines into a single spaCy doc so
-            there is only 1 element in the output array.
-            If False: create a spaCy doc for each line in the original record
-
-    Returns:
-        [List[Doc]]: List of spaCy Doc objects with entity spans set
+    RETURNS (List[Doc]): List of spaCy Doc objects with entity spans set
     """
-
     all_docs = []
     concept_paths = sorted((base_path / "concepts").glob("*.txt.con"))
     document_paths = sorted((base_path / "docs").glob("*.txt"))

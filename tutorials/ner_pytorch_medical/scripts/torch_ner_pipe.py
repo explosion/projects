@@ -1,17 +1,17 @@
 from typing import Dict, Iterable, List, Tuple
 import numpy
 from thinc.api import (
+    Config,
     Model,
     set_dropout_rate,
     SequenceCategoricalCrossentropy,
     Optimizer,
 )
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Floats3d, Ints2d
 import warnings
 from itertools import islice
 
 from spacy.tokens.doc import Doc
-from spacy.morphology import Morphology
 from spacy.vocab import Vocab
 
 from spacy.training import Example
@@ -21,15 +21,47 @@ from spacy.pipeline.pipe import deserialize_config
 from spacy.language import Language
 from spacy.attrs import POS, ID
 from spacy.parts_of_speech import X
-from spacy.errors import Errors, Warnings
-from spacy.scorer import Scorer, get_ner_prf
+from spacy.errors import Errors
+from spacy.scorer import get_ner_prf
 from spacy.training import validate_examples, validate_get_examples
 from spacy import util
+
+
+def set_torch_dropout_rate(model: Model, dropout_rate: float):
+    """Set dropout rate for Thinc and wrapped PyTorch models
+
+    Args:
+        model (Model): Thinc Model (with PyTorch sub-modules)
+        dropout_rate (float): Dropout rate
+    """    
+    set_dropout_rate(model, dropout_rate)
+    func = model.get_ref("torch_model").attrs["set_dropout_rate"]
+    func(dropout_rate)
+
+default_model_config = """
+[model]
+@architectures = "TorchEntityRecognizer.v1"
+hidden_width = 48
+dropout = 0.1
+nO = 3
+
+[model.tok2vec]
+@architectures = "spacy.HashEmbedCNN.v2"
+pretrained_vectors = null
+width = 96
+depth = 4
+embed_size = 2000
+window_size = 1
+maxout_pieces = 3
+subword_features = true
+"""
+DEFAULT_MODEL = Config().from_str(default_model_config)["model"]
 
 
 @Language.factory(
     "torch_ner",
     assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
+    default_config={"model": DEFAULT_MODEL},
     default_score_weights={
         "ents_f": 1.0,
         "ents_p": 0.0,
@@ -70,7 +102,7 @@ class TorchEntityRecognizer(TrainablePipe):
         """
         return tuple(self.cfg["labels"])
 
-    def predict(self, docs: Iterable[Doc]):
+    def predict(self, docs: Iterable[Doc]) -> Ints2d:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
@@ -84,29 +116,22 @@ class TorchEntityRecognizer(TrainablePipe):
         scores = self.model.predict(docs)
 
         assert len(scores) == len(docs), (len(scores), len(docs))
-        guesses = self._scores2guesses(scores)
-        assert len(guesses) == len(docs)
-        return guesses
-
-    def _scores2guesses(self, scores):
         guesses = []
         for doc_scores in scores:
             doc_guesses = doc_scores.argmax(axis=1)
-            if not isinstance(doc_guesses, numpy.ndarray):
-                doc_guesses = doc_guesses.get()
             guesses.append(doc_guesses)
+        assert len(guesses) == len(docs)
         return guesses
 
-    def set_annotations(self, docs: Iterable[Doc], batch_tag_ids: Iterable[List[str]]):
+    def set_annotations(self, docs: Iterable[Doc], preds: Ints2d):
         """Modify a batch of documents, using pre-computed scores.
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by TorchEntityRecognizer.predict.
+        preds (Ints2d): The IDs to set, produced by TorchEntityRecognizer.predict.
         """
         if isinstance(docs, Doc):
             docs = [docs]
         for i, doc in enumerate(docs):
-            doc_tag_ids = batch_tag_ids[i]
-
+            doc_tag_ids = preds[i]
             labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
             try:
                 spans = biluo_tags_to_spans(doc, labels)
@@ -115,7 +140,6 @@ class TorchEntityRecognizer(TrainablePipe):
                 # this could be fixed using a more complex transition system
                 # (e.g. a Conditional Random Field model head)
                 spans = []
-
             doc.ents = spans
 
     def update(
@@ -142,7 +166,7 @@ class TorchEntityRecognizer(TrainablePipe):
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
-        set_dropout_rate(self.model, drop)
+        set_torch_dropout_rate(self.model, drop)
         tag_scores, bp_tag_scores = self.model.begin_update(
             [eg.predicted for eg in examples]
         )
