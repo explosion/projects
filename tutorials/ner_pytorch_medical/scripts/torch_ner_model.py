@@ -76,12 +76,15 @@ def init(
     return model
 
 
-def is_dropout_module(module: nn.Module, dropout_modules: List[nn.Module] = [nn.Dropout, nn.Dropout2d, nn.Dropout3d]) -> bool:
+def is_dropout_module(
+    module: nn.Module,
+    dropout_modules: List[nn.Module] = [nn.Dropout, nn.Dropout2d, nn.Dropout3d],
+) -> bool:
     """Detect if a PyTorch Module is a Dropout layer
     module (nn.Module): Module to check
     dropout_modules (List[nn.Module], optional): List of Modules that count as Dropout layers.
     RETURNS (bool): True if module is a Dropout layer.
-    """    
+    """
     for m in dropout_modules:
         if isinstance(module, m):
             return True
@@ -112,7 +115,7 @@ class TorchEntityRecognizer(nn.Module):
         """Forward pass of the model.
         inputs (torch.Tensor): Batch of outputs from spaCy tok2vec layer
         RETURNS (torch.Tensor): Batch of results with a score for each tag for each token
-        """        
+        """
         x = self.model(inputs)
         x = self.output_layer(x)
         x = self.dropout(x)
@@ -128,11 +131,13 @@ class TorchEntityRecognizer(nn.Module):
             if self.output_layer.bias is not None:
                 self.output_layer.bias = nn.Parameter(torch.Tensor(nO))
             self.output_layer.reset_parameters()
-    
+
     def set_dropout_rate(self, dropout: float):
         """Set the dropout rate of all Dropout layers in the model.
         dropout (float): Dropout rate to set
-        """        
-        dropout_layers = [module for module in self.modules() if is_dropout_module(module)]
+        """
+        dropout_layers = [
+            module for module in self.modules() if is_dropout_module(module)
+        ]
         for layer in dropout_layers:
             layer.p = dropout

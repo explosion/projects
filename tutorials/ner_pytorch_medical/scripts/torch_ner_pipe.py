@@ -34,7 +34,7 @@ def set_torch_dropout_rate(model: Model, dropout_rate: float):
     Args:
         model (Model): Thinc Model (with PyTorch sub-modules)
         dropout_rate (float): Dropout rate
-    """    
+    """
     set_dropout_rate(model, dropout_rate)
     func = model.get_ref("torch_model").attrs["set_dropout_rate"]
     func(dropout_rate)
