@@ -42,7 +42,13 @@ inputs have changed.
 
 ## PyTorch + spaCy
 
-There are several examples that show the integration of  Transformers in spaCy models. These examples already use PyTorch through the spacy-transformers library to create vector representations from spaCy Doc objects which are then passed through native Thinc based models for task specific prediction. The goal for this tutorial is to show how to use a PyTorch (or other ML framework) end-to-end, from 
+There are several spaCy project examples that show the integration of  Transformers in spaCy models. These examples already use PyTorch through the spacy-transformers as to encode spaCy docs as vector representations while using Thinc as task-specific model heads. 
+
+The goal for this tutorial is to show how to use a PyTorch (or other ML framework) end-to-end, from encoding vector representations, to building a task specific model head for Named Entity Recognition.
+
+For more details on using external ML frameworks in spaCy see:
+https://spacy.io/usage/layers-architectures#frameworks
+
 
 ## 📚 Data
 
@@ -77,7 +83,8 @@ The data is separated into the following splits:
 | dev.spacy  | 20% of official train data (combining Beth and Partners training data splits) | 51 |
 | test.spacy | Official test data (combining Beth and Partners test data splits) | 173 |
 
-## Experiments
+
+## 🧮 Results
 
 We've tested 4 configurations which have been saved to the `configs` folder. All models evaluated by F1 Score on the official i2b2 test data created by the `preprocess` command above at `test.spacy`.
 
