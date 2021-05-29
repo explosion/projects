@@ -1,5 +1,5 @@
-title: "Detecting entities in Medical Records"
-description: "This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap an NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy)."
+title: "Detecting entities in Medical Records with PyTorch"
+description: "This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap a PyTorch NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy)."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   spacy_config: "spacy_config.cfg"
@@ -45,7 +45,7 @@ commands:
   - name: "train"
     help: "Train a custom PyTorch named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg --gpu-id 0"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
@@ -55,36 +55,55 @@ commands:
   - name: "train-trf"
     help: "Train a custom PyTorch named entity recognition model with transformer"
     script:
-      - "python -m spacy train configs/${vars.config_trf} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --gpu-id 0"
+      - "python -m spacy train configs/${vars.config_trf} --output training_trf/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --gpu-id 0"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
     outputs:
-      - "training/model-best"
+      - "training_trf/model-best"
     
   - name: "evaluate"
     help: "Evaluate the custom PyTorch model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json --code scripts/custom_functions.py"
+      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json --code scripts/custom_functions.py --gpu-id 0"
     deps:
       - "corpus/${vars.test}.spacy"
       - "training/model-best"
     outputs:
       - "training/metrics.json"
+  
+  - name: "evaluate-trf"
+    help: "Evaluate the custom PyTorch model and export metrics"
+    script:
+      - "python -m spacy evaluate training_trf/model-best corpus/${vars.test}.spacy --output training_trf/metrics.json --code scripts/custom_functions.py --gpu-id 0"
+    deps:
+      - "corpus/${vars.test}.spacy"
+      - "training_trf/model-best"
+    outputs:
+      - "training_trf/metrics.json"
 
   - name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force --code scripts/custom_functions.py"
     deps:
       - "training/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
+  - name: package-trf
+    help: "Package the trained model so it can be installed"
+    script:
+      - "python -m spacy package training_trf/model-best packages --name ${vars.name} --version ${vars.version} --force --code scripts/torch_ner_model.py,scripts/torch_ner_pipe.py"
+    deps:
+      - "training_trf/model-best"
     outputs_no_cache:
       - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
   - name: visualize-model
     help: Visualize the model's output interactively using Streamlit
     script:
-      - "streamlit run scripts/visualize_model.py training/model-best \"The patient had surgery.\""
+      - "streamlit run scripts/visualize_model.py training_trf/model-best \"The patient had surgery.\""
     deps:
       - "scripts/visualize_model.py"
       - "training/model-best"

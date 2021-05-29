@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Detecting entities in Medical Records
+# 🪐 spaCy Project: Detecting entities in Medical Records with PyTorch
 
-This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap an NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy).
+This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap a PyTorch NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy).
 
 ## 📋 project.yml
 
@@ -38,6 +38,12 @@ inputs have changed.
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
+---
+
+## PyTorch + spaCy
+
+There are several examples that show the integration of  Transformers in spaCy models. These examples already use PyTorch through the spacy-transformers library to create vector representations from spaCy Doc objects which are then passed through native Thinc based models for task specific prediction. The goal for this tutorial is to show how to use a PyTorch (or other ML framework) end-to-end, from 
+
 ## 📚 Data
 
 The main data source is the i2b2 2011 Co-Reference Challenge Dataset. This dataset has annotations for Named Entity Recognition in Medical Records and co-references between each entity. For the purpose of this tutorial, we focus solely on extracting the labeled entities.
@@ -61,4 +67,24 @@ assets
 ```
 
 Once you have this data downloaded, the `preprocess` project command will build `*.spacy` dataset files for you.
+
+The data is separated into the following splits:
+
+
+| Name | Description | N Examples |
+|------|-------------|------------|
+| train.spacy | 80% of official train data (combining Beth and Partners training data splits) | 200 |
+| dev.spacy  | 20% of official train data (combining Beth and Partners training data splits) | 51 |
+| test.spacy | Official test data (combining Beth and Partners test data splits) | 173 |
+
+## Experiments
+
+We've tested 4 configurations which have been saved to the `configs` folder. All models evaluated by F1 Score on the official i2b2 test data created by the `preprocess` command above at `test.spacy`.
+
+| Model | Config | Description | F1 Score (test.spacy) |
+|-------|--------|-------------|----------|
+| spaCy + Vectors | `configs/spacy_config.cfg` | spaCy `ner` model with static vectors from `en_core_web_lg` | 67.54 |
+| PyTorch + Vectors | `configs/config.cfg` | PyTorch based `torch_ner` pipeline with static vectors from `en_core_web_lg` | 62.69 |
+| spaCy + Transformer | `configs/spacy_config_trf.cfg` |spaCy `ner` model with Transformer `roberta-base` | 75.20 |
+| PyTorch + Transformer | `configs/config_trf.cfg` | PyTorch based `torch_ner` pipeline with Transformer `roberta-base` | **78.07** |
 

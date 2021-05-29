@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Dict, Iterable, List, Tuple
 import numpy
 from thinc.api import (
@@ -38,12 +39,13 @@ def set_torch_dropout_rate(model: Model, dropout_rate: float):
     func = model.get_ref("torch_model").attrs["set_dropout_rate"]
     func(dropout_rate)
 
+
 default_model_config = """
 [model]
 @architectures = "TorchEntityRecognizer.v1"
 hidden_width = 48
 dropout = 0.1
-nO = 3
+nO = null
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -92,7 +94,7 @@ class TorchEntityRecognizer(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        cfg = {"labels": ["O"]}
+        cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
 
     @property
@@ -100,20 +102,22 @@ class TorchEntityRecognizer(TrainablePipe):
         """The labels currently added to the component.
         RETURNS (Tuple[str]): The labels.
         """
-        return tuple(self.cfg["labels"])
+        labels = ["O"]
+        for label in self.cfg["labels"]:
+            for iob in ["B", "I"]:
+                labels.append(f"{iob}-{label}")
+        return tuple(labels)
 
     def predict(self, docs: Iterable[Doc]) -> Ints2d:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
         """
-        print("DOCS", docs)
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.labels)
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
-            print("GUESSES", guesses, docs)
             return guesses
         scores = self.model.predict(docs)
 
@@ -121,6 +125,8 @@ class TorchEntityRecognizer(TrainablePipe):
         guesses = []
         for doc_scores in scores:
             doc_guesses = doc_scores.argmax(axis=1)
+            if not isinstance(doc_guesses, numpy.ndarray):
+                doc_guesses = doc_guesses.get()
             guesses.append(doc_guesses)
         assert len(guesses) == len(docs)
         return guesses
@@ -134,10 +140,11 @@ class TorchEntityRecognizer(TrainablePipe):
             docs = [docs]
         for i, doc in enumerate(docs):
             doc_tag_ids = preds[i]
-            labels = [self.labels[tag_id] for tag_id in doc_tag_ids]
+            labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
             try:
                 spans = biluo_tags_to_spans(doc, labels)
             except ValueError:
+                # Note:
                 # biluo_tags_to_spans will raise an exception for an invalid tag sequence
                 # this could be fixed using a more complex transition system
                 # (e.g. a Conditional Random Field model head)
@@ -198,7 +205,7 @@ class TorchEntityRecognizer(TrainablePipe):
         truths = []
         for eg in examples:
             eg_truths = [
-                tag if tag != "" else None for tag in eg.get_aligned_ner()
+                tag if tag != "" else None for tag in biluo_to_iob(eg.get_aligned_ner())
             ]
             truths.append(eg_truths)
         d_scores, loss = loss_func(scores, truths)
@@ -224,7 +231,8 @@ class TorchEntityRecognizer(TrainablePipe):
             tags = set()
             for example in get_examples():
                 for token in example.y:
-                    tags.add(token.ent_type_)
+                    if token.ent_type_:
+                        tags.add(token.ent_type_)
             for tag in sorted(tags):
                 self.add_label(tag)
         doc_sample = []
@@ -234,6 +242,7 @@ class TorchEntityRecognizer(TrainablePipe):
         self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=self.labels)
+        nlp.config["components"][self.name]["model"]["nO"] = len(self.labels)
 
     def add_label(self, label):
         """Add a new label to the pipe.
@@ -245,10 +254,8 @@ class TorchEntityRecognizer(TrainablePipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        for iob in ["B", "I", "U", "L"]:
-            iob_label = f"{iob}-{label}"
-            self.cfg["labels"].append(iob_label)
-            self.vocab.strings.add(iob_label)
+        self.cfg["labels"].append(label)
+        self.vocab.strings.add(label)
         return 1
 
     def score(self, examples, **kwargs):

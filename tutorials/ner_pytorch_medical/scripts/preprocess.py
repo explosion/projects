@@ -21,6 +21,7 @@ def main(
     beth_train_tar_name: str = "i2b2_Beth_Train_Release.tar.gz",
     partners_train_tar_name: str = "i2b2_Partners_Train_Release.tar.gz",
     test_zip_name: str = "Task_1C.zip",
+    merge_docs: bool = True
 ):
     """Extract and preprocess raw n2c2 2011 Challenge data into spaCy DocBin format.
     input_dir (Path, optional): Input directory with raw downloads from Harvard DBMI Portal.
@@ -28,6 +29,7 @@ def main(
     beth_train_tar_name (str, optional): Filename of downloaded tarfile for Beth Training Data.
     partners_train_tar_name (str, optional): Filename of downloaded tarfile for Partners Training Data.
     test_zip_name (str, optional): Filename of downloaded tarfile for n2c2 Test Data.
+    merge_docs (bool, optional): If False, create spaCy docs for each line of each medical record 
     """
     # Unpack compressed data files
     print("Extracting raw data.")
@@ -54,15 +56,15 @@ def main(
 
     # preprocess data
     print("Converting to spaCy Doc objects.")
-    beth_train_docs = docs_from_many_clinical_records(input_dir / "Beth_Train")
-    partners_train_docs = docs_from_many_clinical_records(input_dir / "Partners_Train")
+    beth_train_docs = docs_from_many_clinical_records(input_dir / "Beth_Train", merge_docs=merge_docs)
+    partners_train_docs = docs_from_many_clinical_records(input_dir / "Partners_Train", merge_docs=merge_docs)
     train_docs = beth_train_docs + partners_train_docs
 
     beth_test_docs = docs_from_many_clinical_records(
-        input_dir / "Task_1C/i2b2_Test/i2b2_Beth_Test"
+        input_dir / "Task_1C/i2b2_Test/i2b2_Beth_Test", merge_docs=merge_docs
     )
     partners_test_docs = docs_from_many_clinical_records(
-        input_dir / "Task_1C/i2b2_Test/i2b2_Partners_Test"
+        input_dir / "Task_1C/i2b2_Test/i2b2_Partners_Test", merge_docs=merge_docs
     )
     test_docs = beth_test_docs + partners_test_docs
 
