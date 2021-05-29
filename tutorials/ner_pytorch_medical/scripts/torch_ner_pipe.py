@@ -8,8 +8,7 @@ from thinc.api import (
     SequenceCategoricalCrossentropy,
     Optimizer,
 )
-from thinc.types import Floats2d, Floats3d, Ints2d
-import warnings
+from thinc.types import Ints1d
 from itertools import islice
 
 from spacy.tokens.doc import Doc
@@ -108,7 +107,7 @@ class TorchEntityRecognizer(TrainablePipe):
                 labels.append(f"{iob}-{label}")
         return tuple(labels)
 
-    def predict(self, docs: Iterable[Doc]) -> Ints2d:
+    def predict(self, docs: Iterable[Doc]) -> Iterable[Ints1d]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
@@ -131,16 +130,15 @@ class TorchEntityRecognizer(TrainablePipe):
         assert len(guesses) == len(docs)
         return guesses
 
-    def set_annotations(self, docs: Iterable[Doc], preds: Ints2d):
+    def set_annotations(self, docs: Iterable[Doc], preds: Iterable[Ints1d]):
         """Modify a batch of documents, using pre-computed scores.
         docs (Iterable[Doc]): The documents to modify.
-        preds (Ints2d): The IDs to set, produced by TorchEntityRecognizer.predict.
+        preds (Iterable[Ints1d]): The IDs to set, produced by TorchEntityRecognizer.predict.
         """
         if isinstance(docs, Doc):
             docs = [docs]
-        for i, doc in enumerate(docs):
-            doc_tag_ids = preds[i]
-            labels = iob_to_biluo([self.labels[tag_id] for tag_id in doc_tag_ids])
+        for doc, tag_ids in zip(docs, preds):
+            labels = iob_to_biluo([self.labels[tag_id] for tag_id in tag_ids])
             try:
                 spans = biluo_tags_to_spans(doc, labels)
             except ValueError:
@@ -199,9 +197,6 @@ class TorchEntityRecognizer(TrainablePipe):
         """
         validate_examples(examples, "TorchEntityRecognizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
-        # Convert empty tag "" to missing value None so that both misaligned
-        # tokens and tokens with missing annotation have the default missing
-        # value None.
         truths = []
         for eg in examples:
             eg_truths = [
