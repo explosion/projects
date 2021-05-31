@@ -1,0 +1,10 @@
+.templates
+**/__pycache__
+assets/n2c2_2011/*
+azure
+corpus
+notebooks
+packages
+training*
+scripts/torch_ner_model_*.py
+scripts/torch_ner_pipe_*.py
