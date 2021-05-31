@@ -45,8 +45,6 @@ def build_torch_ner_model(
     RETURNS (Model[List[Doc], List[Floats2d]]): Initialized Model
     """
     t2v_width = tok2vec.maybe_get_dim("nO")
-    if not t2v_width:
-        t2v_width = 1
     torch_model = TorchEntityRecognizer(t2v_width, hidden_width, nO, dropout)
     wrapped_pt_model = PyTorchWrapper(torch_model)
     wrapped_pt_model.attrs["set_dropout_rate"] = torch_model.set_dropout_rate
@@ -115,8 +113,10 @@ class TorchEntityRecognizer(nn.Module):
         dropout (float): Dropout ratio (0 - 1.0)
         """
         super(TorchEntityRecognizer, self).__init__()
-        if not nO:
-            nO = 1  # Just for initialization of PyTorch layer. Output shape set during Model.init
+
+        # Just for initialization of PyTorch layer. Output shape set during Model.init
+        nI = nI or 1
+        nO = nO or 1
 
         self.nH = nH
         self.model = nn.Sequential(OrderedDict({
