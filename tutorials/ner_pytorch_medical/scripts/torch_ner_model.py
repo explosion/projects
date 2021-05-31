@@ -124,7 +124,6 @@ class TorchEntityRecognizer(nn.Module):
             "input_activation": nn.ReLU(),
             "input_dropout": nn.Dropout2d(dropout),
             "output_layer": nn.Linear(nH, nO),
-            "output_activation": nn.ReLU(),
             "output_dropout": nn.Dropout2d(dropout),
             "softmax": nn.Softmax(dim=1)
         }))
