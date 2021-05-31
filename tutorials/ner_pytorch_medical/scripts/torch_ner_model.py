@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Optional, List
 from thinc.api import (
     with_array,
@@ -43,7 +44,9 @@ def build_torch_ner_model(
     nO (int or None): The number of tags to output. Inferred from the data if None.
     RETURNS (Model[List[Doc], List[Floats2d]]): Initialized Model
     """
-    t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else 768
+    t2v_width = tok2vec.maybe_get_dim("nO")
+    if not t2v_width:
+        t2v_width = 1
     torch_model = TorchEntityRecognizer(t2v_width, hidden_width, nO, dropout)
     wrapped_pt_model = PyTorchWrapper(torch_model)
     wrapped_pt_model.attrs["set_dropout_rate"] = torch_model.set_dropout_rate
@@ -66,10 +69,20 @@ def init(
     Y (Optional[List[Ints2d]], optional): Available model labels.
     RETURNS (Model[List[Doc], List[Floats2d]]): Initialized Model
     """
+
+    tok2vec = model.get_ref("tok2vec")
+    torch_model = model.get_ref("torch_model")
+
+    listener = tok2vec.maybe_get_ref("listener")
+    t2v_width = listener.maybe_get_dim("nO") if listener else None
+    if t2v_width:
+        torch_model.shims[0]._model.set_input_shape(t2v_width)
+        torch_model.set_dim("nI", t2v_width)
+
     if Y is not None:
         nO = len(Y)
-        torch_model = model.get_ref("torch_model")
         torch_model.shims[0]._model.set_output_shape(nO)
+        torch_model.set_dim("nO", nO)
 
     tok2vec = model.get_ref("tok2vec")
     tok2vec.initialize()
@@ -106,31 +119,50 @@ class TorchEntityRecognizer(nn.Module):
             nO = 1  # Just for initialization of PyTorch layer. Output shape set during Model.init
 
         self.nH = nH
-        self.model = nn.Sequential(nn.Linear(nI, nH), nn.ReLU(), nn.Dropout2d(dropout))
-        self.output_layer = nn.Linear(nH, nO or 1)
-        self.dropout = nn.Dropout2d(dropout)
-        self.softmax = nn.Softmax(dim=1)
+
+        self.model = nn.Sequential(OrderedDict({
+            "input_layer": nn.Linear(nI, nH),
+            "input_activation": nn.ReLU(),
+            "input_dropout": nn.Dropout2d(dropout),
+            "output_layer": nn.Linear(nH, nO),
+            "output_activation": nn.ReLU(),
+            "output_dropout": nn.Dropout2d(dropout),
+            "softmax": nn.Softmax(dim=1)
+        }))
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model.
         inputs (torch.Tensor): Batch of outputs from spaCy tok2vec layer
         RETURNS (torch.Tensor): Batch of results with a score for each tag for each token
         """
-        x = self.model(inputs)
-        x = self.output_layer(x)
-        x = self.dropout(x)
-        return self.softmax(x)
+        return self.model(inputs)
+    
+    def _set_layer_shape(self, name: str, nI: int, nO: int):
+        """Dynamically set the shape of a layer
+        name (str): Layer name
+        nI (int): New input shape
+        nO (int): New output shape
+        """
+        with torch.no_grad():
+            layer = getattr(self.model, name)
+            layer.out_features = nO
+            layer.weight = nn.Parameter(torch.Tensor(nO, nI))
+            if layer.bias is not None:
+                layer.bias = nn.Parameter(torch.Tensor(nO))
+            layer.reset_parameters()
+
+    def set_input_shape(self, nI: int):
+        """Dynamically set the shape of the input layer
+        nI (int): New input layer shape
+        """
+        self._set_layer_shape("input_layer", nI, self.nH)
+        
 
     def set_output_shape(self, nO: int):
         """Dynamically set the shape of the output layer
         nO (int): New output layer shape
         """
-        with torch.no_grad():
-            self.output_layer.out_features = nO
-            self.output_layer.weight = nn.Parameter(torch.Tensor(nO, self.nH))
-            if self.output_layer.bias is not None:
-                self.output_layer.bias = nn.Parameter(torch.Tensor(nO))
-            self.output_layer.reset_parameters()
+        self._set_layer_shape("output_layer", self.nH, nO)
 
     def set_dropout_rate(self, dropout: float):
         """Set the dropout rate of all Dropout layers in the model.
