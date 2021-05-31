@@ -119,7 +119,6 @@ class TorchEntityRecognizer(nn.Module):
             nO = 1  # Just for initialization of PyTorch layer. Output shape set during Model.init
 
         self.nH = nH
-
         self.model = nn.Sequential(OrderedDict({
             "input_layer": nn.Linear(nI, nH),
             "input_activation": nn.ReLU(),
