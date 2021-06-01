@@ -119,14 +119,18 @@ class TorchEntityRecognizer(nn.Module):
         nO = nO or 1
 
         self.nH = nH
-        self.model = nn.Sequential(OrderedDict({
-            "input_layer": nn.Linear(nI, nH),
-            "input_activation": nn.ReLU(),
-            "input_dropout": nn.Dropout2d(dropout),
-            "output_layer": nn.Linear(nH, nO),
-            "output_dropout": nn.Dropout2d(dropout),
-            "softmax": nn.Softmax(dim=1)
-        }))
+        self.model = nn.Sequential(
+            OrderedDict(
+                {
+                    "input_layer": nn.Linear(nI, nH),
+                    "input_activation": nn.ReLU(),
+                    "input_dropout": nn.Dropout2d(dropout),
+                    "output_layer": nn.Linear(nH, nO),
+                    "output_dropout": nn.Dropout2d(dropout),
+                    "softmax": nn.Softmax(dim=1),
+                }
+            )
+        )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model.
@@ -134,7 +138,7 @@ class TorchEntityRecognizer(nn.Module):
         RETURNS (torch.Tensor): Batch of results with a score for each tag for each token
         """
         return self.model(inputs)
-    
+
     def _set_layer_shape(self, name: str, nI: int, nO: int):
         """Dynamically set the shape of a layer
         name (str): Layer name
@@ -154,7 +158,6 @@ class TorchEntityRecognizer(nn.Module):
         nI (int): New input layer shape
         """
         self._set_layer_shape("input_layer", nI, self.nH)
-        
 
     def set_output_shape(self, nO: int):
         """Dynamically set the shape of the output layer

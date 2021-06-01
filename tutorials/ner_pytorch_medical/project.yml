@@ -2,6 +2,9 @@ title: "Detecting entities in Medical Records with PyTorch"
 description: "This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap a PyTorch NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy)."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
+  beth_train_tarfile: i2b2_Beth_Train_Release.tar.gz
+  partners_train_tarfile: i2b2_Partners_Train_Release.tar.gz
+  test_zipfile: Task_1C.zip
   spacy_config: "spacy_config.cfg"
   config: "config.cfg"
   config_trf: "config_trf.cfg"
@@ -14,6 +17,16 @@ vars:
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "training", "configs", "scripts", "corpus", "packages"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+    - dest: "assets/n2c2_2011/${vars.beth_train_tarfile}"
+      description: "Tarfile containing original challenge data from the Beth training data split"
+    - dest: "assets/n2c2_2011/${vars.partners_train_tarfile}"
+      description: "Tarfile containing original challenge data from the Partners training data split"
+    - dest: "assets/n2c2_2011/${vars.test_zipfile}"
+      description: "Zipfile containing original challenge test data"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -34,9 +47,10 @@ commands:
     script:
       - "python scripts/preprocess.py assets/n2c2_2011 corpus"
     deps:
-      - "assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz"
-      - "assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz"
-      - "assets/n2c2_2011/Task_1C.zip"
+      - "assets/n2c2_2011/${vars.beth_train_tarfile}"
+      - "assets/n2c2_2011/${vars.partners_train_tarfile}"
+      - "assets/n2c2_2011/${vars.test_zipfile}"
+      - "scripts/preprocess.py"
     outputs:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
@@ -45,7 +59,7 @@ commands:
   - name: "train"
     help: "Train a custom PyTorch named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py --components.tok2vec.model.embed.include_static_vectors true --paths.vectors en_core_web_lg --gpu-id 0"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --code scripts/custom_functions.py"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
@@ -65,7 +79,7 @@ commands:
   - name: "evaluate"
     help: "Evaluate the custom PyTorch model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json --code scripts/custom_functions.py --gpu-id 0"
+      - "python -m spacy evaluate training/model-best corpus/${vars.test}.spacy --output training/metrics.json --code scripts/custom_functions.py"
     deps:
       - "corpus/${vars.test}.spacy"
       - "training/model-best"
