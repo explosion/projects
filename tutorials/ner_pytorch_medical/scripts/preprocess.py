@@ -24,12 +24,12 @@ def main(
     merge_docs: bool = True,
 ):
     """Extract and preprocess raw n2c2 2011 Challenge data into spaCy DocBin format.
-    input_dir (Path, optional): Input directory with raw downloads from Harvard DBMI Portal.
-    output_dir (Path, optional): Output directory to save spaCy .docbin files to.
-    beth_train_tar_name (str, optional): Filename of downloaded tarfile for Beth Training Data.
-    partners_train_tar_name (str, optional): Filename of downloaded tarfile for Partners Training Data.
-    test_zip_name (str, optional): Filename of downloaded tarfile for n2c2 Test Data.
-    merge_docs (bool, optional): If False, create spaCy docs for each line of each medical record
+    input_dir (Path): Input directory with raw downloads from Harvard DBMI Portal.
+    output_dir (Path): Output directory to save spaCy .docbin files to.
+    beth_train_tar_name (str): Filename of downloaded tarfile for Beth Training Data.
+    partners_train_tar_name (str): Filename of downloaded tarfile for Partners Training Data.
+    test_zip_name (str): Filename of downloaded tarfile for n2c2 Test Data.
+    merge_docs (bool): If False, create spaCy docs for each line of each medical record
     """
     # Unpack compressed data files
     msg.info("Extracting raw data.")
