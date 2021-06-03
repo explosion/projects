@@ -21,7 +21,9 @@ PARTIAL_TRAIN_DATA = [
 ]
 
 
-def examples_from_annotations(annotations: List[Tuple[str, Dict[str, Tuple[int, int, str]]]]):
+def examples_from_annotations(
+    annotations: List[Tuple[str, Dict[str, Tuple[int, int, str]]]]
+):
     nlp = English()
     examples = []
     for t in annotations:
@@ -56,7 +58,7 @@ def test_torch_ner_predict():
 
     empty_doc = Doc(nlp.vocab)
     doc = nlp.make_doc("Test doc.")
-    
+
     scores = torch_ner.predict([empty_doc])
     torch_ner.set_annotations([empty_doc], scores)
 
@@ -73,8 +75,6 @@ def test_torch_ner_predict():
 
     nlp.update([empty_example, example])
     mixed_preds = list(torch_ner.pipe(docs))
-    print(mixed_preds)
     assert len(mixed_preds) == 2
-
     assert len(mixed_preds[0]) == len(empty_doc)
     assert len(mixed_preds[1]) == len(doc)

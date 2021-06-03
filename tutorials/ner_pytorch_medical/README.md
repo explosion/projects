@@ -36,13 +36,23 @@ inputs have changed.
 | --- | --- |
 | `all` | `preprocess` &rarr; `train` &rarr; `evaluate` |
 
+### 🗂 Assets
+
+The following assets are defined by the project. They need to manually downloaded. See the Data below for more details.
+
+| File | Source | Description |
+| --- | --- | --- |
+| [`assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz`](assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz) | Local | Tarfile containing original challenge data from the Beth training data split |
+| [`assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz`](assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz) | Local | Tarfile containing original challenge data from the Partners training data split |
+| [`assets/n2c2_2011/Task_1C.zip`](assets/n2c2_2011/Task_1C.zip) | Local | Zipfile containing original challenge test data |
+
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 ---
 
 ## PyTorch + spaCy
 
-There are several spaCy project examples that show the integration of  Transformers in spaCy models. These examples already use PyTorch through the spacy-transformers as to encode spaCy docs as vector representations while using Thinc as task-specific model heads. 
+There are several spaCy project examples that show the integration of Transformers in spaCy models. These examples already use PyTorch through the spacy-transformers to encode spaCy docs as vector representations while using Thinc as task-specific model heads. 
 
 The goal for this tutorial is to show how to use a PyTorch (or other ML framework) end-to-end, from encoding vector representations, to building a task specific model head for Named Entity Recognition.
 
@@ -62,7 +72,7 @@ Under the 2011 Coreference Challenge Downloads section,Download the Beth Israel 
 
 ![Dataset Downloads](img/n2c2_asset_downloads_screenshot.png)
 
-Your `assets/n2c2_2011` should look like after download:
+Your `assets/n2c2_2011` should look like this after download:
 
 ```
 assets
