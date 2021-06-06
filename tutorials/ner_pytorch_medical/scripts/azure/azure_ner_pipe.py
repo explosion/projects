@@ -31,7 +31,7 @@ def make_azure_entity_recognizer(
     text_analytics_endpoint: str,
     text_analytics_domain: str,
     extension_attr: str,
-    use_extension_attr: bool = True
+    use_extension_attr: bool = True,
 ):
 
     client = TextAnalyticsClient(
@@ -55,10 +55,11 @@ class AzureEntityRecognizer(Pipe):
     Requires an active Azure Subscription with a Cognitive Services account.
     Follow the Prerequisite steps here: https://docs.microsoft.com/en-us/azure/cognitive-services/text-analytics/quickstarts/client-libraries-rest-api?tabs=version-3-1&pivots=programming-language-csharp
 
-    NOTE: This component is not really designed to be saved/loaded to/from disk. The main 
-    reason for this is we'd have to save a private API key from Azure to disk which is a 
+    NOTE: This component is not really designed to be saved/loaded to/from disk. The main
+    reason for this is we'd have to save a private API key from Azure to disk which is a
     security risk.
-    """    
+    """
+
     def __init__(
         self,
         client: TextAnalyticsClient,
