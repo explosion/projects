@@ -13,6 +13,11 @@ vars:
   train: "train"
   dev: "dev"
   test: "test"
+  prodigy_dataset: "pytorch_ner_medical_correct_anonymous"
+  prodigy_source: "assets/mock_notes.jsonl"
+  text_analytics_key: "YOUR_API_KEY"
+  text_analytics_base_url: "https://westus2.api.cognitive.microsoft.com/"
+
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -27,6 +32,8 @@ assets:
       description: "Tarfile containing original challenge data from the Partners training data split"
     - dest: "assets/n2c2_2011/${vars.test_zipfile}"
       description: "Zipfile containing original challenge test data"
+    - dest: "assets/mock_notes.jsonl"
+      description: "JSONL file with raw mock notes to annotate in prodigy"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -120,4 +127,12 @@ commands:
       - "streamlit run scripts/visualize_model.py training_trf/model-best \"The patient had surgery.\""
     deps:
       - "scripts/visualize_model.py"
+      - "training/model-best"
+
+  - name: annotate
+    help: Run the custom prodigy recipe to anonymize data for the annotator and update the PyTorch NER model
+    script:
+      - "prodigy ner.correct.anonymous ${vars.prodigy_dataset} training/model-best ${vars.prodigy_source} --text-analytics-key ${vars.text_analytics_key} --text-analytics-base-url ${vars.text_analytics_base_url} --label person,problem,pronoun,test,treatment --update -F scripts/prodigy/recipes.py"
+    deps:
+      - "scripts/prodigy/recipes.py"
       - "training/model-best"
