@@ -1,7 +1,6 @@
 .templates
 **/__pycache__
 assets/n2c2_2011/*
-azure
 corpus
 notebooks
 packages
