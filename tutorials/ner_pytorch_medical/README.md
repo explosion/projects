@@ -205,8 +205,9 @@ This retains all the structure and character offsets into the original note duri
 ```yaml
 vars:
   ...
-  text_analytics_key: "YOUR_API_KEY"
-  text_analytics_base_url: "https://westus2.api.cognitive.microsoft.com/"
+  azure:
+    text_analytics_key: "YOUR_API_KEY"
+    text_analytics_base_url: "https://westus2.api.cognitive.microsoft.com/"
 ```
 
 4. Run the `annotate` command
@@ -215,3 +216,9 @@ vars:
 spacy project run annotate
 ```
 
+> NOTE: To avoid adding a reference to your private API key in the project.yml, you can skip step 3 and provide the text_analytics_key via the CLI
+
+> e.g.
+> ```bash
+> spacy project run annotate --vars.azure.text_analytics_key "YOUR_API_KEY"
+> ```

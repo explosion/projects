@@ -13,10 +13,13 @@ vars:
   train: "train"
   dev: "dev"
   test: "test"
-  prodigy_dataset: "pytorch_ner_medical_correct_anonymous"
-  prodigy_source: "assets/mock_notes.jsonl"
-  text_analytics_key: "YOUR_API_KEY"
-  text_analytics_base_url: "https://westus2.api.cognitive.microsoft.com/"
+  prodigy:
+    dataset: "pytorch_ner_medical_correct_anonymous"
+    source: "assets/mock_notes.jsonl"
+    labels: "person,problem,pronoun,test,treatment"
+  azure:
+    text_analytics_key: "YOUR_API_KEY"
+    text_analytics_base_url: "https://westus2.api.cognitive.microsoft.com/"
 
 
 # These are the directories that the project needs. The project CLI will make
@@ -132,7 +135,7 @@ commands:
   - name: annotate
     help: Run the custom prodigy recipe to anonymize data for the annotator and update the PyTorch NER model
     script:
-      - "prodigy ner.correct.anonymous ${vars.prodigy_dataset} training/model-best ${vars.prodigy_source} --text-analytics-key ${vars.text_analytics_key} --text-analytics-base-url ${vars.text_analytics_base_url} --label person,problem,pronoun,test,treatment --update -F scripts/prodigy/recipes.py"
+      - "prodigy ner.correct.anonymous ${vars.prodigy.dataset} training/model-best ${vars.prodigy.source} --text-analytics-key ${vars.azure.text_analytics_key} --text-analytics-base-url ${vars.azure.text_analytics_base_url} --label {vars.prodigy.labels} --update -F scripts/prodigy/recipes.py"
     deps:
       - "scripts/prodigy/recipes.py"
       - "training/model-best"
