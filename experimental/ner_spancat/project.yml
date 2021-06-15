@@ -3,7 +3,7 @@ description:
     The SpanCategorizer is a component for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules.
 
 vars:
-  config: "spancat"
+  config: "spancat"  # "ner"
   gpu: -1
 
 remotes:
