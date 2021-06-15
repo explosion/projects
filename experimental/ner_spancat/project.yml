@@ -32,6 +32,9 @@ commands:
     script:
       - "python -m spacy init config --lang id --pipeline 'spancat' -o efficiency configs/spancat.cfg"
       - "python -m spacy init config --lang id --pipeline 'ner' -o efficiency configs/ner.cfg"
+    outputs:
+      - "configs/spancat.cfg"
+      - "configs/ner.cfg"
 
   - name: corpus
     help: "Convert the data to spaCy's format"
@@ -51,15 +54,14 @@ commands:
       - "corpus/dev.spacy"
 
   - name: train
-    help: "Train the  pipeline"
+    help: "Train the pipeline"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code code.py"
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "configs/${vars.config}.cfg"
       - "layers/"
-      - "code.py"
     outputs:
       - "training/model-best"
 
