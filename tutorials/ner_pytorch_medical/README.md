@@ -140,12 +140,55 @@ projects
                 dev.spacy # ner_fashion_brands dev data
 ```
 
-4. Train a PyTorch model with 
+
+## Training and Evaluation
+
+To train a PyTorch model, you need to have a `corpus` with `train.spacy` and `dev.spacy` files.
+
+```
+projects
+└─── tutorials
+    └─── ner_pytorch_medical
+        └─── corpus
+                train.spacy
+                dev.spacy
+```
+
+Once you have data from either the i2b2 data or another NER dataset you can run the spaCy project commands for `train` and `evaluate`
+
+1. Train a PyTorch model with 
 
 ```bash
 spacy project run train 
-# Or for transformer training, spacy project run train-trf
+
+# Or for transformer training: 
+# spacy project run train-trf
 ```
+
+2. Evaluate trained PyTorch model on test dataset. 
+
+If you followed the preprocessing steps for the i2b2 data you will have a `test.spacy` file in the `corpus` directory. 
+
+If you followed the steps to preprocess another example project (like the ner_fashion_brands project) you might not have a test set. To ensure the `evaluate` command succeeds you can update this variable in your project.yml
+
+In your `project.yml` update the "test" variable to "dev" to use the `dev.spacy` file as the evaluation set.
+
+```yaml
+vars:
+  ...
+  train: "train"
+  dev: "dev"
+  test: "dev" # This will be "test" by default
+```
+
+
+```bash
+spacy project run evaluate 
+
+# Or for transformer evaluation: 
+# spacy project run train-trf
+```
+
 
 ## 🧮 Results
 
