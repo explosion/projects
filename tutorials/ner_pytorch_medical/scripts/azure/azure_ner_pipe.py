@@ -1,4 +1,5 @@
 from typing import Iterable, Iterator
+import warnings
 from spacy.language import Language
 from spacy.pipeline import Pipe
 from spacy.tokens import Doc
@@ -131,6 +132,10 @@ class AzureEntityRecognizer(Pipe):
                 # Note this does not currently preserve entities previously set in the pipeline.
                 # So you would want to run this before an existing ner pipeline component.
                 # e.g. nlp.add_pipe("azure_ner", before="ner")
+                if doc.ents:
+                    warnings.warn(
+                        f"Component {self.name} will overwrite existing doc.ents."
+                    )
                 doc.ents = spacy_ents
 
             return doc

@@ -1,31 +1,52 @@
 from typing import List, Optional, Union, Iterable, Dict, Any
-import murmurhash
 import spacy
 from spacy.language import Language
 from spacy.training import Example
 import copy
 
-from prodigy.recipes.compare import get_questions as get_compare_questions
-from prodigy.recipes.compare import get_printer as get_compare_printer
-from prodigy.models.ner import EntityRecognizer, ensure_sentencizer
-from prodigy.models.matcher import PatternMatcher
-from prodigy.components.db import connect
-from prodigy.components.preprocess import split_sentences, add_tokens, make_raw_doc
-from prodigy.components.sorters import prefer_uncertain
+from prodigy.components.preprocess import split_sentences
 from prodigy.components.loaders import get_stream
 from prodigy.core import recipe
 from prodigy.util import (
-    combine_models,
     set_hashes,
     log,
     split_string,
     get_labels,
-    copy_nlp,
 )
-from prodigy.util import INPUT_HASH_ATTR, TASK_HASH_ATTR, msg
+from prodigy.util import INPUT_HASH_ATTR, msg
 
 from scripts.custom_functions import *
 from scripts.azure.azure_ner_pipe import make_azure_entity_recognizer
+
+
+def full_word_shape(text: str) -> str:
+    """Full shape of token. Default .shape attr only
+    returns max 5 chars per token.
+    Based on https://github.com/explosion/spaCy/blob/master/spacy/lang/lex_attrs.py#L115
+    text (str): Input text
+    RETURNS (str): Shape str
+    """
+
+    shape = []
+    last = ""
+    shape_char = ""
+    seq = 0
+    for char in text:
+        if char.isalpha():
+            if char.isupper():
+                shape_char = "X"
+            else:
+                shape_char = "x"
+        elif char.isdigit():
+            shape_char = "d"
+        else:
+            shape_char = char
+        if shape_char == last:
+            seq += 1
+        else:
+            seq = 0
+            last = shape_char
+    return "".join(shape)
 
 
 @recipe(
@@ -58,7 +79,7 @@ def make_gold(
     """
     Create gold data for NER by correcting a model's suggestions.
     """
-    log("RECIPE: Starting recipe ner.correct", locals())
+    log("RECIPE: Starting recipe ner.correct.anonymous", locals())
     nlp = spacy.load(spacy_model)
     labels = label  # comma-separated list or path to text file
     model_labels = nlp.pipe_labels.get("ner", [])
@@ -89,7 +110,7 @@ def make_gold(
             tokens = []
             for t in doc:
                 if t in pii_ents_map:
-                    text = t.shape_
+                    text = full_word_shape(t.text)
                 else:
                     text = t.text
 

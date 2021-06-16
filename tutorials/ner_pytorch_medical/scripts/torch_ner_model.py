@@ -15,21 +15,6 @@ import torch
 from torch import nn
 
 
-@registry.architectures("TorchBiLSTMEncoder.v1")
-def BiLSTMEncoder(
-    width: int, depth: int, dropout: float
-) -> Model[List[Floats2d], List[Floats2d]]:
-    """Encode context using bidirectonal LSTM layers. Requires PyTorch.
-    width (int): The input and output width. These are required to be the same,
-        to allow residual connections. This value will be determined by the
-        width of the inputs. Recommended values are between 64 and 300.
-    depth (int): The number of recurrent layers.
-    dropout (float): Creates a Dropout layer on the outputs of each LSTM layer
-        except the last layer. Set to 0 to disable this functionality.
-    """
-    return PyTorchLSTM(width, width, bi=True, depth=depth, dropout=dropout)
-
-
 @registry.architectures("TorchEntityRecognizer.v1")
 def build_torch_ner_model(
     tok2vec: Model[List[Doc], List[Floats2d]],

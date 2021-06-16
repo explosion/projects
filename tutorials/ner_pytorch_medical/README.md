@@ -68,7 +68,7 @@ There are no downloadable spacy assets for this project due to the User Agreemen
 
 Once you have an account, navigate to the n2c2 NLP Datasets page. https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/.
 
-> NOTE: Once you sign up and request an account, from experience you should get a response in the next 6 hours.
+> Once you sign up and request an account, from experience you should get a response in the next 6 hours.
 
 Under the 2011 Coreference Challenge Downloads section,Download the Beth Israel Portion, Partners Portion, and Test Data to the `assets/n2c2_2011` folder. 
 
@@ -96,7 +96,8 @@ The data is separated into the following splits:
 | test.spacy | Official test data (combining Beth and Partners test data splits) | 173 |
 
 
-## Using PyTorch with a different open dataset
+
+### Using PyTorch with a different open dataset
 
 If you simply want to experiment with the PyTorch NER model and don't want to bother creating an account to get the i2b2 data, you can pull data from any of the other example tutorial [projects](https://github.com/explosion/projects/tree/v3/tutorials) that have the `ner_` prefix.
 
@@ -148,7 +149,7 @@ spacy project run train
 
 ## 🧮 Results
 
-We've tested 4 configurations which have been saved to the `configs` folder. All models evaluated by F1 Score on the official i2b2 test data created by the `preprocess` command above at `test.spacy`.
+We've tested 4 configurations which have been saved to the `configs` folder. All models were evaluated by F1 Score on the official i2b2 test data created by the `preprocess` command as `test.spacy`.
 
 | Model | Config | Description | F1 Score (test.spacy) |
 |-------|--------|-------------|----------|
@@ -160,13 +161,29 @@ We've tested 4 configurations which have been saved to the `configs` folder. All
 
 ## Annotate new data with Prodigy
 
-The i2b2 data comes from medical records with all personal health information already removed. This is information like patient names, medical ID numbers, Social Security numbers, etc. Imagine we want to update our trained model with new medical records. With medical data, it's imperative to retain patient privacy. That being said, we could use the standard `ner` Prodigy workflows to improve our model, however we would have to have a separate process where someone goes through all the records we want to annotate and remove all personal health information present. 
+The i2b2 data comes from medical records with all personal health information already removed. 
+
+> **Personal health information (PHI)** is information like patient names, medical ID numbers, Social Security numbers, etc. 
+
+Imagine we want to update our trained model with new medical records. With medical data, it's imperative to retain patient privacy. That being said, we could use the standard `ner` Prodigy workflows to improve our model, however we would have to have a separate process where someone goes through all the records we want to annotate and remove all personal health information present. 
 
 To improve this manual workflow, we've added a new custom Prodigy recipe that will anonymize medical records for annotators as data is loaded into Prodigy. 
 
 The identification of personal health information is handled by the PII Endpoint of the [Azure Text Analytics Entity Recognition API](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/cognitive-services/text-analytics/includes/create-text-analytics-resource.md) wrapped in a custom spaCy pipeline component here: `scripts/azure/azure_ner_pipe.py`
 
-This recipe takes an opinionated approach to anonymization. Before examples are shown to the annotator in Prodigy, we run the Azure Entity Recognizer to extract PII entities, then we replace tokens in Prodigy with their corresponding `shape` attribute, while retaining the original text and tokens to send to the model update.
+### Why use Azure Text Analytics?
+
+You might be wary of sending this private medical data to an external endpoint. 
+
+However, Microsoft Azure is fully HIPPA compliant (for US) and having worked on the Cognitive Services team I can attest to the fact that no user data is ever stored from the Text Analytics endpoint and never will be. Also, as a US based organization you can enter an official Business Associate Agreement with Azure that ensures data protection and compliance for covered organizations. Read more about [Microsoft Hippa Compliance Offer](https://docs.microsoft.com/en-us/azure/compliance/offerings/offering-hipaa-us).
+
+PII Removal is a nuanced task with a lot of edge cases. While it may be more private to handle this manually and internally, if you are going to automate the process, it's a good case for using a big company's cloud service to offload responsibilty to a larger team with resources to think about all the edge cases and oversight from a compliance department.
+
+> If you still don't want to use Azure Text Analytics for data anonymization, you can adapt this recipe to use Presidio, an open source project by Microsoft: https://github.com/microsoft/presidio 
+
+### Anonymization in action
+
+This recipe takes an opinionated approach to anonymization. Before examples are shown to the annotator in Prodigy, we run the Azure Entity Recognizer to extract PII entities, then we replace tokens in Prodigy with their shape (similar to how spaCy's built-in `token.shape_` works), while retaining the original text and tokens to send to the model update.
 
 
 So for a simple mock note:
@@ -189,16 +206,17 @@ SSN: ddd-dd-dddd
 Information: Patient scheduled for surgery to repair tear in left ACL.
 ```
 
-This retains all the structure and character offsets into the original note during annotation. Once the annotator accepts the example and the internal Prodigy `update` method is called to update our model in the loop, we send the original text instead of the anonymized text.
+This approach retains all the structure and character offsets into the original note during annotation. Once the annotator accepts the example and the internal Prodigy `update` method is called to update our model in the loop, we send the original text instead of the anonymized text.
 
 
 ### Running the example annotation workflow
 
 1. Sign Up for an Azure Account and Create a Cognitive Services resource. Steps detailed under Prerequisites [here](https://docs.microsoft.com/en-us/azure/cognitive-services/text-analytics/quickstarts/client-libraries-rest-api?tabs=version-3-1&pivots=programming-language-csharp)
 
-> NOTE: You want to create a general Cognitive Services resource, not the specific service for Text Analytics
+> You want to create a general Cognitive Services resource, not the specific service for Text Analytics
 
 2. Get your API keys and determine which region your service is in.
+
 
 3. Update the Cognitive Services Key and Base URL under the project.yml vars.
 
