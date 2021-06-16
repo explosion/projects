@@ -113,7 +113,6 @@ def make_gold(
                     text = full_word_shape(t.text)
                 else:
                     text = t.text
-
                 tokens.append(
                     {
                         "text": text,
@@ -123,7 +122,6 @@ def make_gold(
                         "ws": bool(t.whitespace_),
                     }
                 )
-
             task["tokens"] = tokens
             task["original_text"] = task["text"]
 
