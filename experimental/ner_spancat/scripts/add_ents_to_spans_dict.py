@@ -4,7 +4,7 @@ import spacy
 from spacy.tokens import DocBin
 
 
-def main(loc: Path, lang: str="id", span_key: str="spans"):
+def main(loc: Path, lang: str, span_key: str):
     """
     Set the NER data into the doc.spans, under a given key.
 
