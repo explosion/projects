@@ -6,5 +6,4 @@ from pathlib import Path
 def test_experimental_ner_spancat():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "assets")
     project_run(root, "all")
