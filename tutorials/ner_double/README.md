@@ -46,14 +46,20 @@ The first thing to keep in mind about models is that models **do not overwrite
 earlier annotations**. This means that if you combine multiple models the first
 one takes precedence.
 
-The sample text for this model shows and example of the effects that can have.
-"Benz" is a surname, but it also resembles the slang term "benzos" for a kind
-of drug. "weed" can of course refer to marijuana. If the normal NER model runs
-first it will flag "John Benz" as a PERSON, but if the drug model is run first
-"Benz" will be marked as a DRUG and "John" will be ignored.
+Consider this example sentence:
+
+> My name is John Benz and I remove weeds from my garden.
+
+This sample text shows some of the effects that can have.  "Benz" is a surname,
+but it also resembles the slang term "benzos" for a kind of drug.  "Weed" can
+of course refer to marijuana. If the normal NER model runs first it will flag
+"John Benz" as a PERSON, but if the drug model is run first "Benz" will be
+marked as a DRUG and "John" will be ignored.
 
 Play around with the different models and see how the order affects the
-annotations. 
+annotations. You can play with the model interactively using this command:
+
+    spacy project run visualize-model
 
 You can combine models using the configs, but it's also possible to do it in
 code. In code it looks like this:
