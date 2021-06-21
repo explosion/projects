@@ -15,9 +15,14 @@ directories: ["configs", "scripts", "pipelines", "packages"]
 
 workflows:
   all:
+    - download
     - assemble
 
 commands:
+  - name: download
+    help: "Install the base spaCy model used for part of the pipeline."
+    script:
+      - "python -m spacy download en_core_web_md"
   - name: assemble
     help: "Build two versions of the combined pipelines from configs."
     script:
