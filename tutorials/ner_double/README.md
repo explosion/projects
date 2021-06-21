@@ -74,7 +74,7 @@ drug_nlp = spacy.load("en_ner_drugs") # load the drug pipeline
 drug_nlp.replace_listeners("tok2vec", "ner", ["model.tok2vec"])
 
 # now you can put the drug component before or after the other ner
-# This will print a W113 warning but it's OK because we replaced listeners
+# This will print a W113 warning but it's safe to ignore here
 nlp.add_pipe(
     "ner",
     name="ner_drug",
