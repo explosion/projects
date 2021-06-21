@@ -37,14 +37,14 @@ inputs have changed.
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
-## Notes on Combining Models
+## Notes on Combining Components
 
-It's possible to have more than one NER model in a single pipeline, but when
-combining models there are some things you need to be aware of.
+It's possible to have more than one NER component in a single pipeline, but when
+combining components there are some things you need to be aware of.
 
-The first thing to keep in mind about models is that models **do not overwrite
-earlier annotations**. This means that if you combine multiple models the first
-one takes precedence.
+The first thing to keep in mind is that components **do not overwrite earlier
+annotations**. This means that if you combine multiple components the first one
+takes precedence.
 
 Consider this example sentence:
 
@@ -52,27 +52,28 @@ Consider this example sentence:
 
 This sample text shows some of the effects that can have.  "Benz" is a surname,
 but it also resembles the slang term "benzos" for a kind of drug.  "Weed" can
-of course refer to marijuana. If the normal NER model runs first it will flag
-"John Benz" as a PERSON, but if the drug model is run first "Benz" will be
-marked as a DRUG and "John" will be ignored.
+of course refer to marijuana. If the normal NER runs first it will flag "John
+Benz" as a PERSON, but if the drug component is run first "Benz" will be marked
+as a DRUG and "John" will be ignored.
 
-Play around with the different models and see how the order affects the
-annotations. You can play with the model interactively using this command:
+Play around with the different configurations and see how the order affects the
+annotations. You can play with the pipelines interactively using this command:
 
-    spacy project run visualize-model
+    spacy project run check
 
-You can combine models using the configs, but it's also possible to do it in
-code. In code it looks like this:
+You can combine components using the configs, and that would generally be the
+recommended approach, but it's also possible to do it in code. In code it looks
+like this:
 
 ```python
 import spacy
 
-nlp = spacy.load("en_core_web_md") # load the base model
-drug_nlp = spacy.load("en_ner_drugs") # load the drug model
+nlp = spacy.load("en_core_web_md") # load the base pipeline
+drug_nlp = spacy.load("en_ner_drugs") # load the drug pipeline
 # give this component a copy of its own tok2vec
 drug_nlp.replace_listeners("tok2vec", "ner", ["model.tok2vec"])
 
-# now you can put the drug model before or after the other ner
+# now you can put the drug component before or after the other ner
 # This will print a W113 warning but it's OK because we replaced listeners
 nlp.add_pipe(
     "ner",
@@ -92,20 +93,21 @@ layer, or train them together with a shared layer.
 
 If you've already trained the components separately, letting them keep their
 own tok2vec layers will be the easiest option. The main downside is it will
-increase the size of your model. That's what we've done for this example since
+increase the size of your pipeline. That's what we've done for this example since
 the drug NER and core NER were trained separately.
 
-Sharing a tok2vec layer will reduce model size, but normally if you can train
-the models together it might be worth combining their annotations to produce
-just one NER component instead. Usually combining all annotations will work
-better than training separate models, so it's worth training a simple model
-just to check performance, even if you don't expect it to work.
+Sharing a tok2vec layer will reduce pipeline size, but normally if you can
+train the pipelines together it might be worth combining their annotations to
+produce just one NER component instead. Usually combining all annotations will
+work better than training separate components, so it's worth training a simple
+model just to check performance, even if you don't expect it to work.
 
 An example situation where sharing a tok2vec layer but training different
-models would make sense is if your labels don't interact much, and one group of
-labels has much more data than another group. If you have enough data for all
-labels, but some are much more numerous, it's possible (though not guaranteed)
-that they could be ignored by your model in favor of more common labels. 
+components would make sense is if your labels don't interact much, and one
+group of labels has much more data than another group. If you have enough data
+for all labels, but some are much more numerous, it's possible (though not
+guaranteed) that they could be ignored by your model in favor of more common
+labels. 
 
 While based on a description of your data it might be possible to predict the
 optimal approach, in general the best thing is to actually try a few different
