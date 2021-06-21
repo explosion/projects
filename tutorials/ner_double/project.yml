@@ -12,8 +12,7 @@ vars:
   drug_model: "ner_drugs-0.0.0"
 
 
-# TODO is there a better name than "training" for assembled packages?
-directories: ["configs", "scripts", "training", "packages"]
+directories: ["configs", "scripts", "pipelines", "packages"]
 
 workflows:
   all:
@@ -23,20 +22,20 @@ commands:
   - name: assemble
     help: "Build two versions of the combined model from configs."
     script:
-      - "python -m spacy assemble configs/double.cfg training/drugs_first"
-      - "python -m spacy assemble configs/double.cfg training/drugs_second --nlp.pipeline '[\"ner\", \"ner_drug\"]'"
+      - "python -m spacy assemble configs/double.cfg pipelines/drugs_first"
+      - "python -m spacy assemble configs/double.cfg pipelines/drugs_second --nlp.pipeline '[\"ner\", \"ner_drug\"]'"
     outputs:
-      - training/drugs_first
-      - training/drugs_second
+      - pipelines/drugs_first
+      - pipelines/drugs_second
 
   - name: package
     help: "Package the models so they can be installed."
     script: 
-      - "python -m spacy package training/drugs_first packages --name drugs_first --version ${vars.version} --force"
-      - "python -m spacy package training/drugs_second packages --name drugs_second --version ${vars.version} --force"
+      - "python -m spacy package pipelines/drugs_first packages --name drugs_first --version ${vars.version} --force"
+      - "python -m spacy package pipelines/drugs_second packages --name drugs_second --version ${vars.version} --force"
     deps:
-      - training/drugs_first
-      - training/drugs_second
+      - pipelines/drugs_first
+      - pipelines/drugs_second
     outputs_no_cache:
       - "packages/en_drugs_first-${vars.version}/dist/en_drugs_first-${vars.version}.tar.gz"
       - "packages/en_drugs_second-${vars.version}/dist/en_drugs_second-${vars.version}.tar.gz"
@@ -44,7 +43,7 @@ commands:
   - name: visualize-model
     help: "Use the model interactively using Streamlit"
     script:
-      - "streamlit run scripts/visualize_model.py training/drugs_first,training/drugs_second \"My name is John Benz and I remove weeds from my garden.\""
+      - "streamlit run scripts/visualize_model.py pipelines/drugs_first,pipelines/drugs_second \"My name is John Benz and I remove weeds from my garden.\""
     deps:
-      - training/drugs_first
-      - training/drugs_second
+      - pipelines/drugs_first
+      - pipelines/drugs_second
