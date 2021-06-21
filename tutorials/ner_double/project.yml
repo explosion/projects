@@ -23,8 +23,8 @@ commands:
   - name: assemble
     help: "Build two versions of the combined model from configs."
     script:
-      - "python -m spacy assemble configs/drugs_first.cfg training/drugs_first"
-      - "python -m spacy assemble configs/drugs_second.cfg training/drugs_second"
+      - "python -m spacy assemble configs/double.cfg training/drugs_first"
+      - "python -m spacy assemble configs/double.cfg training/drugs_second --nlp.pipeline '[\"ner\", \"ner_drug\"]'"
     outputs:
       - training/drugs_first
       - training/drugs_second
