@@ -68,17 +68,22 @@ code. In code it looks like this:
 import spacy
 
 nlp = spacy.load("en_core_web_md") # load the base model
-drug = spacy.load("en_ner_drugs") # load the drug model
+drug_nlp = spacy.load("en_ner_drugs") # load the drug model
+# give this component a copy of its own tok2vec
+drug_nlp.replace_listeners("tok2vec", "ner", ["model.tok2vec"])
 
 # now you can put the drug model before or after the other ner
+# This will print a W113 warning but it's OK because we replaced listeners
 nlp.add_pipe(
     "ner",
     name="ner_drug",
     source=drug_nlp,
     after="ner",
-    #TODO this doesn't actually work - weights are wrong?
-    config={"replace_listeners": ["model.tok2vec"]},
 )
+
+doc = nlp("My name is John Benz and I remove weeds from my garden.")
+print(doc.ents)
+# => (John Benz, weeds)
 ```
 
 Another option to consider when combining NER components is what to do with
