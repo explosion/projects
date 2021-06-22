@@ -6,7 +6,7 @@ vars:
   config: "spancat"  # "ner"
   gpu: -1
   lang: "id"
-  spans_key: "grit_spans"
+  spans_key: "grit"
 
 remotes:
   default: gs://galaxy-state/spacy-v3-experimental
@@ -32,8 +32,8 @@ commands:
   - name: corpus
     help: "Convert the data to spaCy's format"
     script:
-      - "python -m spacy convert assets/nergrit_ner-grit/train_preprocess.txt --converter iob --lang id corpus/"
-      - "python -m spacy convert assets/nergrit_ner-grit/valid_preprocess.txt --converter iob --lang id corpus/"
+      - "python -m spacy convert assets/nergrit_ner-grit/train_preprocess.txt --converter iob --lang id corpus/ -n 10"
+      - "python -m spacy convert assets/nergrit_ner-grit/valid_preprocess.txt --converter iob --lang id corpus/ -n 10"
       - "mv corpus/train_preprocess.spacy corpus/train.spacy"
       - "mv corpus/valid_preprocess.spacy corpus/dev.spacy"
       - "python scripts/add_ents_to_spans_dict.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
@@ -62,10 +62,11 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/model-best ./corpus/dev.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
+      - "python scripts/evaluate.py ./training/model-best ./corpus/dev.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu}"
     deps:
       - "training/model-best"
       - "corpus/dev.spacy"
+      - "scripts/evaluate.py"
     outputs:
       - "metrics/${vars.config}.json"
 
