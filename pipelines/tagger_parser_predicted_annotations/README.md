@@ -2,7 +2,7 @@
 
 # 🪐 spaCy Project: Using Predicted Annotations in Subsequent Components
 
-This project shows how to use an attribute from one pipeline component as a feature for a subsequent pipeline component in spaCy v3.1. In this demo, which uses [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT), the `token.dep` attribute from the parser is used as a feature by the tagger. To make the predicted `DEP` available to the tagger during training, `parser` is added to `[training.annotating_components]` in the config.
+This project shows how to use the predictions from one pipeline component as features for a subsequent pipeline component in **spaCy v3.1+**. In this demo, which trains a parser and a tagger on [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT), the `token.dep` attribute from the parser is used as a feature by the tagger. To make the predicted `DEP` available to the tagger during training, `DEP` is added to `[components.tagger.model.tok2vec.embed.attrs]` and `parser` is added to `[training.annotating_components]` in the config. This particular example does not lead to a large difference in performance, but the tagger accuracy improves from to 92.67% to 92.97% with the addition of `DEP`.
 
 ## 📋 project.yml
 
