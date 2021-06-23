@@ -3,26 +3,30 @@ description: >
   This project shows you the different ways you can combine multiple trained
   NER components and their tradeoffs.
 
-  Note that before running this project, you should run the
-  [ner_drugs](../ner_drugs) project and install the packaged version of it.
-
 vars:
   name: "ner_double"
   version: "0.0.0"
   drug_model: "ner_drugs-0.0.0"
 
-directories: ["configs", "scripts", "pipelines", "packages"]
+directories: ["assets", "configs", "scripts", "pipelines", "packages"]
 
 workflows:
   all:
-    - download
+    - prep
     - assemble
 
+assets:
+  - dest: "assets/${vars.drug_model}.tar.gz"
+    url: "https://github.com/explosion/projects/releases/download/en-ner-drugs-0.0.0/en_ner_drugs-0.0.0.tar.gz"
+    checksum: "d377872a1c060db4caa686a1a3a5ddea"
+    description: "Pretrained drug model"
+
 commands:
-  - name: download
-    help: "Install the base spaCy model used for part of the pipeline."
+  - name: prep
+    help: "Install the base models."
     script:
       - "python -m spacy download en_core_web_md"
+      - "pip install assets/${vars.drug_model}.tar.gz"
   - name: assemble
     help: "Build two versions of the combined pipelines from configs."
     script:
