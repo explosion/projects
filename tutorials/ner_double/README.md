@@ -3,7 +3,6 @@
 # 🪐 spaCy Project: Combining Multiple Trained NER Components
 
 This project shows you the different ways you can combine multiple trained NER components and their tradeoffs.
-Note that before running this project, you should run the [ner_drugs](../ner_drugs) project and install the packaged version of it.
 
 
 ## 📋 project.yml
@@ -20,9 +19,10 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `assemble` | Build two versions of the combined model from configs. |
-| `package` | Package the models so they can be installed. |
-| `visualize-model` | Use the model interactively using Streamlit |
+| `prep` | Install the base models. |
+| `assemble` | Build two versions of the combined pipelines from configs. |
+| `package` | Package the pipelines so they can be installed. |
+| `check` | Use the pipeline interactively using Streamlit |
 
 ### ⏭ Workflows
 
@@ -33,7 +33,17 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `assemble` |
+| `all` | `prep` &rarr; `assemble` |
+
+### 🗂 Assets
+
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+in the project directory.
+
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/ner_drugs-0.0.0.tar.gz` | URL | Pretrained drug model |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
