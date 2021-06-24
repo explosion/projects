@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo NER Update
+# 🪐 spaCy Project: Demo updating an NER component in a pretrained pipeline
 
 A demo NER project that updates the NER component in an existing pretrained pipeline. All other pipeline components are preserved and frozen during training.
 
