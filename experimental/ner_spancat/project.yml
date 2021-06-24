@@ -1,15 +1,11 @@
 title: "Example SpanCategorizer project using Indonesian NER"
-description:
-    The SpanCategorizer is a component for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules.
+description: "The SpanCategorizer is a component in **spaCy v3.1+** for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules."
 
 vars:
   config: "spancat"  # "ner"
   gpu: -1
   lang: "id"
   spans_key: "grit"
-
-remotes:
-  default: gs://galaxy-state/spacy-v3-experimental
 
 directories: ["assets", "training", "configs", "metrics", "corpus"]
 
