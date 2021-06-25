@@ -12,7 +12,7 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["scripts", "assets", "training", "configs"]
+directories: ["scripts", "corpus", "assets", "training", "configs"]
 
 # Assets that should be downloaded or available in the directory. You can replace
 # this with your own input data.
