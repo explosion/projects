@@ -7,6 +7,8 @@ vars:
   version: "0.0.0"
   train: "docs_issues_training"
   dev: "docs_issues_eval"
+  gpu_id: -1
+spacy_version: ">=3.0.6,<4.0.0"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -53,17 +55,18 @@ commands:
   - name: "train"
     help: "Train a text classification model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
+      - "configs/config.cfg"
     outputs:
       - "training/model-best"
 
   - name: "evaluate"
     help: "Evaluate the model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/${vars.dev}.spacy --output training/metrics.json"
+      - "python -m spacy evaluate training/model-best corpus/${vars.dev}.spacy --output training/metrics.json --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/${vars.dev}.spacy"
       - "training/model-best"
