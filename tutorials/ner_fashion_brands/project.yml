@@ -8,8 +8,6 @@ vars:
   train: "fashion_brands_training"
   dev: "fashion_brands_eval"
   patterns: "fashion_brands_patterns"
-  namespace: "osanseviero"
-  repo_name: "fashion_brands_patterns"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -86,14 +84,6 @@ commands:
     outputs_no_cache:
       - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
-  - name: push_to_hub
-    help: Push the model to the Hub
-    script:
-      - "python scripts/push_to_hub.py ${vars.name} ${vars.version} en ${vars.namespace} ${vars.repo_name}"
-    deps:
-      - "scripts/push_to_hub.py"
-      - "packages/en_${vars.name}-${vars.version}"
-
   - name: visualize-model
     help: Visualize the model's output interactively using Streamlit
     script:
@@ -110,5 +100,3 @@ commands:
       - "scripts/visualize_data.py"
       - "assets/${vars.train}.jsonl"
       - "assets/${vars.dev}.jsonl"
-
-  
