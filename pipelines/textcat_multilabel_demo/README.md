@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo Textcat (Text Classification)
+# 🪐 spaCy Project: Demo Multilabel Textcat (Text Classification)
 
 A minimal demo textcat_multilabel project for spaCy v3.
 

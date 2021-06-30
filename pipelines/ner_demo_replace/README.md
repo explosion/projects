@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Demo NER Replace
+# 🪐 spaCy Project: Demo replacing an NER component in a pretrained pipeline
 
 A minimal demo NER project that replaces the NER component in an existing pretrained pipeline. All other pipeline components are preserved and frozen during training.
 
