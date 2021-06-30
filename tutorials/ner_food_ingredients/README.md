@@ -48,7 +48,7 @@ Labelling the data took about 2.5 hours and was done manually using the patterns
 (first half) and pretrained NER model (second half) to pre-highlight
 suggestions. For more details, see the
 [data creation and training workflow](#data-creation-and-training-workflow)
-below. The raw text was sourced from the from the
+below. The raw text was sourced from the 
 [r/Cooking](https://www.reddit.com/r/Cooking/) subreddit.
 
 ### Raw data
