@@ -1,3 +1,5 @@
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
+
 # 🪐 spaCy Project: Hugging Face Hub integration
 
 With [Hugging Face Hub](https://https://huggingface.co/), you can easily share any trained pipeline with the community. The Hugging Face Hub offers:
@@ -5,8 +7,8 @@ With [Hugging Face Hub](https://https://huggingface.co/), you can easily share a
 - Free model hosting.
 - Built-in file versioning, even with very large files, thanks to a git-based approach.
 - In-browser widgets to play with the uploaded models.
-
 The `push_to_hub` script pushes a packaged pipeline to the Hugging Face Hub, including the `whl` file. This enables using `pip install`ing a pipeline directly from the Hub.
+
 
 ## 📋 project.yml
 
