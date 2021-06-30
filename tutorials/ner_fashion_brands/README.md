@@ -22,7 +22,6 @@ Commands are only re-run if their inputs have changed.
 | `train` | Train a named entity recognition model |
 | `evaluate` | Evaluate the model and export metrics |
 | `package` | Package the trained model so it can be installed |
-| `push_to_hub` | Push the model to the Hub |
 | `visualize-model` | Visualize the model's output interactively using Streamlit |
 | `visualize-data` | Explore the annotated data in an interactive Streamlit app |
 
