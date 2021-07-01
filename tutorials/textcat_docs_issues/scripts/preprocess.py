@@ -15,7 +15,11 @@ def main(
     for doc, eg in nlp.pipe(data_tuples, as_tuples=True):
         if eg["answer"] == "ignore":
             continue
-        doc.cats[eg["label"]] = eg["answer"] == "accept"
+
+        if eg["answer"] == "accept":
+            doc.cats = {"DOCUMENTATION": True, "N/A": False}
+        else:
+            doc.cats = {"DOCUMENTATION": False, "N/A": True}
         doc_bin.add(doc)
     doc_bin.to_disk(output_path)
     print(f"Processed {len(doc_bin)} documents: {output_path.name}")
