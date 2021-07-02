@@ -93,7 +93,7 @@ def create_model_card(repo_name, repo_dir):
     with open(os.path.join(repo_dir, "meta.json")) as f:
         data = json.load(f)
         lang = data["lang"] if data["lang"] != "xx" else "multilingual"
-        lic = data["license"].replace(" ", "-")
+        lic = data.get("license", "").replace(" ", "-")
         tags = ["spacy"]
         for component in data["components"]:
             if component in token_classification_components and "token-classification" not in tags:
