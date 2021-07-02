@@ -50,7 +50,7 @@ in the project directory.
 
 Labelling the data with [Prodigy](https://prodi.gy) took about two hours and was
 done manually using the binary classification interface. The raw text was
-sourced from the from the [GitHub API](https://developer.github.com/v3/) using
+sourced from the [GitHub API](https://developer.github.com/v3/) using
 the search queries `"docs"`, `"documentation"`, `"readme"` and `"instructions"`.
 
 ### Training and evaluation data format

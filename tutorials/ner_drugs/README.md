@@ -54,7 +54,7 @@ in the project directory.
 
 Labelling the data with [Prodigy](https://prodi.gy) took a few hours and was
 done manually using the patterns to pre-highlight suggestions. The raw text was
-sourced from the from the [r/opiates](https://www.reddit.com/r/opiates/)
+sourced from the [r/opiates](https://www.reddit.com/r/opiates/)
 subreddit.
 
 | File                                                  | Count | Description                                                                                                                                                                                                                                                                                                                     |

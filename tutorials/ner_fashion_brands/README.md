@@ -56,7 +56,7 @@ in the project directory.
 
 [Labelling the data](https://explosion.ai/blog/sense2vec-reloaded#annotation-bootstrap)
 took about 2 hours and was done manually using the patterns to pre-highlight
-suggestions. The raw text was sourced from the from the
+suggestions. The raw text was sourced from the 
 [r/MaleFashionAdvice](https://www.reddit.com/r/malefashionadvice/) and
 [r/FemaleFashionAdvice](https://www.reddit.com/r/femalefashionadvice/)
 subreddits.

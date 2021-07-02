@@ -88,7 +88,7 @@ git commit configs/my_new_config.cfg metrics/my_new_config.cfg -m "Scores TODO%"
 
 You can also run experiments in a more lightweight way by running `spacy train`
 directly and
-[overwriting](https://nightly.spacy.io/usage/training#config-overrides)
+[overwriting](https://spacy.io/usage/training#config-overrides)
 hyperparameters on the command line:
 
 ```bash
