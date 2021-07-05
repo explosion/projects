@@ -22,8 +22,11 @@ Commands are only re-run if their inputs have changed.
 | `train` | Train a custom PyTorch named entity recognition model |
 | `train-trf` | Train a custom PyTorch named entity recognition model with transformer |
 | `evaluate` | Evaluate the custom PyTorch model and export metrics |
+| `evaluate-trf` | Evaluate the custom PyTorch model and export metrics |
 | `package` | Package the trained model so it can be installed |
+| `package-trf` | Package the trained model so it can be installed |
 | `visualize-model` | Visualize the model's output interactively using Streamlit |
+| `annotate` | Run the custom prodigy recipe to anonymize data for the annotator and update the PyTorch NER model |
 
 ### ⏭ Workflows
 
@@ -38,13 +41,16 @@ inputs have changed.
 
 ### 🗂 Assets
 
-The following assets are defined by the project. They need to manually downloaded. See the Data below for more details.
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz`](assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz) | Local | Tarfile containing original challenge data from the Beth training data split |
-| [`assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz`](assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz) | Local | Tarfile containing original challenge data from the Partners training data split |
-| [`assets/n2c2_2011/Task_1C.zip`](assets/n2c2_2011/Task_1C.zip) | Local | Zipfile containing original challenge test data |
+| `assets/n2c2_2011/i2b2_Beth_Train_Release.tar.gz` | Local | Tarfile containing original challenge data from the Beth training data split |
+| `assets/n2c2_2011/i2b2_Partners_Train_Release.tar.gz` | Local | Tarfile containing original challenge data from the Partners training data split |
+| `assets/n2c2_2011/Task_1C.zip` | Local | Zipfile containing original challenge test data |
+| [`assets/mock_notes.jsonl`](assets/mock_notes.jsonl) | Local | JSONL file with raw mock notes to annotate in prodigy |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 

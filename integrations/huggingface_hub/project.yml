@@ -93,21 +93,21 @@ commands:
     outputs:
       - "training/metrics.json"
 
-  # Create the package using --build sdist,wheel
+  # Create the package using --build wheel
   - name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force --build sdist,wheel"
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force --build wheel"
     deps:
       - "training/model-best"
     outputs_no_cache:
-      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
 
   # Push the package to the Hub
   - name: push_to_hub
     help: Push the model to the Hub
     script:
-      - "python scripts/push_to_hub.py ${vars.name} ${vars.version} en ${vars.namespace}"
+      - "python scripts/push_to_hub.py packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl osanseviero"
     deps:
       - "scripts/push_to_hub.py"
       - "packages/en_${vars.name}-${vars.version}"

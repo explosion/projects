@@ -1,7 +1,6 @@
 import os
 import typer
-import tempfile
-import tarfile
+import zipfile
 import shutil
 import json
 import yaml
@@ -121,19 +120,17 @@ def create_model_card(repo_name, repo_dir):
 
 
 def main(
-    name: str,
-    version: str,
-    lang: str,
+    whl_path,
     namespace: str,
 ):  
-    lang_and_name = f"{lang}_{name}"
-    versioned_name = f"{lang_and_name}-{version}"
-    package_path = os.path.join("packages", versioned_name, "dist")
-    repo_local_path = os.path.join("hub", lang_and_name)
+    filename = os.path.basename(whl_path)
+    repo_name, version, _, _, _ = filename.split("-")
+    versioned_name = repo_name + "-" + version
+    repo_local_path = os.path.join("hub", repo_name)
 
-    # Create the repo (or clone its content if it's nonempty).
+    # Create the repo (or clone its content if it's nonempty)
     repo_url = HfApi().create_repo(
-            name=lang_and_name,
+            name=repo_name,
             token=HfFolder.get_token(),
             organization=namespace,
             private=False,
@@ -142,31 +139,26 @@ def main(
     repo = Repository(repo_local_path, clone_from=repo_url)
     repo.lfs_track(["*.whl", "*.npz", "*strings.json", "vectors"])
 
-    # Extract tar files to repo
-    tar = tarfile.open(os.path.join(package_path, f"{versioned_name}.tar.gz"), "r:gz")
-    tar.extractall(repo_local_path)
+    # Extract information from whl file
+    with zipfile.ZipFile(whl_path, 'r') as zip_ref:
+        base_name = os.path.join(repo_name, versioned_name)
+        for file_name in zip_ref.namelist():
+            if file_name.startswith(base_name):
+                zip_ref.extract(file_name, 'hub')
 
     # Move files up one directory
     extracted_dir = os.path.join(repo_local_path, versioned_name)
     for filename in os.listdir(extracted_dir):
         dst = os.path.join(repo_local_path, filename)
-        if os.path.isdir(dst):
-            shutil.rmtree(dst)
-        elif os.path.isfile(dst):
-            os.remove(dst)
         shutil.move(os.path.join(extracted_dir, filename), dst)
     shutil.rmtree(os.path.join(repo_local_path, versioned_name))
-    src = os.path.join(repo_local_path, f"{lang_and_name}", versioned_name)
-    dst = os.path.join(repo_local_path, f"{lang_and_name}", f"{lang_and_name}")
-    shutil.move(src, dst)
 
     # Create model card, including HF tags
-    create_model_card(lang_and_name, repo_local_path)
+    create_model_card(repo_name, repo_local_path)
 
-    # Remove version from whl filename and rename to repo name
-    src_dir = os.path.join(package_path,f"{versioned_name}-py3-none-any.whl")
-    dst_file = os.path.join(repo_local_path, f"{lang_and_name}-any-py3-none-any.whl")
-    shutil.copyfile(src_dir, dst_file)
+    # Remove version from whl filename
+    dst_file = os.path.join(repo_local_path, f"{repo_name}-any-py3-none-any.whl")
+    shutil.copyfile(whl_path, dst_file)
 
     repo.push_to_hub(commit_message="Spacy Update")
 
