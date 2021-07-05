@@ -25,21 +25,21 @@ def _insert_values_as_list(metadata, name, values):
     metadata[name] = values
     return metadata
 
-def create_metric(name, t, value): 
+def _create_metric(name, t, value): 
     return {
             "name": name,
             "type": t,
             "value": value
         }
 
-def create_p_r_f_list(precision, recall, f_score):
-    precision = create_metric("Precision", "precision", precision)
-    recall = create_metric("Recall", "recall", recall)
-    f_score = create_metric("F Score", "f_score", f_score)
+def _create_p_r_f_list(precision, recall, f_score):
+    precision = _create_metric("Precision", "precision", precision)
+    recall = _create_metric("Recall", "recall", recall)
+    f_score = _create_metric("F Score", "f_score", f_score)
 
     return [precision, recall, f_score]
 
-def create_model_index(repo_name, data):
+def _create_model_index(repo_name, data):
     model_index = {"name": repo_name}
 
     results = []
@@ -48,7 +48,7 @@ def create_model_index(repo_name, data):
             "tasks": {
                 "name": "NER",
                 "type": "token-classification",
-                "metrics": create_p_r_f_list(data["ents_p"], data["ents_r"], data["ents_f"])
+                "metrics": _create_p_r_f_list(data["ents_p"], data["ents_r"], data["ents_f"])
             }
         })
     if "tag_acc" in data:
@@ -56,7 +56,7 @@ def create_model_index(repo_name, data):
             "tasks": {
                 "name": "POS",
                 "type": "token-classification",
-                "metrics": [create_metric("Accuracy", "accuracy", data["tag_acc"])]
+                "metrics": [_create_metric("Accuracy", "accuracy", data["tag_acc"])]
             }
         })
     if "sents_p" in data:
@@ -64,7 +64,7 @@ def create_model_index(repo_name, data):
             "tasks": {
                 "name": "SENTER",
                 "type": "token-classification",
-                "metrics": create_p_r_f_list(data["sents_p"], data["sents_r"], data["sents_f"])
+                "metrics": _create_p_r_f_list(data["sents_p"], data["sents_r"], data["sents_f"])
             }
         })
     if "dep_uas" in data:
@@ -72,7 +72,7 @@ def create_model_index(repo_name, data):
             "tasks": {
                 "name": "UNLABELED_DEPENDENCIES",
                 "type": "token-classification",
-                "metrics": [create_metric("Accuracy", "accuracy", data["dep_uas"])]
+                "metrics": [_create_metric("Accuracy", "accuracy", data["dep_uas"])]
             }
         })
     if "dep_las" in data:
@@ -80,7 +80,7 @@ def create_model_index(repo_name, data):
             "tasks": {
                 "name": "LABELED_DEPENDENCIES",
                 "type": "token-classification",
-                "metrics": [create_metric("Accuracy", "accuracy", data["dep_uas"])]
+                "metrics": [_create_metric("Accuracy", "accuracy", data["dep_uas"])]
             }
         })
 
@@ -88,7 +88,7 @@ def create_model_index(repo_name, data):
     return model_index
 
 
-def create_model_card(repo_name, repo_dir):
+def _create_model_card(repo_name, repo_dir):
     with open(os.path.join(repo_dir, "meta.json")) as f:
         data = json.load(f)
         lang = data["lang"] if data["lang"] != "xx" else "multilingual"
@@ -103,7 +103,7 @@ def create_model_card(repo_name, repo_dir):
         metadata = _insert_values_as_list({}, "tags", tags)
         metadata = _insert_values_as_list(metadata, "language", lang)
         metadata = _insert_value(metadata, "license", lic)
-        metadata["model-index"]  = create_model_index(repo_name, data["performance"])
+        metadata["model-index"]  = _create_model_index(repo_name, data["performance"])
         metadata = yaml.dump(metadata, sort_keys=False)
         metadata_section = f"---\n{metadata}---\n"
 
@@ -154,7 +154,7 @@ def main(
     shutil.rmtree(os.path.join(repo_local_path, versioned_name))
 
     # Create model card, including HF tags
-    create_model_card(repo_name, repo_local_path)
+    _create_model_card(repo_name, repo_local_path)
 
     # Remove version from whl filename
     dst_file = os.path.join(repo_local_path, f"{repo_name}-any-py3-none-any.whl")
