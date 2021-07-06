@@ -1,5 +1,5 @@
 title: "Hugging Face Hub integration"
-description: > 
+description: >
   With [Hugging Face Hub](https://https://huggingface.co/), you can easily share any trained pipeline with the community. The Hugging Face Hub offers:
 
 
@@ -19,9 +19,6 @@ vars:
   version: "0.0.0"
   train: "fashion_brands_training"
   dev: "fashion_brands_eval"
-  patterns: "fashion_brands_patterns"
-  # You can also add namespace: ORG if you want to push to a specific organization.
-  namespace: osanseviero
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -37,10 +34,6 @@ assets:
   - dest: "assets/${vars.dev}.jsonl"
     checksum: "5113dc04e03f079525edd8df3f4f39e3"
     description: "JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples)"
-  # Patterns are not used for training but we distribute them for reference
-  - dest: "assets/${vars.patterns}.jsonl"
-    checksum: "4070316032ce36a01b7d1e8ecb387a8b"
-    description: "Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns)"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
