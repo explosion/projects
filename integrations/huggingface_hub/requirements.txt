@@ -1,2 +1,1 @@
-huggingface_hub==0.0.12
-PyYAML
+spacy-huggingface_hub

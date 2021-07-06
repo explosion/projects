@@ -9,7 +9,8 @@ description: >
 
   - In-browser widgets to play with the uploaded models.
 
-  The `push_to_hub` script pushes a packaged pipeline to the Hugging Face Hub, including the `whl` file. This enables using `pip install`ing a pipeline directly from the Hub.
+
+  This uses [`spacy-huggingface-hub`](https://github.com/explosion/spacy-huggingface-hub) to push a packaged pipeline to the Hugging Face Hub, including the `whl` file. This enables using `pip install`ing a pipeline directly from the Hugging Face Hub.
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -107,7 +108,6 @@ commands:
   - name: push_to_hub
     help: Push the model to the Hub
     script:
-      - "python scripts/push_to_hub.py packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl osanseviero"
+      - "python -m spacy huggingface-hub push packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
     deps:
-      - "scripts/push_to_hub.py"
       - "packages/en_${vars.name}-${vars.version}"
