@@ -53,6 +53,5 @@ in the project directory.
 | --- | --- | --- |
 | [`assets/fashion_brands_training.jsonl`](assets/fashion_brands_training.jsonl) | Local | JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples) |
 | [`assets/fashion_brands_eval.jsonl`](assets/fashion_brands_eval.jsonl) | Local | JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples) |
-| [`assets/fashion_brands_patterns.jsonl`](assets/fashion_brands_patterns.jsonl) | Local | Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns) |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

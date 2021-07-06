@@ -1,6 +1,6 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Tutorials (8)
+# 🪐 Project Templates: Tutorials (9)
 
 | Template | Description |
 | --- | --- |
@@ -9,6 +9,7 @@
 | [`ner_drugs`](ner_drugs) | Detecting drug names in online comments (Named Entity Recognition) |
 | [`ner_fashion_brands`](ner_fashion_brands) | Detecting fashion brands in online comments (Named Entity Recognition) |
 | [`ner_food_ingredients`](ner_food_ingredients) | Analyzing how mentions of ingredients change over time (Named Entity Recognition) |
+| [`ner_pytorch_medical`](ner_pytorch_medical) | Detecting entities in Medical Records with PyTorch |
 | [`rel_component`](rel_component) | Example project of creating a novel nlp component to do relation extraction from scratch. |
 | [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about docs (Text Classification) |
 | [`textcat_goemotions`](textcat_goemotions) | Categorization of emotions in Reddit posts (Text Classification) |
