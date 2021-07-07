@@ -2,7 +2,7 @@ title: "Categorization of emotions in Reddit posts (Text Classification)"
 description: "This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  name: "en_textcat_reddit"
+  name: "textcat_reddit"
   version: "0.0.1"
   # Choose your GPU here
   gpu_id: -1
