@@ -11,5 +11,5 @@
 | [`ner_food_ingredients`](ner_food_ingredients) | Analyzing how mentions of ingredients change over time (Named Entity Recognition) |
 | [`ner_pytorch_medical`](ner_pytorch_medical) | Detecting entities in Medical Records with PyTorch |
 | [`rel_component`](rel_component) | Example project of creating a novel nlp component to do relation extraction from scratch. |
-| [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about docs (Text Classification) |
+| [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about documentation (Text Classification) |
 | [`textcat_goemotions`](textcat_goemotions) | Categorization of emotions in Reddit posts (Text Classification) |
