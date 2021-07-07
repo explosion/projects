@@ -1,0 +1,74 @@
+title: "Example SpanCategorizer project using Indonesian NER"
+description: "The SpanCategorizer is a component in **spaCy v3.1+** for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules."
+spacy_version: "3.1.0,<4.0.0"
+
+vars:
+  config: "spancat"  # "ner"
+  gpu: -1
+  lang: "id"
+  spans_key: "grit"
+
+directories: ["assets", "training", "configs", "metrics", "corpus"]
+
+assets:
+  -
+    dest: "assets/nergrit_ner-grit"
+    git:
+        repo: "https://github.com/indobenchmark/indonlu"
+        branch: "master"
+        path: "dataset/nergrit_ner-grit"
+
+workflows:
+  all:
+    - corpus
+    - train
+    - evaluate
+
+commands:
+
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    script:
+      - "python -m spacy convert assets/nergrit_ner-grit/train_preprocess.txt --converter iob --lang id corpus/ -n 10"
+      - "python -m spacy convert assets/nergrit_ner-grit/valid_preprocess.txt --converter iob --lang id corpus/ -n 10"
+      - "mv corpus/train_preprocess.spacy corpus/train.spacy"
+      - "mv corpus/valid_preprocess.spacy corpus/dev.spacy"
+      - "python scripts/add_ents_to_spans_dict.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/add_ents_to_spans_dict.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
+    deps:
+      - "scripts/add_ents_to_spans_dict.py"
+      - "assets/nergrit_ner-grit/train_preprocess.txt"
+      - "assets/nergrit_ner-grit/valid_preprocess.txt"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+
+  - name: train
+    help: "Train the pipeline"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/model-best"
+
+  # TODO fix for spancat
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python scripts/evaluate.py ./training/model-best ./corpus/dev.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --spans-key ${vars.spans_key}"
+    deps:
+      - "training/model-best"
+      - "corpus/dev.spacy"
+      - "scripts/evaluate.py"
+    outputs:
+      - "metrics/${vars.config}.json"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
+      - "rm -rf corpus/*"
