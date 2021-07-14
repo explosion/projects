@@ -35,13 +35,13 @@ commands:
   - name: preprocess
     help: "Convert the data to spaCy's format"
     script:
-      - "mkdir -p corpus/${vars.treebank}"
+      - "python utils/file.py mkdir corpus/${vars.treebank}"
       - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
       - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
       - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
-      - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
-      - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
-      - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
+      - "python utils/file.py mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
+      - "python utils/file.py mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
+      - "python utils/file.py mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
     deps:
       - "assets/${vars.treebank}/${vars.train_name}.conllu"
       - "assets/${vars.treebank}/${vars.dev_name}.conllu"
@@ -84,6 +84,6 @@ commands:
   - name: clean
     help: "Remove intermediate files"
     script:
-      - "rm -rf training/*"
-      - "rm -rf metrics/*"
-      - "rm -rf corpus/*"
+      - "python utils/file.py rm training/*"
+      - "python utils/file.py rm metrics/*"
+      - "python utils/file.py rm corpus/*"
