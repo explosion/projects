@@ -1,5 +1,5 @@
 title: "Detecting fashion brands in online comments (Named Entity Recognition)"
-description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks, with and without a model in the loop. For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)"
+description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
@@ -8,7 +8,10 @@ vars:
   train: "fashion_brands_training"
   dev: "fashion_brands_eval"
   patterns: "fashion_brands_patterns"
+
   eval_split: 0.2
+  # Change this variable if you want to use GPU (gpu_id: 0)
+  gpu_id: 0
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -34,8 +37,15 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
-    - preprocess
-    - train
+    - db-in
+    - data-to-spacy
+    - train_spacy
+    - evaluate
+
+  all_prodigy:
+    - db-in
+    - data-to-spacy
+    - train_prodigy
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -44,41 +54,38 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "db-in"
-    help: "Load train/dev data into prodigy"
+    help: "Load data into prodigy"
     script:
       - "python -m prodigy db-in ner_${vars.train} assets/${vars.train}.jsonl"
-      - "python -m prodigy db-in ner_/${vars.dev} assets/${vars.dev}.jsonl"
+      - "python -m prodigy db-in ner_${vars.dev} assets/${vars.dev}.jsonl"
     deps:
       - "assets/${vars.train}.jsonl"
       - "assets/${vars.dev}.jsonl"
-    outputs:
+
 
   - name: "data-to-spacy"
     help: "Convert data from prodigy to spaCy's binary format"
     script:
-      - "python -m prodigy data-to-spacy corpus/${vars.train}.spacy corpus/${vars.dev}.spacy --lang en --ner ner_${vars.train},ner_${vars.dev} --eval_split ${vars.eval_split}"
-
-    deps:
+      - "python -m prodigy data-to-spacy corpus/ --ner ner_${vars.train},ner_${vars.dev} --eval-split ${vars.eval_split}"
 
     outputs:
       - "corpus/${vars.train}.spacy"
       - "corpus/${vars.dev}.spacy"
 
   - name: "train_spacy"
-    help: "Train a named entity recognition model"
+    help: "Train a named entity recognition model with spaCy"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy"
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --gpu-id ${vars.gpu_id}"
     deps:
-      - "corpus/${vars.train}.spacy"
-      - "corpus/${vars.dev}.spacy"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
     outputs:
       - "training/model-best"
 
   - name: "train_prodigy"
     help: "Train a named entity recognition model with prodigy"
     script:
-      - "python -m prodigy train ner ner_${vars.train},ner_${vars.dev} blank:en --output training/ --eval_split ${vars.eval_split}"
-    deps:
+      - "python -m prodigy train training/ -c configs/config.cfg --ner ner_${vars.train},ner_${vars.dev} --eval-split ${vars.eval_split} --gpu-id ${vars.gpu_id}"
 
     outputs:
       - "training/model-best"

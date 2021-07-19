@@ -2,7 +2,7 @@
 
 # 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition)
 
-This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). For more details, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
+This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)
 
 ## 📋 project.yml
 
@@ -18,8 +18,10 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `preprocess` | Convert the data to spaCy's binary format |
-| `train` | Train a named entity recognition model |
+| `db-in` | Load data into prodigy |
+| `data-to-spacy` | Convert data from prodigy to spaCy's binary format |
+| `train_spacy` | Train a named entity recognition model with spaCy |
+| `train_prodigy` | Train a named entity recognition model with prodigy |
 | `evaluate` | Evaluate the model and export metrics |
 | `package` | Package the trained model so it can be installed |
 | `visualize-model` | Visualize the model's output interactively using Streamlit |
@@ -34,7 +36,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `preprocess` &rarr; `train` &rarr; `evaluate` |
+| `all` | `db-in` &rarr; `data-to-spacy` &rarr; `train_spacy` &rarr; `evaluate` |
+| `all_prodigy` | `db-in` &rarr; `data-to-spacy` &rarr; `train_prodigy` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
