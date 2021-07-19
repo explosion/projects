@@ -11,7 +11,7 @@ vars:
 
   eval_split: 0.2
   # Change this variable if you want to use GPU (gpu_id: 0)
-  gpu_id: 0
+  gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
