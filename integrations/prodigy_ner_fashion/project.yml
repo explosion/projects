@@ -1,4 +1,4 @@
-title: "Detecting fashion brands in online comments (Named Entity Recognition)"
+title: "Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌"
 description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -10,7 +10,7 @@ vars:
   patterns: "fashion_brands_patterns"
 
   eval_split: 0.2
-  # Change this variable if you want to use GPU (gpu_id: 0)
+  # Change this variable if you want to use the GPU (gpu_id: 0)
   gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
@@ -61,7 +61,6 @@ commands:
     deps:
       - "assets/${vars.train}.jsonl"
       - "assets/${vars.dev}.jsonl"
-
 
   - name: "data-to-spacy"
     help: "Convert data from prodigy to spaCy's binary format"

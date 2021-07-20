@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition)
+# 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌
 
 This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)
 
