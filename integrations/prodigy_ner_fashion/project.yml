@@ -1,36 +1,36 @@
 title: "Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌"
-description: "This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)"
+description: "This project shows how to integrate [Prodigy](https://prodi.gy) into your spaCy project template to automatically export annotations in spaCy's format and train your model on the collected annotations. Note that in order to run this template, you'll need to install Prodigy separately into your environment. The example in this project uses a separate step `db-in` to export the example annotations into your database, so you can easily run it end-to-end. In your own workflows, you can leave this out and access the given dataset you've annotated directly."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
   name: "ner_fashion"
   version: "0.0.0"
-  train: "fashion_brands_training"
-  dev: "fashion_brands_eval"
-  patterns: "fashion_brands_patterns"
-
-  eval_split: 0.2
   # Change this variable if you want to use the GPU (gpu_id: 0)
-  gpu_id: -1
+  gpu_id: 0
+
+  files:
+    train_file: "fashion_brands_training.jsonl"
+    eval_file: "fashion_brands_eval.jsonl"
+
+  prodigy:
+    train_dataset: "fashion_brands_training"
+    eval_dataset: "fashion_brands_eval"
+
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "configs", "scripts", "corpus", "packages"]
+directories: ["assets", "training", "configs", "corpus", "packages"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded. But the
 # 'project assets' command still lets you verify that the checksums match.
 assets:
-  - dest: "assets/${vars.train}.jsonl"
+  - dest: "assets/${vars.files.train_file}.jsonl"
     checksum: "63373dd656daa1fd3043ce166a59474c"
     description: "JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples)"
-  - dest: "assets/${vars.dev}.jsonl"
+  - dest: "assets/${vars.files.eval_file}.jsonl"
     checksum: "5113dc04e03f079525edd8df3f4f39e3"
     description: "JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples)"
-  # Patterns are not used for training but we distribute them for reference
-  - dest: "assets/${vars.patterns}.jsonl"
-    checksum: "4070316032ce36a01b7d1e8ecb387a8b"
-    description: "Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns)"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -40,13 +40,10 @@ workflows:
     - db-in
     - data-to-spacy
     - train_spacy
-    - evaluate
 
   all_prodigy:
     - db-in
-    - data-to-spacy
     - train_prodigy
-    - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -54,22 +51,22 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "db-in"
-    help: "Load data into prodigy"
+    help: "Load data into prodigy (only for example purposes)"
     script:
-      - "python -m prodigy db-in ner_${vars.train} assets/${vars.train}.jsonl"
-      - "python -m prodigy db-in ner_${vars.dev} assets/${vars.dev}.jsonl"
+      - "python -m prodigy db-in ${vars.prodigy.train_dataset} assets/${vars.files.train_file}"
+      - "python -m prodigy db-in ${vars.prodigy.eval_dataset} assets/${vars.files.eval_file}"
     deps:
-      - "assets/${vars.train}.jsonl"
-      - "assets/${vars.dev}.jsonl"
+      - "assets/${vars.files.train_file}"
+      - "assets/${vars.files.eval_file}"
 
   - name: "data-to-spacy"
-    help: "Convert data from prodigy to spaCy's binary format"
+    help: "Merge your annotations and create data in spaCy's binary format"
     script:
-      - "python -m prodigy data-to-spacy corpus/ --ner ner_${vars.train},ner_${vars.dev} --eval-split ${vars.eval_split}"
+      - "python -m prodigy data-to-spacy corpus/ --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset}"
 
     outputs:
-      - "corpus/${vars.train}.spacy"
-      - "corpus/${vars.dev}.spacy"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
 
   - name: "train_spacy"
     help: "Train a named entity recognition model with spaCy"
@@ -84,20 +81,15 @@ commands:
   - name: "train_prodigy"
     help: "Train a named entity recognition model with prodigy"
     script:
-      - "python -m prodigy train training/ -c configs/config.cfg --ner ner_${vars.train},ner_${vars.dev} --eval-split ${vars.eval_split} --gpu-id ${vars.gpu_id}"
+      - "python -m prodigy train training/ -c configs/${vars.config} --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --gpu-id ${vars.gpu_id}"
 
     outputs:
       - "training/model-best"
 
-  - name: "evaluate"
-    help: "Evaluate the model and export metrics"
+  - name: "train_curve"
+    help: "Train the model with prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance"
     script:
-      - "python -m spacy evaluate training/model-best corpus/${vars.dev}.spacy --output training/metrics.json"
-    deps:
-      - "corpus/${vars.dev}.spacy"
-      - "training/model-best"
-    outputs:
-      - "training/metrics.json"
+      - "python -m prodigy train-curve -c configs/${vars.config} --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --gpu-id ${vars.gpu_id} --show-plot"
 
   - name: package
     help: "Package the trained model so it can be installed"
@@ -108,19 +100,3 @@ commands:
     outputs_no_cache:
       - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
-  - name: visualize-model
-    help: Visualize the model's output interactively using Streamlit
-    script:
-      - "streamlit run scripts/visualize_model.py training/model-best \"I like Adidas shoes.\""
-    deps:
-      - "scripts/visualize_model.py"
-      - "training/model-best"
-
-  - name: "visualize-data"
-    help: "Explore the annotated data in an interactive Streamlit app"
-    script:
-      - "streamlit run scripts/visualize_data.py assets/${vars.train}.jsonl,assets/${vars.dev}.jsonl"
-    deps:
-      - "scripts/visualize_data.py"
-      - "assets/${vars.train}.jsonl"
-      - "assets/${vars.dev}.jsonl"

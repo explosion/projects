@@ -2,7 +2,7 @@
 
 # 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌
 
-This project uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect fashion brands in [Reddit comments](https://files.pushshift.io/reddit/comments/). Prodigy is a modern annotation tool for creating training data for machine learning models, developed by us. It integrates with spaCy out-of-the-box and provides many different annotation recipes for a variety of NLP tasks. For more details about the project, see [our blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation)
+This project shows how to integrate [Prodigy](https://prodi.gy) into your spaCy project template to automatically export annotations in spaCy's format and train your model on the collected annotations. Note that in order to run this template, you'll need to install Prodigy separately into your environment. The example in this project uses a separate step `db-in` to export the example annotations into your database, so you can easily run it end-to-end. In your own workflows, you can leave this out and access the given dataset you've annotated directly.
 
 ## 📋 project.yml
 
@@ -18,14 +18,12 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `db-in` | Load data into prodigy |
-| `data-to-spacy` | Convert data from prodigy to spaCy's binary format |
+| `db-in` | Load data into prodigy (only for example purposes) |
+| `data-to-spacy` | Merge your annotations and create data in spaCy's binary format |
 | `train_spacy` | Train a named entity recognition model with spaCy |
 | `train_prodigy` | Train a named entity recognition model with prodigy |
-| `evaluate` | Evaluate the model and export metrics |
+| `train_curve` | Train the model with prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance |
 | `package` | Package the trained model so it can be installed |
-| `visualize-model` | Visualize the model's output interactively using Streamlit |
-| `visualize-data` | Explore the annotated data in an interactive Streamlit app |
 
 ### ⏭ Workflows
 
@@ -36,8 +34,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `db-in` &rarr; `data-to-spacy` &rarr; `train_spacy` &rarr; `evaluate` |
-| `all_prodigy` | `db-in` &rarr; `data-to-spacy` &rarr; `train_prodigy` &rarr; `evaluate` |
+| `all` | `db-in` &rarr; `data-to-spacy` &rarr; `train_spacy` |
+| `all_prodigy` | `db-in` &rarr; `train_prodigy` |
 
 ### 🗂 Assets
 
@@ -47,9 +45,8 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/fashion_brands_training.jsonl`](assets/fashion_brands_training.jsonl) | Local | JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples) |
-| [`assets/fashion_brands_eval.jsonl`](assets/fashion_brands_eval.jsonl) | Local | JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples) |
-| [`assets/fashion_brands_patterns.jsonl`](assets/fashion_brands_patterns.jsonl) | Local | Patterns file generated with `sense2vec.teach` and used to pre-highlight during annotation (100 patterns) |
+| `assets/fashion_brands_training.jsonl.jsonl` | Local | JSONL-formatted training data exported from Prodigy, annotated with `FASHION_BRAND` entities (1235 examples) |
+| `assets/fashion_brands_eval.jsonl.jsonl` | Local | JSONL-formatted development data exported from Prodigy, annotated with `FASHION_BRAND` entities (500 examples) |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
