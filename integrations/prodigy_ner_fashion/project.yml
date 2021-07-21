@@ -6,7 +6,7 @@ vars:
   name: "ner_fashion"
   version: "0.0.0"
   # Change this variable if you want to use the GPU (gpu_id: 0)
-  gpu_id: 0
+  gpu_id: -1
 
   files:
     train_file: "fashion_brands_training.jsonl"
