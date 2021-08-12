@@ -6,7 +6,7 @@
 | --- | --- |
 | [`fastapi`](fastapi) | FastAPI integration |
 | [`huggingface_hub`](huggingface_hub) | Hugging Face Hub integration |
-| [`prodigy`](prodigy) | Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌 |
+| [`prodigy`](prodigy) | Prodigy annotation tool integration |
 | [`ray`](ray) | Ray integration |
 | [`streamlit`](streamlit) | Streamlit integration |
 | [`wandb`](wandb) | Weights & Biases integration |
