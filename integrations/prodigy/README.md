@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Detecting fashion brands in online comments (Named Entity Recognition) with Prodigy 🌌
+# 🪐 spaCy Project: Prodigy annotation tool integration
 
-This project shows how to integrate the [Prodigy](https://prodi.gy) annotation tool into your spaCy project template to automatically **export annotations** you've created nd **train your model** on the collected data. Note that in order to run this template, you'll need to install Prodigy separately into your environment. For details on how the data was created, check out this [project template](https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands) and [blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
+This project shows how to integrate the [Prodigy](https://prodi.gy) annotation tool (requires **v1.11+**) into your spaCy project template to automatically **export annotations** you've created and **train your model** on the collected data. Note that in order to run this template, you'll need to install Prodigy separately into your environment. For details on how the data was created, check out this [project template](https://github.com/explosion/projects/tree/v3/tutorials/ner_fashion_brands) and [blog post](https://explosion.ai/blog/sense2vec-reloaded#annotation).
 > ⚠️ **Important note:** The example in this project uses a separate step `db-in` to export the example annotations into your database, so you can easily run it end-to-end. In your own workflows, you can leave this out and access the given dataset you've annotated directly.
 
 ## 📋 project.yml
