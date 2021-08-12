@@ -9,9 +9,8 @@ start off by cloning a pre-defined project template, adjust it to fit your
 needs, load in your data, train a pipeline, export it as a Python package,
 upload your outputs to a remote storage and share your results with your team.
 
-> ⚠️ spaCy project templates require [**spaCy v3.0**](https://spacy.io). You can
-> install it from pip with `pip install spacy` or conda with `conda install
-> spacy -c conda-forge`. Make sure to use a fresh virtual environment.
+> ⚠️ spaCy project templates require [**spaCy v3**](https://spacy.io). You can
+> install it from pip with `pip install spacy` or conda with `conda install spacy -c conda-forge`. Make sure to use a fresh virtual environment.
 >
 > See the [`master` branch](https://github.com/explosion/projects/tree/master)
 > for the previous version of this repo.
@@ -63,8 +62,8 @@ more about a command, add `--help`. For detailed instructions, see the
 To keep the project templates and their documentation up to date, this repo
 contains several scripts:
 
-| Script                                                       | Description                                                                                                                                                                                                                       |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Script                                                       | Description                                                                                                                                                                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`update_docs.py`](.github/update_docs.py)                   | Update all auto-generated docs in the given root. Calls into [`spacy project document`](https://spacy.io/api/cli#project-document) and only replaces the auto-generated sections, not any custom content before or after. |
-| [`update_category_docs.py`](.github/update_category_docs.py) | Update the auto-generated `README.md` in the category directories listing the available project templates.                                                                                                                        |
+| [`update_category_docs.py`](.github/update_category_docs.py) | Update the auto-generated `README.md` in the category directories listing the available project templates.                                                                                                                |
 | [`update_configs.py`](.github/update_configs.py)             | Update and auto-fill all `config.cfg` files included in the repo, similar to [`spacy init fill-config`](https://spacy.io/api/cli#init-fill-config). Can be used to keep the configs up to date with changes in spaCy.     |
