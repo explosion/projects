@@ -49,7 +49,7 @@ in the project directory.
 | `assets/dev.tsv` | URL | The development data |
 | `assets/test.tsv` | URL | The test data |
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove!) -->
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 ## Usage
 
