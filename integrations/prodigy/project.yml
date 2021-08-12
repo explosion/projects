@@ -81,17 +81,17 @@ commands:
       - "training/model-best"
 
   - name: "train_prodigy"
-    help: "Train a named entity recognition model with prodigy"
+    help: "Train a named entity recognition model with Prodigy"
     script:
-      - "python -m prodigy train training/ -c configs/${vars.config} --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --gpu-id ${vars.gpu_id}"
+      - "python -m prodigy train training/ --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --config configs/${vars.config} --gpu-id ${vars.gpu_id}"
 
     outputs:
       - "training/model-best"
 
   - name: "train_curve"
-    help: "Train the model with prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance"
+    help: "Train the model with Prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance"
     script:
-      - "python -m prodigy train-curve -c configs/${vars.config} --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --gpu-id ${vars.gpu_id} --show-plot"
+      - "python -m prodigy train-curve --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --config configs/${vars.config} --gpu-id ${vars.gpu_id} --show-plot"
 
   - name: package
     help: "Package the trained model so it can be installed"

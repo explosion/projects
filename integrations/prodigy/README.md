@@ -22,8 +22,8 @@ Commands are only re-run if their inputs have changed.
 | `db-in` | Load data into prodigy (only for example purposes) |
 | `data-to-spacy` | Merge your annotations and create data in spaCy's binary format |
 | `train_spacy` | Train a named entity recognition model with spaCy |
-| `train_prodigy` | Train a named entity recognition model with prodigy |
-| `train_curve` | Train the model with prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance |
+| `train_prodigy` | Train a named entity recognition model with Prodigy |
+| `train_curve` | Train the model with Prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance |
 | `package` | Package the trained model so it can be installed |
 
 ### ⏭ Workflows
