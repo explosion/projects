@@ -130,8 +130,8 @@ models from the tagger and NER. This requires three changes to the config.
 
 ### Using embeddings from a spaCy package
 
-First, download an existing trained pipeline with word vectors. 
-The word vectors of this model can then be specified in `paths.vectors` 
+First, download an existing trained pipeline with word vectors.
+The word vectors of this model can then be specified in `paths.vectors`
 or `initialize.vectors`.
 
 ```bash
@@ -148,8 +148,8 @@ Uncomment the asset in your [`project.yml`](project.yml):
 
 ```yaml
 assets:
-  - dest: 'assets/vectors.zip'
-    url: 'https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip'
+  - dest: "assets/vectors.zip"
+    url: "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip"
 ```
 
 Then download the asset and run the `init-vectors` command:
