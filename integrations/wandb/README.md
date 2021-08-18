@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Weights & Biases integration
+# 🪐 spaCy Project: Weights & Biases integration with W&B Sweeps
 
-Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments. This project template uses the IMDB Movie Review Dataset and includes two workflows: `log` for training a simple text classification model and logging the results to Weights & Biases (works out-of-the-box and only requires the `[training.logger]` to be set in the config) and `parameter-search` for programmatically creating variants of the config for a simple hyperparameter grid search, running the experiments and logging the results.
+Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments. This project template uses the IMDB Movie Review Dataset and includes two workflows: `log` for training a simple text classification model and logging the results to Weights & Biases (works out-of-the-box and only requires the `[training.logger]` to be set in the config) and `parameter-search` for running a hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps), running the experiments and logging the results.
 
 ## 📋 project.yml
 
@@ -21,9 +21,8 @@ Commands are only re-run if their inputs have changed.
 | `install` | Install dependencies and log in to Weights & Biases |
 | `data` | Extract the gold-standard annotations |
 | `train` | Train a model using the default config |
-| `configs-search` | Create variations of the initial, default file for IMDB sentiment classification using different combinations of hyperparameters |
-| `train-search` | Run customized training runs for hyperparameter search using the created configs |
-| `clean` | Remove intermediate files to start config preparation and training from a clean slate. |
+| `train-search` | Run customized training runs for hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps) |
+| `clean` | Remove intermediate files. |
 
 ### ⏭ Workflows
 
@@ -35,7 +34,7 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `log` | `data` &rarr; `train` |
-| `parameter-search` | `data` &rarr; `configs-search` &rarr; `train-search` |
+| `parameter-search` | `data` &rarr; `train-search` |
 
 ### 🗂 Assets
 

@@ -1,0 +1,28 @@
+method: bayes
+metric:
+  goal: maximize
+  name: cats_macro_auc
+command:
+  - ${env}
+  - ${interpreter}
+  - ./scripts/sweep_using_config.py
+  - "configs/default_config.cfg"
+parameters:
+  components.textcat.model.conv_depth:
+    values:
+    - 2
+    - 3
+    - 4
+  components.textcat.model.ngram_size:
+    values:
+    - 1
+    - 2
+    - 3
+  training.dropout:
+    distribution: uniform
+    max: 0.5
+    min: 0.05
+  training.optimizer.learn_rate:
+    distribution: uniform
+    max: 0.01
+    min: 0.001
