@@ -1,5 +1,5 @@
 title: "Weights & Biases integration"
-description: "Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments. This project template uses the IMDB Movie Review Dataset and includes two workflows: `log` for training a simple text classification model and logging the results to Weights & Biases (works out-of-the-box and only requires the `[training.logger]` to be set in the config) and `parameter-search` for programmatically creating variants of the config for a simple hyperparameter grid search, running the experiments and logging the results."
+description: "Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments. This project template uses the IMDB Movie Review Dataset and includes two workflows: `log` for training a simple text classification model and logging the results to Weights & Biases (works out-of-the-box and only requires the `[training.logger]` to be set in the config) and `parameter-search` for running a hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps), running the experiments and logging the results."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -23,7 +23,6 @@ workflows:
 
   parameter-search:
     - data
-    - configs-search
     - train-search
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -54,27 +53,17 @@ commands:
     script:
       - "python -m spacy train configs/${vars.default_config} --output training/"
 
-  - name: "configs-search"
-    help: "Create variations of the initial, default file for IMDB sentiment classification using different combinations of hyperparameters"
-    script:
-      - "mkdir -p configs/search"
-      - "python ./scripts/customize_configs.py configs/search configs/${vars.default_config}"
-    deps:
-      - "scripts/customize_configs.py"
-      - "configs/${vars.default_config}"
-
   - name: "train-search"
-    help: "Run customized training runs for hyperparameter search using the created configs"
+    help: "Run customized training runs for hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps)"
     script:
-      - "python ./scripts/run_configs.py configs/search training/"
+      - "python ./scripts/sweeps_using_code.py configs/${vars.default_config} training/"
     deps:
       - "assets/aclImdb/train/"
       - "assets/aclImdb/test/"
       - "configs/"
 
   - name: "clean"
-    help: "Remove intermediate files to start config preparation and training from a clean slate."
+    help: "Remove intermediate files."
     script:
-      - "rm -rf configs/search/*"
       - "rm -rf training/*"
       - "rm -rf wandb/*"
