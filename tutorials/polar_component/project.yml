@@ -1,0 +1,31 @@
+title: "Example project of creating a novel stateful nlp component to score docs on semantic poles."
+description: "This project shows how to implement a simple stateful component, and uses it to do semantic classification."
+
+vars:
+  reviews: "assets/imdb.csv"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "assets"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+    - dest: ${vars.reviews}
+      description: "IMDB Review Corpus"
+
+workflows:
+  all:
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "evaluate"
+    help: "Check output on sample data"
+    script:
+      - "python ./scripts/evaluate.py"
+    deps:
+      - ${vars.reviews}
