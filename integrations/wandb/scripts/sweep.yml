@@ -5,8 +5,9 @@ metric:
 command:
   - ${env}
   - ${interpreter}
-  - ./scripts/sweep_using_config.py
-  - "configs/default_config.cfg"
+  - scripts/sweeps_using_config.py
+  - ./configs/default_config.cfg
+  - ./training
 parameters:
   components.textcat.model.conv_depth:
     values:
