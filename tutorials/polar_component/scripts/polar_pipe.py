@@ -62,6 +62,20 @@ class PolarEmbeddings(Pipe):
         self.axes = []
         self.cfg = {}
 
+    def get_average_neighbors(self, query, nn=150):
+        """Given a query vector, return the average of the nearest vecs.
+
+        Used to calculate pole vectors."""
+        # Note that in spaCy pipelines for many languages vectors include case
+        # variations, so nn should be larger than in the reference paper
+        seed = self.nlp.vocab[query].vector
+        vectors = self.nlp.vocab.vectors
+        qarray = self.ops.asarray2f([seed])
+        keys, best_rows, scores = vectors.most_similar(qarray, n=nn)
+        targets = vectors.data[best_rows].squeeze()
+
+        return self.ops.xp.mean(targets, axis=0)
+
     def add_axis(self, neg: str, pos: str) -> None:
         """Add a new pole to the pipe. Pass the negative word first."""
 
@@ -72,9 +86,8 @@ class PolarEmbeddings(Pipe):
         if not self.nlp.vocab.has_vector(pos):
             raise KeyError(notfound.format(pos))
 
-        # TODO: in practice this should use the mean of the k nearest terms
-        pv = self.nlp.vocab[pos].vector
-        nv = self.nlp.vocab[neg].vector
+        pv = self.get_average_neighbors(pos)
+        nv = self.get_average_neighbors(neg)
         self.axes.append(Axis(neg, pos, pv - nv))
         self._update_axes_matrix()
 
