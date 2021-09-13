@@ -56,7 +56,7 @@ def check_axes(nlp, nn=3):
             doc = docs[(ii + 1) * -1]
             print(format_review(doc.text))
             print()
-        print("=====")
+        print("=" * 70)
 
 
 def main():
