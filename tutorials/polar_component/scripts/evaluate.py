@@ -21,7 +21,6 @@ def create_polar_pipeline():
     return nlp
 
 def format_review(text, truncate=3):
-    #text = "    " + text # indent
     lines = textwrap.wrap(text)
     return '\n'.join(lines[:truncate])
 

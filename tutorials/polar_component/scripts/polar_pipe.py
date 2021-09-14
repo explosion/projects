@@ -42,7 +42,7 @@ def make_polar_embeddings(
 class PolarEmbeddings(Pipe):
     """PolarEmbeddings let you turn normal word embeddings into embeddings
     oriented along axes of meaning, preserving the overall distance of the
-    original embeddings while given dimensions semantic meaning.
+    original embeddings while giving dimensions semantic meaning.
     """
 
     def __init__(
