@@ -28,7 +28,7 @@ def check_axes(nlp, nn=3):
     """Given a pipeline with a polar component, check the IMDB dataset."""
     docs = []
 
-    with open("assets/imdb.csv") as csvfile:
+    with open("assets/IMDB Dataset.csv") as csvfile:
         reader = csv.reader(csvfile)
         next(reader)
         for row in reader:
