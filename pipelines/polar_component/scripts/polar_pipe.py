@@ -27,7 +27,7 @@ class Axis:
     "polar",
     requires=["doc.vector"],
     default_config={},
-    default_score_weights={},  # ???
+    default_score_weights={},
 )
 def make_polar_embeddings(
     nlp: Language,
