@@ -1,0 +1,50 @@
+title: "Polar Component"
+description: |
+  This example project shows how to implement a simple stateful component to
+  score docs on semantic poles.
+
+  The method here is based on SemAxis from [An et al
+  2018](https://arxiv.org/abs/1806.05521). The basic idea is that given a set
+  of word vectors and some seed poles, like "bad-good", it's possible to
+  calculate reference vectors. The distance of document vectors from those
+  reference vectors is like a sentiment or polar score of the document. While
+  not as sophisticated as a trained model, it's easy to test with existing data.
+
+  If you use enough poles, you can use the scores as semantic vectors that can
+  make downstream tasks explainable. This is explored in the SemAxis paper as
+  well as [Mathew et al 2020](https://arxiv.org/abs/2001.09876), "The Polar
+  Framework". (Incorporating semantic vectors as features in a spaCy model is
+  left as an exercise for the reader.) 
+
+  **Note:** Because the data is hosted on Kaggle, it can't be automatically
+  downloaded by `spacy project assets`, so you'll have to download it yourself.
+  See [the assets section of this README](#assets) for the link.
+
+vars:
+  reviews: "assets/IMDB Dataset.csv"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["scripts", "assets"]
+
+# Assets that should be downloaded or available in the directory. You can replace
+# this with your own input data.
+assets:
+    - dest: ${vars.reviews}
+      description: "IMDB Review Corpus. Download from [Kaggle](https://www.kaggle.com/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)."
+
+workflows:
+  all:
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "evaluate"
+    help: "Check output on sample data"
+    script:
+      - "python ./scripts/evaluate.py"
+    deps:
+      - ${vars.reviews}
