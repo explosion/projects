@@ -1,0 +1,10 @@
+# NLP
+spacy>=3.1
+# Data augmentation
+textacy
+skweak
+nlpaug
+# Auxiliary libraries
+typer
+wasabi
+tqdm
