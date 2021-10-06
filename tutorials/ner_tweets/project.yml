@@ -1,0 +1,26 @@
+title: "Detecting people entities in tweets (Named Entity Recognition)"
+description: |
+  This project demonstrates how to improve spaCy's pretrained models by
+  augmenting the data and adapting it to a different domain.
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config.cfg"
+  name: "ner_tweets"
+  version: "0.0.0"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/raw.txt"
+    url: "https://github.com/cardiffnlp/tweeteval/blob/main/datasets/sentiment/train_text.txt"
+    description: "The raw dataset to perform our first-pass NER"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
