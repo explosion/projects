@@ -17,10 +17,16 @@ directories: ["assets"]
 # them with the project, so they won't have to be downloaded. But the
 # 'project assets' command still lets you verify that the checksums match.
 assets:
-  - dest: "assets/raw.txt"
-    url: "https://github.com/cardiffnlp/tweeteval/blob/main/datasets/sentiment/train_text.txt"
-    description: "The raw dataset to perform our first-pass NER"
+  - dest: "assets/train.txt"
+    description: "The training dataset to augment. Later we'll divide this further to create a dev set"
+  - dest: "assets/test.txt"
+    description: "The held-out test dataset to evaluate our output against."
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
+commands:
+  - name: "preprocess"
+    help: "Convert raw text data into spaCy's preferred formats"
+    script:
+      - "python scripts/preprocess.py prepare-datasets"
