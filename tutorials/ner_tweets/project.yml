@@ -11,15 +11,15 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets"]
+directories: ["assets", "corpus", "scripts", "metrics"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded. But the
 # 'project assets' command still lets you verify that the checksums match.
 assets:
-  - dest: "assets/train.txt"
+  - dest: "assets/train_initial.jsonl"
     description: "The training dataset to augment. Later we'll divide this further to create a dev set"
-  - dest: "assets/test.txt"
+  - dest: "assets/test.jsonl"
     description: "The held-out test dataset to evaluate our output against."
 
 # Workflows are sequences of commands (see below) executed in order. You can
@@ -31,3 +31,7 @@ commands:
     script:
       - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
       - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"
+  - name: "evaluate"
+    help: "Evaluate various experiments and export the computed metrics"
+    script: 
+      - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
