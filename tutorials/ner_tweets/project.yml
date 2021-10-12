@@ -27,6 +27,7 @@ assets:
 # haven't changed, it won't be re-run.
 commands:
   - name: "preprocess"
-    help: "Convert raw text data into spaCy's preferred formats"
+    help: "Convert raw inputs into spaCy's preferred formats"
     script:
-      - "python scripts/preprocess.py prepare-datasets"
+      - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
+      - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"
