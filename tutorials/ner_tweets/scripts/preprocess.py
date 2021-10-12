@@ -14,7 +14,12 @@ def main(
     output_path: Path = typer.Argument(..., dir_okay=False),
     text_only: bool = False,
 ):
-    """Preprocess JSONL files into the .spacy filetype"""
+    """Preprocess JSONL files into the .spacy filetype
+
+    input_path (Path): path to the JSONL file
+    output_path (Path): output path once saved to the spaCy format
+    text_only (bool): if True, then just saves text without other info
+    """
     nlp = spacy.blank("en")
     doc_bin = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])  # we're just concerned with NER
 
