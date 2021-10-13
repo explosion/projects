@@ -39,7 +39,6 @@ class UnifiedNERAnnotator(CombinedAnnotator):
             self.add_annotator(ModelAnnotator(name=name, model_path=model))
             msg.good(f"Added model annotator: {model}")
         self._show_number_of_annotators()
-        return self
 
     def add_gazetteer_annotators(self, sources: Dict = GAZTR_ANNOTATORS):
         """Add annotators based on list of entities / words"""
@@ -50,7 +49,6 @@ class UnifiedNERAnnotator(CombinedAnnotator):
             self.add_annotator(GazetteerAnnotator(name + "_cased", tries, True))
             msg.good(f"Added gazetteer from source: {source}")
         self._show_number_of_annotators()
-        return self
 
     def add_heuristic_annotators(self):
         """Add annotators based on business rules and common heuristics"""
@@ -85,13 +83,11 @@ class UnifiedNERAnnotator(CombinedAnnotator):
         )
 
         self._show_number_of_annotators()
-        return self
 
     def add_standardizer(self):
         self.add_annotator(Standardizer())
         msg.good("Added Standardizer")
         self._show_number_of_annotators()
-        return self
 
     def _show_number_of_annotators(self):
         msg.text(f"Current number of annotators: {len(self.annotators)}")
