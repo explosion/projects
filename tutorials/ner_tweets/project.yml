@@ -31,11 +31,33 @@ commands:
     script:
       - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
       - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"
+    deps:
+      - "assets/train_initial.jsonl"
+      - "assets/test.jsonl"
+    outputs:
+      - "corpus/train_initial.spacy"
+      - "corpus/test.spacy"
   - name: "augment"
     help: "Augment an input dataset then split it into training and evaluation datasets"
     script:
       - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
+    deps:
+      - "assets/train_initial.spacy"
+    outputs:
+      - "corpus/train_aug.spacy"
+      - "corpus/eval_aug.spacy"
+      - "assets/hmm.pkl"
+  - name: "train"
+    help: "Train a named entity recognition model"
+    script:
+      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+    deps:
+      - "corpus/train_aug.spacy"
+      - "corpus/eval_aug.spacy"
   - name: "evaluate"
     help: "Evaluate various experiments and export the computed metrics"
     script: 
       - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
+    deps:
+      - "corpus/test.spacy"
+      - "training/model-best"
