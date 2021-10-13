@@ -5,6 +5,7 @@ import spacy
 import typer
 from sklearn.model_selection import train_test_split
 from skweak.aggregation import HMM
+from skweak.utils import docbin_writer
 from spacy.tokens import Doc, DocBin
 from wasabi import msg
 
@@ -34,34 +35,43 @@ def main(
     # Perform data augmentation
     if weak_supervision:
         msg.info("Performing weak supervision...")
-        docs = augment_with_weak_supervision(docs, model_output_path)
+        docs = augment_weak_supervision(docs, model_output_path)
 
     # Split the dataset based on ratio
     train_data, eval_data = train_test_split(docs, train_size=train_size)
 
     # Save training and eval datasets
-    db_train = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
-    for doc in train_data:
-        db_train.add(doc)
-    db_train.to_disk(training_output_path)
-    msg.good(f"Saved train data to disk! (size={len(train_data)})")
-
-    db_dev = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
-    for doc in eval_data:
-        db_dev.add(doc)
-    db_dev.to_disk(eval_output_path)
-    msg.good(f"Saved eval data to disk! (size={len(eval_data)})")
+    serialize_docs(train_data, training_output_path)
+    serialize_docs(eval_data, eval_output_path)
 
 
-def augment_with_weak_supervision(
-    docs: List[Doc], model_output_path: Path
-) -> List[Doc]:
-    """Perform augmentation via weak supervision"""
-    unified_annotator = UnifiedNERAnnotator()
-    unified_annotator.add_all_annotators()
+def serialize_docs(docs: List[Doc], output_path: Path, span_name: str = "hmm"):
+    """Serialize the annotated documents into the spaCy format
+
+    docs (List[Doc]): list of Doc to serialize
+    output_path (Path): path to save the serialized dataset
+    span_name (str): name of the span to include as entities
+    """
+    for doc in docs:
+        doc.ents = doc.spans[span_name]
+    docbin_writer(docs, str(output_path))
+    msg.good(f"Saved data to disk! (size={len(docs)})")
+
+
+def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[Doc]:
+    """Perform augmentation via weak supervision
+
+    This step first collates all the labelling functions found in UnifiedNERAnnotator,
+    then trains a hidden-markov model to estimate a unified annotator.
+
+    docs (List[Doc]): list of Doc to augment
+    model_output_path (Path): path to save the Hidden Markov model
+    """
+    unified_annotator = UnifiedNERAnnotator().add_all_annotators()
+    msg.info(f"Total number of annotators: {len(unified_annotator.annotators)}")
     # Annotate our training set using all annotators
     msg.text("Labelling dataset with all annotators...")
-    docs_annotated = unified_annotator.pipe(docs)
+    docs_annotated = list(unified_annotator.pipe(docs))
     # Fit a hidden markov model based on the outputs
     msg.text("Fitting a hidden markov model...")
     label_model = HMM("hmm", ["PERSON"])
@@ -70,7 +80,8 @@ def augment_with_weak_supervision(
     label_model.save(model_output_path)
     msg.good(f"Model saved to {model_output_path}")
     # Annotate again using the learned model
-    return list(label_model.pipe(docs))
+    docs_annotated_hmm = list(label_model.pipe(docs))
+    return docs_annotated_hmm_
 
 
 if __name__ == "__main__":

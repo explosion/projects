@@ -31,6 +31,7 @@ class UnifiedNERAnnotator(CombinedAnnotator):
         self.add_gazetteer_annotators()
         self.add_heuristic_annotators()
         self.add_standardizer()
+        return self
 
     def add_model_annotators(self, models: Dict = MODEL_ANNOTATORS):
         """Add annotators based on statistical models"""
@@ -38,6 +39,7 @@ class UnifiedNERAnnotator(CombinedAnnotator):
             self.add_annotator(ModelAnnotator(name=name, model_path=model))
             msg.good(f"Added model annotator: {model}")
         self._show_number_of_annotators()
+        return self
 
     def add_gazetteer_annotators(self, sources: Dict = GAZTR_ANNOTATORS):
         """Add annotators based on list of entities / words"""
@@ -48,6 +50,7 @@ class UnifiedNERAnnotator(CombinedAnnotator):
             self.add_annotator(GazetteerAnnotator(name + "_cased", tries, True))
             msg.good(f"Added gazetteer from source: {source}")
         self._show_number_of_annotators()
+        return self
 
     def add_heuristic_annotators(self):
         """Add annotators based on business rules and common heuristics"""
@@ -69,7 +72,7 @@ class UnifiedNERAnnotator(CombinedAnnotator):
             annotator.add_gap_tokens(["'s'", "-"])
             proper_names_annotator.add_annotator(annotator)
         self.add_annotator(proper_names_annotator)
-        msg.good(f"Added proper names annotator")
+        msg.good("Added proper names annotator")
 
         # Add fullname detector
         self.add_annotator(
@@ -82,11 +85,13 @@ class UnifiedNERAnnotator(CombinedAnnotator):
         )
 
         self._show_number_of_annotators()
+        return self
 
     def add_standardizer(self):
         self.add_annotator(Standardizer())
-        msg.good(f"Added Standardizer")
+        msg.good("Added Standardizer")
         self._show_number_of_annotators()
+        return self
 
     def _show_number_of_annotators(self):
         msg.text(f"Current number of annotators: {len(self.annotators)}")
@@ -127,7 +132,7 @@ class Standardizer(SpanAnnotator):
                 if "\n" in span.text:
                     continue
                 elif span.label_ == "PER":
-                    new_spans.append(Span(doc, span.start, span.end, label="PER"))
+                    new_spans.append(Span(doc, span.start, span.end, label="PERSON"))
                 elif span.label_ in ["ORGANIZATION", "ORGANISATION", "COMPANY"]:
                     new_spans.append(Span(doc, span.start, span.end, label="ORG"))
                 elif span.label_ in ["GPE"]:
