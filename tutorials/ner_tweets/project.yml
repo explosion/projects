@@ -42,7 +42,7 @@ commands:
     script:
       - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
     deps:
-      - "assets/train_initial.spacy"
+      - "corpus/train_initial.spacy"
     outputs:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
