@@ -4,9 +4,9 @@ from typing import List
 import spacy
 import typer
 from sklearn.model_selection import train_test_split
-from wasabi import msg
 from skweak.aggregation import HMM
 from spacy.tokens import Doc, DocBin
+from wasabi import msg
 
 from .weak_supervision import UnifiedNERAnnotator
 
@@ -40,10 +40,15 @@ def main(
     train_data, eval_data = train_test_split(docs, train_size=train_size)
 
     # Save training and eval datasets
-    db_train = DocBin(train_data)
+    db_train = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
+    for doc in train_data:
+        db_train.add(doc)
     db_train.to_disk(training_output_path)
     msg.good(f"Saved train data to disk! (size={len(train_data)})")
-    db_dev = DocBin(eval_data)
+
+    db_dev = DocBin(attrs=["ENT_IOB", "ENT_TYPE"])
+    for doc in eval_data:
+        db_dev.add(doc)
     db_dev.to_disk(eval_output_path)
     msg.good(f"Saved eval data to disk! (size={len(eval_data)})")
 

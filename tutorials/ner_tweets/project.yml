@@ -31,6 +31,10 @@ commands:
     script:
       - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
       - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"
+  - name: "augment"
+    help: "Augment an input dataset then split it into training and evaluation datasets"
+    script:
+      - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
   - name: "evaluate"
     help: "Evaluate various experiments and export the computed metrics"
     script: 
