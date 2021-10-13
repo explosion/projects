@@ -50,7 +50,7 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train ${vars.config} --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
