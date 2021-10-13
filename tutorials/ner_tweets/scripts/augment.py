@@ -53,7 +53,10 @@ def serialize_docs(docs: List[Doc], output_path: Path, span_name: str = "hmm"):
     span_name (str): name of the span to include as entities
     """
     for doc in docs:
-        doc.ents = doc.spans[span_name]
+        try:
+            doc.ents = doc.spans[span_name]
+        except KeyError:
+            pass
     docbin_writer(docs, str(output_path))
     msg.good(f"Saved data to disk! (size={len(docs)})")
 
@@ -81,7 +84,7 @@ def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[D
     msg.good(f"Model saved to {model_output_path}")
     # Annotate again using the learned model
     docs_annotated_hmm = list(label_model.pipe(docs))
-    return docs_annotated_hmm_
+    return docs_annotated_hmm
 
 
 if __name__ == "__main__":
