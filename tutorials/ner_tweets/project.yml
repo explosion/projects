@@ -50,7 +50,7 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train ${vars.config} --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train ${vars.config} --initialize.vectors en_core_web_lg --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
@@ -58,6 +58,7 @@ commands:
     help: "Evaluate various experiments and export the computed metrics"
     script: 
       - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
+      - "python -m spacy evaluate training/model-best corpus/test.spacy --output metrics/model_aug.json"
     deps:
       - "corpus/test.spacy"
       - "training/model-best"
