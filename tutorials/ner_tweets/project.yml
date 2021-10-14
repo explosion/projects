@@ -39,6 +39,12 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
+  all:
+    - preprocess
+    - decompress
+    - augment
+    - train
+    - evaluate
   setup:
     - preprocess
     - decompress
@@ -77,7 +83,7 @@ commands:
     outputs:
       - "assets/crunchbase.json"
       - "assets/wikidata_tokenised.json"
-      - "assets/btc/"
+      - "assets/data/btc/"
 
   - name: "augment"
     help: "Augment an input dataset then split it into training and evaluation datasets"
@@ -85,6 +91,10 @@ commands:
       - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
     deps:
       - "corpus/train_initial.spacy"
+      - "assets/crunchbase.json"
+      - "assets/wikidata_tokenised.json"
+      - "assets/first_names.json"
+      - "assets/data/btc/"
     outputs:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
@@ -108,3 +118,6 @@ commands:
     deps:
       - "corpus/test.spacy"
       - "training/model-best"
+    outputs:
+      - "metrics/baseline.json"
+      - "metrics/model_aug.json"
