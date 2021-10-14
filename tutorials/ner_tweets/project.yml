@@ -21,10 +21,36 @@ assets:
     description: "The training dataset to augment. Later we'll divide this further to create a dev set"
   - dest: "assets/test.jsonl"
     description: "The held-out test dataset to evaluate our output against."
+  - dest: "assets/btc.tar.gz"
+    description: "A model trained on the Broad Twitter Corpus to help in annotation (63.7 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/btc.tar.gz"
+  - dest: "assets/crunchbase.json.gz"
+    description: "A list of crunchbase entities to aid the gazetteer annotator (8.56 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/crunchbase.json.gz"
+  - dest: "assets/wikidata_tokenised.json.gz"
+    description: "A list of wikipedia entities to aid the gazetteer annotator (21.1 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/wikidata_tokenised.json.gz"
+  - dest: "assets/first_names.json"
+    description: "A list of first names to help our heuristic annotator"
+    url: "https://raw.githubusercontent.com/NorskRegnesentral/skweak/main/data/first_names.json"
+    
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
+workflows:
+  setup:
+    - preprocess
+    - decompress
+  finetune:
+    - augment
+    - train
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "preprocess"
     help: "Convert raw inputs into spaCy's preferred formats"
@@ -37,6 +63,21 @@ commands:
     outputs:
       - "corpus/train_initial.spacy"
       - "corpus/test.spacy"
+
+  - name: "decompress"
+    help: "Decompress relevant assets that will be used latter by our weak supervision model"
+    script:
+      - "python scripts/decompress.py assets/crunchbase.json.gz assets/crunchbase.json"
+      - "python scripts/decompress.py assets/wikidata_tokenised.json.gz assets/wikidata_tokenised.json"
+      - "python scripts/decompress.py assets/btc.tar.gz assets/"
+    deps:
+      - "assets/crunchbase.json.gz"
+      - "assets/wikidata_tokenised.json.gz"
+      - "assets/btc.tar.gz"
+    outputs:
+      - "assets/crunchbase.json"
+      - "assets/wikidata_tokenised.json"
+      - "assets/btc/"
 
   - name: "augment"
     help: "Augment an input dataset then split it into training and evaluation datasets"
