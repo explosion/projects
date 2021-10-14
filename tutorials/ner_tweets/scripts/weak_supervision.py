@@ -23,7 +23,10 @@ class UnifiedNERAnnotator(CombinedAnnotator):
     """An annotator that combines all labelling functions we have"""
 
     MODEL_ANNOTATORS = {"en_core_web_lg": "en_core_web_lg", "btc": BTC_MODEL_PATH}
-    GAZTR_ANNOTATORS = {"wikidata": WIKIDATA_PATH, "crunchbase": CRUNCHBASE_PATH}
+    GAZTR_ANNOTATORS = {
+        # "wikidata": WIKIDATA_PATH,
+        "crunchbase": CRUNCHBASE_PATH
+    }
 
     def add_all_annotators(self):
         """Add all previously defined annotators"""
