@@ -1,5 +1,7 @@
 # spaCy project
 training/
+corpus/
+metrics/
 
 
 # Byte-compiled / optimized / DLL files
