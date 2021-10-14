@@ -5,3 +5,4 @@ metrics/
 assets/
 !assets/train_initial.jsonl
 !assets/test.jsonl
+*.ipynb
