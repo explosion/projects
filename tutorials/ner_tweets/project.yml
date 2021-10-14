@@ -1,7 +1,7 @@
 title: "Detecting people entities in tweets (Named Entity Recognition)"
 description: |
   This project demonstrates how to improve spaCy's pretrained models by
-  augmenting the data and adapting it to a different domain.
+  augmenting the training data and adapting it to a different domain.
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -37,6 +37,7 @@ commands:
     outputs:
       - "corpus/train_initial.spacy"
       - "corpus/test.spacy"
+
   - name: "augment"
     help: "Augment an input dataset then split it into training and evaluation datasets"
     script:
@@ -47,6 +48,7 @@ commands:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
       - "assets/hmm.pkl"
+
   - name: "train"
     help: "Train a named entity recognition model"
     script:
@@ -54,6 +56,9 @@ commands:
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
+    outputs:
+      - "training/model-best"
+
   - name: "evaluate"
     help: "Evaluate various experiments and export the computed metrics"
     script: 
