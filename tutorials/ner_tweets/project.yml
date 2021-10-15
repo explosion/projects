@@ -121,3 +121,13 @@ commands:
     outputs:
       - "metrics/baseline.json"
       - "metrics/model_aug.json"
+
+  - name: "package"
+    help: "Package the trained model so it can be installed"
+    script: 
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
