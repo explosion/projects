@@ -103,7 +103,7 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train ${vars.config} --initialize.vectors en_core_web_lg --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
