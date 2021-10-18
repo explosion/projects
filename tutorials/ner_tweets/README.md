@@ -22,9 +22,11 @@ Commands are only re-run if their inputs have changed.
 | --- | --- |
 | `preprocess` | Convert raw inputs into spaCy's preferred formats |
 | `decompress` | Decompress relevant assets that will be used latter by our weak supervision model |
-| `augment` | Augment an input dataset then split it into training and evaluation datasets |
+| `augment` | Augment an input dataset via weak supervision then split it into training and evaluation datasets |
 | `train` | Train a named entity recognition model |
+| `train-with-augmenter` | Train a named entity recognition model with a spaCy built-in augmenter |
 | `evaluate` | Evaluate various experiments and export the computed metrics |
+| `package` | Package the trained model so it can be installed |
 
 ### ⏭ Workflows
 
@@ -53,5 +55,6 @@ in the project directory.
 | `assets/crunchbase.json.gz` | URL | A list of crunchbase entities to aid the gazetteer annotator (8.56 MB) |
 | `assets/wikidata_tokenised.json.gz` | URL | A list of wikipedia entities to aid the gazetteer annotator (21.1 MB) |
 | `assets/first_names.json` | URL | A list of first names to help our heuristic annotator |
+| `assets/en_orth_variants.json` | URL | Orth variants to use for data augmentation |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
