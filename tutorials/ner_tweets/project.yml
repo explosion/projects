@@ -6,6 +6,7 @@ description: |
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
+  config_spacy_augmenter: "config_with_augmenter.cfg"
   name: "ner_tweets"
   version: "0.0.0"
 
@@ -86,7 +87,7 @@ commands:
       - "assets/data/btc/"
 
   - name: "augment"
-    help: "Augment an input dataset then split it into training and evaluation datasets"
+    help: "Augment an input dataset via weak supervision then split it into training and evaluation datasets"
     script:
       - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
     deps:
@@ -103,31 +104,44 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/default --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
     outputs:
-      - "training/model-best"
+      - "training/default/model-best"
+
+  - name: "train-with-augmenter"
+    help: "Train a named entity recognition model with a spaCy built-in augmenter"
+    script:
+      - "python -m spacy train configs/${vars.config_spacy_augmenter} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+    deps:
+      - "corpus/train_aug.spacy"
+      - "corpus/eval_aug.spacy"
+    outputs:
+      - "training/spacy-augmenter/model-best"
 
   - name: "evaluate"
     help: "Evaluate various experiments and export the computed metrics"
     script: 
       - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
-      - "python -m spacy evaluate training/model-best corpus/test.spacy --output metrics/model_aug.json"
+      - "python -m spacy evaluate training/default/model-best corpus/test.spacy --output metrics/model_aug.json"
+      - "python -m spacy evaluate training/spacy-augmenter/model-best corpus/test.spacy --output metrics/model_aug_spacy.json"
     deps:
       - "corpus/test.spacy"
-      - "training/model-best"
+      - "training/default/model-best"
+      - "training/spacy-augmenter/model-best"
     outputs:
       - "metrics/baseline.json"
       - "metrics/model_aug.json"
+      - "metrics/model_aug_spacy.json"
 
   - name: "package"
     help: "Package the trained model so it can be installed"
     script: 
-      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+      - "python -m spacy package training/default/model-best packages --name ${vars.name} --version ${vars.version} --force"
     deps:
-      - "training/model-best"
+      - "training/default/model-best"
     outputs_no_cache:
       - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
