@@ -90,7 +90,7 @@ displacy.serve(doc[0], style="ent)
 ![](/assets/demo/demo_screenshot.png)
 
 Lastly, there are other info and metadata present, and these are artifacts from
-[Prodigy](prodi.gy).  It's a nifty tool that integrates well with spaCy. I don't
+[Prodigy](https://prodi.gy).  It's a nifty tool that integrates well with spaCy. I don't
 have to write any preprocessors on my end, we just have to run 
 
 ```sh
