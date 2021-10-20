@@ -20,25 +20,13 @@ other information to parse. Let's move on to `test.jsonl` and get an example!
 version at `demo/demo.spacy`)
 
 ```json
+# Excerpt of demo/demo.jsonl file
 {
    "text":"I'm seeing Ed Sheeran on Wednesday in Miami so if you wanna meet up or say hi hmu!",
    "_input_hash":885944384,
    "_task_hash":-1665691389,
    "tokens":[
-      {
-         "text":"I",
-         "start":0,
-         "end":1,
-         "id":0,
-         "ws":false
-      },
-      {
-         "text":"'m",
-         "start":1,
-         "end":3,
-         "id":1,
-         "ws":true
-      },
+   # ... rest of the tokens
       {
          "text":"seeing",
          "start":4,
@@ -60,111 +48,7 @@ version at `demo/demo.spacy`)
          "id":4,
          "ws":true
       },
-      {
-         "text":"on",
-         "start":22,
-         "end":24,
-         "id":5,
-         "ws":true
-      },
-      {
-         "text":"Wednesday",
-         "start":25,
-         "end":34,
-         "id":6,
-         "ws":true
-      },
-      {
-         "text":"in",
-         "start":35,
-         "end":37,
-         "id":7,
-         "ws":true
-      },
-      {
-         "text":"Miami",
-         "start":38,
-         "end":43,
-         "id":8,
-         "ws":true
-      },
-      {
-         "text":"so",
-         "start":44,
-         "end":46,
-         "id":9,
-         "ws":true
-      },
-      {
-         "text":"if",
-         "start":47,
-         "end":49,
-         "id":10,
-         "ws":true
-      },
-      {
-         "text":"you",
-         "start":50,
-         "end":53,
-         "id":11,
-         "ws":true
-      },
-      {
-         "text":"wanna",
-         "start":54,
-         "end":59,
-         "id":12,
-         "ws":true
-      },
-      {
-         "text":"meet",
-         "start":60,
-         "end":64,
-         "id":13,
-         "ws":true
-      },
-      {
-         "text":"up",
-         "start":65,
-         "end":67,
-         "id":14,
-         "ws":true
-      },
-      {
-         "text":"or",
-         "start":68,
-         "end":70,
-         "id":15,
-         "ws":true
-      },
-      {
-         "text":"say",
-         "start":71,
-         "end":74,
-         "id":16,
-         "ws":true
-      },
-      {
-         "text":"hi",
-         "start":75,
-         "end":77,
-         "id":17,
-         "ws":true
-      },
-      {
-         "text":"hmu",
-         "start":78,
-         "end":81,
-         "id":18,
-         "ws":false
-      },
-      {
-         "text":"!",
-         "start":81,
-         "end":82,
-         "id":19,
-         "ws":true
-      }
+    # ...rest of the tokens
    ],
    "spans":[
       {
