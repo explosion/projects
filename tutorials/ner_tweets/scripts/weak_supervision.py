@@ -97,7 +97,7 @@ class UnifiedNERAnnotator(CombinedAnnotator):
 
 
 class FullNameDetector:
-    """Custom annotator that search for occurences of full-names"""
+    """Custom annotator that search for occurrences of full-names"""
 
     def __init__(self, names_path: Path = NAMES_PATH):
         with names_path.open(mode="r") as f:

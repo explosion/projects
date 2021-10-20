@@ -68,7 +68,7 @@ def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[D
     then trains a hidden-markov model to estimate a unified annotator.
 
     docs (List[Doc]): list of Doc to augment
-    model_output_path (Path): path to save the Hidden Markov model
+    model_output_path (Path): path to save the Hidden Markov Model (HMM)
     """
     unified_annotator = UnifiedNERAnnotator().add_all_annotators()
     msg.info(f"Total number of annotators: {len(unified_annotator.annotators)}")
