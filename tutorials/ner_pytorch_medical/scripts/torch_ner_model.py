@@ -20,16 +20,21 @@ def build_torch_ner_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     hidden_width: int,
     dropout: Optional[float] = None,
+    nI: Optional[int] = None,
     nO: Optional[int] = None,
 ) -> Model[List[Doc], List[Floats2d]]:
     """Build a tagger model, using a provided token-to-vector component. The tagger
     model simply adds a linear layer with softmax activation to predict scores
     given the token vectors.
     tok2vec (Model[List[Doc], List[Floats2d]]): The token-to-vector subnetwork.
+    nI (int or None): The input dimension (should be the same as the output dimension of the tok2vec layer)
     nO (int or None): The number of tags to output. Inferred from the data if None.
     RETURNS (Model[List[Doc], List[Floats2d]]): Initialized Model
     """
-    t2v_width = tok2vec.maybe_get_dim("nO")
+    t2v_width = nI or tok2vec.maybe_get_dim("nO")
+    if t2v_width is None:
+        listener = tok2vec.maybe_get_ref("listener")
+        t2v_width = listener.maybe_get_dim("nO") if listener else None
     torch_model = TorchEntityRecognizer(t2v_width, hidden_width, nO, dropout)
     wrapped_pt_model = PyTorchWrapper(torch_model)
     wrapped_pt_model.attrs["set_dropout_rate"] = torch_model.set_dropout_rate

@@ -245,6 +245,8 @@ class TorchEntityRecognizer(TrainablePipe):
         self._require_labels()
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=self.labels)
+        torch_model = self.model.get_ref("torch_model")
+        nlp.config["components"][self.name]["model"]["nI"] = torch_model.get_dim("nI")
         nlp.config["components"][self.name]["model"]["nO"] = len(self.labels)
 
     def add_label(self, label: str) -> int:
