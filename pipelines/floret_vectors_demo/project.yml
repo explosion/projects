@@ -1,0 +1,69 @@
+title: "Demo floret vectors"
+description: "Train floret vectors and load them into a spaCy vectors model."
+spacy_version: ">=3.2.0,<4.0.0"
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "floret_vectors"
+  lang: "en"
+  oscar_dataset: "unshuffled_deduplicated_en"
+  max_texts: 1000
+  # number of processes (tokenization) and threads (floret)
+  n_process: 8
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["corpus", "scripts", "vectors"]
+
+## Workflows are sequences of commands (see below) executed in order. You can
+## run them via "spacy project run [workflow]". If a commands's inputs/outputs
+## haven't changed, it won't be re-run.
+workflows:
+  all:
+    - tokenize-oscar
+    - train-floret
+    - init-floret-vectors
+    - floret-nn
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "tokenize-oscar"
+    help: "Download, tokenize, and sentencize data"
+    script:
+      - "python scripts/tokenize_dataset.py ${vars.lang} ${vars.oscar_dataset} ${vars.max_texts} corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt --n-process=${vars.n_process}"
+    deps:
+      - "scripts/tokenize_dataset.py"
+    outputs:
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+
+  - name: "train-floret"
+    help: "Train floret vectors"
+    script:
+      - "python scripts/train_floret.py --model cbow --dim 300 --mincount 10 --minn 3 --maxn 6 --neg 10 --mode floret --hashcount 2 --bucket 20000 --thread ${vars.n_process} corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000"
+    deps:
+      - "scripts/train_floret.py"
+      - "corpus/${vars.oscar_dataset}.${vars.max_texts}.tok.txt"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.floret"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.vec"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.bin"
+
+  - name: "init-floret-vectors"
+    help: "Create a floret vectors model"
+    script:
+      - "python -m spacy init vectors ${vars.lang} vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.floret vectors/${vars.oscar_dataset}.${vars.max_texts}_floret_model --mode floret" 
+    deps:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.floret"
+    outputs:
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}_floret_model"
+
+  - name: "floret-nn"
+    help: "Demo nearest neighbors for intentional OOV misspelling 'outdooor'"
+    script:
+      - "python scripts/nn_floret.py vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.bin outdooor"
+    deps:
+      - "scripts/nn_floret.py"
+      - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.bin"
+
