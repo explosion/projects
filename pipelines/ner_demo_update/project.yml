@@ -5,6 +5,7 @@ spacy_version: ">=3.0.6,<4.0.0"
 vars:
   name: "ner_demo_update"
   lang: "en"
+  # for en_core_web_trf or other trf pipeline, use spacy-transformers>=1.1.1
   pipeline: "en_core_web_sm"
   train: "train.json"
   dev: "dev.json"
@@ -69,7 +70,7 @@ commands:
   - name: "train"
     help: "Update the NER model"
     script:
-      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 100 --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.max_steps 500 --training.patience 50 --gpu-id ${vars.gpu_id}"
     deps:
       - "configs/config.cfg"
       - "corpus/train.spacy"

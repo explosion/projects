@@ -13,7 +13,7 @@ def create_config(model_name: str, component_to_update: str, output_path: Path):
     # revert most training settings to the current defaults
     default_config = spacy.blank(nlp.lang).config
     config["corpora"] = default_config["corpora"]
-    config["training"] = default_config["training"]
+    config["training"]["logger"] = default_config["training"]["logger"]
 
     # copy tokenizer and vocab settings from the base model, which includes
     # lookups (lexeme_norm) and vectors, so they don't need to be copied or
