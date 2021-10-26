@@ -17,11 +17,11 @@ this unified model to re-annotate our entire training dataset.
 In this example, we will be using `skweak` as our weak supervision framework.
 It contains primitives that allows us to define our own labelling functions. 
 Throughout this project, we will be using the following annotators:
-- **A model-based annotator based on `en_core_web_lg`: we can use existing
+- **A model-based annotator based on `en_core_web_lg`**: we can use existing
     spaCy models to bootstrap our annotations.
-- **A model-based annotator based on a model trained on the Broad Twitter
+- **A model-based annotator trained on the Broad Twitter
     Corpus**: this gives us an edge due to having similar domains.
-- **A gazetteer-based annotator from Crunchbase**: gazetteer can be thought
+- **A gazetteer-based annotator from Crunchbase**: a gazetteer can be thought of
     simply as a list of entities. In this case, we obtain all person names from
     Crunchbase to create an annotator of business personalities.
 - **A heuristic for finding proper names**: a simple implementation that checks
