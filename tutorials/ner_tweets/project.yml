@@ -43,12 +43,14 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
+    - install
     - preprocess
     - decompress
     - augment
     - train
     - evaluate
   setup:
+    - install
     - preprocess
     - decompress
   finetune:
@@ -61,6 +63,11 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: "install"
+    help: "Install dependencies"
+    script: 
+      - "pip3 install -r requirements.txt"
+      - "python -m spacy download en_core_web_lg"
   - name: "preprocess"
     help: "Convert raw inputs into spaCy's binary format"
     script:
