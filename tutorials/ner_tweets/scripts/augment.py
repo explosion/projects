@@ -16,7 +16,7 @@ def main(
     input_path: Path = typer.Argument(..., exists=True, dir_okay=False),
     model_output_path: Path = typer.Argument(..., dir_okay=False),
     training_output_path: Path = typer.Argument(..., dir_okay=False),
-    eval_output_path: Path = typer.Argument(..., dir_okay=False),
+    dev_output_path: Path = typer.Argument(..., dir_okay=False),
     train_size: float = 0.8,
     weak_supervision: bool = True,
 ):
@@ -25,7 +25,7 @@ def main(
     input_path (Path): the training dataset to augment
     model_output_path (Path): path to save the HMM model for weak supervision
     training_output_path (Path): path to save the output training data
-    eval_output_path (Path): path to save the output evaluation data
+    dev_output_path (Path): path to save the output evaluation data
     """
     msg.info(f"Reading data from {input_path}")
     db = DocBin()
@@ -38,11 +38,11 @@ def main(
         docs = augment_weak_supervision(docs, model_output_path)
 
     # Split the dataset based on ratio
-    train_data, eval_data = train_test_split(docs, train_size=train_size)
+    train_data, dev_data = train_test_split(docs, train_size=train_size)
 
     # Save training and eval datasets
     serialize_docs(train_data, training_output_path)
-    serialize_docs(eval_data, eval_output_path)
+    serialize_docs(dev_data, dev_output_path)
 
 
 def serialize_docs(docs: List[Doc], output_path: Path, span_name: str = "hmm"):

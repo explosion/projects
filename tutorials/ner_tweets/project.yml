@@ -127,7 +127,7 @@ commands:
   - name: "augment"
     help: "Augment an input dataset via weak supervision then split it into training and evaluation datasets"
     script:
-      - "python -m scripts.augment corpus/train_raw.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
+      - "python -m scripts.augment corpus/train_raw.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/dev_aug.spacy"
     deps:
       - "corpus/train_raw.spacy"
       - "assets/crunchbase.json"
@@ -136,26 +136,26 @@ commands:
       - "assets/data/btc/"
     outputs:
       - "corpus/train_aug.spacy"
-      - "corpus/eval_aug.spacy"
+      - "corpus/dev_aug.spacy"
       - "assets/hmm.pkl"
 
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-no-augmenter --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy --corpora.train.augmenter null"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-no-augmenter --paths.train corpus/train_aug.spacy --paths.dev corpus/dev_aug.spacy --corpora.train.augmenter null"
     deps:
       - "corpus/train_aug.spacy"
-      - "corpus/eval_aug.spacy"
+      - "corpus/dev_aug.spacy"
     outputs:
       - "training/spacy-no-augmenter/model-best"
 
   - name: "train-with-augmenter"
     help: "Train a named entity recognition model with a spaCy built-in augmenter"
     script:
-      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/dev_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
-      - "corpus/eval_aug.spacy"
+      - "corpus/dev_aug.spacy"
     outputs:
       - "training/spacy-augmenter/model-best"
 
