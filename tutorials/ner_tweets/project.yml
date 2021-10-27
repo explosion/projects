@@ -6,7 +6,6 @@ description: |
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
-  config_spacy_augmenter: "config_with_augmenter.cfg"
   name: "ner_tweets"
   version: "0.0.0"
 
@@ -107,7 +106,7 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/default --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/default --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy --corpora.train.augmenter null"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
@@ -117,7 +116,7 @@ commands:
   - name: "train-with-augmenter"
     help: "Train a named entity recognition model with a spaCy built-in augmenter"
     script:
-      - "python -m spacy train configs/${vars.config_spacy_augmenter} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
