@@ -106,12 +106,12 @@ commands:
   - name: "train"
     help: "Train a named entity recognition model"
     script:
-      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/default --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy --corpora.train.augmenter null"
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-no-augmenter --paths.train corpus/train_aug.spacy --paths.dev corpus/eval_aug.spacy --corpora.train.augmenter null"
     deps:
       - "corpus/train_aug.spacy"
       - "corpus/eval_aug.spacy"
     outputs:
-      - "training/default/model-best"
+      - "training/spacy-no-augmenter/model-best"
 
   - name: "train-with-augmenter"
     help: "Train a named entity recognition model with a spaCy built-in augmenter"
@@ -127,11 +127,11 @@ commands:
     help: "Evaluate various experiments and export the computed metrics"
     script: 
       - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
-      - "python -m spacy evaluate training/default/model-best corpus/test.spacy --output metrics/model_aug.json"
+      - "python -m spacy evaluate training/spacy-no-augmenter/model-best corpus/test.spacy --output metrics/model_aug.json"
       - "python -m spacy evaluate training/spacy-augmenter/model-best corpus/test.spacy --output metrics/model_aug_spacy.json"
     deps:
       - "corpus/test.spacy"
-      - "training/default/model-best"
+      - "training/spacy-no-augmenter/model-best"
       - "training/spacy-augmenter/model-best"
     outputs:
       - "metrics/baseline.json"
@@ -141,9 +141,9 @@ commands:
   - name: "package"
     help: "Package the trained model so it can be installed"
     script: 
-      - "python -m spacy package training/default/model-best packages --name ${vars.name} --version ${vars.version} --force"
+      - "python -m spacy package training/spacy-no-augmenter/model-best packages --name ${vars.name} --version ${vars.version} --force"
     deps:
-      - "training/default/model-best"
+      - "training/spacy-no-augmenter/model-best"
     outputs_no_cache:
       - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
 
