@@ -17,9 +17,9 @@ directories: ["assets", "corpus", "scripts", "metrics"]
 # them with the project, so they won't have to be downloaded. But the
 # 'project assets' command still lets you verify that the checksums match.
 assets:
-  - dest: "assets/train_initial.jsonl"
+  - dest: "assets/train_raw.jsonl"
     description: "The training dataset to augment. Later we'll divide this further to create a dev set"
-  - dest: "assets/test.jsonl"
+  - dest: "assets/test_annotated.jsonl"
     description: "The held-out test dataset to evaluate our output against."
   - dest: "assets/btc.tar.gz"
     description: "A model trained on the Broad Twitter Corpus to help in annotation (63.7 MB)"
@@ -71,14 +71,14 @@ commands:
   - name: "preprocess"
     help: "Convert raw inputs into spaCy's binary format"
     script:
-      - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
-      - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"
+      - "python scripts/preprocess.py assets/train_raw.jsonl corpus/train_raw.spacy --text-only"
+      - "python scripts/preprocess.py assets/test_annotated.jsonl corpus/test_annotated.spacy"
     deps:
-      - "assets/train_initial.jsonl"
-      - "assets/test.jsonl"
+      - "assets/train_raw.jsonl"
+      - "assets/test_annotated.jsonl"
     outputs:
-      - "corpus/train_initial.spacy"
-      - "corpus/test.spacy"
+      - "corpus/train_raw.spacy"
+      - "corpus/test_annotated.spacy"
 
   - name: "decompress"
     help: "Decompress relevant assets that will be used latter by our weak supervision model"
@@ -98,9 +98,9 @@ commands:
   - name: "augment"
     help: "Augment an input dataset via weak supervision then split it into training and evaluation datasets"
     script:
-      - "python -m scripts.augment corpus/train_initial.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
+      - "python -m scripts.augment corpus/train_raw.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/eval_aug.spacy"
     deps:
-      - "corpus/train_initial.spacy"
+      - "corpus/train_raw.spacy"
       - "assets/crunchbase.json"
       - "assets/wikidata_tokenised.json"
       - "assets/first_names.json"
@@ -133,11 +133,11 @@ commands:
   - name: "evaluate"
     help: "Evaluate various experiments and export the computed metrics"
     script: 
-      - "python -m spacy evaluate en_core_web_lg corpus/test.spacy --output metrics/baseline.json"
-      - "python -m spacy evaluate training/spacy-no-augmenter/model-best corpus/test.spacy --output metrics/model_aug.json"
-      - "python -m spacy evaluate training/spacy-augmenter/model-best corpus/test.spacy --output metrics/model_aug_spacy.json"
+      - "python -m spacy evaluate en_core_web_lg corpus/test_annotated.spacy --output metrics/baseline.json"
+      - "python -m spacy evaluate training/spacy-no-augmenter/model-best corpus/test_annotated.spacy --output metrics/model_aug.json"
+      - "python -m spacy evaluate training/spacy-augmenter/model-best corpus/test_annotated.spacy --output metrics/model_aug_spacy.json"
     deps:
-      - "corpus/test.spacy"
+      - "corpus/test_annotated.spacy"
       - "training/spacy-no-augmenter/model-best"
       - "training/spacy-augmenter/model-best"
     outputs:
