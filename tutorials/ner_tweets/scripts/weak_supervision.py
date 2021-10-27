@@ -10,13 +10,8 @@ from skweak.spacy import ModelAnnotator
 from spacy.tokens import Doc, Span
 from wasabi import msg
 
-from .constants import (
-    BTC_MODEL_PATH,
-    CRUNCHBASE_PATH,
-    NAME_PREFIXES,
-    NAMES_PATH,
-    WIKIDATA_PATH,
-)
+from .constants import BTC_MODEL_PATH, CRUNCHBASE_PATH
+from .constants import NAME_PREFIXES, NAMES_PATH, WIKIDATA_PATH
 
 
 class UnifiedNERAnnotator(CombinedAnnotator):
