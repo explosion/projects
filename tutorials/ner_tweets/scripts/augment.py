@@ -19,6 +19,7 @@ def main(
     dev_output_path: Path = typer.Argument(..., dir_okay=False),
     train_size: float = 0.8,
     weak_supervision: bool = True,
+    limit: int = typer.Option(None, envvar="NUM_DOCS_TO_AUGMENT"),
 ):
     """Augment a dataset and split it into training and eval
 
@@ -35,7 +36,7 @@ def main(
     # Perform data augmentation
     if weak_supervision:
         msg.info("Performing weak supervision...")
-        docs = augment_weak_supervision(docs, model_output_path)
+        docs = augment_weak_supervision(docs, model_output_path, limit)
 
     # Split the dataset based on ratio
     train_data, dev_data = train_test_split(docs, train_size=train_size)
@@ -61,7 +62,9 @@ def serialize_docs(docs: List[Doc], output_path: Path, span_name: str = "hmm"):
     msg.good(f"Saved data to disk! (size={len(docs)})")
 
 
-def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[Doc]:
+def augment_weak_supervision(
+    docs: List[Doc], model_output_path: Path, limit: int
+) -> List[Doc]:
     """Perform augmentation via weak supervision
 
     This step first collates all the labelling functions found in UnifiedNERAnnotator,
@@ -69,12 +72,14 @@ def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[D
 
     docs (List[Doc]): list of Doc objects to augment
     model_output_path (Path): path to save the Hidden Markov Model (HMM)
+    limit (int): optional, number of documents to annotate, useful for testing
     """
     unified_annotator = UnifiedNERAnnotator().add_all_annotators()
     msg.info(f"Total number of annotators: {len(unified_annotator.annotators)}")
     # Annotate our training set using all annotators
     msg.text("Labelling dataset with all annotators...")
-    docs_annotated = list(unified_annotator.pipe(docs))
+    docs_to_annotate = docs[:limit]
+    docs_annotated = list(unified_annotator.pipe(docs_to_annotate))
     # Fit a hidden markov model based on the outputs
     msg.text("Fitting a hidden markov model...")
     label_model = HMM("hmm", ["PERSON"])
