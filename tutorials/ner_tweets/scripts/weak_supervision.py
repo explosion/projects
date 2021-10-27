@@ -97,14 +97,14 @@ class UnifiedNERAnnotator(CombinedAnnotator):
 
 
 class FullNameDetector:
-    """Custom annotator that search for occurrences of full-names"""
+    """Custom annotator that searches for occurrences of full names"""
 
     def __init__(self, names_path: Path = NAMES_PATH):
         with names_path.open(mode="r") as f:
             self.first_names = set(json.load(f))
 
     def __call__(self, span: Span) -> bool:
-        """Return if a particular span is a full name or not"""
+        """Return whether a particular span is a full name or not"""
         if len(span) < 2 or len(span) > 5:
             return False
 

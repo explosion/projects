@@ -67,7 +67,7 @@ def augment_weak_supervision(docs: List[Doc], model_output_path: Path) -> List[D
     This step first collates all the labelling functions found in UnifiedNERAnnotator,
     then trains a hidden-markov model to estimate a unified annotator.
 
-    docs (List[Doc]): list of Doc to augment
+    docs (List[Doc]): list of Doc objects to augment
     model_output_path (Path): path to save the Hidden Markov Model (HMM)
     """
     unified_annotator = UnifiedNERAnnotator().add_all_annotators()

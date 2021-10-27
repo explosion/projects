@@ -63,7 +63,7 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "preprocess"
-    help: "Convert raw inputs into spaCy's preferred formats"
+    help: "Convert raw inputs into spaCy's binary format"
     script:
       - "python scripts/preprocess.py assets/train_initial.jsonl corpus/train_initial.spacy --text-only"
       - "python scripts/preprocess.py assets/test.jsonl corpus/test.spacy"

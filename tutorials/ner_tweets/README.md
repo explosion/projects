@@ -19,8 +19,8 @@ It contains primitives that allows us to define our own labelling functions.
 Throughout this project, we will be using the following annotators:
 - **A model-based annotator based on `en_core_web_lg`**: we can use existing
     spaCy models to bootstrap our annotations.
-- **A model-based annotator trained on the Broad Twitter
-    Corpus**: this gives us an edge due to having similar domains.
+- **A model-based annotator trained on the Broad Twitter Corpus** (BTC): 
+    this gives us an edge due to having similar domains.
 - **A gazetteer-based annotator from Crunchbase**: a gazetteer can be thought of
     simply as a list of entities. In this case, we obtain all person names from
     Crunchbase to create an annotator of business personalities.
@@ -49,8 +49,8 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `preprocess` | Convert raw inputs into spaCy's preferred formats |
-| `decompress` | Decompress relevant assets that will be used latter by our weak supervision model |
-| `augment` | Augment an input dataset via weak supervision then split it into training and evaluation datasets |
+| `decompress` | Decompress relevant assets that will be used later by our weak supervision model |
+| `augment` | Augment an input dataset via weak supervision, then split it into training and evaluation datasets |
 | `train` | Train a named entity recognition model |
 | `train-with-augmenter` | Train a named entity recognition model with a spaCy built-in augmenter |
 | `evaluate` | Evaluate various experiments and export the computed metrics |
