@@ -5,35 +5,6 @@
 This project demonstrates how to improve spaCy's pretrained models by
 augmenting the training data and adapting it to a different domain.
 
-**Weak supervision** is the practice of using imprecise annotators to label a
-dataset. These annotators take in the form of *labelling functions*, and may
-contain a single heuristic, a rule, or a model trained from related data.
-
-Once these functions are defined, we annotate the dataset and fit a Hidden Markov
-Model (HMM) to "pool" our annotators together. The result is a single, unified
-model that contains the pooled knowledge of each annotator. We can then use
-this unified model to re-annotate our entire training dataset.
-
-In this example, we will be using `skweak` as our weak supervision framework.
-It contains primitives that allows us to define our own labelling functions. 
-Throughout this project, we will be using the following annotators:
-- **A model-based annotator based on `en_core_web_lg`**: we can use existing
-    spaCy models to bootstrap our annotations.
-- **A model-based annotator trained on the Broad Twitter Corpus** (BTC): 
-    this gives us an edge due to having similar domains.
-- **A gazetteer-based annotator from Crunchbase**: a gazetteer can be thought of
-    simply as a list of entities. In this case, we obtain all person names from
-    Crunchbase to create an annotator of business personalities.
-- **A heuristic for finding proper names**: a simple implementation that checks
-    for proper names in a given tweet. If there are two proper names joined by
-    a prefix ("**van** Gogh", "**del** Pilar", "**de** Castro", etc.), then
-    it's most likely a person's name. 
-- **A heuristic for finding full names based on a list**: we obtained a list of
-    first names from skweak's data utilities, and use that to condition our
-    search. If a full name is found, and a proper name comes after it, then
-    it's most likely a person's name.
-
-
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
