@@ -3,8 +3,8 @@ training/
 corpus/
 metrics/
 assets/
-!assets/train_initial.jsonl
-!assets/test.jsonl
+!assets/train_raw.jsonl
+!assets/test_annotated.jsonl
 !assets/README.md
 !assets/demo/*
 *.ipynb
