@@ -66,9 +66,9 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `install` &rarr; `preprocess` &rarr; `decompress` &rarr; `augment` &rarr; `train` &rarr; `evaluate` |
+| `all` | `install` &rarr; `preprocess` &rarr; `decompress` &rarr; `augment` &rarr; `train` &rarr; `train-with-augmenter` &rarr; `evaluate` |
 | `setup` | `install` &rarr; `preprocess` &rarr; `decompress` |
-| `finetune` | `augment` &rarr; `train` &rarr; `evaluate` |
+| `finetune` | `augment` &rarr; `train` &rarr; `train-with-augmenter` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -78,8 +78,8 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/train_raw.jsonl` | Local | The training dataset to augment. Later we'll divide this further to create a dev set |
-| `assets/test_annotated.jsonl` | Local | The held-out test dataset to evaluate our output against. |
+| [`assets/train_raw.jsonl`](assets/train_raw.jsonl) | Local | The training dataset to augment. Later we'll divide this further to create a dev set |
+| [`assets/test_annotated.jsonl`](assets/test_annotated.jsonl) | Local | The held-out test dataset to evaluate our output against. |
 | `assets/btc.tar.gz` | URL | A model trained on the Broad Twitter Corpus to help in annotation (63.7 MB) |
 | `assets/crunchbase.json.gz` | URL | A list of crunchbase entities to aid the gazetteer annotator (8.56 MB) |
 | `assets/wikidata_tokenised.json.gz` | URL | A list of wikipedia entities to aid the gazetteer annotator (21.1 MB) |

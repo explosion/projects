@@ -78,6 +78,7 @@ workflows:
     - decompress
     - augment
     - train
+    - train-with-augmenter
     - evaluate
   setup:
     - install
@@ -86,6 +87,7 @@ workflows:
   finetune:
     - augment
     - train
+    - train-with-augmenter
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
