@@ -48,7 +48,7 @@ def main(
 def serialize_docs(docs: List[Doc], output_path: Path, span_name: str = "hmm"):
     """Serialize the annotated documents into the spaCy format
 
-    docs (List[Doc]): list of Doc to serialize
+    docs (List[Doc]): list of Doc objects to serialize
     output_path (Path): path to save the serialized dataset
     span_name (str): name of the span to include as entities
     """
