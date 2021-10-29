@@ -43,13 +43,13 @@ description: |
   trained on, it makes sense to adapt the domain. Here are some annotators I
   created:
 
-  | Annotator                                 | Annotator Type | Heuristic                                                                                                                              | Heuristic |
-  |-------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------|-----------|
-  | Model-based annotator from en_core_web_lg | Model          | We can reuse spaCy models to bootstrap our annotation process. By doing this, we don't have to start entirely from scratch.            |           |
-  | Broad Twitter Corpus model                | Model          | Because our dataset is made of tweets, it makes sense to bootstrap from a language model trained on the same domain.                   |           |
-  | List of crunchbase personalities          | Gazetteer      | Obtaining a list of tech  personalities is timely, especially due to the context of some tweets.                                       |           |
-  | Proper names annotator                    | Heuristics     | A simple heuristic that checks if two proper names are joined by an infix (e.g. Vincent **van** Gogh, Mark **de** Castro, etc.)        |           |
-  | Full names annotator                      | Heuristics     | A simple heuristic for finding full names. It checks if a first name exists in a list of names, and is also followed by a proper name. |           |
+  | Annotator                                 | Annotator Type | Heuristic                                                                                                                              |
+  |-------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------|
+  | Model-based annotator from en_core_web_lg | Model          | We can reuse spaCy models to bootstrap our annotation process. By doing this, we don't have to start entirely from scratch.            |
+  | Broad Twitter Corpus model                | Model          | Because our dataset is made of tweets, it makes sense to bootstrap from a language model trained on the same domain.                   |
+  | List of crunchbase personalities          | Gazetteer      | Obtaining a list of tech  personalities is timely, especially due to the context of some tweets.                                       |
+  | Proper names annotator                    | Heuristics     | A simple heuristic that checks if two proper names are joined by an infix (e.g. Vincent **van** Gogh, Mark **de** Castro, etc.)        |
+  | Full names annotator                      | Heuristics     | A simple heuristic for finding full names. It checks if a first name exists in a list of names, and is also followed by a proper name. |
 
 
   There are also some annotators that I've tried, but removed due to its
