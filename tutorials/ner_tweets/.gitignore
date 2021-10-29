@@ -1,0 +1,10 @@
+# spaCy project
+training/
+corpus/
+metrics/
+assets/
+!assets/train_raw.jsonl
+!assets/test_annotated.jsonl
+!assets/README.md
+!assets/demo/*
+*.ipynb

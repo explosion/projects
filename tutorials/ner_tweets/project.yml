@@ -1,0 +1,216 @@
+title: "Detecting people entities in tweets (Named Entity Recognition)"
+description: |
+  This project demonstrates how to improve spaCy's pretrained models by
+  augmenting the training data and adapting it to a different domain.
+
+  **Weak supervision** is the practice of labelling a dataset using imprecise
+  annotators. Instead of labelling them manually by ourselves (which may take
+  time and effort), we can just encode business rules or heuristics to do the
+  labelling for us. 
+
+  Of course, these rules don't capture all the nuances a human annotator can.
+  So weak supervision's idea is to **pool all these naive annotators
+  together**, and come up with a unified annotator that can hopefully understand
+  those nuances. The pooling is done via a Hidden Markov Model (HMM). 
+
+  Once we have the unified annotator, we re-annotate our entire training dataset,
+  and use that for our downstream tasks, which in this case, is finetuning spaCy's
+  `en_core_web_lg` model. 
+
+  ### Using `skweak` as our weak supervision framework
+  
+  In this project, we will be using `skweak` as our weak supervision framework.
+  It contains primitives to define our own labelling functions, and it's
+  well-integrated to spaCy! These labelling functions can then be defined as
+  one of the following:
+
+  | Annotator Type | What it does                                                                                                                                                                                                                |
+  |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | Model          | makes use of existing models trained from other datasets. Here we can also use spaCy's pretrained models like `en_core_web_lg`                                                                                              |
+  | Gazetteer      | a list of entities that an annotator can look up from. This will always depend on your use-case.                                                                                                                            |
+  | Heuristics     | can be used to encode business rules based on one's domain. You can check for tokens that fall under a specific rule (`TokenConstraintAnnotator`), or look for spans of entities in a sentence (`SpanConstraintAnnotator`). |
+
+  The unified model is then done using a Hidden Markov Model, in this case, via
+  the [hmmlearn](https://hmmlearn.readthedocs.io/en/latest/) pacakge. Once we
+  have our final model, we re-annotate the dataset and resume training via
+  `spacy train`.
+
+  ### Weak supervision in practice 
+  
+  For our dataset, we have a collection of tweets from the [TweetEval
+  Benchmark](https://github.com/cardiffnlp/tweeteval). Because tweets differ in
+  structure and form compared to the datasets our original spaCy models were
+  trained on, it makes sense to adapt the domain. Here are some annotators I
+  created:
+
+  | Annotator                                 | Annotator Type | Heuristic                                                                                                                              |
+  |-------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------------------|
+  | Model-based annotator from en_core_web_lg | Model          | We can reuse spaCy models to bootstrap our annotation process. By doing this, we don't have to start entirely from scratch.            |
+  | Broad Twitter Corpus model                | Model          | Because our dataset is made of tweets, it makes sense to bootstrap from a language model trained on the same domain.                   |
+  | List of crunchbase personalities          | Gazetteer      | Obtaining a list of tech  personalities is timely, especially due to the context of some tweets.                                       |
+  | Proper names annotator                    | Heuristics     | A simple heuristic that checks if two proper names are joined by an infix (e.g. Vincent **van** Gogh, Mark **de** Castro, etc.)        |
+  | Full names annotator                      | Heuristics     | A simple heuristic for finding full names. It checks if a first name exists in a list of names, and is also followed by a proper name. |
+
+
+  There are also some annotators that I've tried, but removed due to its
+  detrimental effect to our evaluation scores:
+
+  | Annotator                            | Annotator Type | Heuristic                                                                                                                                      |
+  |--------------------------------------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+  | List of personalities from Wikipedia | Gazetteer      | Ideally, we want to include all person entities from a bigger database. However, it detects "you" as a `PERSON`, which affected our Precision. |
+  | Name suffix annotator                | Heuristic      | I wanted to capture names with "iii", "IV", etc., but it gives lower precision due to it detecting roman numerals that aren't part of names.   |
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config.cfg"
+  config_no_augmenter: "config_no_augmenter.cfg"
+  name: "ner_tweets"
+  version: "1.0.0"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "scripts", "metrics"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/train_raw.jsonl"
+    description: "The training dataset to augment. Later we'll divide this further to create a dev set"
+  - dest: "assets/test_annotated.jsonl"
+    description: "The held-out test dataset to evaluate our output against."
+  - dest: "assets/btc.tar.gz"
+    description: "A model trained on the Broad Twitter Corpus to help in annotation (63.7 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/btc.tar.gz"
+  - dest: "assets/crunchbase.json.gz"
+    description: "A list of crunchbase entities to aid the gazetteer annotator (8.56 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/crunchbase.json.gz"
+  - dest: "assets/wikidata_tokenised.json.gz"
+    description: "A list of wikipedia entities to aid the gazetteer annotator (21.1 MB)"
+    url: "https://github.com/NorskRegnesentral/skweak/releases/download/0.2.8/wikidata_tokenised.json.gz"
+  - dest: "assets/first_names.json"
+    description: "A list of first names to help our heuristic annotator"
+    url: "https://raw.githubusercontent.com/NorskRegnesentral/skweak/main/data/first_names.json"
+  - dest: "assets/en_orth_variants.json"
+    description: "Orth variants to use for data augmentation"
+    url: "https://raw.githubusercontent.com/explosion/spacy-lookups-data/master/spacy_lookups_data/data/en_orth_variants.json"
+    
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - install
+    - preprocess
+    - decompress
+    - augment
+    - train
+    - train-with-augmenter
+    - evaluate
+  setup:
+    - install
+    - preprocess
+    - decompress
+  finetune:
+    - augment
+    - train
+    - train-with-augmenter
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script: 
+      - "pip3 install --user -r requirements.txt"
+      - "python -m spacy download en_core_web_lg"
+  - name: "preprocess"
+    help: "Convert raw inputs into spaCy's binary format"
+    script:
+      - "python scripts/preprocess.py assets/train_raw.jsonl corpus/train_raw.spacy --text-only"
+      - "python scripts/preprocess.py assets/test_annotated.jsonl corpus/test_annotated.spacy"
+    deps:
+      - "assets/train_raw.jsonl"
+      - "assets/test_annotated.jsonl"
+    outputs:
+      - "corpus/train_raw.spacy"
+      - "corpus/test_annotated.spacy"
+
+  - name: "decompress"
+    help: "Decompress relevant assets that will be used latter by our weak supervision model"
+    script:
+      - "python scripts/decompress.py assets/crunchbase.json.gz assets/crunchbase.json"
+      - "python scripts/decompress.py assets/wikidata_tokenised.json.gz assets/wikidata_tokenised.json"
+      - "python scripts/decompress.py assets/btc.tar.gz assets/"
+    deps:
+      - "assets/crunchbase.json.gz"
+      - "assets/wikidata_tokenised.json.gz"
+      - "assets/btc.tar.gz"
+    outputs:
+      - "assets/crunchbase.json"
+      - "assets/wikidata_tokenised.json"
+      - "assets/data/btc/"
+
+  - name: "augment"
+    help: "Augment an input dataset via weak supervision then split it into training and evaluation datasets"
+    script:
+      - "python -m scripts.augment corpus/train_raw.spacy assets/hmm.pkl corpus/train_aug.spacy corpus/dev_aug.spacy"
+    deps:
+      - "corpus/train_raw.spacy"
+      - "assets/crunchbase.json"
+      - "assets/wikidata_tokenised.json"
+      - "assets/first_names.json"
+      - "assets/data/btc/"
+    outputs:
+      - "corpus/train_aug.spacy"
+      - "corpus/dev_aug.spacy"
+      - "assets/hmm.pkl"
+
+  - name: "train"
+    help: "Train a named entity recognition model"
+    script:
+      - "python -m spacy train configs/${vars.config_no_augmenter} --initialize.vectors en_core_web_lg --output training/spacy-no-augmenter --paths.train corpus/train_aug.spacy --paths.dev corpus/dev_aug.spacy"
+    deps:
+      - "corpus/train_aug.spacy"
+      - "corpus/dev_aug.spacy"
+    outputs:
+      - "training/spacy-no-augmenter/model-best"
+
+  - name: "train-with-augmenter"
+    help: "Train a named entity recognition model with a spaCy built-in augmenter"
+    script:
+      - "python -m spacy train configs/${vars.config} --initialize.vectors en_core_web_lg --output training/spacy-augmenter/ --paths.train corpus/train_aug.spacy --paths.dev corpus/dev_aug.spacy"
+    deps:
+      - "corpus/train_aug.spacy"
+      - "corpus/dev_aug.spacy"
+    outputs:
+      - "training/spacy-augmenter/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate various experiments and export the computed metrics"
+    script: 
+      - "python -m spacy evaluate en_core_web_lg corpus/test_annotated.spacy --output metrics/baseline.json"
+      - "python -m spacy evaluate training/spacy-no-augmenter/model-best corpus/test_annotated.spacy --output metrics/model_aug.json"
+      - "python -m spacy evaluate training/spacy-augmenter/model-best corpus/test_annotated.spacy --output metrics/model_aug_spacy.json"
+    deps:
+      - "corpus/test_annotated.spacy"
+      - "training/spacy-no-augmenter/model-best"
+      - "training/spacy-augmenter/model-best"
+    outputs:
+      - "metrics/baseline.json"
+      - "metrics/model_aug.json"
+      - "metrics/model_aug_spacy.json"
+
+  - name: "package"
+    help: "Package the trained model so it can be installed"
+    script: 
+      - "python -m spacy package training/spacy-no-augmenter/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/spacy-no-augmenter/model-best"
+    outputs_no_cache:
+      - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}.tar.gz"
+
