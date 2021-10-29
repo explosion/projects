@@ -65,7 +65,7 @@ vars:
   config: "config.cfg"
   config_no_augmenter: "config_no_augmenter.cfg"
   name: "ner_tweets"
-  version: "0.0.0"
+  version: "1.0.0"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
