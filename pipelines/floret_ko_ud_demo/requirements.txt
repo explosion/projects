@@ -1,0 +1,9 @@
+floret>=0.10.0,<0.11.0
+datasets[streaming]
+# this demo uses Tokenizer rather than KoreanTokenizer for whitespace + punct
+# tokenization, but to create compatible "ko" vectors, you need to be able to
+# create a default Korean pipeline, which requires:
+# - mecab-ko: https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md
+# - mecab-ko-dic: https://bitbucket.org/eunjeon/mecab-ko-dic
+# - natto-py: https://github.com/buruzaemon/natto-py
+natto-py
