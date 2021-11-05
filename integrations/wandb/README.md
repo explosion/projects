@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Weights & Biases integration with W&B Sweeps
+# 🪐 spaCy Project: Weights & Biases integration
 
 Use [Weights & Biases](https://www.wandb.com/) for logging of training experiments. This project template uses the IMDB Movie Review Dataset and includes two workflows: `log` for training a simple text classification model and logging the results to Weights & Biases (works out-of-the-box and only requires the `[training.logger]` to be set in the config) and `parameter-search` for running a hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps), running the experiments and logging the results.
 
