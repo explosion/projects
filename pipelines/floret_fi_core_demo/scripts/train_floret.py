@@ -21,6 +21,7 @@ def main(
         str(input_file.absolute()),
         model=model,
         mode=mode,
+        dim=dim,
         minCount=mincount,
         minn=minn,
         maxn=maxn,
