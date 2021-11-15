@@ -1,4 +1,4 @@
-floret>=0.10.0,<0.11.0
+floret>=0.10.1,<0.11.0
 datasets[streaming]
 # this demo uses Tokenizer rather than KoreanTokenizer for whitespace + punct
 # tokenization, but to create compatible "ko" vectors, you need to be able to
