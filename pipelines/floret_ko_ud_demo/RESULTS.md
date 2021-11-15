@@ -5,7 +5,7 @@ the standard vectors:
 
 | Vectors                                      |  TAG |  POS | DEP UAS | DEP LAS |
 | -------------------------------------------- | ---: | ---: | ------: | ------: |
-| none                                         | 72.5 | 85.0 |    73.2 |    64.3 |
-| standard (pruned: 50K vectors for 800K keys) | 77.9 | 89.4 |    78.8 |    72.8 |
-| standard (unpruned: 800K vectors/keys)       | 79.0 | 90.2 |    79.2 |    73.9 |
-| floret (minn 2, maxn 3; 50K vectors, no OOV) | 82.5 | 93.8 |    83.0 |    80.1 |
+| none                                         | 72.5 | 85.3 |    74.0 |    65.0 |
+| standard (pruned: 50K vectors for 800K keys) | 77.3 | 89.1 |    78.2 |    72.2 |
+| standard (unpruned: 800K vectors/keys)       | 79.0 | 90.3 |    79.4 |    73.9 |
+| floret (minn 2, maxn 3; 50K vectors, no OOV) | 82.8 | 94.1 |    83.5 |    80.5 |
