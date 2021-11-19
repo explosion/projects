@@ -26,6 +26,7 @@ workflows:
     - convert
     - train-tokenizer
     - train-lemmatizer
+    - init-labels-transformer
     - train-transformer
     - assemble
     - evaluate
@@ -77,14 +78,31 @@ commands:
     outputs:
       - "training/${vars.ud_treebank}/lemmatizer/model-best"
 
-  - name: train-transformer
+  - name: init-labels-transformer
     help: "Train transformer"
     script:
-      - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model}"
+      - "python -m spacy init labels configs/transformer.cfg corpus/${vars.ud_treebank}/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --corpora.train.gold_preproc true --corpora.dev.gold_preproc true --paths.labels corpus/UD_English-EWT"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
       - "configs/transformer.cfg"
+      - "training/${vars.ud_treebank}/tokenizer/model-best"
+    outputs:
+      - "corpus/${vars.ud_treebank}/morphologizer.json"
+      - "corpus/${vars.ud_treebank}/parser.json"
+      - "corpus/${vars.ud_treebank}/tagger.json"
+
+  - name: train-transformer
+    help: "Train transformer"
+    script:
+        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --paths.labels corpus/${vars.ud_treebank}"
+    deps:
+      - "corpus/${vars.ud_treebank}/train.spacy"
+      - "corpus/${vars.ud_treebank}/dev.spacy"
+      - "configs/transformer.cfg"
+      - "corpus/${vars.ud_treebank}/morphologizer.json"
+      - "corpus/${vars.ud_treebank}/parser.json"
+      - "corpus/${vars.ud_treebank}/tagger.json"
       - "training/${vars.ud_treebank}/tokenizer/model-best"
     outputs:
       - "training/${vars.ud_treebank}/transformer/model-best"
