@@ -80,7 +80,7 @@ commands:
       - "training/${vars.ud_treebank}/lemmatizer/model-best"
 
   - name: init-labels-transformer
-    help: "Train transformer"
+    help: "Initialize labels for transformer components from gold tokenization"
     script:
       - "python -m spacy init labels configs/transformer.cfg corpus/${vars.ud_treebank}/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --corpora.train.gold_preproc true --corpora.dev.gold_preproc true --paths.labels corpus/UD_English-EWT"
     deps:

@@ -22,6 +22,7 @@ Commands are only re-run if their inputs have changed.
 | `convert` | Convert the data to spaCy's format |
 | `train-tokenizer` | Train tokenizer |
 | `train-lemmatizer` | Train lemmatizer |
+| `init-labels-transformer` | Initialize labels for transformer components from gold tokenization |
 | `train-transformer` | Train transformer |
 | `assemble` | Assemble full pipeline |
 | `evaluate` | Evaluate on the test data and save the metrics |
@@ -37,7 +38,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `extract` &rarr; `convert` &rarr; `train-tokenizer` &rarr; `train-lemmatizer` &rarr; `train-transformer` &rarr; `assemble` &rarr; `evaluate` &rarr; `package` |
+| `all` | `extract` &rarr; `convert` &rarr; `train-tokenizer` &rarr; `train-lemmatizer` &rarr; `init-labels-transformer` &rarr; `train-transformer` &rarr; `assemble` &rarr; `evaluate` &rarr; `package` |
 
 ### 🗂 Assets
 
