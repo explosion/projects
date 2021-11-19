@@ -1,27 +1,39 @@
-import spacy
+from typing import Optional, List
+import glob
+from pathlib import Path
 import re
 import tempfile
 import typer
+import spacy
 from conll18_ud_eval import load_conllu, evaluate
-from typing import Optional, List
-import code
 
 
-def main(model: str, gold_conllu: str, text: Optional[str] = None, output: Optional[str] = None, gpu_id: int = -1):
+def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1):
     if gpu_id >= 0:
         spacy.require_gpu(gpu_id)
 
     # load model from model name or path
     nlp = spacy.load(model)
 
+    test_txt_file = None
+    test_txt_files = glob.glob(str(gold_dir.resolve()) + "/*test.txt")
+    if len(test_txt_files) > 0:
+        test_txt_file = test_txt_files[0]
+    test_conllu_file = None
+    test_conllu_files = glob.glob(str(gold_dir.resolve()) + "/*test.conllu")
+    if len(test_conllu_files) > 0:
+        test_conllu_file = test_conllu_files[0]
+
     # if raw text input is provided, load texts from plain text file
-    if text:
-        with open(text) as fileh:
+    if test_txt_file:
+        with open(test_txt_file) as fileh:
             content = fileh.read()
-            texts = [text.replace("\n", " ").strip() for text in content.split("\n\n")]
+            texts = [re.sub(r"\s+", " ", text.replace("\n", " ").strip()) for text in content.split("\n\n")]
     # otherwise generate raw text input from gold CoNLL-U file
+    elif test_conllu_file:
+        texts = gold_to_texts(test_conllu_file)
     else:
-        texts = gold_to_texts(gold_conllu)
+        raise ValueError("No test.txt or test.conllu files found in", gold_dir)
 
     # apply model to texts
     docs = nlp.pipe(texts)
@@ -32,9 +44,8 @@ def main(model: str, gold_conllu: str, text: Optional[str] = None, output: Optio
     for doc in docs:
         for sent in doc.sents:
             output_lines.append("# text = " + sent.text + "\n")
+            assert all(not token.is_space for token in doc)
             for i, token in enumerate(sent):
-                if token.is_space:
-                    continue
                 cols = ["_"] * 10
                 cols[0] = str(i + 1)
                 cols[1] = token.text
@@ -52,14 +63,14 @@ def main(model: str, gold_conllu: str, text: Optional[str] = None, output: Optio
                     cols[9] = "SpaceAfter=No"
                 output_lines.append("\t".join(cols) + "\n")
             output_lines.append("\n")
-    with tempfile.TemporaryFile("w+") as fileh:
+    with tempfile.NamedTemporaryFile("w+", delete=False) as fileh:
         fileh.writelines(output_lines)
         fileh.flush()
         fileh.seek(0)
         pred_corpus = load_conllu(fileh)
 
     # load the gold CoNLL-U file
-    with open(gold_conllu) as fileh:
+    with open(test_conllu_file) as fileh:
         gold_corpus = load_conllu(fileh)
 
     # run the CoNLL 2018 shared task evaluation
