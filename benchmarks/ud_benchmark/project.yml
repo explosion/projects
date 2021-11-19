@@ -9,6 +9,7 @@ vars:
   package_name: "udv25_englishewt_trf"
   transformer_model: "xlm-roberta-base"
   gpu: 0
+  mixed_precision: true
   package_version: "0.0.1"
 
 # These are the directories that the project needs. The project CLI will make
@@ -95,7 +96,7 @@ commands:
   - name: train-transformer
     help: "Train transformer"
     script:
-        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --paths.labels corpus/${vars.ud_treebank}"
+        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --paths.labels corpus/${vars.ud_treebank} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
