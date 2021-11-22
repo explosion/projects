@@ -5,16 +5,11 @@ import re
 import tempfile
 import typer
 import spacy
+from thinc.api import set_gpu_allocator
 from conll18_ud_eval import load_conllu, evaluate
 
 
-def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1):
-    if gpu_id >= 0:
-        spacy.require_gpu(gpu_id)
-
-    # load model from model name or path
-    nlp = spacy.load(model)
-
+def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1, sents_per_text: int = -1):
     test_txt_file = None
     test_txt_files = glob.glob(str(gold_dir.resolve()) + "/*test.txt")
     if len(test_txt_files) > 0:
@@ -35,8 +30,33 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
     else:
         raise ValueError("No test.txt or test.conllu files found in", gold_dir)
 
+    # if desired (for GPU), break up very long texts
+    if sents_per_text > 0:
+        split_texts = []
+        sentencizer_nlp = spacy.blank("xx")
+        sentencizer_nlp.max_length = max(len(text) + 1 for text in texts)
+        sentencizer_nlp.add_pipe("sentencizer")
+        for doc in sentencizer_nlp.pipe(texts):
+            sents = list(doc.sents)
+            for i in range(0, len(sents), sents_per_text):
+                start_t = sents[i][0].i
+                if len(sents) < i + sents_per_text:
+                    end_t = len(doc)
+                else:
+                    end_t = sents[i+sents_per_text][0].i
+                split_texts.append(doc[sents[i][0].i:end_t].text)
+    else:
+        split_texts = texts
+
+    if gpu_id >= 0:
+        spacy.require_gpu(gpu_id)
+        set_gpu_allocator("pytorch")
+
+    # load model from model name or path
+    nlp = spacy.load(model)
+
     # apply model to texts
-    docs = nlp.pipe(texts)
+    docs = nlp.pipe(split_texts, batch_size=1)
 
     # load the system CoNLL-U predictions by creating a temporary CoNLL-U
     # output file
