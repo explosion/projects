@@ -3,10 +3,10 @@ description: "This project template lets you train a tokenizer, lemmatizer, part
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  ud_treebank: "UD_English-EWT"
+  ud_treebank: "UD_Danish-DDT"
   # use "xx" for a language not currently supported by spaCy
-  spacy_lang: "en"
-  package_name: "udv25_englishewt_trf"
+  spacy_lang: "da"
+  package_name: "udv25_danishddt_trf"
   transformer_model: "xlm-roberta-base"
   gpu: 0
   mixed_precision: true
@@ -26,8 +26,6 @@ workflows:
     - extract
     - convert
     - train-tokenizer
-    - train-lemmatizer
-    - init-labels-transformer
     - train-transformer
     - assemble
     - evaluate
@@ -67,43 +65,14 @@ commands:
     outputs:
       - "training/${vars.ud_treebank}/tokenizer/model-best"
 
-  - name: train-lemmatizer
-    help: "Train lemmatizer"
-    script:
-      - "python -m spacy train configs/lemmatizer.cfg -o training/${vars.ud_treebank}/lemmatizer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best"
-    deps:
-      - "corpus/${vars.ud_treebank}/train.spacy"
-      - "corpus/${vars.ud_treebank}/dev.spacy"
-      - "configs/lemmatizer.cfg"
-      - "training/${vars.ud_treebank}/tokenizer/model-best"
-    outputs:
-      - "training/${vars.ud_treebank}/lemmatizer/model-best"
-
-  - name: init-labels-transformer
-    help: "Initialize labels for transformer components from gold tokenization"
-    script:
-      - "python -m spacy init labels configs/transformer.cfg corpus/${vars.ud_treebank}/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --corpora.train.gold_preproc true --corpora.dev.gold_preproc true --paths.labels corpus/UD_English-EWT"
-    deps:
-      - "corpus/${vars.ud_treebank}/train.spacy"
-      - "corpus/${vars.ud_treebank}/dev.spacy"
-      - "configs/transformer.cfg"
-      - "training/${vars.ud_treebank}/tokenizer/model-best"
-    outputs:
-      - "corpus/${vars.ud_treebank}/morphologizer.json"
-      - "corpus/${vars.ud_treebank}/parser.json"
-      - "corpus/${vars.ud_treebank}/tagger.json"
-
   - name: train-transformer
     help: "Train transformer"
     script:
-        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.elephant_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --paths.labels corpus/${vars.ud_treebank} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
+        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.experimental_char_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
       - "configs/transformer.cfg"
-      - "corpus/${vars.ud_treebank}/morphologizer.json"
-      - "corpus/${vars.ud_treebank}/parser.json"
-      - "corpus/${vars.ud_treebank}/tagger.json"
       - "training/${vars.ud_treebank}/tokenizer/model-best"
     outputs:
       - "training/${vars.ud_treebank}/transformer/model-best"
@@ -111,13 +80,12 @@ commands:
   - name: assemble
     help: "Assemble full pipeline"
     script:
-      - "python -m spacy assemble configs/assemble.cfg training/${vars.ud_treebank}/final --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --paths.tokenizer_source training/${vars.ud_treebank}/tokenizer/model-best --paths.lemmatizer_source training/${vars.ud_treebank}/lemmatizer/model-best --paths.transformer_source training/${vars.ud_treebank}/transformer/model-best"
+      - "python -m spacy assemble configs/assemble.cfg training/${vars.ud_treebank}/final --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --paths.tokenizer_source training/${vars.ud_treebank}/tokenizer/model-best --paths.transformer_source training/${vars.ud_treebank}/transformer/model-best"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
       - "configs/assemble.cfg"
       - "training/${vars.ud_treebank}/tokenizer/model-best"
-      - "training/${vars.ud_treebank}/lemmatizer/model-best"
       - "training/${vars.ud_treebank}/transformer/model-best"
     outputs:
       - "training/${vars.ud_treebank}/final"
@@ -125,7 +93,8 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.txt --gpu-id ${vars.gpu}"
+      # not on GPU due to potential RAM
+      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.txt --gpu-id -1"
     deps:
       - "training/${vars.ud_treebank}/final"
       - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
