@@ -3,10 +3,10 @@ description: "This project template lets you train a spaCy pipeline on any [Univ
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  ud_treebank: "UD_Danish-DDT"
+  ud_treebank: "UD_English-EWT"
   # use "xx" for a language not currently supported by spaCy
-  spacy_lang: "da"
-  package_name: "udv25_danishddt_trf"
+  spacy_lang: "en"
+  package_name: "udv25_englishewt_trf"
   transformer_model: "xlm-roberta-base"
   gpu: 0
   mixed_precision: true
