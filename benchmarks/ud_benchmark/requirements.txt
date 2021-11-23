@@ -1,1 +1,1 @@
-spacy-experimental==0.1.0
+spacy-experimental==0.2.0
