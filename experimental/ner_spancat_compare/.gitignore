@@ -1,0 +1,5 @@
+# spaCy project
+training/
+corpus/
+metrics/
+assets/
