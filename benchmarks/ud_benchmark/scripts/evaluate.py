@@ -4,12 +4,13 @@ from pathlib import Path
 import re
 import tempfile
 import typer
+import srsly
 import spacy
 from thinc.api import set_gpu_allocator
 from conll18_ud_eval import load_conllu, evaluate
 
 
-def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1, sents_per_text: int = -1):
+def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1, batch_size: int = 64, sents_per_text: int = -1, enable_senter: bool = False):
     test_txt_file = None
     test_txt_files = glob.glob(str(gold_dir.resolve()) + "/*test.txt")
     if len(test_txt_files) > 0:
@@ -54,8 +55,12 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
 
     # load model from model name or path
     nlp = spacy.load(model)
+    if enable_senter:
+        nlp.enable_pipe("senter")
+    else:
+        nlp.disable_pipe("senter")
 
-    # apply model to texts
+    # apply model to texts (batch_size=1 is slow, but reduces change of OOM)
     docs = nlp.pipe(split_texts, batch_size=1)
 
     # load the system CoNLL-U predictions by creating a temporary CoNLL-U
@@ -83,7 +88,7 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
                     cols[9] = "SpaceAfter=No"
                 output_lines.append("\t".join(cols) + "\n")
             output_lines.append("\n")
-    with tempfile.NamedTemporaryFile("w+", delete=False) as fileh:
+    with tempfile.NamedTemporaryFile("w+") as fileh:
         fileh.writelines(output_lines)
         fileh.flush()
         fileh.seek(0)
@@ -99,8 +104,17 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
     # output evaluation to output file or stdout
     evaluation_table = format_evaluation(scores)
     if output:
-        with open(output, "w") as fileh:
+        with open(output + ".txt", "w") as fileh:
             fileh.write(evaluation_table)
+        scores_dict = {}
+        for key, score in scores.items():
+            scores_dict[key] = {
+                "precision": score.precision,
+                "recall": score.recall,
+                "f1": score.f1,
+                "aligned_accuracy": score.aligned_accuracy,
+            }
+        srsly.write_json(output + ".json", scores_dict)
     else:
         print("".join(evaluation_table))
 

@@ -94,12 +94,25 @@ commands:
     help: "Evaluate on the test data and save the metrics"
     script:
       # not on GPU due to potential RAM
-      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.txt --gpu-id -1"
+      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1"
     deps:
       - "training/${vars.ud_treebank}/final"
       - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
     outputs:
-      - "metrics/${vars.ud_treebank}.txt"
+      - "metrics/${vars.ud_treebank}.default.txt"
+      - "metrics/${vars.ud_treebank}.default.json"
+
+  - name: evaluate-with-senter
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      # not on GPU due to potential RAM
+      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --enable-senter"
+    deps:
+      - "training/${vars.ud_treebank}/final"
+      - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
+    outputs:
+      - "metrics/${vars.ud_treebank}.senter.txt"
+      - "metrics/${vars.ud_treebank}.senter.json"
 
   - name: package
     help: "Package the trained model so it can be installed"
