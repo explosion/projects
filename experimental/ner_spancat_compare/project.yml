@@ -1,0 +1,36 @@
+title: "Comparing SpanCat and NER using a corpus of medical abstracts with Patient, Intervention, and Outcomes (PIO) annotations"
+vars:
+  config: "config.cfg"
+  name: "ner_spancat_compare"
+  version: "1.0.0"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist
+directories: ["assets", "corpus", "scripts"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/ebm_nlp_1_00.tar.gz"
+    description: "The full dataset containing text files of medical abstracts and their annotations."
+    url: https://github.com/bepnye/EBM-NLP/master/ebm_nlp_1_00.tar.gz
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script:
+      - "pip3 install --user -r requirements.txt"
+      - "python -m spacy download en_core_web_lg"
+  - name: "preprocess"
+    help: "Convert raw inputs into spaCy's binary format"
+    script:
+      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/"
+    deps:
+      - "assets/ebm_nlp_1_00.tar.gz"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/test.spacy"
