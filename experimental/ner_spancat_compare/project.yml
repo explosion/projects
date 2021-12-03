@@ -35,6 +35,7 @@ commands:
       - "assets/ebm_nlp_1_00.tar.gz"
     outputs:
       - "corpus/train.spacy"
+      - "corpus/dev.spacy"
       - "corpus/test.spacy"
 
   - name: "train-spancat"

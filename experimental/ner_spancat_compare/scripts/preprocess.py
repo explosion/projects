@@ -1,4 +1,6 @@
+from multiprocessing import Value
 import re
+import random
 import tarfile
 from glob import glob
 from pathlib import Path
@@ -116,6 +118,17 @@ def main(
     output_path: Path = typer.Argument(
         ..., dir_okay=True, help="Output directory to save the spaCy serialized format."
     ),
+    train_size: float = typer.Option(
+        0.8, show_default=True, help="Ratio of training data"
+    ),
+    shuffle: bool = typer.Option(
+        True,
+        show_default=True,
+        help="Shuffle training data before splitting it to dev.",
+    ),
+    random_seed: int = typer.Option(
+        42, show_default=True, help="Random seed to control shuffling."
+    ),
 ):
     """Convert the downloaded EBM-NLP data into the spaCy binary format"""
     # Extract the tar.gz file
@@ -135,6 +148,18 @@ def main(
     ]
     msg.text(f"Found {len(train_file_ids)} train and {len(test_file_ids)} test files")
 
+    # Shuffle and split training data into train and dev
+    random.seed(random_seed)
+    if shuffle:
+        msg.text(f"Shuffling the training IDs before splitting (seed={random_seed})")
+        random.shuffle(train_file_ids)
+    training_count = int(len(train_file_ids) * train_size)
+    dev_file_ids = train_file_ids[training_count:]
+    train_file_ids = train_file_ids[:training_count]
+    msg.text(
+        f"Split files into {len(train_file_ids)} train and {len(dev_file_ids)} dev"
+    )
+
     # Convert to DocBin then save to disk
     nlp = spacy.blank("en")
 
@@ -148,6 +173,17 @@ def main(
             train_doc_bin.add(doc)
     train_doc_bin.to_disk(output_path / "train.spacy")
     msg.good(f"Saved train docs to corpus")
+
+    dev_doc_bin = DocBin()
+    for dev_id in tqdm(dev_file_ids, desc="Parsing dev files"):
+        try:
+            doc = to_spacy(dev_id, nlp)
+        except ValueError as e:
+            msg.fail(f"Error in {dev_id}: {e}")
+        else:
+            dev_doc_bin.add(doc)
+    dev_doc_bin.to_disk(output_path / "dev.spacy")
+    msg.good(f"Saved dev docs to corpus")
 
     test_doc_bin = DocBin()
     for test_id in tqdm(test_file_ids, desc="Parsing test files"):
