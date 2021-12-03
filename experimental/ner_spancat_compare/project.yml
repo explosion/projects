@@ -37,6 +37,17 @@ commands:
       - "corpus/train.spacy"
       - "corpus/test.spacy"
 
+  - name: "train-spancat"
+    help: "Train a SpanCat pipeline"
+    script:
+      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/spancat.cfg"
+    outputs:
+      - "training/spancat/model-best"
+
   - name: "clean"
     help: "Remove intermediate files"
     script:
