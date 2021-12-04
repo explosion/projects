@@ -109,6 +109,22 @@ def to_spacy(file_id, nlp) -> Doc:
     return doc
 
 
+def convert_to_docbin(
+    nlp, file_ids: List[str], dataset_type: str, output_path: Path
+) -> DocBin:
+    """Convert to DocBin and save them to disk"""
+    doc_bin = DocBin()
+    for id_ in tqdm(file_ids, desc=f"Parsing {dataset_type} files"):
+        try:
+            doc = to_spacy(id_, nlp)
+        except ValueError as e:
+            msg.fail(f"Error in {id_}: {e}")
+        else:
+            doc_bin.add(doc)
+    doc_bin.to_disk(output_path / f"{dataset_type}.spacy")
+    msg.good(f"Saved {dataset_type} Docs to corpus")
+
+
 def main(
     input_path: Path = typer.Argument(
         ..., exists=True, dir_okay=False, help="Path to the tar.gz file."
@@ -135,7 +151,7 @@ def main(
         for member in tqdm(f.getmembers(), total=len(f.getmembers())):
             f.extract(member, path=dirs.ASSETS_DIR)
 
-    # Read each file and convert them into a spaCy doc
+    # Read each file and get the IDs
     train_file_ids = [
         _get_ids(file.stem)
         for file in (dirs.PARTICIPANTS_DIR / "train").glob("*_AGGREGATED.ann")
@@ -160,39 +176,9 @@ def main(
 
     # Convert to DocBin then save to disk
     nlp = spacy.blank("en")
-
-    train_doc_bin = DocBin()
-    for train_id in tqdm(train_file_ids, desc="Parsing train files"):
-        try:
-            doc = to_spacy(train_id, nlp)
-        except ValueError as e:
-            msg.fail(f"Error in {train_id}: {e}")
-        else:
-            train_doc_bin.add(doc)
-    train_doc_bin.to_disk(output_path / "train.spacy")
-    msg.good(f"Saved train docs to corpus")
-
-    dev_doc_bin = DocBin()
-    for dev_id in tqdm(dev_file_ids, desc="Parsing dev files"):
-        try:
-            doc = to_spacy(dev_id, nlp)
-        except ValueError as e:
-            msg.fail(f"Error in {dev_id}: {e}")
-        else:
-            dev_doc_bin.add(doc)
-    dev_doc_bin.to_disk(output_path / "dev.spacy")
-    msg.good(f"Saved dev docs to corpus")
-
-    test_doc_bin = DocBin()
-    for test_id in tqdm(test_file_ids, desc="Parsing test files"):
-        try:
-            doc = to_spacy(test_id, nlp)
-        except ValueError as e:
-            msg.fail(f"Error in {test_id}: {e}")
-        else:
-            test_doc_bin.add(doc)
-    test_doc_bin.to_disk(output_path / "test.spacy")
-    msg.good(f"Saved test docs to corpus")
+    convert_to_docbin(nlp, train_file_ids, "train", output_path)
+    convert_to_docbin(nlp, dev_file_ids, "dev", output_path)
+    convert_to_docbin(nlp, test_file_ids, "test", output_path)
 
 
 if __name__ == "__main__":
