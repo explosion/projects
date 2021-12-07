@@ -3,6 +3,7 @@ vars:
   config: "config.cfg"
   name: "ner_spancat_compare"
   version: "1.0.0"
+  spans_key: "sc"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist
