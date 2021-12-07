@@ -1,6 +1,8 @@
 title: "Universal Dependencies v2.5 Benchmarks"
 description: "This project template lets you train a spaCy pipeline on any [Universal Dependencies](https://universaldependencies.org/) corpus (v2.5) for benchmarking purposes. The pipeline includes an experimental trainable tokenizer, an experimental edit tree lemmatizer, and the standard spaCy tagger, morphologizer and dependency parser components. The CoNLL 2018 evaluation script is used to evaluate the pipeline. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `ud_treebank` and `spacy_lang` settings in the config. Use `xx` (multi-language) for `spacy_lang` if a particular language is not supported by spaCy. The tokenizer in particular is only intended for use in this generic benchmarking setup. It is not optimized for speed and it does not perform particularly well for languages without space-separated tokens. In production, custom rules for spaCy's rule-based tokenizer or a language-specific word segmenter such as jieba for Chinese or sudachipy for Japanese would be recommended instead."
 
+spacy_version: ">=3.2.1,<4.0.0"
+
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   ud_treebank: "UD_English-EWT"
