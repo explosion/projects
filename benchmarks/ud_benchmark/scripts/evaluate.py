@@ -51,7 +51,6 @@ def main(
         for doc in sentencizer_nlp.pipe(texts):
             sents = list(doc.sents)
             for i in range(0, len(sents), sents_per_text):
-                start_t = sents[i][0].i
                 if len(sents) < i + sents_per_text:
                     end_t = len(doc)
                 else:
@@ -71,7 +70,7 @@ def main(
     else:
         nlp.disable_pipe("senter")
 
-    # apply model to texts (batch_size=1 is slow, but reduces change of OOM)
+    # apply model to texts (batch_size=1 is slow, but reduces chance of OOM)
     docs = nlp.pipe(split_texts, batch_size=1)
 
     # load the system CoNLL-U predictions by creating a temporary CoNLL-U
@@ -180,14 +179,14 @@ def gold_to_texts(gold_conllu: str) -> List[str]:
         for line in fileh:
             line = line.strip()
             if text and (line.startswith("# newdoc") or line.startswith("# newpar")):
-                texts.append(re.sub("\s+", " ", text.strip()))
+                texts.append(re.sub(r"\s+", " ", text.strip()))
                 text = ""
             if line.startswith("# text = "):
                 text += line.replace("# text = ", "")
             if line == "":
                 cols = prev_line.split("\t")
                 if len(cols) >= 10:
-                    if not "SpaceAfter=No" in cols[9]:
+                    if "SpaceAfter=No" not in cols[9]:
                         text += " "
             prev_line = line
         if text:
