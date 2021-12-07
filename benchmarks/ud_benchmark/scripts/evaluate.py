@@ -10,7 +10,15 @@ from thinc.api import set_gpu_allocator
 from conll18_ud_eval import load_conllu, evaluate
 
 
-def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int = -1, batch_size: int = 64, sents_per_text: int = -1, enable_senter: bool = False):
+def main(
+    model: str,
+    gold_dir: Path,
+    output: Optional[str] = None,
+    gpu_id: int = -1,
+    batch_size: int = 64,
+    sents_per_text: int = -1,
+    enable_senter: bool = False,
+):
     test_txt_file = None
     test_txt_files = glob.glob(str(gold_dir.resolve()) + "/*test.txt")
     if len(test_txt_files) > 0:
@@ -24,7 +32,10 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
     if test_txt_file:
         with open(test_txt_file) as fileh:
             content = fileh.read()
-            texts = [re.sub(r"\s+", " ", text.replace("\n", " ").strip()) for text in content.split("\n\n")]
+            texts = [
+                re.sub(r"\s+", " ", text.replace("\n", " ").strip())
+                for text in content.split("\n\n")
+            ]
     # otherwise generate raw text input from gold CoNLL-U file
     elif test_conllu_file:
         texts = gold_to_texts(test_conllu_file)
@@ -44,8 +55,8 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
                 if len(sents) < i + sents_per_text:
                     end_t = len(doc)
                 else:
-                    end_t = sents[i+sents_per_text][0].i
-                split_texts.append(doc[sents[i][0].i:end_t].text)
+                    end_t = sents[i + sents_per_text][0].i
+                split_texts.append(doc[sents[i][0].i : end_t].text)
     else:
         split_texts = texts
 
@@ -82,7 +93,11 @@ def main(model: str, gold_dir: Path, output: Optional[str] = None, gpu_id: int =
                     cols[4] = token.tag_
                 if str(token.morph):
                     cols[5] = str(token.morph)
-                cols[6] = "0" if token.head.i == token.i else str(token.head.i + 1 - sent[0].i)
+                cols[6] = (
+                    "0"
+                    if token.head.i == token.i
+                    else str(token.head.i + 1 - sent[0].i)
+                )
                 cols[7] = "root" if token.dep_ == "ROOT" else token.dep_
                 if not token.whitespace_:
                     cols[9] = "SpaceAfter=No"
@@ -125,14 +140,32 @@ def format_evaluation(evaluation) -> List[str]:
     lines = []
     lines.append("Metric     | Precision |    Recall |  F1 Score | AligndAcc")
     lines.append("-----------+-----------+-----------+-----------+-----------")
-    for metric in["Tokens", "Sentences", "Words", "UPOS", "XPOS", "UFeats", "AllTags", "Lemmas", "UAS", "LAS", "CLAS", "MLAS", "BLEX"]:
-        lines.append("{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{}".format(
-            metric,
-            100 * evaluation[metric].precision,
-            100 * evaluation[metric].recall,
-            100 * evaluation[metric].f1,
-            "{:10.2f}".format(100 * evaluation[metric].aligned_accuracy) if evaluation[metric].aligned_accuracy is not None else ""
-        ))
+    for metric in [
+        "Tokens",
+        "Sentences",
+        "Words",
+        "UPOS",
+        "XPOS",
+        "UFeats",
+        "AllTags",
+        "Lemmas",
+        "UAS",
+        "LAS",
+        "CLAS",
+        "MLAS",
+        "BLEX",
+    ]:
+        lines.append(
+            "{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{}".format(
+                metric,
+                100 * evaluation[metric].precision,
+                100 * evaluation[metric].recall,
+                100 * evaluation[metric].f1,
+                "{:10.2f}".format(100 * evaluation[metric].aligned_accuracy)
+                if evaluation[metric].aligned_accuracy is not None
+                else "",
+            )
+        )
     return "\n".join(lines)
 
 
