@@ -103,7 +103,7 @@ def main(
                     cols[9] = "SpaceAfter=No"
                 output_lines.append("\t".join(cols) + "\n")
             output_lines.append("\n")
-    with tempfile.NamedTemporaryFile("w+") as fileh:
+    with tempfile.TemporaryFile("w+") as fileh:
         fileh.writelines(output_lines)
         fileh.flush()
         fileh.seek(0)
