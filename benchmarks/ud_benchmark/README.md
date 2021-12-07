@@ -24,6 +24,7 @@ Commands are only re-run if their inputs have changed.
 | `train-transformer` | Train transformer |
 | `assemble` | Assemble full pipeline |
 | `evaluate` | Evaluate on the test data and save the metrics |
+| `evaluate-with-senter` | Evaluate on the test data and save the metrics |
 | `package` | Package the trained model so it can be installed |
 | `clean` | Remove intermediate files |
 
@@ -36,7 +37,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `extract` &rarr; `convert` &rarr; `train-tokenizer` &rarr; `train-transformer` &rarr; `assemble` &rarr; `evaluate` &rarr; `package` |
+| `all` | `extract` &rarr; `convert` &rarr; `train-tokenizer` &rarr; `train-transformer` &rarr; `assemble` &rarr; `evaluate` &rarr; `evaluate-with-senter` &rarr; `package` |
 
 ### 🗂 Assets
 

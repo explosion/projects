@@ -29,6 +29,7 @@ workflows:
     - train-transformer
     - assemble
     - evaluate
+    - evaluate-with-senter
     - package
 
 commands:
@@ -45,7 +46,7 @@ commands:
     help: "Convert the data to spaCy's format"
     script:
       - "python scripts/copy_files.py train conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/train/"
-      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/dev"
+      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/dev/"
       - "python -m spacy convert corpus/${vars.ud_treebank}/train/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
       - "python -m spacy convert corpus/${vars.ud_treebank}/dev/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
     deps:
@@ -93,8 +94,11 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      # not on GPU due to potential RAM
+      # not on GPU to avoid RAM issues on long test texts
       - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1"
+      # for very large corpora like UD_German-HDT, you can split the test texts
+      # with the rule-based sentencizer into smaller texts for evaluation
+      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --sents-per-text 500"
     deps:
       - "training/${vars.ud_treebank}/final"
       - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
@@ -105,8 +109,11 @@ commands:
   - name: evaluate-with-senter
     help: "Evaluate on the test data and save the metrics"
     script:
-      # not on GPU due to potential RAM
+      # not on GPU to avoid RAM issues on long test texts
       - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --enable-senter"
+      # for very large corpora like UD_German-HDT, you can split the test texts
+      # with the rule-based sentencizer into smaller texts for evaluation
+      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --enable-senter --sents-per-text 500"
     deps:
       - "training/${vars.ud_treebank}/final"
       - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
@@ -117,6 +124,7 @@ commands:
   - name: package
     help: "Package the trained model so it can be installed"
     script:
+      - "cp assets/ud-treebanks-v2.5/${vars.ud_treebank}/LICENSE.txt training/${vars.ud_treebank}/final"
       - "python -m spacy package training/${vars.ud_treebank}/final packages --name ${vars.package_name} --version ${vars.package_version} --force"
     deps:
       - "training/${vars.ud_treebank}/final"
