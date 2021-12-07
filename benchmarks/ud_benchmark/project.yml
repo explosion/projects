@@ -71,7 +71,7 @@ commands:
   - name: train-transformer
     help: "Train transformer"
     script:
-        - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.experimental_char_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
+      - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.experimental_char_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
