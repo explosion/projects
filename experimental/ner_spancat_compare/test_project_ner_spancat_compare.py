@@ -5,7 +5,7 @@ from spacy.cli.project.assets import project_assets
 
 # from spacy.cli.project.run import project_run
 
-from scripts.preprocess import _get_contiguous_tokens
+from .scripts.preprocess import _get_contiguous_tokens
 
 
 @pytest.mark.parametrize(
@@ -17,7 +17,7 @@ from scripts.preprocess import _get_contiguous_tokens
     ],
 )
 def test_contiguous_tokens_generator(labels, span):
-    """Test if the method for generating contiguous tokens from EBM-NLP works correctly"""
+    """Test if the method for generating tokens from EBM-NLP works correctly"""
     assert set(_get_contiguous_tokens(labels)) == set(span)
 
 
