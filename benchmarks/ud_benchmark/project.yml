@@ -100,7 +100,7 @@ commands:
       - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1"
       # for very large corpora like UD_German-HDT, you can split the test texts
       # with the rule-based sentencizer into smaller texts for evaluation
-      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --sents-per-text 500"
+      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1 --sents-per-text 500"
     deps:
       - "training/${vars.ud_treebank}/final"
       - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
