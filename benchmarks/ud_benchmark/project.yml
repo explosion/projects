@@ -1,21 +1,22 @@
 title: "Universal Dependencies v2.5 Benchmarks"
-description: "This project template lets you train a part-of-speech tagger, a morphologizer and a dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus (v2.5). It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `ud_treebank`, `ud_prefix` and `spacy_lang` settings in the config. Use `xx` (multi-language) for `spacy_lang` if no language-specific tokenizer is available in spaCy."
+description: "This project template lets you train a spaCy pipeline on any [Universal Dependencies](https://universaldependencies.org/) corpus (v2.5) for benchmarking purposes. The pipeline includes an experimental trainable tokenizer, an experimental edit tree lemmatizer, and the standard spaCy tagger, morphologizer and dependency parser components. The CoNLL 2018 evaluation script is used to evaluate the pipeline. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `ud_treebank` and `spacy_lang` settings in the config. Use `xx` (multi-language) for `spacy_lang` if a particular language is not supported by spaCy. The tokenizer in particular is only intended for use in this generic benchmarking setup. It is not optimized for speed and it does not perform particularly well for languages without space-separated tokens. In production, custom rules for spaCy's rule-based tokenizer or a language-specific word segmenter such as jieba for Chinese or sudachipy for Japanese would be recommended instead."
+
+spacy_version: ">=3.2.1,<4.0.0"
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   ud_treebank: "UD_English-EWT"
-  ud_prefix: "en_ewt"
+  # use "xx" for a language not currently supported by spaCy
   spacy_lang: "en"
-  # spacy model with vectors by name or path: "en_core_web_lg"
-  # if used, switch from train to train-with-vectors
-  vectors: null
+  package_name: "udv25_englishewt_trf"
+  transformer_model: "xlm-roberta-base"
   gpu: 0
-  package_name: "ud_en_ewt"
-  package_version: "0.0.0"
+  mixed_precision: true
+  package_version: "0.0.1"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "metrics", "configs", "packages"]
+directories: ["assets", "training", "metrics", "packages"]
 
 assets:
   - dest: "assets/ud-treebanks-v2.5.tgz"
@@ -26,10 +27,11 @@ workflows:
   all:
     - extract
     - convert
-    - generate-config
-    - train
-    # - train-with-vectors
+    - train-tokenizer
+    - train-transformer
+    - assemble
     - evaluate
+    - evaluate-with-senter
     - package
 
 commands:
@@ -45,68 +47,89 @@ commands:
   - name: convert
     help: "Convert the data to spaCy's format"
     script:
-      - "mkdir -p corpus/${vars.ud_treebank}"
-      - "python -m spacy convert assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-train.conllu corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T"
-      - "python -m spacy convert assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-dev.conllu corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T"
-      - "python -m spacy convert assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.conllu corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T"
-      - "mv corpus/${vars.ud_treebank}/${vars.ud_prefix}-ud-train.spacy corpus/${vars.ud_treebank}/train.spacy"
-      - "mv corpus/${vars.ud_treebank}/${vars.ud_prefix}-ud-dev.spacy corpus/${vars.ud_treebank}/dev.spacy"
-      - "mv corpus/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.spacy corpus/${vars.ud_treebank}/test.spacy"
+      - "python scripts/copy_files.py train conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/train/"
+      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/dev/"
+      - "python -m spacy convert corpus/${vars.ud_treebank}/train/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+      - "python -m spacy convert corpus/${vars.ud_treebank}/dev/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
     deps:
       - "assets/ud-treebanks-v2.5/"
     outputs:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
-      - "corpus/${vars.ud_treebank}/test.spacy"
 
-  - name: generate-config
-    help: "Generate config"
+  - name: train-tokenizer
+    help: "Train tokenizer"
     script:
-      - "python -m spacy init config -l ${vars.spacy_lang} -p morphologizer,tagger,parser -o accuracy configs/${vars.ud_treebank}.cfg"
-    outputs:
-      - "configs/${vars.ud_treebank}.cfg"
-
-  - name: train
-    help: "Train without vectors"
-    script:
-      - "python -m spacy train configs/${vars.ud_treebank}.cfg -o training/${vars.ud_treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --training.max_steps=0 --initialize.vectors=null --components.tok2vec.model.embed.include_static_vectors=false"
+      - "python -m spacy train configs/tokenizer.cfg -o training/${vars.ud_treebank}/tokenizer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
-      - "configs/${vars.ud_treebank}.cfg"
+      - "configs/tokenizer.cfg"
     outputs:
-      - "training/${vars.ud_treebank}/model-best"
+      - "training/${vars.ud_treebank}/tokenizer/model-best"
 
-  - name: train-with-vectors
-    help: "Train with vectors"
+  - name: train-transformer
+    help: "Train transformer"
     script:
-      - "python -m spacy train configs/${vars.ud_treebank}.cfg -o training2/${vars.ud_treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --training.max_steps=0 --initialize.vectors=${vars.vectors}"
+      - "python -m spacy train configs/transformer.cfg -o training/${vars.ud_treebank}/transformer --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --components.experimental_char_ner_tokenizer.source training/${vars.ud_treebank}/tokenizer/model-best --components.transformer.model.name ${vars.transformer_model} --components.transformer.model.mixed_precision ${vars.mixed_precision}"
     deps:
       - "corpus/${vars.ud_treebank}/train.spacy"
       - "corpus/${vars.ud_treebank}/dev.spacy"
-      - "configs/${vars.ud_treebank}.cfg"
+      - "configs/transformer.cfg"
+      - "training/${vars.ud_treebank}/tokenizer/model-best"
     outputs:
-      - "training/${vars.ud_treebank}/model-best"
+      - "training/${vars.ud_treebank}/transformer/model-best"
+
+  - name: assemble
+    help: "Assemble full pipeline"
+    script:
+      - "python -m spacy assemble configs/assemble.cfg training/${vars.ud_treebank}/final --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy --paths.tokenizer_source training/${vars.ud_treebank}/tokenizer/model-best --paths.transformer_source training/${vars.ud_treebank}/transformer/model-best"
+    deps:
+      - "corpus/${vars.ud_treebank}/train.spacy"
+      - "corpus/${vars.ud_treebank}/dev.spacy"
+      - "configs/assemble.cfg"
+      - "training/${vars.ud_treebank}/tokenizer/model-best"
+      - "training/${vars.ud_treebank}/transformer/model-best"
+    outputs:
+      - "training/${vars.ud_treebank}/final"
 
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      # not on GPU because you'd need to handle batching for treebanks withouts
-      # paragraph breaks
-      - "python scripts/evaluate.py training/${vars.ud_treebank}/model-best assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.conllu --output metrics/${vars.ud_treebank}.txt --text assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.txt"
+      # not on GPU to avoid RAM issues on long test texts
+      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1"
+      # for very large corpora like UD_German-HDT, you can split the test texts
+      # with the rule-based sentencizer into smaller texts for evaluation
+      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.default --gpu-id -1 --sents-per-text 500"
     deps:
-      - "training/${vars.ud_treebank}/model-best"
-      - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.conllu"
-      - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/${vars.ud_prefix}-ud-test.txt"
+      - "training/${vars.ud_treebank}/final"
+      - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
     outputs:
-      - "metrics/${vars.ud_treebank}.txt"
+      - "metrics/${vars.ud_treebank}.default.txt"
+      - "metrics/${vars.ud_treebank}.default.json"
+
+  - name: evaluate-with-senter
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      # not on GPU to avoid RAM issues on long test texts
+      - "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --enable-senter"
+      # for very large corpora like UD_German-HDT, you can split the test texts
+      # with the rule-based sentencizer into smaller texts for evaluation
+      #- "python scripts/evaluate.py training/${vars.ud_treebank}/final assets/ud-treebanks-v2.5/${vars.ud_treebank}/ --output metrics/${vars.ud_treebank}.senter --gpu-id -1 --enable-senter --sents-per-text 500"
+    deps:
+      - "training/${vars.ud_treebank}/final"
+      - "assets/ud-treebanks-v2.5/${vars.ud_treebank}/"
+    outputs:
+      - "metrics/${vars.ud_treebank}.senter.txt"
+      - "metrics/${vars.ud_treebank}.senter.json"
 
   - name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package training/${vars.ud_treebank}/model-best packages --name ${vars.package_name} --version ${vars.package_version} --force"
+      - "cp assets/ud-treebanks-v2.5/${vars.ud_treebank}/LICENSE.txt training/${vars.ud_treebank}/final"
+      - "python -m spacy package training/${vars.ud_treebank}/final packages --name ${vars.package_name} --version ${vars.package_version} --force"
     deps:
-      - "training/${vars.ud_treebank}/model-best"
+      - "training/${vars.ud_treebank}/final"
     outputs_no_cache:
       - "packages/${vars.package_name}-${vars.package_version}/dist/${vars.package_name}-${vars.package_version}.tar.gz"
 
