@@ -66,24 +66,41 @@ commands:
       - "pip3 install --user -r requirements.txt"
       - "python -m spacy download en_core_web_lg"
 
-  - name: "preprocess"
-    help: "Convert raw inputs into spaCy's binary format"
+  - name: "preprocess-spancat"
+    help: "Convert raw inputs into spaCy's binary format as preparation for SpanCat training"
     script:
-      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/"
+      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/ --pipeline spancat"
     deps:
       - "assets/ebm_nlp_1_00.tar.gz"
     outputs:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
-      - "corpus/test.spacy"
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
+      - "corpus/spancat_test.spacy"
+
+  - name: "preprocess-ner"
+    help: "Convert raw inputs into spaCy's binary format as preparation for NER training"
+    script:
+      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/ --pipeline ner"
+    deps:
+      - "assets/ebm_nlp_1_00.tar.gz"
+    outputs:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+      - "corpus/ner_test_p.spacy"
+      - "corpus/ner_test_i.spacy"
+      - "corpus/ner_test_o.spacy"
 
   - name: "train-spancat"
     help: "Train a SpanCat pipeline"
     script:
-      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/spancat_train.spacy --paths.dev corpus/spancat_dev.spacy"
     deps:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
       - "configs/spancat.cfg"
     outputs:
       - "training/spancat/model-best"

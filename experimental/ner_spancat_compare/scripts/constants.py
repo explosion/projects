@@ -1,5 +1,7 @@
 from pathlib import Path
 
+SPAN_KEY = "sc"
+
 
 class Directories:
     ROOT_DIR = Path(__file__).parent.parent

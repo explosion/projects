@@ -3,6 +3,7 @@ import re
 import tarfile
 from pathlib import Path
 from typing import List
+from enum import Enum
 
 import numpy as np
 import spacy
@@ -13,6 +14,20 @@ from tqdm import tqdm
 from wasabi import msg
 
 from .constants import Directories as dirs
+from .constants import SPAN_KEY
+
+
+DIRECTORIES = {
+    "PARTICIPANTS": dirs.PARTICIPANTS_DIR,
+    "INTERVENTIONS": dirs.INTERVENTIONS_DIR,
+    "OUTCOMES": dirs.OUTCOMES_DIR,
+}
+
+
+class Pipeline(str, Enum):
+    spancat = "spancat"
+    ner = "ner"
+    combined = "combined"
 
 
 def _convert_to_doc(nlp, file_id: str) -> Doc:
@@ -62,18 +77,17 @@ def _read_annotations(f: Path) -> List[int]:
     return [int(a) for a in annotations]
 
 
-def _attach_spans_to_doc(doc: Doc, file_id: str, span_key: str = "sc") -> Doc:
-    """Attach the Spans to a given Doc based on the annotations
+def _create_spans_from_annotations(
+    doc: Doc, file_id: str, entities: List[str] = DIRECTORIES.keys()
+) -> List[Span]:
+    """Read the annotations file and create spaCy spans out of that
 
-    doc (Doc): the spaCy Doc to attach the spans onto
+    doc (Doc): the spaCy Doc to attach the spans onto.
     file_id (str): the file ID from where the spans will be sourced from.
-    span_key (str): the span key to attach the spans onto, default is 'sc'.
+    entities (List[str]): filter the spans based on what kind of entities you just need.
     """
-    directories = {
-        "PARTICIPANTS": dirs.PARTICIPANTS_DIR,
-        "INTERVENTIONS": dirs.INTERVENTIONS_DIR,
-        "OUTCOMES": dirs.OUTCOMES_DIR,
-    }
+    # filter entities based on what you just want to get
+    directories = {k: v for k, v in DIRECTORIES.items() if k in entities}
     annotations = {
         label: _read_annotations(list(dir_.glob(f"**/{file_id}_AGGREGATED.ann"))[0])
         for label, dir_ in directories.items()
@@ -93,8 +107,8 @@ def _attach_spans_to_doc(doc: Doc, file_id: str, span_key: str = "sc") -> Doc:
                 end = idx[0] if len(idx) == 1 else idx[-1]
                 # We add +1 because we want the index AFTER the span
                 spans.append(Span(doc, start, end + 1, label=annot))
-    doc.spans[span_key] = spans
-    return doc
+
+    return spans
 
 
 def _get_ids(s: str) -> str:
@@ -102,27 +116,49 @@ def _get_ids(s: str) -> str:
     return re.sub("\_AGGREGATED", "", s)
 
 
-def to_spacy(file_id, nlp) -> Doc:
-    """Convert a file id into a spaCy doc. A convenience function"""
-    doc = _convert_to_doc(nlp, file_id)
-    doc = _attach_spans_to_doc(doc, file_id)
-    return doc
-
-
-def convert_to_docbin(
-    nlp, file_ids: List[str], dataset_type: str, output_path: Path
-) -> DocBin:
+def create_docbin(
+    nlp, file_ids: List[str], dataset_type: str, output_path: Path, pipeline: Pipeline
+):
     """Convert to DocBin and save them to disk"""
-    doc_bin = DocBin()
-    for id_ in tqdm(file_ids, desc=f"Parsing {dataset_type} files"):
-        try:
-            doc = to_spacy(id_, nlp)
-        except ValueError as e:
-            msg.fail(f"Error in {id_}: {e}")
-        else:
-            doc_bin.add(doc)
-    doc_bin.to_disk(output_path / f"{dataset_type}.spacy")
-    msg.good(f"Saved {dataset_type} Docs to corpus")
+    if pipeline == Pipeline.spancat:
+        doc_bin = DocBin()
+        for id_ in tqdm(file_ids, desc=f"Parsing {dataset_type} files"):
+            try:
+                doc = _convert_to_doc(nlp, id_)
+                spans = _create_spans_from_annotations(doc, id_)
+                doc.spans[SPAN_KEY] = spans
+            except ValueError as e:
+                msg.fail(f"Error in {id_}: {e}")
+            else:
+                doc_bin.add(doc)
+
+        fp = output_path / f"{pipeline}_{dataset_type}.spacy"
+        doc_bin.to_disk(fp)
+        msg.good(f"Saved {dataset_type} Docs to corpus")
+    elif pipeline == Pipeline.ner:
+        entities = DIRECTORIES.keys()
+        for entity in entities:
+            msg.text(f"Creating Docs for {entity}")
+            doc_bin = DocBin()
+            for id_ in tqdm(
+                file_ids, desc=f"Parsing {dataset_type} files for {entity}"
+            ):
+                try:
+                    doc = _convert_to_doc(nlp, id_)
+                    spans = _create_spans_from_annotations(doc, id_, entities=[entity])
+                    doc.ents = spans
+                except ValueError as e:
+                    msg.fail(f"Error in {id_}: {e}")
+                else:
+                    doc_bin.add(doc)
+            fp = output_path / f"{pipeline}_{dataset_type}_{entity[0].lower()}.spacy"
+            doc_bin.to_disk(fp)
+            msg.good(f"Saved {dataset_type} [{entity}] Docs to corpus")
+
+    elif pipeline == Pipeline.combined:
+        raise NotImplementedError
+    else:
+        msg.fail(f"Unknown pipeline type: {pipeline}")
 
 
 def main(
@@ -142,6 +178,11 @@ def main(
     ),
     random_seed: int = typer.Option(
         42, show_default=True, help="Random seed to control shuffling."
+    ),
+    pipeline: Pipeline = typer.Option(
+        Pipeline.spancat,
+        show_default=True,
+        help="Pipeline you will create. The created Docs will depend on this value",
     ),
 ):
     """Convert the downloaded EBM-NLP data into the spaCy binary format"""
@@ -167,6 +208,7 @@ def main(
     if shuffle:
         msg.text(f"Shuffling the training IDs before splitting (seed={random_seed})")
         random.shuffle(train_file_ids)
+
     training_count = int(len(train_file_ids) * train_size)
     dev_file_ids = train_file_ids[training_count:]
     train_file_ids = train_file_ids[:training_count]
@@ -176,9 +218,9 @@ def main(
 
     # Convert to DocBin then save to disk
     nlp = spacy.blank("en")
-    convert_to_docbin(nlp, train_file_ids, "train", output_path)
-    convert_to_docbin(nlp, dev_file_ids, "dev", output_path)
-    convert_to_docbin(nlp, test_file_ids, "test", output_path)
+    create_docbin(nlp, train_file_ids, "train", output_path, pipeline)
+    create_docbin(nlp, dev_file_ids, "dev", output_path, pipeline)
+    create_docbin(nlp, test_file_ids, "test", output_path, pipeline)
 
 
 if __name__ == "__main__":
