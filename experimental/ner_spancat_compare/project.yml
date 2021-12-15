@@ -105,6 +105,24 @@ commands:
     outputs:
       - "training/spancat/model-best"
 
+  - name: "train-ner"
+    help: "Train three separate NER models for P/I/O"
+    script:
+      - "python -m spacy train configs/ner.cfg -o training/ner-p --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy"
+      - "python -m spacy train configs/ner.cfg -o training/ner-i --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy"
+      - "python -m spacy train configs/ner.cfg -o training/ner-o --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy"
+    deps:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+    outputs:
+      - "training/ner-p"
+      - "training/ner-i"
+      - "training/ner-o"
+
   - name: "clean"
     help: "Remove intermediate files"
     script:
