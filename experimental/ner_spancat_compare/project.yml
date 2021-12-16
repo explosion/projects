@@ -124,6 +124,16 @@ commands:
       - "training/ner-i"
       - "training/ner-o"
 
+  - name: "search-spancat"
+    help: "Perform hyperparameter search for the SpanCat model using W&B's Sweeps (time-intensive operation)"
+    script:
+      - "python -m scripts.hyperparameter_search configs/spancat.cfg training/search-spancat --pipeline spancat --train-path corpus/spancat_train.spacy --dev-path corpus/spancat_dev.spacy"
+    deps:
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
+    outputs:
+      - "training/search-spancat"
+
   - name: "search-ner"
     help: "Perform hyperparameter search for NER models using W&B's Sweeps (time-intensive operation)"
     script:
