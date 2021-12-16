@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 
 SPAN_KEY = "sc"
@@ -15,3 +16,9 @@ class Directories:
     PARTICIPANTS_DIR = ANNOTATIONS_DIR / "participants"
     INTERVENTIONS_DIR = ANNOTATIONS_DIR / "interventions"
     OUTCOMES_DIR = ANNOTATIONS_DIR / "outcomes"
+
+
+class Pipeline(str, Enum):
+    spancat = "spancat"
+    ner = "ner"
+    combined = "combined"

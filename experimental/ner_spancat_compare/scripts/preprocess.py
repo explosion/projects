@@ -3,7 +3,6 @@ import re
 import tarfile
 from pathlib import Path
 from typing import List
-from enum import Enum
 
 import numpy as np
 import spacy
@@ -14,6 +13,7 @@ from tqdm import tqdm
 from wasabi import msg
 
 from .constants import Directories as dirs
+from .constants import Pipeline
 from .constants import SPAN_KEY
 
 
@@ -22,12 +22,6 @@ DIRECTORIES = {
     "INTERVENTIONS": dirs.INTERVENTIONS_DIR,
     "OUTCOMES": dirs.OUTCOMES_DIR,
 }
-
-
-class Pipeline(str, Enum):
-    spancat = "spancat"
-    ner = "ner"
-    combined = "combined"
 
 
 def _convert_to_doc(nlp, file_id: str) -> Doc:
