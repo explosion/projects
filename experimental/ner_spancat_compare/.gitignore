@@ -3,3 +3,4 @@ training/
 corpus/
 metrics/
 assets/
+wandb/
