@@ -1,0 +1,25 @@
+# To start a sweep, execute:
+#     wandb sweep sweep_ner.yml
+#
+# This will output a sweep-id that you should pass to a W&B agent:
+#     wandb agent sweep-id
+
+method: random
+metric:
+  goal: maximize
+  name: ents_f # https://spacy.io/api/scorer#score
+command:
+  - ${env}
+  - ${interpreter}
+  - scripts/wandb_sweeps_using_config.py
+  - ./configs/ner.cfg
+  - ./training/ner-sweep/
+  - --train-path
+  - ./corpus/ner_train_p.spacy
+  - --dev-path
+  - ./corpus/ner_dev_p.spacy
+parameters:
+  training.dropout:
+    distribution: uniform
+    max: 0.5
+    min: 0.05
