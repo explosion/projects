@@ -1,6 +1,6 @@
 ## Results
 
-With 1M (3.3G) tokenized training texts and 50K 100-dim vectors, ~800K keys for
+With 1M (3.3G) tokenized training texts and 50K 300-dim vectors, ~800K keys for
 the standard vectors:
 
 | Vectors                                      |  TAG |  POS | DEP UAS | DEP LAS |
