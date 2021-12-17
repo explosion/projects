@@ -41,7 +41,7 @@ def main(default_config: Path, output_path: Path):
         }
     }
     sweep_config['parameters'] = parameters_dict
-    sweep_id = wandb.sweep(sweep_config, project="wandb_spacy_sweeps", entity='wandb')
+    sweep_id = wandb.sweep(sweep_config, project="wandb_spacy_sweeps")
     wandb.agent(sweep_id, train_spacy, count=20)
 
 if __name__ == "__main__":
