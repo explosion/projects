@@ -59,8 +59,7 @@ def main(
         prompt_required=True,
     ),
     model: str = typer.Option(
-        ...,
-        default="en_core_web_sm",
+        "en_core_web_sm",
         help="Model to initialize the vectors from during hyperparam search",
     ),
     pipeline: Pipeline = typer.Option(
