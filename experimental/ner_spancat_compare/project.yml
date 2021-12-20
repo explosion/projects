@@ -127,19 +127,19 @@ commands:
   - name: "search-spancat"
     help: "Perform hyperparameter search for the SpanCat model using W&B's Sweeps (time-intensive operation)"
     script:
-      - "python -m scripts.hyperparameter_search configs/spancat.cfg training/search-spancat --pipeline spancat --train-path corpus/spancat_train.spacy --dev-path corpus/spancat_dev.spacy"
+      - "python -m scripts.hyperparameter_search configs/spancat.cfg training/search/spancat --pipeline spancat --train-path corpus/spancat_train.spacy --dev-path corpus/spancat_dev.spacy"
     deps:
       - "corpus/spancat_train.spacy"
       - "corpus/spancat_dev.spacy"
     outputs:
-      - "training/search-spancat"
+      - "training/search/spancat"
 
   - name: "search-ner"
     help: "Perform hyperparameter search for NER models using W&B's Sweeps (time-intensive operation)"
     script:
-      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search-ner-p --pipeline ner --train-path corpus/ner_train_p.spacy --dev-path corpus/ner_dev_p.spacy"
-      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search-ner-i --pipeline ner --train-path corpus/ner_train_i.spacy --dev-path corpus/ner_dev_i.spacy"
-      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search-ner-o --pipeline ner --train-path corpus/ner_train_o.spacy --dev-path corpus/ner_dev_o.spacy"
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-p --pipeline ner --train-path corpus/ner_train_p.spacy --dev-path corpus/ner_dev_p.spacy"
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-i --pipeline ner --train-path corpus/ner_train_i.spacy --dev-path corpus/ner_dev_i.spacy"
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-o --pipeline ner --train-path corpus/ner_train_o.spacy --dev-path corpus/ner_dev_o.spacy"
     deps:
       - "corpus/ner_train_p.spacy"
       - "corpus/ner_train_i.spacy"
@@ -148,9 +148,9 @@ commands:
       - "corpus/ner_dev_i.spacy"
       - "corpus/ner_dev_o.spacy"
     outputs:
-      - "training/search-ner-p"
-      - "training/search-ner-i"
-      - "training/search-ner-o"
+      - "training/search/ner-p"
+      - "training/search/ner-i"
+      - "training/search/ner-o"
 
   - name: "clean"
     help: "Remove intermediate files"

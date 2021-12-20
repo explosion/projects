@@ -72,12 +72,15 @@ def main(
 
     def train_spacy():
         loaded_local_config = util.load_config(default_config)
+        msg.info(f"Overwriting train and dev paths with {train_path} and {dev_path}")
         loaded_local_config["paths"]["train"] = str(train_path)
         loaded_local_config["paths"]["dev"] = str(dev_path)
         with wandb.init() as run:
             sweeps_config = Config(util.dot_to_dict(run.config))
             merged_config = Config(loaded_local_config).merge(sweeps_config)
             nlp = init_nlp(merged_config)
+            output_path.mkdir(parents=True, exist_ok=True)
+            msg.info(f"Created output directory: {output_path}")
             train(nlp, output_path, use_gpu=True)
 
     if pipeline == "spancat":
