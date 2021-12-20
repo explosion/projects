@@ -33,12 +33,11 @@ description: |
 
   | Pipeline | Description                                                                                                                             | Workflow Name |
   |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
-  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `all-spancat` |
+  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
   | NER      | Named-Entity Recognition only for the Intervention entity. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
   | Combined | Combines SpanCat and NER to leverage their strengths. Use SpanCat for Participants and Outcomes, then use NER for Interventions         | `combined`    |
 
 vars:
-  config: "config.cfg"
   name: "ner_spancat_compare"
   version: "1.0.0"
   spans_key: "sc"
@@ -55,6 +54,30 @@ assets:
     description: "The full dataset containing text files of medical abstracts and their annotations."
     url: https://github.com/bepnye/EBM-NLP/master/ebm_nlp_1_00.tar.gz
 
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]." If a command's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  setup:
+    - install
+    - preprocess-spancat
+    - preprocess-ner
+  spancat:
+    - install
+    - preprocess-spancat
+    - train-spancat
+    # - evaluate-spancat
+  ner:
+    - install
+    - preprocess-ner
+    - train-ner
+    # - evaluate-ner
+  combined:
+    - install
+    - preprocess-combined
+    - train-combined
+    # - evaluate-combined
+
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
@@ -64,8 +87,8 @@ commands:
     help: "Install dependencies"
     script:
       - "pip3 install --user -r requirements.txt"
-      - "python -m spacy download en_core_web_lg"
-      - "wandb login"
+      - "python3 -m spacy download en_core_web_lg"
+      - "python3 -m spacy wandb login"
 
   - name: "preprocess-spancat"
     help: "Convert raw inputs into spaCy's binary format as preparation for SpanCat training"
