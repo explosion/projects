@@ -58,6 +58,11 @@ def main(
         help="Override the paths.dev parameter with this value.",
         prompt_required=True,
     ),
+    model: str = typer.Option(
+        ...,
+        default="en_core_web_sm",
+        help="Model to initialize the vectors from during hyperparam search",
+    ),
     pipeline: Pipeline = typer.Option(
         Pipeline.spancat,
         show_default=True,
@@ -75,6 +80,7 @@ def main(
         msg.info(f"Overwriting train and dev paths with {train_path} and {dev_path}")
         loaded_local_config["paths"]["train"] = str(train_path)
         loaded_local_config["paths"]["dev"] = str(dev_path)
+        loaded_local_config["initialize"]["vectors"] = model
         with wandb.init() as run:
             sweeps_config = Config(util.dot_to_dict(run.config))
             merged_config = Config(loaded_local_config).merge(sweeps_config)

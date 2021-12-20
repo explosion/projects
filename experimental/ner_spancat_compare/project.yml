@@ -88,6 +88,7 @@ commands:
     script:
       - "pip3 install --user -r requirements.txt"
       - "python3 -m spacy download en_core_web_lg"
+      - "python3 -m spacy download en_core_web_sm" # for hyperparameter search
       - "python3 -m spacy wandb login"
 
   - name: "preprocess-spancat"
