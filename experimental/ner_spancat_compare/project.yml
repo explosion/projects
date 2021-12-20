@@ -74,8 +74,8 @@ workflows:
     # - evaluate-ner
   combined:
     - install
-    - preprocess-combined
-    - train-combined
+    # - preprocess-combined
+    # - train-combined
     # - evaluate-combined
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
