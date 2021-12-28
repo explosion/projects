@@ -71,7 +71,7 @@ custom config). For instance, you could edit the
 
 ```ini
 [components.textcat.model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = 32
 depth = 4
 window_size = 1
