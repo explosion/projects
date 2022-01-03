@@ -28,7 +28,15 @@ SWEEP_CONFIG_NER = {
 }
 
 
-SWEEP_CONFIG_SPANCAT = {"method": "random"}
+SWEEP_CONFIG_SPANCAT = {
+    "method": "random",
+    "metric": {"name": "spans_sc_f", "goal": "maximize"},
+    "parameters": {
+        "components.spancat.suggester.max_size": {"values": [5, 6, 7]},
+        "components.spancat.model.tok2vec.encode.window_size": {"values": [1, 2, 3]},
+        "components.spancat.model.tok2vec.encode.width": {"values": [64, 96, 128]},
+    },
+}
 
 
 def main(
