@@ -1,0 +1,70 @@
+title: "Healthsea"
+description: "This is the spaCy project for the Healthsea pipeline with all dataset and training workflows."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "config_tok2vec"
+  train: "train"
+  dev: "dev"
+
+  models:
+    model_ner: "training/ner/${vars.config}/model-best"
+    model_spancat: "training/spancat/${vars.config}/model-best"
+
+  gpu_id: 0
+  eval_split: 0.25
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist. 
+directories: ["assets","training","configs","scripts", "data"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that all required files are available.
+assets:
+  - dest: "assets/annotation.jsonl"
+    description: "NER annotations exported from Prodigy with 5000 examples and 2 labels"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - preprocess
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+
+  - name: "preprocess"
+    help: "Format .jsonl annotations into .spaCy training format"
+    script:
+      - "python scripts/preprocessing/preprocess_ner.py assets/annotation.jsonl data/${vars.train}.spacy data/${vars.dev}.spacy ${vars.eval_split}"
+    deps:
+      - "assets/annotation.jsonl"
+      - "scripts/preprocessing/preprocess_ner.py"
+    outputs:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+
+  - name: "train_ner"
+    help: "Train an NER model"
+    script:
+      - "python -m spacy train configs/ner/${vars.config}.cfg --output training/ner/${vars.config}/ --paths.train data/${vars.train}.spacy --paths.dev data/${vars.dev}.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - ${vars.models.model_ner}
+
+  - name: "train_spancat"
+    help: "Train a Spancat model"
+    script:
+      - "python -m spacy train configs/spancat/${vars.config}.cfg --output training/spancat/${vars.config}/ --paths.train data/${vars.train}.spacy --paths.dev data/${vars.dev}.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - ${vars.models.model_spancat}
+
