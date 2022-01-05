@@ -66,12 +66,12 @@ workflows:
     - install
     - preprocess-spancat
     - train-spancat
-    # - evaluate-spancat
+    - evaluate-spancat
   ner:
     - install
     - preprocess-ner
     - train-ner
-    # - evaluate-ner
+    - evaluate-ner
   combined:
     - install
     # - preprocess-combined
@@ -147,6 +147,34 @@ commands:
       - "training/ner-p"
       - "training/ner-i"
       - "training/ner-o"
+
+  - name: "evaluate-spancat"
+    help: "Evaluate the SpanCat model on the test dataset"
+    script:
+      - "python -m spacy evaluate training/spancat/model-best corpus/spancat_test.spacy --output metrics/spancat.json"
+    deps:
+      - "corpus/spancat_test.spacy"
+      - "training/spancat/model-best"
+    outputs:
+      - "metrics/spancat.json"
+
+  - name: "evaluate-ner"
+    help: "Evaluate the NER model on the test datasets"
+    script:
+      - "python -m spacy evaluate training/ner-p/model-best corpus/ner_test_p.spacy --output metrics/ner_p.json"
+      - "python -m spacy evaluate training/ner-i/model-best corpus/ner_test_i.spacy --output metrics/ner_i.json"
+      - "python -m spacy evaluate training/ner-o/model-best corpus/ner_test_o.spacy --output metrics/ner_o.json"
+    deps:
+      - "corpus/ner_test_p.spacy"
+      - "corpus/ner_test_i.spacy"
+      - "corpus/ner_test_o.spacy"
+      - "training/ner-p/model-best"
+      - "training/ner-i/model-best"
+      - "training/ner-o/model-best"
+    outputs:
+      - "metrics/ner_p.json"
+      - "metrics/ner_i.json"
+      - "metrics/ner_o.json"
 
   - name: "search-spancat"
     help: "Perform hyperparameter search for the SpanCat model using W&B's Sweeps (time-intensive operation)"
