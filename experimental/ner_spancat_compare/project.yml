@@ -1,0 +1,212 @@
+title: "Comparing SpanCat and NER using a corpus of medical abstracts with Patient, Intervention, and Outcomes (PIO) annotations"
+description: |
+  This project demonstrates how spaCy's Span Categorization (SpanCat) and
+  Named-Entity Recognition (NER) perform on different types of entities. Here, we used
+  a dataset of medical abstracts containing both overlapping and non-overlapping spans.
+
+  ### The Evidence-based Medicine NLP (EBM-NLP) Corpus
+
+  The [EBM-NLP (Evidence-based Medicine NLP)
+  corpus](https://ebm-nlp.herokuapp.com/index) contains 5,000 annotated
+  abstracts of various medical articles describing clinical trials. It includes
+  three sets of annotations: 
+
+  - Patient (P): the population who received the study.
+  - Intervention (I): the medication, procedure, and diagnostic test done for the patient.
+  - Outcome (O): what was accomplished from the study (e.g, accurate diagnosis, relieve symptom, etc.)
+
+  Due to the nature of these articles, entities tend to overlap one another. In
+  the example below, the Intervention, *bestatin*, overlaps with the Patient
+  annotation. Most abstracts often report in this form.
+
+  ![](static/sample_00.png)
+
+  It is also apparent that some entities can be described by noun phrases
+  instead of proper nouns. This is especially true for the Patient and Outcome
+  entities&mdash; describing a population ("acute nonlymphocytic leukemia in
+  adults") or a study's result ("longer remission", "prolonged survival")
+  involves a collection of words rather than a single noun.
+
+  ### Experiments
+
+  Given what we know from the dataset, we will create the following pipelines:
+
+  | Pipeline | Description                                                                                                                             | Workflow Name |
+  |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
+  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
+  | NER      | Named-Entity Recognition only for the Intervention entity. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
+  | Combined | Combines SpanCat and NER to leverage their strengths. Use SpanCat for Participants and Outcomes, then use NER for Interventions         | `combined`    |
+
+vars:
+  name: "ner_spancat_compare"
+  version: "1.0.0"
+  spans_key: "sc"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist
+directories: ["assets", "configs", "corpus", "metrics", "scripts", "training"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/ebm_nlp_1_00.tar.gz"
+    description: "The full dataset containing text files of medical abstracts and their annotations."
+    url: https://github.com/bepnye/EBM-NLP/master/ebm_nlp_1_00.tar.gz
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]." If a command's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  setup:
+    - install
+    - preprocess-spancat
+    - preprocess-ner
+  spancat:
+    - install
+    - preprocess-spancat
+    - train-spancat
+    - evaluate-spancat
+  ner:
+    - install
+    - preprocess-ner
+    - train-ner
+    - evaluate-ner
+  combined:
+    - install
+    # - preprocess-combined
+    # - train-combined
+    # - evaluate-combined
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script:
+      - "pip3 install --user -r requirements.txt"
+      - "python3 -m spacy download en_core_web_lg"
+      - "python3 -m spacy download en_core_web_md" # for hyperparameter search
+      - "python3 -m spacy wandb login"
+
+  - name: "preprocess-spancat"
+    help: "Convert raw inputs into spaCy's binary format as preparation for SpanCat training"
+    script:
+      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/ --pipeline spancat"
+    deps:
+      - "assets/ebm_nlp_1_00.tar.gz"
+    outputs:
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
+      - "corpus/spancat_test.spacy"
+
+  - name: "preprocess-ner"
+    help: "Convert raw inputs into spaCy's binary format as preparation for NER training"
+    script:
+      - "python -m scripts.preprocess assets/ebm_nlp_1_00.tar.gz corpus/ --pipeline ner"
+    deps:
+      - "assets/ebm_nlp_1_00.tar.gz"
+    outputs:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+      - "corpus/ner_test_p.spacy"
+      - "corpus/ner_test_i.spacy"
+      - "corpus/ner_test_o.spacy"
+
+  - name: "train-spancat"
+    help: "Train a SpanCat pipeline"
+    script:
+      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/spancat_train.spacy --paths.dev corpus/spancat_dev.spacy"
+    deps:
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
+      - "configs/spancat.cfg"
+    outputs:
+      - "training/spancat/model-best"
+
+  - name: "train-ner"
+    help: "Train three separate NER models for P/I/O"
+    script:
+      - "python -m spacy train configs/ner.cfg -o training/ner-p --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy"
+      - "python -m spacy train configs/ner.cfg -o training/ner-i --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy"
+      - "python -m spacy train configs/ner.cfg -o training/ner-o --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy"
+    deps:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+    outputs:
+      - "training/ner-p"
+      - "training/ner-i"
+      - "training/ner-o"
+
+  - name: "evaluate-spancat"
+    help: "Evaluate the SpanCat model on the test dataset"
+    script:
+      - "python -m spacy evaluate training/spancat/model-best corpus/spancat_test.spacy --output metrics/spancat.json"
+    deps:
+      - "corpus/spancat_test.spacy"
+      - "training/spancat/model-best"
+    outputs:
+      - "metrics/spancat.json"
+
+  - name: "evaluate-ner"
+    help: "Evaluate the NER model on the test datasets"
+    script:
+      - "python -m spacy evaluate training/ner-p/model-best corpus/ner_test_p.spacy --output metrics/ner_p.json"
+      - "python -m spacy evaluate training/ner-i/model-best corpus/ner_test_i.spacy --output metrics/ner_i.json"
+      - "python -m spacy evaluate training/ner-o/model-best corpus/ner_test_o.spacy --output metrics/ner_o.json"
+    deps:
+      - "corpus/ner_test_p.spacy"
+      - "corpus/ner_test_i.spacy"
+      - "corpus/ner_test_o.spacy"
+      - "training/ner-p/model-best"
+      - "training/ner-i/model-best"
+      - "training/ner-o/model-best"
+    outputs:
+      - "metrics/ner_p.json"
+      - "metrics/ner_i.json"
+      - "metrics/ner_o.json"
+
+  - name: "search-spancat"
+    help: "Perform hyperparameter search for the SpanCat model using W&B's Sweeps (time-intensive operation)"
+    script:
+      - "python -m scripts.hyperparameter_search configs/spancat.cfg training/search/spancat --pipeline spancat --train-path corpus/spancat_train.spacy --dev-path corpus/spancat_dev.spacy"
+    deps:
+      - "corpus/spancat_train.spacy"
+      - "corpus/spancat_dev.spacy"
+    outputs:
+      - "training/search/spancat"
+
+  - name: "search-ner"
+    help: "Perform hyperparameter search for NER models using W&B's Sweeps (time-intensive operation)"
+    script:
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-p --pipeline ner --train-path corpus/ner_train_p.spacy --dev-path corpus/ner_dev_p.spacy"
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-i --pipeline ner --train-path corpus/ner_train_i.spacy --dev-path corpus/ner_dev_i.spacy"
+      - "python -m scripts.hyperparameter_search configs/ner.cfg training/search/ner-o --pipeline ner --train-path corpus/ner_train_o.spacy --dev-path corpus/ner_dev_o.spacy"
+    deps:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+    outputs:
+      - "training/search/ner-p"
+      - "training/search/ner-i"
+      - "training/search/ner-o"
+
+  - name: "clean"
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf corpus/"
+      - "rm -rf metrics/"
+      - "rm -rf training/"

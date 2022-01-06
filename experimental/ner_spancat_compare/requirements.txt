@@ -1,0 +1,6 @@
+spacy==3.2.0
+typer
+wandb
+numpy
+tqdm
+wasabi

@@ -1,0 +1,6 @@
+# spaCy project
+training/
+corpus/
+metrics/
+assets/
+wandb/
