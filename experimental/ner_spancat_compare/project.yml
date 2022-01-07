@@ -34,13 +34,21 @@ description: |
   | Pipeline | Description                                                                                                                             | Workflow Name |
   |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
   | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
-  | NER      | Named-Entity Recognition only for the Intervention entity. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
+  | NER      | Named-Entity Recognition for all types of entities. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
   | Combined | Combines SpanCat and NER to leverage their strengths. Use SpanCat for Participants and Outcomes, then use NER for Interventions         | `combined`    |
 
 vars:
   name: "ner_spancat_compare"
   version: "1.0.0"
   spans_key: "sc"
+
+  # Change training config for NER (When using command train-ner-pretraining this variable must be set to config_pretraining)
+  # [config_tok2vec, config_pretraining, config_trf]
+  ner_config: "config_tok2vec"
+  # Pretrained weights are produced by the pretrain-weights command
+  pretrained_weights: "model99.bin"
+  # (-1) CPU, (0-n) GPU device
+  gpu_id: 0
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist
@@ -119,6 +127,24 @@ commands:
       - "corpus/ner_test_i.spacy"
       - "corpus/ner_test_o.spacy"
 
+  - name: "preprocess-pretraining"
+    help: "Convert raw text into .jsonl format as preparation for pretraining"
+    script:
+      - "python -m scripts.create_pretraining_data assets/ebm_nlp_1_00/documents/ corpus/"
+    deps:
+      - "assets/ebm_nlp_1_00/documents/"
+    outputs:
+      - "corpus/pretraining_data.jsonl"
+
+  - name: "pretrain-weights"
+    help: "Pretrain weights for initializing Tok2Vec"
+    script:
+      - "python -m spacy pretrain configs/ner/config_pretraining.cfg corpus/pretrained_weights/ --paths.pretrain corpus/pretraining_data.jsonl --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/pretraining_data.jsonl"
+    outputs:
+      - "training/ner-p/${vars.ner_config}/"
+
   - name: "train-spancat"
     help: "Train a SpanCat pipeline"
     script:
@@ -133,9 +159,9 @@ commands:
   - name: "train-ner"
     help: "Train three separate NER models for P/I/O"
     script:
-      - "python -m spacy train configs/ner.cfg -o training/ner-p --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy"
-      - "python -m spacy train configs/ner.cfg -o training/ner-i --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy"
-      - "python -m spacy train configs/ner.cfg -o training/ner-o --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy"
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-p/${vars.ner_config}/ --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-i/${vars.ner_config}/ --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-o/${vars.ner_config}/ --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/ner_train_p.spacy"
       - "corpus/ner_train_i.spacy"
@@ -144,9 +170,28 @@ commands:
       - "corpus/ner_dev_i.spacy"
       - "corpus/ner_dev_o.spacy"
     outputs:
-      - "training/ner-p"
-      - "training/ner-i"
-      - "training/ner-o"
+      - "training/ner-p/${vars.ner_config}/"
+      - "training/ner-i/${vars.ner_config}/"
+      - "training/ner-o/${vars.ner_config}/"
+
+  - name: "train-ner-pretraining"
+    help: "Train three separate NER models for P/I/O with pretrained weights"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-p/${vars.ner_config}/ --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-i/${vars.ner_config}/ --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-o/${vars.ner_config}/ --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+    deps:
+      - "corpus/pretrained_weights/${vars.pretrained_weights}"
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/ner_dev_o.spacy"
+    outputs:
+      - "training/ner-p/${vars.ner_config}/"
+      - "training/ner-i/${vars.ner_config}/"
+      - "training/ner-o/${vars.ner_config}/"
 
   - name: "evaluate-spancat"
     help: "Evaluate the SpanCat model on the test dataset"
@@ -161,20 +206,107 @@ commands:
   - name: "evaluate-ner"
     help: "Evaluate the NER model on the test datasets"
     script:
-      - "python -m spacy evaluate training/ner-p/model-best corpus/ner_test_p.spacy --output metrics/ner_p.json"
-      - "python -m spacy evaluate training/ner-i/model-best corpus/ner_test_i.spacy --output metrics/ner_i.json"
-      - "python -m spacy evaluate training/ner-o/model-best corpus/ner_test_o.spacy --output metrics/ner_o.json"
+      - "python -m spacy evaluate training/ner-p/${vars.ner_config}/ corpus/ner_test_p.spacy --output metrics/${vars.ner_config}_ner_p.json"
+      - "python -m spacy evaluate training/ner-i/${vars.ner_config}/ corpus/ner_test_i.spacy --output metrics/${vars.ner_config}_ner_i.json"
+      - "python -m spacy evaluate training/ner-o/${vars.ner_config}/ corpus/ner_test_o.spacy --output metrics/${vars.ner_config}_ner_o.json"
     deps:
       - "corpus/ner_test_p.spacy"
       - "corpus/ner_test_i.spacy"
       - "corpus/ner_test_o.spacy"
-      - "training/ner-p/model-best"
-      - "training/ner-i/model-best"
-      - "training/ner-o/model-best"
+      - "evaluate training/ner-p/${vars.ner_config}/"
+      - "evaluate training/ner-i/${vars.ner_config}/"
+      - "evaluate training/ner-o/${vars.ner_config}/"
     outputs:
-      - "metrics/ner_p.json"
-      - "metrics/ner_i.json"
-      - "metrics/ner_o.json"
+      - "metrics/${vars.ner_config}_ner_p.json"
+      - "metrics/${vars.ner_config}_ner_i.json"
+      - "metrics/${vars.ner_config}_ner_o.json"
+
+  - name: "train-ner-p"
+    help: "Train a NER model for the P label"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-p/${vars.ner_config}/ --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_dev_p.spacy"
+    outputs:
+      - "training/ner-p/${vars.ner_config}/"
+
+  - name: "train-ner-i"
+    help: "Train a NER model for the I label"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-i/${vars.ner_config}/ --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_dev_i.spacy"
+    outputs:
+      - "training/ner-i/${vars.ner_config}/"
+
+  - name: "train-ner-o"
+    help: "Train a NER model for the O label"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-o/${vars.ner_config}/ --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_o.spacy"
+    outputs:
+      - "training/ner-o/${vars.ner_config}/"
+
+  - name: "train-ner-p-pretraining"
+    help: "Train a NER model for the P label with pretrained weights"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-p/${vars.ner_config}/ --paths.train corpus/ner_train_p.spacy --paths.dev corpus/ner_dev_p.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+    deps:
+      - "corpus/ner_train_p.spacy"
+      - "corpus/ner_dev_p.spacy"
+      - "corpus/pretrained_weights/${vars.pretrained_weights}"
+    outputs:
+      - "training/ner-p/${vars.ner_config}/"
+
+  - name: "train-ner-i-pretraining"
+    help: "Train a NER model for the I label with pretrained weights"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-i/${vars.ner_config}/ --paths.train corpus/ner_train_i.spacy --paths.dev corpus/ner_dev_i.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+    deps:
+      - "corpus/ner_train_i.spacy"
+      - "corpus/ner_dev_i.spacy"
+      - "corpus/pretrained_weights/${vars.pretrained_weights}"
+    outputs:
+      - "training/ner-i/${vars.ner_config}/"
+
+  - name: "train-ner-o-pretraining"
+    help: "Train a NER model for the O label with pretrained weights"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg -o training/ner-o/${vars.ner_config}/ --paths.train corpus/ner_train_o.spacy --paths.dev corpus/ner_dev_o.spacy --gpu-id ${vars.gpu_id} --paths.init_tok2vec corpus/pretrained_weights/${vars.pretrained_weights}"
+    deps:
+      - "corpus/ner_train_o.spacy"
+      - "corpus/ner_dev_o.spacy"
+      - "corpus/pretrained_weights/${vars.pretrained_weights}"
+    outputs:
+      - "training/ner-o/${vars.ner_config}/"
+
+  - name: "evaluate-ner-p"
+    help: "Evaluate the NER-P model on the test datasets"
+    script:
+      - "python -m spacy evaluate training/ner-p/${vars.ner_config}/model-best corpus/ner_test_p.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_test_p.spacy"
+      - "training/ner-p/${vars.ner_config}/model-best"
+
+  - name: "evaluate-ner-i"
+    help: "Evaluate the NER-I model on the test datasets"
+    script:
+      - "python -m spacy evaluate training/ner-i/${vars.ner_config}/model-best corpus/ner_test_i.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_test_i.spacy"
+      - "training/ner-i/${vars.ner_config}/model-best"
+
+  - name: "evaluate-ner-o"
+    help: "Evaluate the NER-O model on the test datasets"
+    script:
+      - "python -m spacy evaluate training/ner-o/${vars.ner_config}/model-best corpus/ner_test_o.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "corpus/ner_test_o.spacy"
+      - "training/ner-o/${vars.ner_config}/model-best"    
 
   - name: "search-spancat"
     help: "Perform hyperparameter search for the SpanCat model using W&B's Sweeps (time-intensive operation)"
@@ -203,6 +335,18 @@ commands:
       - "training/search/ner-p"
       - "training/search/ner-i"
       - "training/search/ner-o"
+
+  - name: "assemble-ner"
+    help: "Assemble all NER models into one pipeline"
+    script:
+      - "python -m spacy assemble configs/ner/assemble/${vars.ner_config}.cfg -o training/ner-assemble/${vars.ner_config}/ --code scripts.transfer_ent_component.py --paths.ner-p training/ner-p/${vars.ner_config}/model-best --paths.ner-i training/ner-i/${vars.ner_config}/model-best --paths.ner-o training/ner-o/${vars.ner_config}/model-best"
+    deps:
+      - "scripts.transfer_ent_component.py"
+      - "training/ner-p/${vars.ner_config}/model-best"
+      - "training/ner-i/${vars.ner_config}/model-best"
+      - "training/ner-o/${vars.ner_config}/model-best"
+    outputs:
+      - "training/ner-assemble/${vars.ner_config}/"
 
   - name: "clean"
     help: "Remove intermediate files"
