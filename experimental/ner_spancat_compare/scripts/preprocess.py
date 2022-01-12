@@ -134,7 +134,6 @@ def create_docbin(
         for entity in entities:
             msg.text(f"Creating Docs for {entity}")
             doc_bin = DocBin()
-            doc_entities_count = 0
             for id_ in tqdm(
                 file_ids, desc=f"Parsing {dataset_type} files for {entity}"
             ):
@@ -142,14 +141,13 @@ def create_docbin(
                     doc = _convert_to_doc(nlp, id_)
                     spans = _create_spans_from_annotations(doc, id_, entities=[entity])
                     doc.ents = spans
-                    doc_entities_count += len(spans)
                 except ValueError as e:
                     msg.fail(f"Error in {id_}: {e}")
                 else:
                     doc_bin.add(doc)
             fp = output_path / f"{pipeline}_{dataset_type}_{entity[0].lower()}.spacy"
             doc_bin.to_disk(fp)
-            msg.good(f"Saved {dataset_type} [{doc_entities_count} {entity}] Docs to corpus")
+            msg.good(f"Saved {dataset_type} [{entity}] Docs to corpus")
 
     elif pipeline == Pipeline.combined:
         raise NotImplementedError
