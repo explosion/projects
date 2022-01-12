@@ -44,7 +44,7 @@ vars:
 
   # Change training config for NER (When using command train-ner-pretraining this variable must be set to config_pretraining)
   # [config_tok2vec, config_pretraining, config_trf]
-  ner_config: "config_tok2vec"
+  ner_config: "config_trf"
   # Pretrained weights are produced by the pretrain-weights command
   pretrained_weights: "model99.bin"
   # (-1) CPU, (0-n) GPU device
@@ -148,7 +148,7 @@ commands:
   - name: "train-spancat"
     help: "Train a SpanCat pipeline"
     script:
-      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/spancat_train.spacy --paths.dev corpus/spancat_dev.spacy"
+      - "python -m spacy train configs/spancat.cfg -o training/spancat --paths.train corpus/spancat_train.spacy --paths.dev corpus/spancat_dev.spacy --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/spancat_train.spacy"
       - "corpus/spancat_dev.spacy"
@@ -339,14 +339,24 @@ commands:
   - name: "assemble-ner"
     help: "Assemble all NER models into one pipeline"
     script:
-      - "python -m spacy assemble configs/ner/assemble/${vars.ner_config}.cfg -o training/ner-assemble/${vars.ner_config}/ --code scripts.transfer_ent_component.py --paths.ner-p training/ner-p/${vars.ner_config}/model-best --paths.ner-i training/ner-i/${vars.ner_config}/model-best --paths.ner-o training/ner-o/${vars.ner_config}/model-best"
+      - "python -m spacy assemble configs/ner/assemble/${vars.ner_config}.cfg training/ner-assemble/${vars.ner_config}/ --code scripts/transfer_ent_component.py --paths.ner_p training/ner-p/${vars.ner_config}/model-best --paths.ner_i training/ner-i/${vars.ner_config}/model-best --paths.ner_o training/ner-o/${vars.ner_config}/model-best --paths.spans_key ${vars.spans_key} --verbose"
     deps:
-      - "scripts.transfer_ent_component.py"
+      - "scripts/transfer_ent_component.py"
       - "training/ner-p/${vars.ner_config}/model-best"
       - "training/ner-i/${vars.ner_config}/model-best"
       - "training/ner-o/${vars.ner_config}/model-best"
     outputs:
       - "training/ner-assemble/${vars.ner_config}/"
+
+
+  - name: "evaluate"
+    help: "Evaluate NER vs Spancat on the test dataset"
+    script:
+      - "python scripts/evaluation.py ${vars.spans_key} ${vars.gpu_id} training/ner-assemble/${vars.ner_config}/ training/spancat/model-best/ corpus/spancat_test.spacy --verbose"
+    deps:
+      - "training/spancat/model-best/"
+      - "training/ner-assemble/${vars.ner_config}/"
+      - "corpus/spancat_test.spacy"
 
   - name: "clean"
     help: "Remove intermediate files"
