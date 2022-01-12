@@ -44,11 +44,11 @@ vars:
 
   # Change training config for NER (When using command train-ner-pretraining this variable must be set to config_pretraining)
   # [config_tok2vec, config_pretraining, config_trf]
-  ner_config: "config_trf"
+  ner_config: "config_tok2vec"
   # Pretrained weights are produced by the pretrain-weights command
   pretrained_weights: "model99.bin"
   # (-1) CPU, (0-n) GPU device
-  gpu_id: 0
+  gpu_id: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist
@@ -347,7 +347,6 @@ commands:
       - "training/ner-o/${vars.ner_config}/model-best"
     outputs:
       - "training/ner-assemble/${vars.ner_config}/"
-
 
   - name: "evaluate"
     help: "Evaluate NER vs Spancat on the test dataset"
