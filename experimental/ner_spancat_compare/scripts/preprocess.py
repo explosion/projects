@@ -149,7 +149,9 @@ def create_docbin(
                     doc_bin.add(doc)
             fp = output_path / f"{pipeline}_{dataset_type}_{entity[0].lower()}.spacy"
             doc_bin.to_disk(fp)
-            msg.good(f"Saved {dataset_type} [{doc_entities_count} {entity}] Docs to corpus")
+            msg.good(
+                f"Saved {dataset_type} [{doc_entities_count} {entity}] Docs to corpus"
+            )
 
     elif pipeline == Pipeline.combined:
         raise NotImplementedError

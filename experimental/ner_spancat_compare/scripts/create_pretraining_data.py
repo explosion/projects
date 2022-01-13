@@ -5,17 +5,25 @@ from tqdm import tqdm
 from wasabi import msg
 import typer
 
-def main(documents_path: Path = typer.Argument(..., exists=True, dir_okay=True, help="Path to the documents directory"), output_path: Path = typer.Argument(..., exists=True, dir_okay=True, help="Path to the pretraining directory")):
-    
+
+def main(
+    documents_path: Path = typer.Argument(
+        ..., exists=True, dir_okay=True, help="Path to the documents directory"
+    ),
+    output_path: Path = typer.Argument(
+        ..., exists=True, dir_okay=True, help="Path to the pretraining directory"
+    ),
+):
+
     # Get all file names inside /documents/ with .text extension
-    p = documents_path.glob('*.text')
+    p = documents_path.glob("*.text")
     files = [x for x in p if x.is_file()]
     json_file = []
     max_length = 0
     min_length = 0
 
-    replace_dict = {"[":"","]":"","'":'"',"\n":" "}
-    
+    replace_dict = {"[": "", "]": "", "'": '"', "\n": " "}
+
     # Read all files
     msg.info(f"Found {len(files)} documents")
     for file in tqdm(files, total=len(files)):
@@ -23,9 +31,9 @@ def main(documents_path: Path = typer.Argument(..., exists=True, dir_okay=True, 
             text = str(reader.read())
 
             for replace in replace_dict:
-                text = text.replace(replace,replace_dict[replace])
+                text = text.replace(replace, replace_dict[replace])
 
-            json_line = {"text":text.strip()}
+            json_line = {"text": text.strip()}
             json_file.append(json_line)
 
             # Getting KPI's
@@ -36,15 +44,15 @@ def main(documents_path: Path = typer.Argument(..., exists=True, dir_okay=True, 
             elif min_length == 0:
                 min_length = len(text)
 
-    
     # Write text as .jsonl
-    with open(output_path/"pretraining_data.jsonl", "w", encoding="utf8") as writer:
+    with open(output_path / "pretraining_data.jsonl", "w", encoding="utf8") as writer:
         for entry in json_file:
-            json.dump(entry,writer)
-            writer.write('\n')
+            json.dump(entry, writer)
+            writer.write("\n")
 
     msg.info(f"Max length: {max_length} Min length: {min_length}")
     msg.good(f"Successfully saved {len(files)} documents as .jsonl")
+
 
 if __name__ == "__main__":
     typer.run(main)
