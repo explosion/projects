@@ -5,3 +5,4 @@
 | Template | Description |
 | --- | --- |
 | [`ner_spancat`](ner_spancat) | Example SpanCategorizer project using Indonesian NER |
+| [`ner_spancat_compare`](ner_spancat_compare) | Example project that compares NER with Spancat |
