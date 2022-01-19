@@ -8,6 +8,8 @@ vars:
   version: "0.0.0"
   drug_model: "ner_drugs-0.0.0"
 
+spacy_version: ">=3.1.0,<4.0.0"
+
 directories: ["assets", "configs", "scripts", "pipelines", "packages"]
 
 workflows:
@@ -26,7 +28,7 @@ commands:
     help: "Install the base models."
     script:
       - "python -m spacy download en_core_web_md"
-      - "pip install assets/${vars.drug_model}.tar.gz"
+      - "pip install assets/${vars.drug_model}.tar.gz --no-deps"
   - name: assemble
     help: "Build two versions of the combined pipelines from configs."
     script:
