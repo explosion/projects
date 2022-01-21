@@ -6,6 +6,7 @@ from spacy import util
 from thinc.api import Config
 import wandb
 
+
 def main(default_config: Path, output_path: Path):
     loaded_local_config = util.load_config(default_config)
     with wandb.init() as run:
@@ -15,5 +16,7 @@ def main(default_config: Path, output_path: Path):
         output_path.mkdir(parents=True, exist_ok=True)
         train(nlp, output_path, use_gpu=True)
 
+
 if __name__ == "__main__":
     typer.run(main)
+
