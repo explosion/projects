@@ -6,13 +6,17 @@ from spacy import util
 from thinc.api import Config
 import wandb
 
+
 def main(default_config: Path, output_path: Path):
     loaded_local_config = util.load_config(default_config)
     with wandb.init() as run:
         sweeps_config = Config(util.dot_to_dict(run.config))
         merged_config = Config(loaded_local_config).merge(sweeps_config)
         nlp = init_nlp(merged_config)
+        output_path.mkdir(parents=True, exist_ok=True)
         train(nlp, output_path, use_gpu=True)
+
 
 if __name__ == "__main__":
     typer.run(main)
+
