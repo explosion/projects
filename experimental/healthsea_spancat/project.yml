@@ -2,9 +2,10 @@ title: "Healthsea"
 description: "This is the spaCy project for the Healthsea pipeline with all dataset and training workflows."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  config: "config_tok2vec"
+  config: "config_trf"
   train: "train"
   dev: "dev"
+  spankey: "health_aspects"
 
   models:
     model_ner: "training/ner/${vars.config}/model-best"
@@ -14,8 +15,8 @@ vars:
   eval_split: 0.25
 
 # These are the directories that the project needs. The project CLI will make
-# sure that they always exist. 
-directories: ["assets","training","configs","scripts", "data"]
+# sure that they always exist.
+directories: ["assets", "training", "configs", "scripts", "data", "metrics"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded. But the
@@ -36,14 +37,13 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-
   - name: "preprocess"
-    help: "Format .jsonl annotations into .spaCy training format"
+    help: "Format .jsonl annotations into .spaCy training format for NER and Spancat"
     script:
-      - "python scripts/preprocessing/preprocess_ner.py assets/annotation.jsonl data/${vars.train}.spacy data/${vars.dev}.spacy ${vars.eval_split}"
+      - "python scripts/preprocess.py assets/annotation.jsonl data/${vars.train}.spacy data/${vars.dev}.spacy ${vars.eval_split}"
     deps:
       - "assets/annotation.jsonl"
-      - "scripts/preprocessing/preprocess_ner.py"
+      - "scripts/preprocess.py"
     outputs:
       - "data/${vars.train}.spacy"
       - "data/${vars.dev}.spacy"
@@ -55,6 +55,7 @@ commands:
     deps:
       - "data/${vars.train}.spacy"
       - "data/${vars.dev}.spacy"
+      - "configs/ner/${vars.config}.cfg"
     outputs:
       - ${vars.models.model_ner}
 
@@ -68,3 +69,31 @@ commands:
     outputs:
       - ${vars.models.model_spancat}
 
+  - name: "evaluate_ner"
+    help: "Evaluate the trained NER model"
+    script:
+      - "python -m spacy evaluate ${vars.models.model_ner} data/${vars.dev}.spacy --output metrics/ner_${vars.config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "${vars.models.model_ner}"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - "metric/ner_${vars.config}.json"
+
+  - name: "evaluate_spancat"
+    help: "Evaluate the trained Spancat model"
+    script:
+      - "python -m spacy evaluate ${vars.models.model_spancat} data/${vars.dev}.spacy --output metrics/spancat_${vars.config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "${vars.models.model_spancat}"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - "metric/ner_${vars.config}.json"
+
+  - name: "evaluate"
+    help: "Evaluate NER vs Spancat on the dev dataset"
+    script:
+      - "python scripts/evaluation.py ${vars.spankey} ${vars.gpu_id} ${vars.models.model_ner} ${vars.models.model_spancat} data/dev.spacy --verbose"
+    deps:
+      - ${vars.models.model_ner}
+      - ${vars.models.model_spancat}
+      - "data/dev.spacy"
