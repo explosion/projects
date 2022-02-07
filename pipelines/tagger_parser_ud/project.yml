@@ -107,7 +107,7 @@ commands:
         ./training/${vars.treebank}/model-best 
         ./corpus/${vars.treebank}/test.spacy 
         --output ./metrics/${vars.treebank}.json 
-        --gpu-id ${vars.gpu}"
+        --gpu-id ${vars.gpu}
     deps:
       - "training/${vars.treebank}/model-best"
       - "corpus/${vars.treebank}/test.spacy"
@@ -122,7 +122,7 @@ commands:
         training/${vars.treebank}/model-best packages 
         --name ${vars.package_name} 
         --version ${vars.package_version}
-        --force"
+        --force
     deps:
       - "training/${vars.treebank}/model-best"
     outputs_no_cache:
