@@ -1,5 +1,17 @@
 title: "Part-of-speech Tagging & Dependency Parsing (Universal Dependencies)"
-description: "This project template lets you train a part-of-speech tagger, morphologizer and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `lang` and treebank settings in the variables below. Use `xx` for multi-language if no language-specific tokenizer is available in spaCy. Note that multi-word tokens will be merged together when the corpus is converted since spaCy does not support multi-word token expansion."
+description: >
+  This project template lets you train a part-of-speech tagger,
+  morphologizer and dependency parser from a [Universal
+  Dependencies](https://universaldependencies.org/) corpus. It takes
+  care of downloading the treebank, converting it to spaCy's format and
+  training and evaluating the model. The template uses the 
+  [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT)
+  treebank by default, but you can swap it out for any other available
+  treebank. Just make sure to adjust the `lang` and treebank settings in
+  the variables below. Use `xx` for multi-language if no language-
+  specific tokenizer is available in spaCy. Note that multi-word tokens
+  will be merged together when the corpus is converted since spaCy does
+  not support multi-word token expansion.
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -36,9 +48,27 @@ commands:
     help: "Convert the data to spaCy's format"
     script:
       - "mkdir -p corpus/${vars.treebank}"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
-      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
+      - >-
+        python -m spacy convert
+        assets/${vars.treebank}/${vars.train_name}.conllu 
+        corpus/${vars.treebank}/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert 
+        assets/${vars.treebank}/${vars.dev_name}.conllu 
+        corpus/${vars.treebank}/ 
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
+      - >-
+        python -m spacy convert 
+        assets/${vars.treebank}/${vars.test_name}.conllu
+        corpus/${vars.treebank}/
+        --converter conllu 
+        --n-sents 10 
+        --merge-subtokens
       - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
       - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
       - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
@@ -54,7 +84,14 @@ commands:
   - name: train
     help: "Train ${vars.treebank}"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg --output training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy --nlp.lang=${vars.lang}"
+      - >-
+        python -m spacy train 
+        configs/${vars.config}.cfg
+        --output training/${vars.treebank}
+        --gpu-id ${vars.gpu} 
+        --paths.train corpus/${vars.treebank}/train.spacy 
+        --paths.dev corpus/${vars.treebank}/dev.spacy 
+        --nlp.lang=${vars.lang}
     deps:
       - "corpus/${vars.treebank}/train.spacy"
       - "corpus/${vars.treebank}/dev.spacy"
@@ -65,7 +102,12 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/${vars.treebank}/model-best ./corpus/${vars.treebank}/test.spacy --output ./metrics/${vars.treebank}.json --gpu-id ${vars.gpu}"
+      - >-
+        python -m spacy evaluate 
+        ./training/${vars.treebank}/model-best 
+        ./corpus/${vars.treebank}/test.spacy 
+        --output ./metrics/${vars.treebank}.json 
+        --gpu-id ${vars.gpu}
     deps:
       - "training/${vars.treebank}/model-best"
       - "corpus/${vars.treebank}/test.spacy"
@@ -75,7 +117,12 @@ commands:
   - name: package
     help: "Package the trained model so it can be installed"
     script:
-      - "python -m spacy package training/${vars.treebank}/model-best packages --name ${vars.package_name} --version ${vars.package_version} --force"
+      - >-
+        python -m spacy package 
+        training/${vars.treebank}/model-best packages 
+        --name ${vars.package_name} 
+        --version ${vars.package_version}
+        --force
     deps:
       - "training/${vars.treebank}/model-best"
     outputs_no_cache:
