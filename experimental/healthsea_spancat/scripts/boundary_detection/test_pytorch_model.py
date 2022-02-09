@@ -1,16 +1,21 @@
-import model
+
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from spacy.util import registry
 from wasabi import msg
 import spacy
 import numpy as np
 
-import pytorch_model
+import sbd
 
 default_config = """
 [model]
 @architectures = "spacy.PyTorchSpanBoundaryDetection.v1"
-window_size = 1
+hidden_size = 2
+dropout= 0.2
+
+[model.scorer]
+@layers = "spacy.LinearLogistic.v1"
+nO = 2
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
@@ -115,22 +120,15 @@ model.initialize(X=docs[:1], Y=Y)
 
 msg.info("Model initialized")
 
-#msg.info("Start training")
-#for i in range(10):
- #   msg.info(f"Iteration {i}")
- #   scores, backprop_scores = model.begin_update(docs)
- #   loss, d_scores = get_loss(scores,docs)
- #   backprop_scores(d_scores)
- #   model.finish_update(optimizer)
-#    print(loss)
-
-    #for doc, prediction in zip(docs,predictions):
-    #    for token, vector in zip(doc, prediction):
-    #        print(token.text, vector)
+msg.info("Start training")
+#for i in range(100):
+#    scores, backprop_scores = model.begin_update(docs)
+#    loss, d_scores = get_loss(scores,docs)
+#    backprop_scores(d_scores)
+#    model.finish_update(optimizer)
+#    print(f"{i} LOSS: {loss}")
 
 msg.info("Prediction started")
 predictions = model.predict(docs)
 msg.info("Prediction ended")
-
-
 print(predictions)
