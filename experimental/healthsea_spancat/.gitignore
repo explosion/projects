@@ -5,3 +5,5 @@ __pycache__/
 *.ipynb_checkpoints
 *.ipynb
 wandb
+data
+assets

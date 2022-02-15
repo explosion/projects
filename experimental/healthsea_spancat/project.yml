@@ -2,7 +2,7 @@ title: "Healthsea"
 description: "This is the spaCy project for the Healthsea pipeline with all dataset and training workflows."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  config: "config_trf"
+  config: "config_tok2vec"
   train: "train"
   dev: "dev"
   spankey: "health_aspects"
@@ -24,6 +24,7 @@ directories: ["assets", "training", "configs", "scripts", "data", "metrics"]
 assets:
   - dest: "assets/annotation.jsonl"
     description: "NER annotations exported from Prodigy with 5000 examples and 2 labels"
+    url: https://github.com/explosion/healthsea/blob/main/project/assets/ner/annotation.jsonl
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -31,6 +32,9 @@ assets:
 workflows:
   all:
     - preprocess
+    - train_ner
+    - train_spancat
+    - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command

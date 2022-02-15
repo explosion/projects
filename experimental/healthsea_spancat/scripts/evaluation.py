@@ -69,13 +69,11 @@ def main(
     ):
         # Create a Doc object same way as preprocessing did
         text = test_doc.text
-        tokens = text.split(" ")
-        words, spaces = get_words_and_spaces(words=tokens, text=text)
-        ner_doc = Doc(ner_nlp.vocab, words=words, spaces=spaces)
-        spancat_doc = Doc(spancat_nlp.vocab, words=words, spaces=spaces)
 
-        ner_doc = ner_nlp(ner_doc)
-        spancat_doc = spancat_nlp(spancat_doc)
+        ner_doc = ner_nlp(text)
+        spancat_doc = spancat_nlp(text)
+
+        ner_doc.spans[span_key] = list(ner_doc.ents)
 
         doc_eval = {
             "doc": test_doc.text,
