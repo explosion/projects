@@ -1,8 +1,8 @@
-title: "Healthsea"
-description: "This is the spaCy project for the Healthsea pipeline with all dataset and training workflows."
+title: "Healthsea-Spancat"
+description: "This spaCy project uses the Healthsea dataset to compare the results between the Spancat and NER architecture"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  config: "config_tok2vec"
+  config: "config_tok2vec" #config_tok2vec, config_trf
   train: "train"
   dev: "dev"
   spankey: "health_aspects"
@@ -11,7 +11,7 @@ vars:
     model_ner: "training/ner/${vars.config}/model-best"
     model_spancat: "training/spancat/${vars.config}/model-best"
 
-  gpu_id: 0
+  gpu_id: -1
   eval_split: 0.25
 
 # These are the directories that the project needs. The project CLI will make

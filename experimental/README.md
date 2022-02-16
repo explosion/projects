@@ -5,4 +5,4 @@
 | Template | Description |
 | --- | --- |
 | [`ner_spancat`](ner_spancat) | Example SpanCategorizer project using Indonesian NER |
-| [`healthsea_spancat`](healthsea_spancat) | Healthsea project comparing performance of NER and Spancat |
+| [`healthsea_spancat`](healthsea_spancat) | Healthsea project comparing performance between NER and Spancat architecture |
