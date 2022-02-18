@@ -62,6 +62,11 @@ def main(
     eval_list = []
     doc_eval_list = []
 
+    # Suggester KPI
+    total_candidates = 0
+    total_real_candidates = 0
+    matching_candidates = 0
+
     msg.info("Starting evaluation")
 
     for test_doc in tqdm(
@@ -72,6 +77,9 @@ def main(
 
         ner_doc = ner_nlp(text)
         spancat_doc = spancat_nlp(text)
+
+        total_candidates += len(spancat_doc.user_data["candidates_indices"])
+        total_real_candidates += len(test_doc.spans[span_key])
 
         ner_doc.spans[span_key] = list(ner_doc.ents)
 
@@ -95,6 +103,10 @@ def main(
             }
             ner_found = False
             spancat_found = False
+
+            for indices in spancat_doc.user_data["candidates_indices"]:
+                if indices[0] == test_span.start and indices[1] == test_span.end:
+                    matching_candidates += 1
 
             # NER
             for ner_span in ner_doc.spans[span_key]:
@@ -278,6 +290,15 @@ def main(
     msg.divider("KPI")
     print(table(kpi_data, header=kpi_header, divider=True))
 
+
+    coverage = round((matching_candidates/total_real_candidates)*100,2)
+    candidates_relation = round((total_candidates/total_real_candidates)*100,2)
+
+    msg.divider("Suggester KPI")
+    suggester_header = ["KPI", "Value"]
+    suggester_data = [("Total candidates",total_candidates),("Real candidates",total_real_candidates),("Ratio",f"{candidates_relation}%"),("Coverage",f"{coverage}%"), ("F-Score",spancat_fscore),("Recall",spancat_recall),("Precision",spancat_precision)]
+    print(table(suggester_data, header=suggester_header, divider=True))
+
     # Writes logging file that directly compares NER and Spancat
     if verbose:
 
@@ -322,7 +343,6 @@ def emoji_return(emoji_bool: bool):
         return "✔️"
     else:
         return "❌"
-
 
 if __name__ == "__main__":
     typer.run(main)
