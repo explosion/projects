@@ -1,8 +1,7 @@
 import spacy
-from spacy.tokens import DocBin, Doc
+from spacy.tokens import DocBin
 from spacy.scorer import PRFScore
 from pathlib import Path
-from spacy.util import get_words_and_spaces
 
 from tqdm import tqdm
 from wasabi import msg
@@ -40,15 +39,9 @@ def main(
     test_docBin = DocBin().from_disk(test_path)
     test_docs = list(test_docBin.get_docs(spacy.blank("en").vocab))
 
-    ner_scorer = {
-        "CONDITION": PRFScore(),
-        "BENEFIT": PRFScore()
-    }
-
-    spancat_scorer = {
-        "CONDITION": PRFScore(),
-        "BENEFIT": PRFScore()
-    }
+    # Initialize scorers
+    ner_scorer = {"CONDITION": PRFScore(), "BENEFIT": PRFScore()}
+    spancat_scorer = {"CONDITION": PRFScore(), "BENEFIT": PRFScore()}
 
     KPI = {}
 
@@ -72,13 +65,14 @@ def main(
     for test_doc in tqdm(
         test_docs, total=len(test_docs), desc=f"Evaluation test dataset"
     ):
-        # Create a Doc object same way as preprocessing did
+        # Prediction
         text = test_doc.text
-
         ner_doc = ner_nlp(text)
         spancat_doc = spancat_nlp(text)
 
-        total_candidates += len(spancat_doc.user_data["candidates_indices"])
+        # Count spans when saving spans is enabled
+        if "candidates_indices" in spancat_doc.user_data:
+            total_candidates += len(spancat_doc.user_data["candidates_indices"])
         total_real_candidates += len(test_doc.spans[span_key])
 
         ner_doc.spans[span_key] = list(ner_doc.ents)
@@ -104,9 +98,10 @@ def main(
             ner_found = False
             spancat_found = False
 
-            for indices in spancat_doc.user_data["candidates_indices"]:
-                if indices[0] == test_span.start and indices[1] == test_span.end:
-                    matching_candidates += 1
+            if "candidates_indices" in spancat_doc.user_data:
+                for indices in spancat_doc.user_data["candidates_indices"]:
+                    if indices[0] == test_span.start and indices[1] == test_span.end:
+                        matching_candidates += 1
 
             # NER
             for ner_span in ner_doc.spans[span_key]:
@@ -139,7 +134,6 @@ def main(
                         doc_eval["spancat_spans"].append((spancat_span, True))
                         KPI[test_span.label_]["correct_spancat_spans"] += 1
                         spancat_scorer[test_span.label_].tp += 1
-
                     else:
                         spancat_scorer[test_span.label_].fn += 1
                         spancat_found = False
@@ -290,13 +284,26 @@ def main(
     msg.divider("KPI")
     print(table(kpi_data, header=kpi_header, divider=True))
 
-
-    coverage = round((matching_candidates/total_real_candidates)*100,2)
-    candidates_relation = round((total_candidates/total_real_candidates)*100,2)
+    coverage = round((matching_candidates / total_real_candidates) * 100, 2)
+    candidates_relation = round((total_candidates / total_real_candidates) * 100, 2)
 
     msg.divider("Suggester KPI")
+
+    if "candidates_indices" not in spancat_doc.user_data:
+        msg.info("save_candidates is not set to true")
+    else:
+        msg.info("save_candidates is set to true")
+
     suggester_header = ["KPI", "Value"]
-    suggester_data = [("Total candidates",total_candidates),("Real candidates",total_real_candidates),("Ratio",f"{candidates_relation}%"),("Coverage",f"{coverage}%"), ("F-Score",spancat_fscore),("Recall",spancat_recall),("Precision",spancat_precision)]
+    suggester_data = [
+        ("Total candidates", total_candidates),
+        ("Real candidates", total_real_candidates),
+        ("Ratio", f"{candidates_relation}%"),
+        ("Coverage", f"{coverage}%"),
+        ("F-Score", spancat_fscore),
+        ("Recall", spancat_recall),
+        ("Precision", spancat_precision),
+    ]
     print(table(suggester_data, header=suggester_header, divider=True))
 
     # Writes logging file that directly compares NER and Spancat
@@ -343,6 +350,7 @@ def emoji_return(emoji_bool: bool):
         return "✔️"
     else:
         return "❌"
+
 
 if __name__ == "__main__":
     typer.run(main)

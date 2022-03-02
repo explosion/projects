@@ -24,6 +24,7 @@ Commands are only re-run if their inputs have changed.
 | `evaluate_ner` | Evaluate the trained NER model |
 | `evaluate_spancat` | Evaluate the trained Spancat model |
 | `evaluate` | Evaluate NER vs Spancat on the dev dataset |
+| `reset` | Reset the project to its original state and delete all training process |
 
 ### ⏭ Workflows
 
@@ -35,6 +36,8 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `all` | `preprocess` &rarr; `train_ner` &rarr; `train_spancat` &rarr; `evaluate` |
+| `ner` | `preprocess` &rarr; `train_ner` &rarr; `evaluate_ner` |
+| `spancat` | `preprocess` &rarr; `train_spancat` &rarr; `evaluate_spancat` |
 
 ### 🗂 Assets
 
