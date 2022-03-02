@@ -56,8 +56,8 @@ def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     stream = (eg for score, eg in model(stream))
 
     # For each NER mention, add the candidates from the KB to the annotation task
-    stream = _add_options(stream, kb, id_dict)
-    stream = filter_duplicates(stream, by_input=False, by_task=True)
+    stream = _add_options(stream, kb, nlp, id_dict)
+    stream = filter_duplicates(stream, by_input=True, by_task=False)
 
     return {
         "dataset": dataset,
