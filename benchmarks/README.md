@@ -9,3 +9,4 @@
 | [`speed`](speed) | Project for speed benchmarking of various pretrained models of different NLP libraries. |
 | [`textcat_architectures`](textcat_architectures) | Textcat performance benchmarks |
 | [`ud_benchmark`](ud_benchmark) | Universal Dependencies v2.5 Benchmarks |
+| [`healthsea_spancat`](healthsea_spancat) | Project comparing performance between NER and Spancat architecture on [Healthsea](https://github.com/explosion/healthsea) data. |

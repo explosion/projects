@@ -10,28 +10,9 @@ import typer
 
 
 def main(
-    span_key: str,
-    gpu_id: int,
-    ner_model_path: Path = typer.Argument(
-        ..., exists=True, dir_okay=True, help="Path to the NER model directory"
-    ),
-    spancat_model_path: Path = typer.Argument(
-        ..., exists=True, dir_okay=True, help="Path to the Spancat model directory"
-    ),
-    test_path: Path = typer.Argument(
-        ..., exists=True, dir_okay=False, help="Path to the test.spacy file"
-    ),
-    verbose: bool = typer.Option(
-        False,
-        show_default=False,
-        help="Show comparison on span level between NER and Spancat",
-    ),
+    span_key: str, ner_model_path: Path, spancat_model_path: Path, test_path: Path
 ):
-
-    if gpu_id >= 0:
-        spacy.prefer_gpu()
-
-    # Initialize NLP objects
+    # Initialize NER & Spancat models
     ner_nlp = spacy.load(ner_model_path)
     spancat_nlp = spacy.load(spancat_model_path)
 
@@ -55,11 +36,6 @@ def main(
     eval_list = []
     doc_eval_list = []
 
-    # Suggester KPI
-    total_candidates = 0
-    total_real_candidates = 0
-    matching_candidates = 0
-
     msg.info("Starting evaluation")
 
     for test_doc in tqdm(
@@ -69,11 +45,6 @@ def main(
         text = test_doc.text
         ner_doc = ner_nlp(text)
         spancat_doc = spancat_nlp(text)
-
-        # Count spans when saving spans is enabled
-        if "candidates_indices" in spancat_doc.user_data:
-            total_candidates += len(spancat_doc.user_data["candidates_indices"])
-        total_real_candidates += len(test_doc.spans[span_key])
 
         ner_doc.spans[span_key] = list(ner_doc.ents)
 
@@ -98,12 +69,7 @@ def main(
             ner_found = False
             spancat_found = False
 
-            if "candidates_indices" in spancat_doc.user_data:
-                for indices in spancat_doc.user_data["candidates_indices"]:
-                    if indices[0] == test_span.start and indices[1] == test_span.end:
-                        matching_candidates += 1
-
-            # NER
+            # NER evaluation
             for ner_span in ner_doc.spans[span_key]:
                 if test_span.start == ner_span.start and test_span.end == ner_span.end:
                     ner_found = True
@@ -121,7 +87,7 @@ def main(
             if not ner_found:
                 ner_scorer[test_span.label_].fn += 1
 
-            # Spancat
+            # Spancat evaluation
             for spancat_span in spancat_doc.spans[span_key]:
                 if (
                     test_span.start == spancat_span.start
@@ -208,7 +174,7 @@ def main(
         ("Average", round(ner_fscore, 2), round(ner_recall, 2), round(ner_precision, 2))
     )
 
-    msg.divider("NER")
+    msg.divider("NER performance")
     print(table(ner_data, header=header, divider=True))
 
     print()
@@ -245,12 +211,12 @@ def main(
         )
     )
 
-    msg.divider("Spancat")
+    msg.divider("Spancat performance")
     print(table(spancat_data, header=header, divider=True))
 
     print()
 
-    # KPI Table Config
+    # Compare performance between NER and Spancat architecture
     kpi_header = ("Label", "Total Spans", "Correct NER", "Correct Spancat")
     kpi_data = []
 
@@ -281,68 +247,45 @@ def main(
         )
     )
 
-    msg.divider("KPI")
+    msg.divider("NER vs Spancat")
     print(table(kpi_data, header=kpi_header, divider=True))
 
-    coverage = round((matching_candidates / total_real_candidates) * 100, 2)
-    candidates_relation = round((total_candidates / total_real_candidates) * 100, 2)
-
-    msg.divider("Suggester KPI")
-
-    if "candidates_indices" not in spancat_doc.user_data:
-        msg.info("save_candidates is not set to true")
-    else:
-        msg.info("save_candidates is set to true")
-
-    suggester_header = ["KPI", "Value"]
-    suggester_data = [
-        ("Total candidates", total_candidates),
-        ("Real candidates", total_real_candidates),
-        ("Ratio", f"{candidates_relation}%"),
-        ("Coverage", f"{coverage}%"),
-        ("F-Score", spancat_fscore),
-        ("Recall", spancat_recall),
-        ("Precision", spancat_precision),
-    ]
-    print(table(suggester_data, header=suggester_header, divider=True))
-
     # Writes logging file that directly compares NER and Spancat
-    if verbose:
 
-        log_file = ""
-        # Logging where either NER or Spancat predicted spans correctly while the other didn't
-        log_file += "\n----------NER vs Spancat---------- \n"
-        log_file += "Showing where either NER or Spancat predicted spans correctly while the other model didn't \n\n"
+    log_file = ""
+    # Logging where either NER or Spancat predicted spans correctly while the other model didn't
+    log_file += "\n----------NER vs Spancat---------- \n"
+    log_file += "Showing where either NER or Spancat predicted spans correctly while the other model didn't \n\n"
 
-        for i, eval in enumerate(eval_list):
-            if (eval["ner_correct_label"] and not eval["spancat_correct_label"]) or (
-                not eval["ner_correct_label"] and eval["spancat_correct_label"]
-            ):
-                log_file += f"({i}) {eval['span']} [{eval['span'].label_}] | NER {emoji_return(eval['ner_correct_label'])}  | Spancat {emoji_return(eval['spancat_correct_label'])} \n"
+    for i, eval in enumerate(eval_list):
+        if (eval["ner_correct_label"] and not eval["spancat_correct_label"]) or (
+            not eval["ner_correct_label"] and eval["spancat_correct_label"]
+        ):
+            log_file += f"({i}) {eval['span']} [{eval['span'].label_}] | NER {emoji_return(eval['ner_correct_label'])}  | Spancat {emoji_return(eval['spancat_correct_label'])} \n"
 
-        log_file += "\n"
+    log_file += "\n"
 
-        # Logging every Doc and the predictions of NER and Spancat
-        log_file += "\n----------Spans per doc---------- \n"
-        log_file += "Showing every doc and the predictions of NER and Spancat \n\n"
+    # Logging every Doc and the predictions of NER and Spancat
+    log_file += "\n----------Spans per doc---------- \n"
+    log_file += "Showing every doc and the predictions of NER and Spancat \n\n"
 
-        for i, eval in enumerate(doc_eval_list):
-            log_file += f"{i} {eval['doc']} \n"
-            log_file += f"-----Reference spans----- \n"
-            for reference_span in eval["reference_spans"]:
-                log_file += f" > {reference_span.text} ({reference_span.start},{reference_span.end}) [{reference_span.label_}] \n"
-            log_file += f"-----NER spans----- \n"
-            for ner_span in eval["ner_spans"]:
-                log_file += f" {emoji_return(ner_span[1])} {ner_span[0].text} ({ner_span[0].start},{ner_span[0].end}) [{ner_span[0].label_}] \n"
-            log_file += f"-----Spancat spans----- \n"
-            for spancat_span in eval["spancat_spans"]:
-                log_file += f" {emoji_return(spancat_span[1])} {spancat_span[0]} ({spancat_span[0].start},{spancat_span[0].end}) [{spancat_span[0].label_}] \n"
-            log_file += "\n----------\n"
+    for i, eval in enumerate(doc_eval_list):
+        log_file += f"{i} {eval['doc']} \n"
+        log_file += f"-----Reference spans----- \n"
+        for reference_span in eval["reference_spans"]:
+            log_file += f" > {reference_span.text} ({reference_span.start},{reference_span.end}) [{reference_span.label_}] \n"
+        log_file += f"-----NER spans----- \n"
+        for ner_span in eval["ner_spans"]:
+            log_file += f" {emoji_return(ner_span[1])} {ner_span[0].text} ({ner_span[0].start},{ner_span[0].end}) [{ner_span[0].label_}] \n"
+        log_file += f"-----Spancat spans----- \n"
+        for spancat_span in eval["spancat_spans"]:
+            log_file += f" {emoji_return(spancat_span[1])} {spancat_span[0]} ({spancat_span[0].start},{spancat_span[0].end}) [{spancat_span[0].label_}] \n"
+        log_file += "\n----------\n"
 
-        with open(
-            "./metrics/evaluation_ner_vs_spancat.txt", "w", encoding="UTF-8"
-        ) as writer:
-            writer.write(log_file)
+    with open(
+        "./metrics/evaluation_ner_vs_spancat.txt", "w", encoding="UTF-8"
+    ) as writer:
+        writer.write(log_file)
 
 
 def emoji_return(emoji_bool: bool):

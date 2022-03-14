@@ -1,5 +1,5 @@
 title: "Healthsea-Spancat"
-description: "This spaCy project uses the Healthsea dataset to compare the results between the Spancat and NER architecture"
+description: "This spaCy project uses the Healthsea dataset to compare the performance between the Spancat and NER architecture."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   ner_config: "config_tok2vec" # config_tok2vec, config_trf
@@ -12,7 +12,7 @@ vars:
     model_ner: "training/ner/${vars.ner_config}/model-best"
     model_spancat: "training/spancat/${vars.spancat_config}/model-best"
 
-  gpu_id: -1
+  gpu_id: -1 # -1 (CPU)
   eval_split: 0.25
 
 # These are the directories that the project needs. The project CLI will make
@@ -45,14 +45,13 @@ workflows:
     - train_spancat
     - evaluate_spancat
 
-
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "preprocess"
-    help: "Format .jsonl annotations into .spaCy training format for NER and Spancat"
+    help: "Format .jsonl annotations into .spacy training format for NER and Spancat"
     script:
       - "python scripts/preprocess.py assets/annotation.jsonl data/${vars.train}.spacy data/${vars.dev}.spacy ${vars.eval_split}"
     deps:
@@ -104,9 +103,9 @@ commands:
       - "metric/ner_${vars.spancat_config}.json"
 
   - name: "evaluate"
-    help: "Evaluate NER vs Spancat on the dev dataset"
+    help: "Evaluate NER vs Spancat on the dev dataset and create a detailed performance analysis which is saved in the metrics folder"
     script:
-      - "python scripts/evaluation.py ${vars.spankey} ${vars.gpu_id} ${vars.models.model_ner} ${vars.models.model_spancat} data/${vars.dev}.spacy --verbose"
+      - "python scripts/evaluation.py ${vars.spankey} ${vars.models.model_ner} ${vars.models.model_spancat} data/${vars.dev}.spacy"
     deps:
       - ${vars.models.model_ner}
       - ${vars.models.model_spancat}
