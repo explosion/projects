@@ -59,8 +59,6 @@ def main(
                     empty_docs.append(doc)
 
     # Split
-    train = []
-    dev = []
     table_data = []
 
     split = int(len(docs) * eval_split)

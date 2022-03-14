@@ -2,7 +2,7 @@
 
 # 🪐 spaCy Project: Healthsea-Spancat
 
-This spaCy project uses the Healthsea dataset to compare the results between the Spancat and NER architecture
+This spaCy project uses the Healthsea dataset to compare the performance between the Spancat and NER architecture.
 
 ## 📋 project.yml
 
@@ -18,12 +18,12 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `preprocess` | Format .jsonl annotations into .spaCy training format for NER and Spancat |
+| `preprocess` | Format .jsonl annotations into .spacy training format for NER and Spancat |
 | `train_ner` | Train an NER model |
 | `train_spancat` | Train a Spancat model |
 | `evaluate_ner` | Evaluate the trained NER model |
 | `evaluate_spancat` | Evaluate the trained Spancat model |
-| `evaluate` | Evaluate NER vs Spancat on the dev dataset |
+| `evaluate` | Evaluate NER vs Spancat on the dev dataset and create a detailed performance analysis which is saved in the metrics folder |
 | `reset` | Reset the project to its original state and delete all training process |
 
 ### ⏭ Workflows
