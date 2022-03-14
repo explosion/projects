@@ -1,0 +1,254 @@
+title: "Train floret vectors from Wikipedia and OSCAR"
+description: |
+  This project downloads, extracts and preprocesses texts from Wikipedia and
+  OSCAR and trains vectors with [floret](https://github.com/explosion/floret).
+
+  By default, the project trains floret vectors for Macedonian.
+
+  Prerequisites:
+  - a large amount of hard drive space
+  - a workstation with a good CPU, or a lot of patience
+
+  For Macedonian, you'll need ~5GB in `/scratch` and ~1GB in `vectors/`.
+
+  Adjust the variables `n_process_tokenize` and `vector_thread` for your CPU.
+
+  ## Text Sources
+
+  - Wikipedia: https://dumps.wikimedia.org
+  - OSCAR 2019: https://oscar-corpus.com/post/oscar-2019/
+
+  By default the full OSCAR 2019 dataset is loaded in streaming mode. Adjust
+  `oscar_max_texts` to use a subset of the full dataset, especially for large
+  languages like English, Spanish, Chinese, Russian, etc.
+
+  ## floret Parameters
+
+  [floret](https://github.com/explosion/floret) has a large number of
+  parameters and it's difficult to give advice for all configurations, but the
+  parameters described here are the ones that it makes sense to customize for
+  any new language and to experiment with initially.
+
+  Be aware that if you're using more than one thread, the results of each run
+  with fastText or floret will be slightly different.
+
+  ### `vector_minn` / `vector_maxn`
+  
+  The minimum and maximum character n-gram lengths should be adapted for the
+  language and writing system. The n-grams should capture common grammatical
+  affixes like English `-ing`, without making the number of n-grams per word
+  too large. Very short n-grams aren't meaningful and very long n-grams will be
+  too sparse and won't be useful for cases with misspellings and noise.
+
+  A good rule of thumb is that `maxn` should correspond to the length of the
+  longest common affix + `1`, so for many languages with alphabets, `minn
+  5`/`maxn 5` can be a good starting point, similar to the defaults in the
+  [original fastText vectors](https://fasttext.cc/docs/en/crawl-vectors.html).
+  
+  For writing systems where one character corresponds to a syllable, shorter
+  n-grams are typically more suitable. For Korean, where each (normalized)
+  character is a syllable and most grammatical affixes are 1-2 characters,
+  `minn 2`/`maxn 3` seems to perform well.
+
+  ### `vector_bucket`
+
+  The bucket size is the number of rows in the floret vector table. For
+  tagging and parsing, a bucket size of 50k performs well, but larger sizes may
+  still lead to small improvements. For NER, the performance continues to
+  improve for bucket sizes up to at least 200k.
+
+  In a spaCy pipeline package, 50k 300-dim vectors are ~60MB and 200k 300-dim
+  vectors are ~230MB.
+
+  ### `vector_hash_count`
+
+  The recommended hash count is `2`, especially for smaller bucket sizes.
+  
+  Larger hash counts are slower to train with floret and slightly slower in
+  inference in spaCy, but may lead to slightly improved performance, especially
+  with larger bucket sizes.
+
+  ### `vector_epoch`
+
+  You may want to reduce the number of epochs for larger training input sizes.
+
+  ### `vector_min_count`
+
+  You may want to increase the minimum word count for larger training input
+  sizes.
+
+  ### `vector_lr`
+
+  You may need to decrease the learning rate for larger training input sizes to
+  avoid NaN errors, see:
+  https://fasttext.cc/docs/en/faqs.html#im-encountering-a-nan-why-could-this-be
+
+  ### `vector_thread`
+  
+  Adjust the number of threads for your CPU. With a larger number of threads,
+  you may need more epochs to reach the same performance.
+
+  ## Notes
+
+  The project does not currently clean up any intermediate files so that it's
+  possible to resume from any point in the workflow. The overall disk space
+  could be reduced by cleaning up files after each step, keeping only the final
+  floret input text file. floret does require the input file to be on disk
+  during training.
+
+  floret always writes the full `.bin` and `.vec` files after training. These
+  may be 5GB+ each even though the final `.floret` table is much smaller.
+
+  Import the floret vectors into a spaCy vectors model with:
+
+  ```shell
+  spacy init vectors mk vectors/mk.floret /path/to/mk_vectors_model --mode floret
+  ```
+
+spacy_version: ">=3.2.0,<4.0.0"
+vars:
+  name: "vectors"
+  lang: "mk"
+  n_process_tokenize: 16
+  # The defaults assume that you have a large hard drive mounted under /scratch
+  downloaded_dir: "/scratch/vectors/downloaded"
+  extracted_dir: "/scratch/vectors/extracted"
+  tokenized_dir: "/scratch/vectors/tokenized"
+  wikipedia_version: "latest"
+  oscar_dataset: "oscar"
+  oscar_dataset_subset: "unshuffled_deduplicated_${vars.lang}"
+  oscar_dataset_split: "train"
+  # Limit for large languages like English, Spanish, Chinese, Russian
+  # Check the size of the raw corpus (under the column "Size deduplicated"):
+  # https://oscar-corpus.com/post/oscar-2019/
+  oscar_max_texts: -1
+  vector_input_dir: "/scratch/vectors/input"
+  vector_model: "cbow"
+  # For languages with alphabets: minn/maxn 4/5 or 5/5 is a good starting point.
+  vector_minn: 5
+  vector_maxn: 5
+  vector_epoch: 5
+  vector_dim: 300
+  vector_neg: 10
+  vector_bucket: 50000
+  vector_min_count: 20
+  vector_hash_count: 2
+  vector_thread: 16
+  vector_lr: 0.05
+
+directories: ["vectors"]
+
+assets:
+  - dest: "${vars.downloaded_dir}/wikipedia/${vars.lang}wiki-${vars.wikipedia_version}-pages-articles.xml.bz2"
+    url: "https://dumps.wikimedia.org/${vars.lang}wiki/${vars.wikipedia_version}/${vars.lang}wiki-${vars.wikipedia_version}-pages-articles.xml.bz2"
+
+workflows:
+  all:
+    - extract-wikipedia
+    - tokenize-wikipedia
+    - tokenize-oscar
+    - create-input
+    - train-floret-vectors
+
+commands:
+  - name: "extract-wikipedia"
+    help: "Convert Wikipedia XML to JSONL with wikiextractor"
+    script:
+      - >-
+        python -m wikiextractor.WikiExtractor
+        --json --no-templates -b 1000G -q
+        ${vars.downloaded_dir}/wikipedia/${vars.lang}wiki-${vars.wikipedia_version}-pages-articles.xml.bz2
+        -o ${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/
+    outputs:
+      - "${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/AA/wiki_00"
+
+  - name: "tokenize-wikipedia"
+    help: "Tokenize and sentencize Wikipedia"
+    script:
+      - >-
+        python scripts/tokenize_resource.py ${vars.lang}
+        --input-jsonl ${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/AA/wiki_00
+        --output-file ${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt
+        --n-process ${vars.n_process_tokenize}
+    deps:
+      - "scripts/tokenize_resource.py"
+      - "${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/AA/wiki_00"
+    outputs:
+      - "${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt"
+
+  - name: "tokenize-oscar"
+    help: "Tokenize and sentencize OSCAR dataset"
+    script:
+      - >-
+        python scripts/tokenize_resource.py ${vars.lang}
+        --input-dataset ${vars.oscar_dataset}
+        --dataset-subset ${vars.oscar_dataset_subset}
+        --dataset-split ${vars.oscar_dataset_split}
+        --output-file ${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt
+        --n-process=${vars.n_process_tokenize}
+        --max-texts=${vars.oscar_max_texts}
+    deps:
+      - "scripts/tokenize_resource.py"
+    outputs:
+      - "${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt"
+
+  - name: "create-input"
+    help: "Concatenate tokenized input texts"
+    script:
+      - >-
+        python scripts/concat_files.py 
+        --input-file ${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt
+        --input-file ${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt
+        ${vars.vector_input_dir}/${vars.lang}.txt
+    deps:
+      - "scripts/concat_files.py"
+      - "${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt"
+      - "${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt"
+    outputs:
+      - "${vars.vector_input_dir}/${vars.lang}.txt"
+
+  - name: "train-floret-vectors"
+    help: "Train floret vectors"
+    script:
+      - >-
+        python scripts/train_floret.py
+        --mode floret
+        --model ${vars.vector_model}
+        --dim ${vars.vector_dim}
+        --mincount ${vars.vector_min_count}
+        --minn ${vars.vector_minn}
+        --maxn ${vars.vector_maxn}
+        --neg ${vars.vector_neg}
+        --epoch ${vars.vector_epoch}
+        --hashcount ${vars.vector_hash_count}
+        --bucket ${vars.vector_bucket}
+        --thread ${vars.vector_thread}
+        ${vars.vector_input_dir}/${vars.lang}.txt
+        vectors/${vars.lang}
+    deps:
+      - "scripts/train_floret.py"
+      - "${vars.vector_input_dir}/${vars.lang}.txt"
+    outputs:
+      - "vectors/${vars.lang}.floret"
+
+  - name: "train-fasttext-vectors"
+    help: "Train fastText vectors"
+    script:
+      - >-
+        python scripts/train_floret.py
+        --mode fasttext
+        --model ${vars.vector_model}
+        --dim ${vars.vector_dim}
+        --mincount ${vars.vector_min_count}
+        --minn ${vars.vector_minn}
+        --maxn ${vars.vector_maxn}
+        --neg ${vars.vector_neg}
+        --epoch ${vars.vector_epoch}
+        --thread ${vars.vector_thread}
+        ${vars.vector_input_dir}/${vars.lang}.txt
+        vectors/${vars.lang}.fasttext
+    deps:
+      - "scripts/train_floret.py"
+      - "${vars.vector_input_dir}/${vars.lang}.txt"
+    outputs:
+      - "vectors/${vars.lang}.fasttext.vec"
