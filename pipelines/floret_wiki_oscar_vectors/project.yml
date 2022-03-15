@@ -6,12 +6,15 @@ description: |
   By default, the project trains floret vectors for Macedonian.
 
   Prerequisites:
+  - linux (you can try using `wikiextractor` with `fork` in OS X, but it's not
+    recommended)
   - a large amount of hard drive space
   - a workstation with a good CPU, or a lot of patience
 
   For Macedonian, you'll need ~5GB in `/scratch` and ~1GB in `vectors/`.
 
-  Adjust the variables `n_process_tokenize` and `vector_thread` for your CPU.
+  Adjust the variables `n_process_tokenize`, `n_process_wikiextractor` and
+  `vector_thread` for your CPU.
 
   ## Text Sources
 
@@ -110,6 +113,8 @@ vars:
   name: "vectors"
   lang: "mk"
   n_process_tokenize: 16
+  # Set to 1 for windows
+  n_process_wikiextractor: 16
   # The defaults assume that you have a large hard drive mounted under /scratch
   downloaded_dir: "/scratch/vectors/downloaded"
   extracted_dir: "/scratch/vectors/extracted"
@@ -157,6 +162,7 @@ commands:
       - >-
         python -m wikiextractor.WikiExtractor
         --json --no-templates -b 1000G -q
+        --processes ${vars.n_process_wikiextractor}
         ${vars.downloaded_dir}/wikipedia/${vars.lang}wiki-${vars.wikipedia_version}-pages-articles.xml.bz2
         -o ${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/
     outputs:

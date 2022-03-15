@@ -1,7 +1,12 @@
 import pytest
+import sys
 from spacy.cli.project.run import project_run
 from spacy.cli.project.assets import project_assets
 from pathlib import Path
+
+
+if not sys.platform.startswith("linux"):
+    pytest.skip("skipping tests for not-linux", allow_module_level=True)
 
 
 def test_floret_web_vectors():
@@ -9,6 +14,7 @@ def test_floret_web_vectors():
     overrides = {
         "vars.lang": "yo",
         "vars.n_process_tokenize": 2,
+        "vars.n_process_wikiextractor": 2,
         "vars.vector_thread": 2,
         "vars.downloaded_dir": "./temp",
         "vars.extracted_dir": "./temp",
