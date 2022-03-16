@@ -15,10 +15,10 @@ jobs:
       strategy:
           matrix:
               Python37Linux:
-                  imageName: 'ubuntu-18.04'
+                  imageName: 'ubuntu-latest'
                   python.version: '3.7'
               Python37Windows:
-                  imageName: 'vs2017-win2016'
+                  imageName: 'windows-latest'
                   python.version: '3.7'
           maxParallel: 4
       pool:
