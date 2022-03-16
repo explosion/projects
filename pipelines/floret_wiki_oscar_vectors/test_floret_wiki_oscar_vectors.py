@@ -17,6 +17,8 @@ def test_floret_web_vectors():
         "vars.extracted_dir": "./temp",
         "vars.tokenized_dir": "./temp",
         "vars.vector_input_dir": "./temp",
+        "vars.vector_dim": 100,
+        "vars.vector_bucket": 100,
     }
     project_assets(root, overrides=overrides)
     project_run(root, "all", overrides=overrides, capture=True)
