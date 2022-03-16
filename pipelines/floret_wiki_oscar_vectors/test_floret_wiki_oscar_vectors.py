@@ -5,9 +5,6 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-if not sys.platform.startswith("linux"):
-    pytest.skip("skipping tests for not-linux", allow_module_level=True)
-
 
 def test_floret_web_vectors():
     root = Path(__file__).parent
