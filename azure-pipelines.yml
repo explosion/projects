@@ -38,7 +38,8 @@ jobs:
                 pip install "spacy_lookups_data>=1.0.2,<1.1.0"
                 pip install torch==1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
                 # for pipelines/floret_wiki_oscar_vectors
-                pip install floret more-itertools datasets wikiextractor
+                pip install floret more-itertools datasets
+                pip install "wikiextractor @ git+https://github.com/adrianeboyd/wikiextractor.git@v3.0.7a0"
             displayName: 'Install dependencies'
 
           - script: python -m pytest -s benchmarks experimental integrations pipelines tutorials
