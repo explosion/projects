@@ -8,15 +8,12 @@ OSCAR and trains vectors with [floret](https://github.com/explosion/floret).
 By default, the project trains floret vectors for Macedonian.
 
 Prerequisites:
-- linux (you can try using `wikiextractor` with `fork` in OS X, but it's not
-  recommended)
 - a large amount of hard drive space
 - a workstation with a good CPU, or a lot of patience
 
 For Macedonian, you'll need ~5GB in `/scratch` and ~1GB in `vectors/`.
 
-Adjust the variables `n_process_tokenize`, `n_process_wikiextractor` and
-`vector_thread` for your CPU.
+Adjust the variables `n_process` and `vector_thread` for your CPU.
 
 ## Text Sources
 
