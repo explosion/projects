@@ -5,7 +5,6 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-
 def test_floret_web_vectors():
     root = Path(__file__).parent
     overrides = {
