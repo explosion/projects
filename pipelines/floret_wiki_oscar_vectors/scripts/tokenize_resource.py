@@ -22,13 +22,13 @@ def tokenize_batch(nlp, batch):
 
 def main(
     lang: str,
+    output_file: Path,
     input_jsonl: Optional[Path] = None,
     input_dataset: Optional[str] = None,
     dataset_subset: Optional[str] = None,
     dataset_split: Optional[str] = None,
     dataset_streaming: bool = True,
     dataset_auth_token: bool = False,
-    output_file: Optional[Path] = None,
     max_texts: int = -1,
     n_process: int = 8,
     batch_size: int = 1000,

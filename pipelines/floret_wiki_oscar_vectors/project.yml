@@ -168,8 +168,8 @@ commands:
     script:
       - >-
         python scripts/tokenize_resource.py ${vars.lang}
+        ${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt
         --input-jsonl ${vars.extracted_dir}/${vars.lang}_wiki_${vars.wikipedia_version}/AA/wiki_00
-        --output-file ${vars.tokenized_dir}/${vars.lang}_wiki_${vars.wikipedia_version}.txt
         --n-process ${vars.n_process}
     deps:
       - "scripts/tokenize_resource.py"
@@ -182,10 +182,10 @@ commands:
     script:
       - >-
         python scripts/tokenize_resource.py ${vars.lang}
+        ${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt
         --input-dataset ${vars.oscar_dataset}
         --dataset-subset ${vars.oscar_dataset_subset}
         --dataset-split ${vars.oscar_dataset_split}
-        --output-file ${vars.tokenized_dir}/${vars.lang}_oscar_${vars.oscar_dataset_subset}.txt
         --n-process=${vars.n_process}
         --max-texts=${vars.oscar_max_texts}
     deps:
