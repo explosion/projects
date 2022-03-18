@@ -224,6 +224,7 @@ commands:
         --hashcount ${vars.vector_hash_count}
         --bucket ${vars.vector_bucket}
         --thread ${vars.vector_thread}
+        --lr ${vars.vector_lr}
         ${vars.vector_input_dir}/${vars.lang}.txt
         vectors/${vars.lang}
     deps:
@@ -246,6 +247,7 @@ commands:
         --neg ${vars.vector_neg}
         --epoch ${vars.vector_epoch}
         --thread ${vars.vector_thread}
+        --lr ${vars.vector_lr}
         ${vars.vector_input_dir}/${vars.lang}.txt
         vectors/${vars.lang}.fasttext
     deps:
