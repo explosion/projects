@@ -17,6 +17,7 @@ def main(
     hashcount: int = 2,
     bucket: int = 20000,
     thread: int = 8,
+    lr: float = 0.05,
 ):
     floret_model = floret.train_unsupervised(
         str(input_file.absolute()),
@@ -31,6 +32,7 @@ def main(
         hashCount=hashcount,
         bucket=bucket,
         thread=thread,
+        lr=lr,
     )
     floret_model.save_model(output_stem + ".bin")
     floret_model.save_vectors(output_stem + ".vec")
