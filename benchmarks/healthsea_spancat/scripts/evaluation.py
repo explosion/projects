@@ -217,7 +217,12 @@ def main(
     print()
 
     # Compare performance between NER and Spancat architecture
-    kpi_header = ("Label", "Total Spans", "Correct NER", "Correct Spancat")
+    kpi_header = (
+        "Label",
+        "Total Spans",
+        "True positives (NER)",
+        "True positives (Spancat)",
+    )
     kpi_data = []
 
     total_spans = 0
