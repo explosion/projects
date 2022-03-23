@@ -22,7 +22,16 @@ Adjust the variables `n_process` and `vector_thread` for your CPU.
 
 By default the full OSCAR 2019 dataset is loaded in streaming mode. Adjust
 `oscar_max_texts` to use a subset of the full dataset, especially for large
-languages like English, Spanish, Chinese, Russian, etc.
+languages like English, Spanish, Chinese, Russian, etc. The text lengths are
+not consistent, but 1M texts may be ~3-5GB.
+
+## wikiextractor
+
+In order to fix a few bugs and support multiprocessing with spawn, this
+project installs a fork of [`wikiextractor`
+v3.0.6](https://github.com/attardi/wikiextractor) as wikiextractor v3.0.7a0.
+The modifications to wikiextractor v3.0.6 are described in [this
+commit](https://github.com/adrianeboyd/wikiextractor/commit/f8b539d46cd67205884d701c1d5fd18eda84825f).
 
 ## floret Parameters
 
