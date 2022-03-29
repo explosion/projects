@@ -15,7 +15,7 @@ def main(
     neg: int = 10,
     epoch: int = 5,
     hashcount: int = 2,
-    bucket: int = 20000,
+    bucket: int = 50000,
     thread: int = 8,
     lr: float = 0.05,
 ):

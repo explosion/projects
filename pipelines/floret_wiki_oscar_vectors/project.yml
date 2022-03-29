@@ -265,6 +265,7 @@ commands:
         --epoch ${vars.vector_epoch}
         --thread ${vars.vector_thread}
         --lr ${vars.vector_lr}
+        --bucket 2000000
         ${vars.vector_input_dir}/${vars.lang}.txt
         vectors/${vars.lang}.fasttext
     deps:
