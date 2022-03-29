@@ -22,9 +22,19 @@ from pathlib import Path
     "entity_linker.manual",
     dataset=("The dataset to use", "positional", None, str),
     source=("The source data as a .txt file", "positional", None, Path),
-    nlp_dir=("Path to the NLP model with a pretrained NER component", "positional", None, Path),
+    nlp_dir=(
+        "Path to the NLP model with a pretrained NER component",
+        "positional",
+        None,
+        Path,
+    ),
     kb_loc=("Path to the KB", "positional", None, Path),
-    entity_loc=("Path to the file with additional information about the entities", "positional", None, Path),
+    entity_loc=(
+        "Path to the file with additional information about the entities",
+        "positional",
+        None,
+        Path,
+    ),
 )
 def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     # Load the NLP and KB objects from file
@@ -58,7 +68,7 @@ def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
 
 
 def _add_options(stream, kb, nlp, id_dict):
-    """ Define the options the annotator will be given, by consulting the candidates from the KB for each NER span. """
+    """Define the options the annotator will be given, by consulting the candidates from the KB for each NER span."""
     for task in stream:
         text = task["text"]
         for mention in task["spans"]:
@@ -69,7 +79,10 @@ def _add_options(stream, kb, nlp, id_dict):
 
             candidates = get_candidates(kb, span)
             if candidates:
-                options = [{"id": c.entity_, "html": _print_url(c.entity_, id_dict)} for c in candidates]
+                options = [
+                    {"id": c.entity_, "html": _print_url(c.entity_, id_dict)}
+                    for c in candidates
+                ]
 
                 # we sort the options by ID
                 options = sorted(options, key=lambda r: int(r["id"][1:]))
@@ -83,7 +96,7 @@ def _add_options(stream, kb, nlp, id_dict):
 
 
 def _print_url(entity_id, id_dict):
-    """ For each candidate QID, create a link to the corresponding Wikidata page and print the description """
+    """For each candidate QID, create a link to the corresponding Wikidata page and print the description"""
     url_prefix = "https://www.wikidata.org/wiki/"
     name, descr = id_dict.get(entity_id)
     option = "<a href='" + url_prefix + entity_id + "'>" + entity_id + "</a>: " + descr

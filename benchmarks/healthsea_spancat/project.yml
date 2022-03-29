@@ -1,0 +1,120 @@
+title: "Healthsea-Spancat"
+description: "This spaCy project uses the Healthsea dataset to compare the performance between the Spancat and NER architecture."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  ner_config: "config_tok2vec" # config_tok2vec, config_trf
+  spancat_config: "config_tok2vec" # config_tok2vec, config_trf
+  train: "train"
+  dev: "dev"
+  spankey: "health_aspects"
+
+  models:
+    model_ner: "training/ner/${vars.ner_config}/model-best"
+    model_spancat: "training/spancat/${vars.spancat_config}/model-best"
+
+  gpu_id: -1 # -1 (CPU)
+  eval_split: 0.25
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "scripts", "data", "metrics"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that all required files are available.
+assets:
+  - dest: "assets/annotation.jsonl"
+    description: "NER annotations exported from Prodigy with 5000 examples and 2 labels"
+    url: https://github.com/explosion/healthsea/blob/main/project/assets/ner/annotation.jsonl
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - preprocess
+    - train_ner
+    - train_spancat
+    - evaluate
+  ner:
+    - preprocess
+    - train_ner
+    - evaluate_ner
+  spancat:
+    - preprocess
+    - train_spancat
+    - evaluate_spancat
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "preprocess"
+    help: "Format .jsonl annotations into .spacy training format for NER and Spancat"
+    script:
+      - "python scripts/preprocess.py assets/annotation.jsonl data/${vars.train}.spacy data/${vars.dev}.spacy ${vars.eval_split}"
+    deps:
+      - "assets/annotation.jsonl"
+      - "scripts/preprocess.py"
+    outputs:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+
+  - name: "train_ner"
+    help: "Train an NER model"
+    script:
+      - "python -m spacy train configs/ner/${vars.ner_config}.cfg --output training/ner/${vars.ner_config}/ --paths.train data/${vars.train}.spacy --paths.dev data/${vars.dev}.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+      - "configs/ner/${vars.ner_config}.cfg"
+    outputs:
+      - ${vars.models.model_ner}
+
+  - name: "train_spancat"
+    help: "Train a Spancat model"
+    script:
+      - "python -m spacy train configs/spancat/${vars.spancat_config}.cfg --output training/spancat/${vars.spancat_config}/ --paths.train data/${vars.train}.spacy --paths.dev data/${vars.dev}.spacy --gpu-id ${vars.gpu_id}"
+    deps:
+      - "data/${vars.train}.spacy"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - ${vars.models.model_spancat}
+
+  - name: "evaluate_ner"
+    help: "Evaluate the trained NER model"
+    script:
+      - "python -m spacy evaluate ${vars.models.model_ner} data/${vars.dev}.spacy --output metrics/ner_${vars.ner_config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "${vars.models.model_ner}"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - "metric/ner_${vars.ner_config}.json"
+
+  - name: "evaluate_spancat"
+    help: "Evaluate the trained Spancat model"
+    script:
+      - "python -m spacy evaluate ${vars.models.model_spancat} data/${vars.dev}.spacy --output metrics/spancat_${vars.spancat_config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "${vars.models.model_spancat}"
+      - "data/${vars.dev}.spacy"
+    outputs:
+      - "metric/ner_${vars.spancat_config}.json"
+
+  - name: "evaluate"
+    help: "Evaluate NER vs Spancat on the dev dataset and create a detailed performance analysis which is saved in the metrics folder"
+    script:
+      - "python scripts/evaluation.py ${vars.spankey} ${vars.models.model_ner} ${vars.models.model_spancat} data/${vars.dev}.spacy"
+    deps:
+      - ${vars.models.model_ner}
+      - ${vars.models.model_spancat}
+      - "data/${vars.dev}.spacy"
+
+  - name: "reset"
+    help: "Reset the project to its original state and delete all training process"
+    script:
+      - "python scripts/reset.py training"
+      - "python scripts/reset.py metrics"
+      - "python scripts/reset.py assets"
+      - "python scripts/reset.py data"
