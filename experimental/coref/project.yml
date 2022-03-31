@@ -1,0 +1,96 @@
+title: "spaCy Coref Model"
+description: >
+  This project trains a coreference model for spaCy using OntoNotes.
+
+vars:
+  # XXX Change to your actual GPU ID
+  gpu_id: 0
+  # XXX fill with your local path to OntoNotes
+  ontonotes: /home/polm/data/ontonotes
+
+directories: ["assets", "corpus", "scripts", "configs", "training"]
+
+assets:
+  - dest: "assets/conll-2012-scripts.v3.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-scripts.v3.tar.gz"
+    description: "CoNLL 2012 Scripts"
+  - dest: "assets/conll-2012-train.v4.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-train.v4.tar.gz"
+    description: "CoNLL 2012 Offset Train Data"
+  - dest: "assets/conll-2012-development.v4.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-development.v4.tar.gz"
+    description: "CoNLL 2012 Offset Development Data"
+  - dest: "assets/conll-2012-development.v4.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-development.v4.tar.gz"
+    description: "CoNLL 2012 Offset Development Data"
+  - dest: "assets/conll-2012-test-official.v9.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-test-official.v9.tar.gz"
+    description: "CoNLL 2012 Offset Test Data"
+  - dest: "assets/conll-2012-test-key.v9.tar.gz"
+    url: "http://conll.cemantix.org/2012/download/conll-2012-test-key.v9.tar.gz"
+    description: "CoNLL 2012 Offset Test Key Data"
+
+workflows:
+  all:
+    - prep-data
+    - preprocess
+    - train
+
+commands:
+  - name: "prep-data"
+    help: "Rehydrate the data using OntoNotes"
+    script: 
+      # TODO check in code that python2 is installed and the ontonotes path is OK
+      # untar the individual files
+      - tar xvzf assets/conll-2012-development.v4.tar.gz -C assets/
+      - tar xvzf assets/conll-2012-scripts.v3.tar.gz -C assets/
+      - tar xvzf assets/conll-2012-test-key.tar.gz -C assets/
+      - tar xvzf assets/conll-2012-test-official.v9.tar.gz -C assets/
+      - tar xvzf assets/conll-2012-train.v4.tar.gz -C assets/
+      #- tar xvzf assets/conll2012-coref/reference-coreference-scorers.v8.01.tar.gz -C assets/
+
+      # fix issues in the official scripts
+      # For the shell script, be sure to use python2.
+      - "sed -i 's:python:python2:' assets/conll-2012/v3/scripts/skeleton2conll.sh"
+      # In the Python, change the exception syntax that doesn't work in 2.7.
+      - "sed -i '392s:,: as :' assets/conll-2012/v3/scripts/skeleton2conll.py"
+
+      # rehydrate data
+      # XXX note this can take 20m
+      # XXX This can fail depending on the structure of OntoNotes. I had to do this:
+      #   ontonotes="/path/to/ontonotes" # use absolute path
+      #   mkdir -p ${ontonotes}/data/files
+      #   ln -s ${ontonotes} ${ontonotes}/data/files/data
+      # # TODO The symlink step should be moved into a script
+      - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes}/data/files/data assets/conll-2012"
+      # Concatenate the data into single files to make it easier to work with
+      - sh -c "rm -f assets/*._gold_conll"
+      - sh -c "cat assets/conll-2012/v4/data/development/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/dev.gold.conll"
+      - sh -c "cat assets/conll-2012/v4/data/train/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/train..gold.conll"
+      - sh -c "cat assets/conll-2012/v4/data/test/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/test.gold.conll"
+    deps:
+      - ${vars.ontonotes}
+    outputs: 
+      - "assets/train.gold.conll"
+      - "assets/dev.gold.conll"
+      - "assets/test.gold.conll"
+
+  - name: "preprocess"
+    help: "Convert the data to spaCy's format"
+    script:
+      - python scripts/preprocess.py assets/train.gold.conll corpus/train.spacy
+      - python scripts/preprocess.py assets/dev.gold.conll corpus/dev.spacy
+      - python scripts/preprocess.py assets/test.gold.conll corpus/test.spacy
+
+  - name: "train"
+    help: "Train the pipeline"
+    script: 
+      - "python -m spacy train configs/coref.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/coref.cfg"
+    outputs:
+      - "training/model-best"
+  
+
