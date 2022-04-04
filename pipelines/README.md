@@ -1,12 +1,13 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Pipelines (14)
+# 🪐 Project Templates: Pipelines (15)
 
 | Template | Description |
 | --- | --- |
 | [`floret_fi_core_demo`](floret_fi_core_demo) | Demo floret vectors for Finnish |
 | [`floret_ko_ud_demo`](floret_ko_ud_demo) | Demo floret vectors for UD Korean Kaist |
 | [`floret_vectors_demo`](floret_vectors_demo) | Demo floret vectors |
+| [`floret_wiki_oscar_vectors`](floret_wiki_oscar_vectors) | Train floret vectors from Wikipedia and OSCAR |
 | [`ner_demo`](ner_demo) | Demo NER in a new pipeline (Named Entity Recognition) |
 | [`ner_demo_replace`](ner_demo_replace) | Demo replacing an NER component in a pretrained pipeline |
 | [`ner_demo_update`](ner_demo_update) | Demo updating an NER component in a pretrained pipeline |
