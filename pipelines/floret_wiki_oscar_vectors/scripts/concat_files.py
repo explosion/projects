@@ -12,7 +12,7 @@ def main(
     with open(output_file, "wb") as output_fileh:
         for filename in input_file:
             with open(filename, "rb") as fileh:
-                shutil.copyfileobj(fileh, output_fileh)
+                shutil.copyfileobj(fileh, output_fileh, length=1000000)
 
 
 if __name__ == "__main__":
