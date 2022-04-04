@@ -33,14 +33,6 @@ v3.0.6](https://github.com/attardi/wikiextractor) as wikiextractor v3.0.7a0.
 The modifications to wikiextractor v3.0.6 are described in [this
 commit](https://github.com/adrianeboyd/wikiextractor/commit/f8b539d46cd67205884d701c1d5fd18eda84825f).
 
-## wikiextractor
-
-In order to fix a few bugs and support multiprocessing with spawn, this
-project installs a fork of [`wikiextractor`
-v3.0.6](https://github.com/attardi/wikiextractor) as wikiextractor v3.0.7a0.
-The modifications to wikiextractor v3.0.6 are described in [this
-commit](https://github.com/adrianeboyd/wikiextractor/commit/f8b539d46cd67205884d701c1d5fd18eda84825f).
-
 ## floret Parameters
 
 [floret](https://github.com/explosion/floret) has a large number of
