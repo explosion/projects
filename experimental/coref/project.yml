@@ -28,6 +28,7 @@ commands:
   - name: "prep-data"
     help: "Rehydrate the data using OntoNotes"
     script: 
+      # XXX python2 is required for the old scripts
       - python2 -c "print('Checking for Python 2...')"
       - tar xzf assets/conll-2012-development.v4.tar.gz -C assets/
       - tar xzf assets/conll-2012-test-key.tar.gz -C assets/
@@ -35,9 +36,9 @@ commands:
       - tar xzf assets/conll-2012-train.v4.tar.gz -C assets/
       #- tar xvzf assets/conll2012-coref/reference-coreference-scorers.v8.01.tar.gz -C assets/
 
-      # rehydrate data
-      # XXX note this can take 20m
+      - echo "Rehydrating data... This will take roughly 20 minutes"
       - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes} assets/conll-2012"
+
       # Concatenate the data into single files to make it easier to work with
       - sh -c "rm -f assets/*._gold_conll"
       - sh -c "cat assets/conll-2012/v4/data/development/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/dev.gold.conll"
