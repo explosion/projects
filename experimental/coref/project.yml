@@ -11,24 +11,12 @@ vars:
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
 assets:
-  - dest: "assets/conll-2012-scripts.v3.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-scripts.v3.tar.gz"
-    description: "CoNLL 2012 Scripts"
-  - dest: "assets/conll-2012-train.v4.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-train.v4.tar.gz"
-    description: "CoNLL 2012 Offset Train Data"
-  - dest: "assets/conll-2012-development.v4.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-development.v4.tar.gz"
-    description: "CoNLL 2012 Offset Development Data"
-  - dest: "assets/conll-2012-development.v4.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-development.v4.tar.gz"
-    description: "CoNLL 2012 Offset Development Data"
-  - dest: "assets/conll-2012-test-official.v9.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-test-official.v9.tar.gz"
-    description: "CoNLL 2012 Offset Test Data"
-  - dest: "assets/conll-2012-test-key.v9.tar.gz"
-    url: "http://conll.cemantix.org/2012/download/conll-2012-test-key.v9.tar.gz"
-    description: "CoNLL 2012 Offset Test Key Data"
+  - dest: "assets/"
+    git:
+      repo: "https://github.com/explosion/conll-2012"
+      branch: "main"
+      path: ""
+    description: "CoNLL-2012 scripts and dehydrated data."
 
 workflows:
   all:
@@ -43,17 +31,10 @@ commands:
       # TODO check in code that python2 is installed and the ontonotes path is OK
       # untar the individual files
       - tar xvzf assets/conll-2012-development.v4.tar.gz -C assets/
-      - tar xvzf assets/conll-2012-scripts.v3.tar.gz -C assets/
       - tar xvzf assets/conll-2012-test-key.tar.gz -C assets/
       - tar xvzf assets/conll-2012-test-official.v9.tar.gz -C assets/
       - tar xvzf assets/conll-2012-train.v4.tar.gz -C assets/
       #- tar xvzf assets/conll2012-coref/reference-coreference-scorers.v8.01.tar.gz -C assets/
-
-      # fix issues in the official scripts
-      # For the shell script, be sure to use python2.
-      - "sed -i 's:python:python2:' assets/conll-2012/v3/scripts/skeleton2conll.sh"
-      # In the Python, change the exception syntax that doesn't work in 2.7.
-      - "sed -i '392s:,: as :' assets/conll-2012/v3/scripts/skeleton2conll.py"
 
       # rehydrate data
       # XXX note this can take 20m
