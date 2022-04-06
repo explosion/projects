@@ -57,16 +57,11 @@ commands:
 
       # rehydrate data
       # XXX note this can take 20m
-      # XXX This can fail depending on the structure of OntoNotes. I had to do this:
-      #   ontonotes="/path/to/ontonotes" # use absolute path
-      #   mkdir -p ${ontonotes}/data/files
-      #   ln -s ${ontonotes} ${ontonotes}/data/files/data
-      # # TODO The symlink step should be moved into a script
-      - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes}/data/files/data assets/conll-2012"
+      - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes} assets/conll-2012"
       # Concatenate the data into single files to make it easier to work with
       - sh -c "rm -f assets/*._gold_conll"
       - sh -c "cat assets/conll-2012/v4/data/development/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/dev.gold.conll"
-      - sh -c "cat assets/conll-2012/v4/data/train/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/train..gold.conll"
+      - sh -c "cat assets/conll-2012/v4/data/train/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/train.gold.conll"
       - sh -c "cat assets/conll-2012/v4/data/test/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/test.gold.conll"
     deps:
       - ${vars.ontonotes}
