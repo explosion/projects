@@ -28,8 +28,7 @@ commands:
   - name: "prep-data"
     help: "Rehydrate the data using OntoNotes"
     script: 
-      # TODO check in code that python2 is installed and the ontonotes path is OK
-      # untar the individual files
+      - python2 -c "print('Checking for Python 2...')"
       - tar xvzf assets/conll-2012-development.v4.tar.gz -C assets/
       - tar xvzf assets/conll-2012-test-key.tar.gz -C assets/
       - tar xvzf assets/conll-2012-test-official.v9.tar.gz -C assets/
