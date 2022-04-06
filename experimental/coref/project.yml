@@ -29,10 +29,10 @@ commands:
     help: "Rehydrate the data using OntoNotes"
     script: 
       - python2 -c "print('Checking for Python 2...')"
-      - tar xvzf assets/conll-2012-development.v4.tar.gz -C assets/
-      - tar xvzf assets/conll-2012-test-key.tar.gz -C assets/
-      - tar xvzf assets/conll-2012-test-official.v9.tar.gz -C assets/
-      - tar xvzf assets/conll-2012-train.v4.tar.gz -C assets/
+      - tar xzf assets/conll-2012-development.v4.tar.gz -C assets/
+      - tar xzf assets/conll-2012-test-key.tar.gz -C assets/
+      - tar xzf assets/conll-2012-test-official.v9.tar.gz -C assets/
+      - tar xzf assets/conll-2012-train.v4.tar.gz -C assets/
       #- tar xvzf assets/conll2012-coref/reference-coreference-scorers.v8.01.tar.gz -C assets/
 
       # rehydrate data
