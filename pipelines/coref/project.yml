@@ -7,6 +7,7 @@ vars:
   gpu_id: 0
   # XXX fill with your local path to OntoNotes
   ontonotes: /home/polm/data/ontonotes
+  max_epochs: 5
 
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
@@ -22,7 +23,9 @@ workflows:
   all:
     - prep-data
     - preprocess
-    - train
+    - train-cluster
+    - prep-span-data
+    - train-span-predictor
 
 commands:
   - name: "prep-data"
@@ -58,15 +61,36 @@ commands:
       - python scripts/preprocess.py assets/dev.gold.conll corpus/dev.spacy
       - python scripts/preprocess.py assets/test.gold.conll corpus/test.spacy
 
-  - name: "train"
-    help: "Train the pipeline"
+  - name: "train-cluster"
+    help: "Train the clustering component"
     script: 
-      - "python -m spacy train configs/coref.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training"
+      - "python -m spacy train configs/cluster.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training/cluster --training.max_epochs ${vars.max_epochs}"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
-      - "configs/coref.cfg"
+      - "configs/cluster.cfg"
     outputs:
       - "training/model-best"
   
+  - name: "prep-span-data"
+    help: "Prepare data for the span predictor component."
+    script:
+      - python scripts/reader.py --model-path training/cluster/model-best/ --gpu --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/reader.py --model-path training/cluster/model-best/ --gpu --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+    deps:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+    outputs:
+      - corpus/spans.train.spacy
+      - corpus/spans.dev.spacy
+  
+  - name: "train-span-predictor"
+    help: "Train the span predictor component."
+    script:
+      - spacy train configs/span.cfg -c scripts/custom_functions.py -g ${vars.gpu_id} --paths.train corpus/spans.train.spacy --paths.dev corpus/spans.dev.spacy --training.max_epochs ${vars.max_epochs} --paths.transformer_source training/cluster/model-best -o training/span_predictor
+    deps:
+      - corpus/spans.train.spacy
+      - corpus/spans.dev.spacy
+    outputs:
+      - training/span_predictor
 
