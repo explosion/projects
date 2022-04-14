@@ -20,12 +20,18 @@ assets:
     description: "CoNLL-2012 scripts and dehydrated data."
 
 workflows:
-  all:
+  prep:
     - prep-data
     - preprocess
+  train:
     - train-cluster
     - prep-span-data
     - train-span-predictor
+    - assemble
+
+  all:
+    - prep
+    - train
 
 commands:
   - name: "prep-data"
