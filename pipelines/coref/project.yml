@@ -94,3 +94,7 @@ commands:
     outputs:
       - training/span_predictor
 
+  - name: "assemble"
+    help: "Assemble parts into complete coref pipeline."
+    script:
+      - spacy assemble configs/coref.cfg training/coref
