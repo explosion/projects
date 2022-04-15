@@ -18,6 +18,12 @@ assets:
       branch: "main"
       path: ""
     description: "CoNLL-2012 scripts and dehydrated data."
+  - dest: "assets/conll-eval"
+    git:
+      repo: "https://github.com/conll/reference-coreference-scorers"
+      branch: "master"
+      path: ""
+    description: "CoNLL-2012 reference scorer."
 
 workflows:
   prep:
@@ -110,3 +116,12 @@ commands:
     help: "Assemble parts into complete coref pipeline."
     script:
       - spacy assemble configs/coref.cfg training/coref
+
+  - name: "eval"
+    help: "Evaluate model on the test set."
+    script:
+      - rm -f corpus/test.key corpus/test.response
+      - python scripts/create_eval_data.py training/coref corpus/test.spacy
+      - ./assets/conll-eval/scorer.pl all corpus/test.key corpus/test.response
+
+
