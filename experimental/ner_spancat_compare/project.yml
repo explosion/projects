@@ -185,6 +185,7 @@ commands:
   - name: "evaluate-ner"
     help: "Evaluate all NER models"
     script:
+      - "mkdir -p metrics/ner"
       - >-
         python3 -m spacy evaluate
         training/ner/${vars.dna}/model-best
@@ -231,6 +232,7 @@ commands:
   - name: "evaluate-spancat"
     help: "Evaluate SpanCat model"
     script:
+      - "mkdir -p metrics/spancat"
       - >-
         python3 -m spacy evaluate
         training/spancat/model-best

@@ -1,0 +1,17 @@
+{
+  "token_acc":null,
+  "token_p":null,
+  "token_r":null,
+  "token_f":null,
+  "ents_p":0.7777777778,
+  "ents_r":0.7211367673,
+  "ents_f":0.7483870968,
+  "ents_per_type":{
+    "cell_type":{
+      "p":0.7777777778,
+      "r":0.7211367673,
+      "f":0.7483870968
+    }
+  },
+  "speed":4212.112267955
+}

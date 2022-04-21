@@ -1,0 +1,17 @@
+{
+  "token_acc":null,
+  "token_p":null,
+  "token_r":null,
+  "token_f":null,
+  "ents_p":0.7357212004,
+  "ents_r":0.6307053942,
+  "ents_f":0.6791778374,
+  "ents_per_type":{
+    "DNA":{
+      "p":0.7357212004,
+      "r":0.6307053942,
+      "f":0.6791778374
+    }
+  },
+  "speed":341.4703045069
+}

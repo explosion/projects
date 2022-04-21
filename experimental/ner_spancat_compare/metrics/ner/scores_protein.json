@@ -1,0 +1,17 @@
+{
+  "token_acc":null,
+  "token_p":null,
+  "token_r":null,
+  "token_f":null,
+  "ents_p":0.7583302819,
+  "ents_r":0.7183489421,
+  "ents_f":0.7377983612,
+  "ents_per_type":{
+    "protein":{
+      "p":0.7583302819,
+      "r":0.7183489421,
+      "f":0.7377983612
+    }
+  },
+  "speed":3774.9078092349
+}
