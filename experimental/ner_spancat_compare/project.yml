@@ -180,3 +180,63 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "training/spancat/model-best"
+
+  - name: "evaluate-ner"
+    help: "Evaluate all NER models"
+    script:
+      - >-
+        python3 -m spacy evaluate
+        training/ner/${vars.dna}/model-best
+        corpus/ner/test_${vars.dna}.spacy
+        --output metrics/ner/scores_${vars.dna}.json
+      - >-
+        python3 -m spacy evaluate
+        training/ner/${vars.rna}/model-best
+        corpus/ner/test_${vars.rna}.spacy
+        --output metrics/ner/scores_${vars.rna}.json
+      - >-
+        python3 -m spacy evaluate
+        training/ner/${vars.cell_line}/model-best
+        corpus/ner/test_${vars.cell_line}.spacy
+        --output metrics/ner/scores_${vars.cell_line}.json
+      - >-
+        python3 -m spacy evaluate
+        training/ner/${vars.cell_type}/model-best
+        corpus/ner/test_${vars.cell_type}.spacy
+        --output metrics/ner/scores_${vars.cell_type}.json
+      - >-
+        python3 -m spacy evaluate
+        training/ner/${vars.protein}/model-best
+        corpus/ner/test_${vars.protein}.spacy
+        --output metrics/ner/scores_${vars.protein}.json
+    deps:
+      - "training/ner/${vars.dna}/model-best"
+      - "training/ner/${vars.rna}/model-best"
+      - "training/ner/${vars.cell_line}/model-best"
+      - "training/ner/${vars.cell_type}/model-best"
+      - "training/ner/${vars.protein}/model-best"
+      - "corpus/ner/test_${vars.dna}.spacy"
+      - "corpus/ner/test_${vars.rna}.spacy"
+      - "corpus/ner/test_${vars.cell_line}.spacy"
+      - "corpus/ner/test_${vars.cell_type}.spacy"
+      - "corpus/ner/test_${vars.protein}.spacy"
+    outputs:
+      - "metrics/ner/scores_${vars.dna}.json"
+      - "metrics/ner/scores_${vars.rna}.json"
+      - "metrics/ner/scores_${vars.cell_line}.json"
+      - "metrics/ner/scores_${vars.cell_type}.json"
+      - "metrics/ner/scores_${vars.protein}.json"
+
+  - name: "evaluate-spancat"
+    help: "Evaluate SpanCat model"
+    script:
+      - >-
+        python3 -m spacy evaluate
+        training/spancat/model-best
+        corpus/test.spacy
+        --output metrics/spancat/scores.json
+    deps:
+      - "training/spancat/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/spancat/scores.json"
