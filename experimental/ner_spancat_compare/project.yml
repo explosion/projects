@@ -63,6 +63,7 @@ commands:
     help: "Install dependencies"
     script:
       - "pip3 install --user -r requirements.txt"
+      - "python3 -m spacy download en_core_web_lg"
   - name: "convert"
     help: "Convert IOB file into the spaCy format"
     script:
