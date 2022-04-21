@@ -25,6 +25,13 @@ description: |
 vars:
   name: "ner_spancat_compare"
   version: "1.0.0"
+  gpu_id: -1
+  # Labels
+  dna: "DNA"
+  rna: "RNA"
+  cell_line: "cell_line"
+  cell_type: "cell_type"
+  protein: "protein"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist
@@ -70,7 +77,106 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
+
   - name: "create-ner"
-    help: "Create NER dataset for each GENIA label"
+    help: "Split corpus into separate NER datasets for each GENIA label"
     script:
-      - "python3 -m scripts.create_ner --train corpus/train.spacy --dev corpus/dev.spacy --test corpus/test.spacy --output-dir corpus/ner/"
+      - >-
+        python3 -m scripts.create_ner
+        --train corpus/train.spacy
+        --dev corpus/dev.spacy
+        --test corpus/test.spacy
+        --output-dir corpus/ner
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+    outputs:
+      - "corpus/ner/train_${vars.dna}.spacy"
+      - "corpus/ner/train_${vars.rna}.spacy"
+      - "corpus/ner/train_${vars.cell_line}.spacy"
+      - "corpus/ner/train_${vars.cell_type}.spacy"
+      - "corpus/ner/train_${vars.protein}.spacy"
+      - "corpus/ner/dev_${vars.dna}.spacy"
+      - "corpus/ner/dev_${vars.rna}.spacy"
+      - "corpus/ner/dev_${vars.cell_line}.spacy"
+      - "corpus/ner/dev_${vars.cell_type}.spacy"
+      - "corpus/ner/dev_${vars.protein}.spacy"
+      - "corpus/ner/test_${vars.dna}.spacy"
+      - "corpus/ner/test_${vars.rna}.spacy"
+      - "corpus/ner/test_${vars.cell_line}.spacy"
+      - "corpus/ner/test_${vars.cell_type}.spacy"
+      - "corpus/ner/test_${vars.protein}.spacy"
+
+  - name: "train-ner"
+    help: "Train an NER model for each label"
+    script:
+      - >-
+        python3 -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.dna}
+        --paths.train corpus/ner/train_${vars.dna}.spacy
+        --paths.dev corpus/ner/dev_${vars.dna}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python3 -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.rna}
+        --paths.train corpus/ner/train_${vars.rna}.spacy
+        --paths.dev corpus/ner/dev_${vars.rna}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python3 -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.cell_line}
+        --paths.train corpus/ner/train_${vars.cell_line}.spacy
+        --paths.dev corpus/ner/dev_${vars.cell_line}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python3 -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.cell_type}
+        --paths.train corpus/ner/train_${vars.cell_type}.spacy
+        --paths.dev corpus/ner/dev_${vars.cell_type}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python3 -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.protein}
+        --paths.train corpus/ner/train_${vars.protein}.spacy
+        --paths.dev corpus/ner/dev_${vars.protein}.spacy
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - "corpus/ner/train_${vars.dna}.spacy"
+      - "corpus/ner/train_${vars.rna}.spacy"
+      - "corpus/ner/train_${vars.cell_line}.spacy"
+      - "corpus/ner/train_${vars.cell_type}.spacy"
+      - "corpus/ner/train_${vars.protein}.spacy"
+      - "corpus/ner/dev_${vars.dna}.spacy"
+      - "corpus/ner/dev_${vars.rna}.spacy"
+      - "corpus/ner/dev_${vars.cell_line}.spacy"
+      - "corpus/ner/dev_${vars.cell_type}.spacy"
+      - "corpus/ner/dev_${vars.protein}.spacy"
+    outputs:
+      - "training/ner/${vars.dna}/model-best"
+      - "training/ner/${vars.rna}/model-best"
+      - "training/ner/${vars.cell_line}/model-best"
+      - "training/ner/${vars.cell_type}/model-best"
+      - "training/ner/${vars.protein}/model-best"
+
+  - name: "train-spancat"
+    help: "Train a SpanCat model"
+    script:
+      - >-
+        python3 -m spacy train
+        configs/spancat.cfg
+        --output training/spancat/
+        --paths.train corpus/train.spacy
+        --paths.dev corpus/dev.spacy
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+    outputs:
+      - "training/spancat/model-best"
