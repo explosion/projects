@@ -1,0 +1,76 @@
+title: "Comparing SpanCat and NER using a corpus of biomedical literature (GENIA)"
+description: |
+  This project demonstrates how spaCy's Span Categorization (SpanCat) and
+  Named-Entity Recognition (NER) perform on different types of entities. Here, we used
+  a dataset of biomedical literature containing both overlapping and non-overlapping spans.
+
+  ### About the dataset
+
+  [GENIA](http://www.geniaproject.org/genia-corpus) is a dataset containing
+  biomedical literature from 1,999 Medline abstracts. It contains a collection
+  of overlapping and hierarhical spans.  To make parsing easier, we will be
+  using the [pre-constructed IOB
+  tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia)
+  from the Boundary Aware Nested NER paper repository.
+
+  ### Experiments
+
+  Given what we know from the dataset, we will create the following pipelines:
+
+  | Pipeline | Description                                                                                                                             | Workflow Name |
+  |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
+  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
+  | NER      | Named-Entity Recognition for all types of entities. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
+
+vars:
+  name: "ner_spancat_compare"
+  version: "1.0.0"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist
+directories:
+  - "assets"
+  - "configs"
+  - "corpus"
+  - "corpus/ner"
+  - "metrics"
+  - "scripts"
+  - "training"
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/train.iob2"
+    description: "The training dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.train.iob2
+  - dest: "assets/dev.iob2"
+    description: "The evaluation dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.dev.iob2
+  - dest: "assets/test.iob2"
+    description: "The test dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.test.iob2
+
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script:
+      - "pip3 install --user -r requirements.txt"
+  - name: "convert"
+    help: "Convert IOB file into the spaCy format"
+    script:
+      - "python3 -m scripts.convert assets/train.iob2 -o corpus/train.spacy"
+      - "python3 -m scripts.convert assets/dev.iob2 -o corpus/dev.spacy"
+      - "python3 -m scripts.convert assets/test.iob2 -o corpus/test.spacy"
+    deps:
+      - "assets/train.iob2"
+      - "assets/dev.iob2"
+      - "assets/test.iob2"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+  - name: "create-ner"
+    help: "Create NER dataset for each GENIA label"
+    script:
+      - "python3 -m scripts.create_ner --train corpus/train.spacy --dev corpus/dev.spacy --test corpus/test.spacy --output-dir corpus/ner/"
