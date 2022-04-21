@@ -6,8 +6,8 @@ vars:
   # XXX Change to your actual GPU ID
   gpu_id: 0
   # XXX fill with your local path to OntoNotes
-  ontonotes: /home/polm/data/ontonotes
-  max_epochs: 5
+  ontonotes: /home/akos/ontonotes5/data
+  max_epochs: 20
 
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
@@ -121,7 +121,4 @@ commands:
     help: "Evaluate model on the test set."
     script:
       - rm -f corpus/test.key corpus/test.response
-      - python scripts/create_eval_data.py training/coref corpus/test.spacy
-      - ./assets/conll-eval/scorer.pl all corpus/test.key corpus/test.response
-
-
+      - python scripts/run_eval.py training/coref corpus/test.spacy
