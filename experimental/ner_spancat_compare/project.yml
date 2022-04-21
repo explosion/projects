@@ -33,8 +33,6 @@ vars:
   cell_type: "cell_type"
   protein: "protein"
 
-# These are the directories that the project needs. The project CLI will make
-# sure that they always exist
 directories:
   - "assets"
   - "configs"
@@ -44,9 +42,27 @@ directories:
   - "scripts"
   - "training"
 
-# Assets that should be downloaded or available in the directory. We're shipping
-# them with the project, so they won't have to be downloaded. But the
-# 'project assets' command still lets you verify that the checksums match.
+workflows:
+  all:
+    - "install"
+    - "convert"
+    - "create-ner"
+    - "train-ner"
+    - "train-spancat"
+    - "evaluate-ner"
+    - "evaluate-spancat"
+  spancat:
+    - "install"
+    - "convert"
+    - "train-spancat"
+    - "evaluate-spancat"
+  ner: 
+    - "install"
+    - "convert"
+    - "create-ner"
+    - "train-ner"
+    - "evaluate-ner"
+
 assets:
   - dest: "assets/train.iob2"
     description: "The training dataset for GENIA in IOB format."

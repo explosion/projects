@@ -47,6 +47,19 @@ Commands are only re-run if their inputs have changed.
 | `evaluate-ner` | Evaluate all NER models |
 | `evaluate-spancat` | Evaluate SpanCat model |
 
+### ⏭ Workflows
+
+The following workflows are defined by the project. They
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
+and will run the specified commands in order. Commands are only re-run if their
+inputs have changed.
+
+| Workflow | Steps |
+| --- | --- |
+| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
+| `spancat` | `install` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
+| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` |
+
 ### 🗂 Assets
 
 The following assets are defined by the project. They can
