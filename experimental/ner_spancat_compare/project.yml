@@ -11,7 +11,19 @@ description: |
   of overlapping and hierarhical spans.  To make parsing easier, we will be
   using the [pre-constructed IOB
   tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia)
-  from the Boundary Aware Nested NER paper repository.
+  from the [Boundary Aware Nested NER
+  paper](https://aclanthology.org/D19-1034/)
+  [repository](https://github.com/thecharm/boundary-aware-nested-ner/). Running `debug data` gives us the
+  following span characteristics:
+
+  | Span Type | Span Length | Span Distinctiveness | Boundary Distinctiveness |
+  |-----------|-------------|----------------------|--------------------------|
+  | DNA       | 2.807       | 1.447                | 0.796                    |
+  | protein   | 2.189       | 1.192                | 0.567                    |
+  | cell_type | 2.094       | 2.350                | 1.051                    |
+  | cell_line | 3.286       | 1.910                | 1.044                    |
+  | RNA       | 2.731       | 2.683                | 1.277                    |
+
 
   ### Experiments
 
@@ -56,7 +68,7 @@ workflows:
     - "convert"
     - "train-spancat"
     - "evaluate-spancat"
-  ner: 
+  ner:
     - "install"
     - "convert"
     - "create-ner"
