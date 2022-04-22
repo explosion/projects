@@ -24,6 +24,12 @@ description: |
   | cell_line | 3.286       | 1.910                | 1.044                    |
   | RNA       | 2.731       | 2.683                | 1.277                    |
 
+  Here's some example data:
+
+  ![](./images/sample_00.png)
+  ![](./images/sample_01.png)
+
+
 
   ### Experiments
 
