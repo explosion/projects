@@ -30,7 +30,6 @@ description: |
   ![](./images/sample_01.png)
 
 
-
   ### Experiments
 
   Given what we know from the dataset, we will create the following pipelines:
@@ -39,6 +38,20 @@ description: |
   |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
   | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
   | NER      | Named-Entity Recognition for all types of entities. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
+
+
+  #### SpanCat Results
+
+  |           |   Precision |   Recall |   F-score |
+  |-----------|-------------|----------|-----------|
+  | DNA       |    0.695853 | 0.360382 |  0.474843 |
+  | protein   |    0.772816 | 0.519243 |  0.621147 |
+  | cell_line |    0.773256 | 0.303653 |  0.436066 |
+  | cell_type |    0.759674 | 0.61755  |  0.681279 |
+  | RNA       |    0.771429 | 0.247706 |  0.375    |
+  | **Overall**| 0.7562334996 | 0.4709535988 | 0.5804345379 |
+
+  #### NER Results
 
 vars:
   name: "ner_spancat_compare"
