@@ -16,15 +16,15 @@ tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boun
 from the [Boundary Aware Nested NER
 paper](https://aclanthology.org/D19-1034/)
 [repository](https://github.com/thecharm/boundary-aware-nested-ner/). Running `debug data` gives us the
-following span characteristics:
+following span characteristics (**SD** = Span Distinctiveness, **BD** = Boundary Distinctiveness):
 
-| Span Type | Span Length | Span Distinctiveness | Boundary Distinctiveness |
+| Span Type | Span Length | SD                   | BD                       |
 |-----------|-------------|----------------------|--------------------------|
-| DNA       | 2.807       | 1.447                | 0.796                    |
-| protein   | 2.189       | 1.192                | 0.567                    |
-| cell_type | 2.094       | 2.350                | 1.051                    |
-| cell_line | 3.286       | 1.910                | 1.044                    |
-| RNA       | 2.731       | 2.683                | 1.277                    |
+| DNA       | 2.81        | 1.45                 | 0.80                     |
+| protein   | 2.19        | 1.19                 | 0.57                     |
+| cell_type | 2.09        | 2.35                 | 1.05                     |
+| cell_line | 3.29        | 1.91                 | 1.04                     |
+| RNA       | 2.73        | 2.68                 | 1.28                     |
 
 Here's some example data:
 
@@ -50,14 +50,14 @@ spans belong to the correct class. We can always tune how precise we want it
 to be: make the suggester lenient and we might get a lot of irrelevant hits,
 make it strict and we miss might out on some true positives.
 
-|           |   Precision |   Recall |   F-score |
+|           | Precision   | Recall   | F-score   |
 |-----------|-------------|----------|-----------|
-| DNA       |    0.695853 | 0.360382 |  0.474843 |
-| protein   |    0.772816 | 0.519243 |  0.621147 |
-| cell_line |    0.773256 | 0.303653 |  0.436066 |
-| cell_type |    0.759674 | 0.61755  |  0.681279 |
-| RNA       |    0.771429 | 0.247706 |  0.375    |
-| **Overall**| 0.7562334996 | 0.4709535988 | 0.5804345379 |
+| DNA       |    0.70     | 0.36     |  0.47     |
+| protein   |    0.77     | 0.52     |  0.62     |
+| cell_line |    0.77     | 0.30     |  0.44     |
+| cell_type |    0.76     | 0.62     |  0.68     |
+| RNA       |    0.77     | 0.25     |  0.38     |
+| **Overall**| 0.76       | 0.47     |  0.58     |
 
 #### NER Results
 
@@ -66,13 +66,13 @@ process entails training five (5) models per entity type. This might work if
 you have a small number of entities, but can be computationally heavy if you
 have a lot.
 
-|           |   Precision |   Recall |   F-score |
-|-----------|-------------|----------|-----------|
-| DNA       |    0.735721 | 0.630705 |  0.679178 |
-| protein   |    0.75833  | 0.718349 |  0.737798 |
-| cell_line |    0.738462 | 0.567376 |  0.641711 |
-| cell_type |    0.777778 | 0.721137 |  0.748387 |
-| RNA       |    0.855422 | 0.651376 |  0.739583 |
+|           |   Precision | Recall |   F-score |
+|-----------|-------------|--------|-----------|
+| DNA       |    0.74     | 0.63   |  0.68     |
+| protein   |    0.76     | 0.72   |  0.74     |
+| cell_line |    0.74     | 0.57   |  0.64     |
+| cell_type |    0.78     | 0.72   |  0.75     |
+| RNA       |    0.86     | 0.65   |  0.74     |
 
 Since we have five (5) separate models in NER, what we can do afterwards is
 combine them into a single `Doc` that transfers `doc.ents` to `doc.spans`. Since
