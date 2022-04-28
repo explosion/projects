@@ -132,14 +132,14 @@ commands:
   - name: "install"
     help: "Install dependencies"
     script:
-      - "pip3 install --user -r requirements.txt"
-      - "python3 -m spacy download en_core_web_lg"
+      - "pip install --user -r requirements.txt"
+      - "python -m spacy download en_core_web_lg"
   - name: "convert"
     help: "Convert IOB file into the spaCy format"
     script:
-      - "python3 -m scripts.convert assets/train.iob2 -o corpus/train.spacy"
-      - "python3 -m scripts.convert assets/dev.iob2 -o corpus/dev.spacy"
-      - "python3 -m scripts.convert assets/test.iob2 -o corpus/test.spacy"
+      - "python -m scripts.convert assets/train.iob2 -o corpus/train.spacy"
+      - "python -m scripts.convert assets/dev.iob2 -o corpus/dev.spacy"
+      - "python -m scripts.convert assets/test.iob2 -o corpus/test.spacy"
     deps:
       - "assets/train.iob2"
       - "assets/dev.iob2"
@@ -153,7 +153,7 @@ commands:
     help: "Split corpus into separate NER datasets for each GENIA label"
     script:
       - >-
-        python3 -m scripts.create_ner
+        python -m scripts.create_ner
         --train corpus/train.spacy
         --dev corpus/dev.spacy
         --test corpus/test.spacy
@@ -183,35 +183,35 @@ commands:
     help: "Train an NER model for each label"
     script:
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/ner.cfg
         --output training/ner/${vars.dna}
         --paths.train corpus/ner/train_${vars.dna}.spacy
         --paths.dev corpus/ner/dev_${vars.dna}.spacy
         --gpu-id ${vars.gpu_id}
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/ner.cfg
         --output training/ner/${vars.rna}
         --paths.train corpus/ner/train_${vars.rna}.spacy
         --paths.dev corpus/ner/dev_${vars.rna}.spacy
         --gpu-id ${vars.gpu_id}
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/ner.cfg
         --output training/ner/${vars.cell_line}
         --paths.train corpus/ner/train_${vars.cell_line}.spacy
         --paths.dev corpus/ner/dev_${vars.cell_line}.spacy
         --gpu-id ${vars.gpu_id}
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/ner.cfg
         --output training/ner/${vars.cell_type}
         --paths.train corpus/ner/train_${vars.cell_type}.spacy
         --paths.dev corpus/ner/dev_${vars.cell_type}.spacy
         --gpu-id ${vars.gpu_id}
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/ner.cfg
         --output training/ner/${vars.protein}
         --paths.train corpus/ner/train_${vars.protein}.spacy
@@ -239,7 +239,7 @@ commands:
     help: "Train a SpanCat model"
     script:
       - >-
-        python3 -m spacy train
+        python -m spacy train
         configs/spancat.cfg
         --output training/spancat/
         --paths.train corpus/train.spacy
@@ -257,27 +257,27 @@ commands:
     script:
       - "mkdir -p metrics/ner"
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/ner/${vars.dna}/model-best
         corpus/ner/test_${vars.dna}.spacy
         --output metrics/ner/scores_${vars.dna}.json
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/ner/${vars.rna}/model-best
         corpus/ner/test_${vars.rna}.spacy
         --output metrics/ner/scores_${vars.rna}.json
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/ner/${vars.cell_line}/model-best
         corpus/ner/test_${vars.cell_line}.spacy
         --output metrics/ner/scores_${vars.cell_line}.json
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/ner/${vars.cell_type}/model-best
         corpus/ner/test_${vars.cell_type}.spacy
         --output metrics/ner/scores_${vars.cell_type}.json
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/ner/${vars.protein}/model-best
         corpus/ner/test_${vars.protein}.spacy
         --output metrics/ner/scores_${vars.protein}.json
@@ -304,7 +304,7 @@ commands:
     script:
       - "mkdir -p metrics/spancat"
       - >-
-        python3 -m spacy evaluate
+        python -m spacy evaluate
         training/spancat/model-best
         corpus/test.spacy
         --output metrics/spancat/scores.json
