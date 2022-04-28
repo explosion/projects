@@ -8,7 +8,7 @@ description: |
 
   [GENIA](http://www.geniaproject.org/genia-corpus) is a dataset containing
   biomedical literature from 1,999 Medline abstracts. It contains a collection
-  of overlapping and hierarhical spans.  To make parsing easier, we will be
+  of overlapping and hierarchical spans. To make parsing easier, we will be
   using the [pre-constructed IOB
   tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia)
   from the [Boundary Aware Nested NER
