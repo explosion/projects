@@ -92,6 +92,7 @@ vars:
   name: "ner_spancat_compare"
   version: "1.0.0"
   gpu_id: -1
+  spans_key: "sc"
   # Labels
   dna: "DNA"
   rna: "RNA"
@@ -114,6 +115,7 @@ workflows:
     - "convert"
     - "create-ner"
     - "train-ner"
+    - "assemble-ner"
     - "train-spancat"
     - "evaluate-ner"
     - "evaluate-spancat"
@@ -128,6 +130,7 @@ workflows:
     - "create-ner"
     - "train-ner"
     - "evaluate-ner"
+    - "assemble-ner"
 
 assets:
   - dest: "assets/train.iob2"
@@ -310,6 +313,24 @@ commands:
       - "metrics/ner/scores_${vars.cell_line}.json"
       - "metrics/ner/scores_${vars.cell_type}.json"
       - "metrics/ner/scores_${vars.protein}.json"
+
+  - name: "assemble-ner"
+    help: "Assemble all NER models into a single pipeline"
+    script:
+      - >-
+        python -m spacy assemble
+        configs/ner_assemble.cfg
+        training/ner-assemble/
+        --code scripts/transfer_ent_component.py
+        --paths.ner_${vars.dna} training/ner/${vars.dna}/model-best
+        --paths.ner_${vars.rna} training/ner/${vars.rna}/model-best
+        --paths.ner_${vars.cell_line} training/ner/${vars.cell_line}/model-best
+        --paths.ner_${vars.cell_type} training/ner/${vars.cell_type}/model-best
+        --paths.ner_${vars.protein} training/ner/${vars.protein}/model-best
+        --paths.spans_key ${vars.spans_key}
+        --verbose
+    outputs:
+      - "training/ner-assemble/"
 
   - name: "evaluate-spancat"
     help: "Evaluate SpanCat model"

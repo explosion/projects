@@ -26,6 +26,18 @@ following span characteristics (**SD** = Span Distinctiveness, **BD** = Boundary
 | cell_line | 3.29        | 1.91                 | 1.04                     |
 | RNA       | 2.73        | 2.68                 | 1.28                     |
 
+The table above shows the average span length for each span type, and their
+corresponding distinctiveness characteristics. The latter is computed using
+the KL-divergence of the span's token distribution with respect to the overall
+corpus's. The higher the number is, the more distinct the tokens are compared to the
+rest of the corpus.
+
+These characteristics can give us a good intuition as to how well the SpanCat
+model identify the correct spans. In the case of GENIA, the entities
+themselves tend to be technical terms, which makes it more distinct and easier
+to classify. Again, we measure distinctiveness not only within the entities
+themselves (SD), but also in its boundaries (BD).
+
 Here's some example data:
 
 ![](./images/sample_00.png)
@@ -99,6 +111,7 @@ Commands are only re-run if their inputs have changed.
 | `train-ner` | Train an NER model for each label |
 | `train-spancat` | Train a SpanCat model |
 | `evaluate-ner` | Evaluate all NER models |
+| `assemble-ner` | Assemble all NER models into a single pipeline |
 | `evaluate-spancat` | Evaluate SpanCat model |
 
 ### ⏭ Workflows
@@ -110,9 +123,9 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
+| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `assemble-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
 | `spancat` | `install` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
-| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` |
+| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` &rarr; `assemble-ner` |
 
 ### 🗂 Assets
 
