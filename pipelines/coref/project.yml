@@ -1,4 +1,4 @@
-title: "spaCy Coref Model"
+title: "Training a spaCy Coref Model"
 description: >
   This project trains a coreference model for spaCy using OntoNotes.
 
@@ -24,6 +24,8 @@ assets:
       branch: "master"
       path: ""
     description: "CoNLL-2012 reference scorer."
+  - dest: ${vars.ontonotes}
+    description: "Ensure you have a local copy of OntoNotes: https://catalog.ldc.upenn.edu/LDC2013T19"    
 
 workflows:
   prep:
