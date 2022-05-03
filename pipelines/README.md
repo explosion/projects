@@ -1,9 +1,10 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Pipelines (14)
+# 🪐 Project Templates: Pipelines (15)
 
 | Template | Description |
 | --- | --- |
+| [`coref`](coref) | Training a spaCy Coref Model |
 | [`floret_fi_core_demo`](floret_fi_core_demo) | Demo floret vectors for Finnish |
 | [`floret_ko_ud_demo`](floret_ko_ud_demo) | Demo floret vectors for UD Korean Kaist |
 | [`floret_vectors_demo`](floret_vectors_demo) | Demo floret vectors |
