@@ -2,8 +2,9 @@ title: "Spancat annotation in Prodigy"
 description: "This project showcases how to use Prodigy to annotate data for the Spancat component"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  database: "spancat_food_ingredients"
+  database: "spancat_food_ingredients_production"
   eval_split: 0.25
+  gpu_id: 0
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -47,7 +48,7 @@ commands:
   - name: "train_spancat"
     help: "Train a spancat model."
     script:
-      - "python -m prodigy train ./training --spancat ${vars.database} --eval-split ${vars.eval_split}"
+      - "python -m prodigy train ./training --spancat ${vars.database} --eval-split ${vars.eval_split} --gpu-id ${vars.gpu_id}"
 
   - name: "correct"
     help: "Correct entity spans predicted by a trained spancat model."
