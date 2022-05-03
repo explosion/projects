@@ -18,12 +18,6 @@ assets:
       branch: "main"
       path: ""
     description: "CoNLL-2012 scripts and dehydrated data."
-  - dest: "assets/conll-eval"
-    git:
-      repo: "https://github.com/conll/reference-coreference-scorers"
-      branch: "master"
-      path: ""
-    description: "CoNLL-2012 reference scorer."
   - dest: ${vars.ontonotes}
     description: "Ensure you have a local copy of OntoNotes: https://catalog.ldc.upenn.edu/LDC2013T19"    
 
@@ -51,13 +45,10 @@ commands:
   - name: "prep-data"
     help: "Rehydrate the data using OntoNotes"
     script: 
-      # XXX python2 is required for the old scripts
-      - python2 -c "print('Checking for Python 2...')"
       - tar xzf assets/conll-2012-development.v4.tar.gz -C assets/
       - tar xzf assets/conll-2012-test-key.tar.gz -C assets/
       - tar xzf assets/conll-2012-test-official.v9.tar.gz -C assets/
       - tar xzf assets/conll-2012-train.v4.tar.gz -C assets/
-      #- tar xvzf assets/conll2012-coref/reference-coreference-scorers.v8.01.tar.gz -C assets/
 
       - echo "Rehydrating data... This will take roughly 20 minutes"
       - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes} assets/conll-2012"
