@@ -1,0 +1,4 @@
+typer
+numpy
+tqdm
+wasabi
