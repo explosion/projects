@@ -6,7 +6,7 @@ vars:
   # XXX Change to your actual GPU ID
   gpu_id: 0
   # XXX fill with your local path to OntoNotes
-  ontonotes: "/home/USER/ontonotes5/data"
+  ontonotes: /home/USER/ontonotes5/data
   max_epochs: 20
 
 directories: ["assets", "corpus", "scripts", "configs", "training"]
