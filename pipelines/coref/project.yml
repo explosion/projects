@@ -12,7 +12,7 @@ vars:
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
 assets:
-  - dest: "assets/"
+  - dest: assets/
     git:
       repo: "https://github.com/explosion/conll-2012"
       branch: "main"
@@ -63,9 +63,9 @@ commands:
     deps:
       - ${vars.ontonotes}
     outputs: 
-      - "assets/train.gold.conll"
-      - "assets/dev.gold.conll"
-      - "assets/test.gold.conll"
+      - assets/train.gold.conll
+      - assets/dev.gold.conll
+      - assets/test.gold.conll
 
   - name: "preprocess"
     help: "Convert the data to spaCy's format"
@@ -79,11 +79,11 @@ commands:
     script: 
       - "python -m spacy train configs/cluster.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training/cluster --training.max_epochs ${vars.max_epochs}"
     deps:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
-      - "configs/cluster.cfg"
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - configs/cluster.cfg
     outputs:
-      - "training/cluster/model-best"
+      - training/cluster/model-best
   
   - name: "prep-span-data"
     help: "Prepare data for the span predictor component."
