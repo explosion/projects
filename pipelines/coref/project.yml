@@ -40,6 +40,8 @@ workflows:
     - prep-span-data
     - train-span-predictor
     - assemble
+    # eval
+    - eval
 
 commands:
   - name: "prep-data"
@@ -81,7 +83,7 @@ commands:
       - "corpus/dev.spacy"
       - "configs/cluster.cfg"
     outputs:
-      - "training/model-best"
+      - "training/cluster/model-best"
   
   - name: "prep-span-data"
     help: "Prepare data for the span predictor component."
@@ -91,6 +93,7 @@ commands:
     deps:
       - corpus/train.spacy
       - corpus/dev.spacy
+      - training/cluster/model-best
     outputs:
       - corpus/spans.train.spacy
       - corpus/spans.dev.spacy
@@ -102,13 +105,17 @@ commands:
     deps:
       - corpus/spans.train.spacy
       - corpus/spans.dev.spacy
+      - training/cluster/model-best
     outputs:
-      - training/span_predictor
+      - training/span_predictor/model-best
 
   - name: "assemble"
-    help: "Assemble parts into complete coref pipeline."
+    help: "Assemble all parts into a complete coref pipeline."
     script:
       - spacy assemble configs/coref.cfg training/coref
+    deps:
+      - training/cluster/model-best
+      - training/span_predictor/model-best
 
   - name: "eval"
     help: "Evaluate model on the test set."
