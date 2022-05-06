@@ -120,5 +120,4 @@ commands:
   - name: "eval"
     help: "Evaluate model on the test set."
     script:
-      - rm -f corpus/test.key corpus/test.response
       - python scripts/run_eval.py training/coref corpus/test.spacy
