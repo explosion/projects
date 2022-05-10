@@ -67,7 +67,7 @@ full name. These sentences are then annotated with Prodigy by executing the
 command
 
 ```bash
-prodigy entity_linker.manual emersons_annotated emerson_input_text.txt my_nlp/ my_kb entitites.csv -F el_recipe.py
+prodigy entity_linker.manual emersons_annotated assets/emerson_input_text.txt temp/my_nlp/ temp/my_kb assets/entities.csv -F scripts/el_recipe.py
 ```
 
 The final results are stored to file with
