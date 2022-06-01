@@ -1,0 +1,110 @@
+title: 'NEL Benchmark'
+description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
+vars:
+  name: "nel_benchmark"
+  config: "nel.cfg"
+  vectors_model: "en_core_web_md"
+  dataset_config: "dataset_config.yml"
+  version: "0.0.1"
+
+directories: ["assets", "training", "configs", "scripts", "corpus", "temp"]
+
+assets:
+  - dest: 'assets/reddit.zip'
+    url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
+    checksum: 'eea345cc7574a5c9c376748d1871d557'
+
+workflows:
+  all:
+    - setup
+    - preprocess
+    - download
+    - create_kb
+    - compile_corpora
+#    - train
+#    - evaluate
+  training:
+    - create_kb
+    - compile_corpora
+#    - train
+#    - evaluate
+
+commands:
+  - name: setup
+    help: Install dependencies
+    script:
+      - "python -m pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
+
+  - name: preprocess
+    help: Preprocess test datasets
+    script:
+      - "unzip -d assets/reddit assets/reddit.zip"
+      - "rm assets/reddit.zip"
+      - "python ./scripts/clean_data.py reddit"
+    outputs:
+      - "assets/reddit"
+    deps:
+      - "assets/reddit.zip"
+
+  - name: download
+    help: "Download a model with pretrained vectors and NER component"
+    script:
+      - "python -m spacy download ${vars.vectors_model}"
+
+  - name: create_kb
+    help: "Create the knowledge base and write it to file"
+    script:
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} temp/"
+    deps:
+      - "assets/reddit"
+    outputs:
+      - "assets/reddit/entities.pkl"
+      - "assets/reddit/entities_failed_lookup.pkl"
+      - "assets/reddit/annotations.pkl"
+    outputs_no_cache:
+      - "temp/reddit.kb"
+      - "temp/reddit.nlp"
+
+  - name: compile_corpora
+    help: "Compile corpora, separated in in train/dev/test sets"
+    script:
+      - "python ./scripts/compile_corpora.py reddit temp/ ${vars.dataset_config}"
+    deps:
+      - "assets/reddit/entities.pkl"
+      - "assets/reddit/entities_failed_lookups.pkl"
+      - "assets/reddit/annotations.pkl"
+      - "temp/reddit.kb"
+      - "temp/reddit.nlp"
+      - "${vars.dataset_config}"
+    outputs_no_cache:
+      - "corpus/reddit/train.spacy"
+      - "corpus/reddit/dev.spacy"
+      - "corpus/reddit/test.spacy"
+
+#  - name: train
+#    help: "Train a new Entity Linking component"
+#    script:
+#      - "python -m spacy train configs/${vars.config} --output training --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb temp/${vars.kb} --paths.base_nlp temp/${vars.nlp} -c scripts/custom_functions.py"
+#    deps:
+#      - "temp/${vars.kb}"
+#      - "temp/${vars.nlp}"
+#      - "corpus/${vars.train}.spacy"
+#      - "corpus/${vars.dev}.spacy"
+#
+#  - name: evaluate
+#    help: "Final evaluation on the dev data and printing the results"
+#    script:
+#      - "python ./scripts/evaluate.py ./training/model-best/ corpus/${vars.dev}.spacy"
+#    deps:
+#      - "training/model-best"
+#      - "corpus/${vars.dev}.spacy"
+#
+#  - name: clean
+#    help: "Remove intermediate files"
+#    script:
+#      - "rm -rf training/*"
+#      - "rm -rf corpus/*"
+#      - "rm -rf temp/${vars.kb}"
+#      - "rm -rf temp/${vars.nlp}"
