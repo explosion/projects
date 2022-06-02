@@ -134,7 +134,6 @@ def create_corpus(
     # Create spans from annotations.
     for row in rows:
         doc = nlp.make_doc(row[-1])
-
         # There might be multiple annotations for the same tokens/spans. This is handled by (1) sorting all
         # entities for this document by their frequency and (2) afterwards moving all overlapping entities to
         # the doc's _ attribute, so we might still consider that during evaluation.

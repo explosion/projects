@@ -28,17 +28,19 @@ def serialize_corpora(
         for dataset, idx in zip(
             ("train", "dev", "test"),
             numpy.split(
-                list(range(len(docs))), [int(frac_train * len(docs)), int((frac_train + frac_dev) * len(docs))]
+                numpy.asarray(range(len(docs))), [int(frac_train * len(docs)), int((frac_train + frac_dev) * len(docs))]
             )
         )
     }
+
+    corpora_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) / "corpora"
     for key in indices:
         corpus = DocBin(store_user_data=True)
         for idx in indices[key]:
             corpus.add(docs[idx])
-        if not os.path.exists(Path("corpus") / dataset_id):
-            os.mkdir(Path("corpus") / dataset_id)
-        corpus.to_disk(Path("corpus") / dataset_id / f"{key}_.spacy")
+        if not os.path.exists(corpora_root / dataset_id):
+            os.mkdir(corpora_root / dataset_id)
+        corpus.to_disk(corpora_root / dataset_id / f"{key}_.spacy")
 
 
 def main(dataset_id: str, nlp_dir: Path, dataset_config_path: Path):
@@ -51,11 +53,12 @@ def main(dataset_id: str, nlp_dir: Path, dataset_config_path: Path):
     assert dataset_id in ("reddit",)
 
     # Load entity info and corpus config.
-    with open(os.path.join("assets", dataset_id, "entities.pkl"), "rb") as file:
+    asset_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) / "assets"
+    with open(asset_root / dataset_id / "entities.pkl", "rb") as file:
         entities_info = pickle.load(file)
-    with open(os.path.join("assets", dataset_id, "entities_failed_lookups.pkl"), "rb") as file:
+    with open(asset_root / dataset_id / "entities_failed_lookups.pkl", "rb") as file:
         entities_failed_lookups = pickle.load(file)
-    with open(os.path.join("assets", dataset_id, "annotations.pkl"), "rb") as file:
+    with open(asset_root / dataset_id / "annotations.pkl", "rb") as file:
         annotations = pickle.load(file)
     with open(dataset_config_path, "r") as stream:
         corpus_config = yaml.safe_load(stream)
@@ -63,7 +66,7 @@ def main(dataset_id: str, nlp_dir: Path, dataset_config_path: Path):
     serialize_corpora(
         docs=reddit.create_corpus(
             nlp_dir / f"{dataset_id}.nlp",
-            Path("assets") / dataset_id,
+            asset_root / dataset_id,
             entities_info,
             entities_failed_lookups,
             annotations,
@@ -72,18 +75,14 @@ def main(dataset_id: str, nlp_dir: Path, dataset_config_path: Path):
         frac_train=corpus_config["reddit"]["frac_train"],
         frac_dev=corpus_config["reddit"]["frac_test"],
         frac_test=corpus_config["reddit"]["frac_test"],
-        dataset_id=corpus_config["reddit"]["id"]
+        dataset_id="reddit"
     )
 
 
 if __name__ == "__main__":
-    typer.run(main)
-    # main(
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/assets/reddit_el/"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/assets/reddit_el/entities.pkl"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/assets/reddit_el/entities_failed_lookups.pkl"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/assets/reddit_el/annotations.pkl"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/temp/my_nlp"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/corpus"),
-    #     Path("/home/raphael/dev/nel-benchmark/nel_benchmark/corpus/config.yml")
-    # )
+    # typer.run(main)
+    main(
+        "reddit",
+        Path("/home/raphael/dev/spacy-projects/benchmarks/nel/temp"),
+        Path("/home/raphael/dev/spacy-projects/benchmarks/nel/configs/datasets.yml"),
+    )

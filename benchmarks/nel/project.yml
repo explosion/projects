@@ -4,10 +4,9 @@ vars:
   name: "nel_benchmark"
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
-  dataset_config: "dataset_config.yml"
   version: "0.0.1"
 
-directories: ["assets", "training", "configs", "scripts", "corpus", "temp"]
+directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
 
 assets:
   - dest: 'assets/reddit.zip'
@@ -42,7 +41,7 @@ commands:
     script:
       - "unzip -d assets/reddit assets/reddit.zip"
       - "rm assets/reddit.zip"
-      - "python ./scripts/clean_data.py reddit"
+      - "python ./scripts/clean_data.py"
     outputs:
       - "assets/reddit"
     deps:
@@ -70,41 +69,41 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets"
     script:
-      - "python ./scripts/compile_corpora.py reddit temp/ ${vars.dataset_config}"
+      - "python ./scripts/compile_corpora.py reddit temp/"
     deps:
       - "assets/reddit/entities.pkl"
       - "assets/reddit/entities_failed_lookups.pkl"
       - "assets/reddit/annotations.pkl"
       - "temp/reddit.kb"
       - "temp/reddit.nlp"
-      - "${vars.dataset_config}"
+      - "configs/datasets.yml"
     outputs_no_cache:
-      - "corpus/reddit/train.spacy"
-      - "corpus/reddit/dev.spacy"
-      - "corpus/reddit/test.spacy"
+      - "corpora/reddit/train.spacy"
+      - "corpora/reddit/dev.spacy"
+      - "corpora/reddit/test.spacy"
 
 #  - name: train
 #    help: "Train a new Entity Linking component"
 #    script:
-#      - "python -m spacy train configs/${vars.config} --output training --paths.train corpus/${vars.train}.spacy --paths.dev corpus/${vars.dev}.spacy --paths.kb temp/${vars.kb} --paths.base_nlp temp/${vars.nlp} -c scripts/custom_functions.py"
+#      - "python -m spacy train configs/${vars.config} --output training --paths.train corpora/${vars.train}.spacy --paths.dev corpora/${vars.dev}.spacy --paths.kb temp/${vars.kb} --paths.base_nlp temp/${vars.nlp} -c scripts/custom_functions.py"
 #    deps:
 #      - "temp/${vars.kb}"
 #      - "temp/${vars.nlp}"
-#      - "corpus/${vars.train}.spacy"
-#      - "corpus/${vars.dev}.spacy"
+#      - "corpora/${vars.train}.spacy"
+#      - "corpora/${vars.dev}.spacy"
 #
 #  - name: evaluate
 #    help: "Final evaluation on the dev data and printing the results"
 #    script:
-#      - "python ./scripts/evaluate.py ./training/model-best/ corpus/${vars.dev}.spacy"
+#      - "python ./scripts/evaluate.py ./training/model-best/ corpora/${vars.dev}.spacy"
 #    deps:
 #      - "training/model-best"
-#      - "corpus/${vars.dev}.spacy"
+#      - "corpora/${vars.dev}.spacy"
 #
 #  - name: clean
 #    help: "Remove intermediate files"
 #    script:
 #      - "rm -rf training/*"
-#      - "rm -rf corpus/*"
+#      - "rm -rf corpora/*"
 #      - "rm -rf temp/${vars.kb}"
 #      - "rm -rf temp/${vars.nlp}"
