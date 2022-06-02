@@ -20,12 +20,12 @@ workflows:
     - download
     - create_kb
     - compile_corpora
-#    - train
+    - train
 #    - evaluate
   training:
     - create_kb
     - compile_corpora
-#    - train
+    - train
 #    - evaluate
 
 commands:
@@ -55,7 +55,7 @@ commands:
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} temp/"
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
     deps:
       - "assets/reddit"
     outputs:
@@ -69,7 +69,7 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets"
     script:
-      - "python ./scripts/compile_corpora.py reddit temp/"
+      - "python ./scripts/compile_corpora.py reddit"
     deps:
       - "assets/reddit/entities.pkl"
       - "assets/reddit/entities_failed_lookups.pkl"
@@ -82,16 +82,23 @@ commands:
       - "corpora/reddit/dev.spacy"
       - "corpora/reddit/test.spacy"
 
-#  - name: train
-#    help: "Train a new Entity Linking component"
-#    script:
-#      - "python -m spacy train configs/${vars.config} --output training --paths.train corpora/${vars.train}.spacy --paths.dev corpora/${vars.dev}.spacy --paths.kb temp/${vars.kb} --paths.base_nlp temp/${vars.nlp} -c scripts/custom_functions.py"
-#    deps:
-#      - "temp/${vars.kb}"
-#      - "temp/${vars.nlp}"
-#      - "corpora/${vars.train}.spacy"
-#      - "corpora/${vars.dev}.spacy"
-#
+  - name: train
+    help: "Train a new Entity Linking component"
+    script:
+      - "python -m spacy train configs/${vars.config} \
+          --output training \
+          --paths.train corpora/reddit/train.spacy \
+          --paths.dev corpora/reddit/dev.spacy \
+          --paths.kb temp/reddit.kb \
+          --paths.base_nlp temp/reddit.nlp \
+          --gpu-id 0
+          -c scripts/custom_functions.py"
+    deps:
+      - "temp/reddit.kb"
+      - "temp/reddit.nlp"
+      - "corpora/reddit/train.spacy"
+      - "corpora/reddit/dev.spacy"
+
 #  - name: evaluate
 #    help: "Final evaluation on the dev data and printing the results"
 #    script:
