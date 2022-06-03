@@ -1,13 +1,13 @@
 """ Dataset for Reddit EL data. """
 
 import csv
-import pickle
 from typing import Set, List, Tuple
+import fileinput
 
-import spacy
 from spacy.tokens import Doc
 
-from .dataset import Dataset, ENTITIES_TYPE, ANNOTATIONS_TYPE
+from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE
+from .dataset import Dataset
 
 
 class RedditDataset(Dataset):
@@ -29,7 +29,7 @@ class RedditDataset(Dataset):
 
         # Load data from .tsv files, track entity frequency.
         for file_name in file_names:
-            with open(self._assets_dir / file_name) as file_path:
+            with open(self._paths["assets"] / file_name) as file_path:
                 quality = file_name.split("_")[0]
                 for row in csv.reader(file_path, delimiter="\t"):
                     assert len(row) == 7
@@ -60,10 +60,10 @@ class RedditDataset(Dataset):
         # one entity. Associating the remaining title with the correct entity can bloat up the code).
         # Since we don't expect many failures, we instead run failed lookups again individually. This should avoid any
         # situations with entity interdependencies at the cost of lookup speed.
-        entities, failed_entity_lookups, title_qid_mappings = self._resolve_wiki_titles(entities)
+        entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities)
         if len(failed_entity_lookups):
             print(f"Trying to salvage {len(failed_entity_lookups)} failed lookups")
-            entities, failed_entity_lookups, _title_qid_mapping = self._resolve_wiki_titles(
+            entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
                 entities=entities, entity_titles=failed_entity_lookups, batch_size=1
             )
             title_qid_mappings = {**title_qid_mappings, **_title_qid_mapping}
@@ -89,7 +89,7 @@ class RedditDataset(Dataset):
 
         # Join records with line breaks.
         rows: List[List[str]] = []
-        for file_name in [self._assets_dir / file_name for file_name in file_names]:
+        for file_name in [self._paths["assets"] / file_name for file_name in file_names]:
             row_length = 3 if file_name.name.endswith("posts.tsv") else 5
             with open(file_name) as file_path:
                 for row in csv.reader(file_path, delimiter="\t"):
@@ -104,13 +104,13 @@ class RedditDataset(Dataset):
 
         # Create spans from annotations.
         for row in rows:
-            doc = self._nlp(row[-1])
+            doc = self._nlp_temp(row[-1])
             # There might be multiple annotations for the same tokens/spans. This is handled by (1) sorting all
             # entities for this document by their frequency and (2) afterwards moving all overlapping entities to
             # the doc's _ attribute, so we might still consider that during evaluation.
             # Additionally, there is a number of index errors in the annotations (especially in the bronze dataset).
             # Some of these are resolved by aligning annotation with token indices.
-            doc_spans, overlapping_doc_annotations = self._create_spans_from_doc_annotation(
+            doc_spans, overlapping_doc_annotations = _create_spans_from_doc_annotation(
                 doc=doc,
                 entities_info=self._entities,
                 annotations=self._annotations.get(row[0], []),
@@ -122,3 +122,29 @@ class RedditDataset(Dataset):
 
         return annotated_docs
 
+    def clean_assets(self) -> None:
+        to_remove = {
+            "bronze_post_annotations.tsv": {},
+            "bronze_comment_annotations.tsv": {}
+        }
+        to_replace = {
+            "bronze_comment_annotations.tsv": {
+                "`` How to Lose a Guy in 10 Days": "How to Lose a Guy in 10 Days",
+                "\"How to Lose a Guy in 10 Days": "\"How to Lose a Guy in 10 Days\"",
+                "Money\t325\t330\tmoney\n": "Money\t323\t328\tmoney\n"
+            },
+            "bronze_post_annotations.tsv": {
+                # "8qntul\tsports\tad\tAdvertising\t56\t58\tparade\n": "8qntul\tsports\tad\tParade\t56\t58\tparade\n",
+                # "dtjq8bn\tpolitics\tGOOD\tGood\t102\t106\tGOOD\n": "dtjq8bn\tpolitics\tGOOD\tGood\t94\t98\tGOOD\n"
+            }
+        }
+
+        for file_name in to_replace:
+            for line in fileinput.input(self._paths["assets"] / file_name, inplace=True):
+                if line not in to_remove[file_name]:
+                    new_line = line
+                    for snippet in to_replace[file_name]:
+                        if snippet in line:
+                            new_line = line.replace(snippet, to_replace[file_name][snippet])
+                            break
+                    print(new_line, end='')

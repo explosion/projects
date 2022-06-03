@@ -21,12 +21,12 @@ workflows:
     - create_kb
     - compile_corpora
     - train
-#    - evaluate
+    - evaluate
   training:
     - create_kb
     - compile_corpora
     - train
-#    - evaluate
+    - evaluate
 
 commands:
   - name: setup
@@ -39,13 +39,13 @@ commands:
   - name: preprocess
     help: Preprocess test datasets
     script:
-      - "unzip -d assets/reddit assets/reddit.zip"
-      - "rm assets/reddit.zip"
-      - "python ./scripts/clean_data.py"
+      # - "unzip -q -d assets/reddit assets/reddit.zip"
+      #- "rm assets/reddit.zip"
+      - "python ./scripts/clean_data.py reddit"
     outputs:
       - "assets/reddit"
-    deps:
-      - "assets/reddit.zip"
+    #deps:
+      #- "assets/reddit.zip"
 
   - name: download
     help: "Download a model with pretrained vectors and NER component"
@@ -86,7 +86,7 @@ commands:
     help: "Train a new Entity Linking component"
     script:
       - "python -m spacy train configs/${vars.config} \
-          --output training \
+          --output training/reddit \
           --paths.train corpora/reddit/train.spacy \
           --paths.dev corpora/reddit/dev.spacy \
           --paths.kb temp/reddit.kb \
@@ -98,18 +98,17 @@ commands:
       - "corpora/reddit/train.spacy"
       - "corpora/reddit/dev.spacy"
 
-#  - name: evaluate
-#    help: "Final evaluation on the dev data and printing the results"
-#    script:
-#      - "python ./scripts/evaluate.py ./training/model-best/ corpora/${vars.dev}.spacy"
-#    deps:
-#      - "training/model-best"
-#      - "corpora/${vars.dev}.spacy"
-#
-#  - name: clean
-#    help: "Remove intermediate files"
-#    script:
-#      - "rm -rf training/*"
-#      - "rm -rf corpora/*"
-#      - "rm -rf temp/${vars.kb}"
-#      - "rm -rf temp/${vars.nlp}"
+  - name: evaluate
+    help: "Evaluation on the test set"
+    script:
+      - "python ./scripts/evaluate.py reddit"
+    deps:
+      - "training/reddit/model-best"
+      - "corpora/reddit/dev.spacy"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpora/*"
+      - "rm -rf temp/*"

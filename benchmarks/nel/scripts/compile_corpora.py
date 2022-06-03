@@ -1,6 +1,6 @@
 """ Compiles train/dev/test corpora. """
 import typer
-from datasets.reddit import RedditDataset
+from datasets.dataset import Dataset
 
 
 def main(dataset_id: str):
@@ -8,12 +8,8 @@ def main(dataset_id: str):
     dataset_id (str): Dataset ID.
     """
 
-    {"reddit": RedditDataset}[dataset_id]().create_corpora()
+    Dataset.generate_dataset_from_id(dataset_id).create_corpora()
 
 
 if __name__ == "__main__":
     typer.run(main)
-    # main(
-    #     "reddit",
-    #     Path("/home/raphael/dev/spacy-projects/benchmarks/nel/temp")
-    # )

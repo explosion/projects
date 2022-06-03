@@ -3,7 +3,7 @@ Functionality for creating the knowledge base from downloaded assets and by quer
 """
 
 import typer
-from datasets.reddit import RedditDataset
+from datasets.dataset import Dataset
 
 
 def main(dataset_id: str, vectors_model: str):
@@ -14,7 +14,7 @@ def main(dataset_id: str, vectors_model: str):
      temp_dir (Path): Path to save knowledge base and NLP pipeline at.
      """
 
-    {"reddit": RedditDataset}[dataset_id]().create_knowledge_base(vectors_model)
+    Dataset.generate_dataset_from_id(dataset_id).create_knowledge_base(vectors_model)
 
 
 if __name__ == "__main__":
