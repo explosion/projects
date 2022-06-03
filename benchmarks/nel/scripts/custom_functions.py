@@ -1,3 +1,6 @@
+""" Custom functions for training preparation. Currently not used.
+"""
+
 from functools import partial
 from pathlib import Path
 from typing import Iterable, Callable
