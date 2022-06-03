@@ -39,13 +39,13 @@ commands:
   - name: preprocess
     help: Preprocess test datasets
     script:
-      # - "unzip -q -d assets/reddit assets/reddit.zip"
-      #- "rm assets/reddit.zip"
+      - "unzip -q -d assets/reddit assets/reddit.zip"
+      - "rm assets/reddit.zip"
       - "python ./scripts/clean_data.py reddit"
     outputs:
       - "assets/reddit"
-    #deps:
-      #- "assets/reddit.zip"
+    deps:
+      - "assets/reddit.zip"
 
   - name: download
     help: "Download a model with pretrained vectors and NER component"
