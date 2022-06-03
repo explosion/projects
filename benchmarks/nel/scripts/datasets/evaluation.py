@@ -171,5 +171,5 @@ def add_baseline(
             )
 
 
-def offset(start, end):
+def offset(start: int, end: int):
     return "{}_{}".format(start, end)
