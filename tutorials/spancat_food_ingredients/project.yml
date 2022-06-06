@@ -2,7 +2,7 @@ title: "Spancat annotation in Prodigy"
 description: "This project showcases how to use Prodigy to annotate data for the Spancat component"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  database: "spancat_food_ingredients_production"
+  database: "spancat_food_ingredients_2"
   eval_split: 0.25
   gpu_id: 0
 
@@ -32,9 +32,9 @@ commands:
   - name: "manual_pattern"
     help: "Mark entity spans in a text with patterns."
     script:
-      - "python -m prodigy spans.manual ${vars.database} blank:en assets/recipes.jsonl --label INGREDIENT,INSTRUCTION --patterns assets/patterns.jsonl"
+      - "python -m prodigy spans.manual ${vars.database} en_core_web_sm assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION --patterns assets/patterns.jsonl"
     deps:
-      - "assets/recipes.jsonl"
+      - "assets/food_recipes.jsonl"
       - "assets/patterns.jsonl"
 
   - name: "manual_suggester"
