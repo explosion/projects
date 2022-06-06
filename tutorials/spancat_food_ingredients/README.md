@@ -4,6 +4,9 @@
 
 This project shows how to use Prodigy to annotate data for the spancat component
 
+## ⚠️ Please note
+You can only use this spaCy project when you own [prodigy](https://prodi.gy/)
+
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
