@@ -6,8 +6,11 @@ from spacy.tokens import Doc
 from spacy.util import registry
 from spacy.pipeline.spancat import Suggester
 
+
 @registry.misc("noun_suggester")
 def build_noun_suggester():
+    """Suggester that suggests every token and token sequence which .pos_ attribute is a NOUN"""
+
     def noun_suggester(docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
@@ -27,7 +30,7 @@ def build_noun_suggester():
                         spans.append((start_i, end_i + 1))
                         cache.add((start_i, end_i + 1))
                         length += 1
-                    for token_k in doc[token.i:]:
+                    for token_k in doc[token.i :]:
                         if token_k.pos_ == "NOUN":
                             end_i = token_k.i
                             if (start_i, end_i + 1) not in cache:
@@ -46,4 +49,5 @@ def build_noun_suggester():
             output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
 
         return output
+
     return noun_suggester

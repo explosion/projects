@@ -1,8 +1,8 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Spancat annotation in Prodigy
+# 🪐 spaCy Project: Span Categorization in Prodigy
 
-This project showcases how to use Prodigy to annotate data for the Spancat component
+This project shows how to use Prodigy to annotate data for the spancat component
 
 ## 📋 project.yml
 
@@ -18,13 +18,14 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `manual` | Mark entity spans in a text by highlighting them and selecting the respective labels. |
-| `manual_pattern` | Mark entity spans in a text with patterns. |
-| `manual_suggester` | Mark entity spans in a text with suggester rules. |
+| `download` | Download the required spaCy model. |
+| `span_manual` | Mark entity spans in a text by highlighting them and selecting the respective labels. |
+| `span_manual_pattern` | Mark entity spans in a text with patterns. |
+| `span_manual_suggester` | Mark entity spans in a text with suggester validation. |
 | `train_spancat` | Train a spancat model. |
-| `correct` | Correct entity spans predicted by a trained spancat model. |
-| `drop` | Drop the prodigy database defined in the project.yml |
-| `export` | Export the database defined in the project.yml to .spaCy files |
+| `span_correct` | Correct entity spans predicted by the trained spancat model. |
+| `db_drop` | Drop the prodigy database defined in the project.yml |
+| `db_export` | Export the database defined in the project.yml to .spaCy files |
 
 ### 🗂 Assets
 
@@ -34,6 +35,9 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/recipes.jsonl` | Local | Extract of the [Food.com Recipe & Review](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews) dataset with 25.000 entries |
+| [`assets/food_recipes.jsonl`](assets/food_recipes.jsonl) | Local | Extract of the [Food.com Recipe & Review](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews) dataset with 25.000 entries. |
+| [`assets/instructions.html`](assets/instructions.html) | Local | Example .HTML file for annotation instructions. |
+| [`assets/patterns.jsonl`](assets/patterns.jsonl) | Local | Example patterns for pre-selecting spans in text. |
+| [`prodigy.json`](prodigy.json) | Local | Example prodigy.json file for using instruction files. |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
