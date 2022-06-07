@@ -177,7 +177,7 @@ def _create_spans_from_doc_annotation(
             doc_annots.append(annot)
 
     doc_spans = [
-        doc.char_span(annot["start_pos"], annot["end_pos"], label=annot["name"], kb_id=annot["entity_id"])
+        doc.char_span(annot["start_pos"], annot["end_pos"], kb_id=annot["entity_id"])
         for annot in doc_annots
     ]
     assert all([span is not None for span in doc_spans])

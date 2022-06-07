@@ -8,7 +8,7 @@ def main(dataset_id: str):
     dataset_id (str): Dataset ID.
     """
 
-    Dataset.generate_dataset_from_id(dataset_id).create_corpora()
+    Dataset.generate_dataset_from_id(dataset_id).compile_corpora()
 
 
 if __name__ == "__main__":

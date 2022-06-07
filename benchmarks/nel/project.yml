@@ -40,7 +40,6 @@ commands:
     help: Preprocess test datasets
     script:
       - "unzip -q -d assets/reddit assets/reddit.zip"
-      - "rm assets/reddit.zip"
       - "python ./scripts/clean_data.py reddit"
     outputs:
       - "assets/reddit"
@@ -83,15 +82,14 @@ commands:
       - "corpora/reddit/test.spacy"
 
   - name: train
-    help: "Train a new Entity Linking component"
+    help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
     script:
       - "python -m spacy train configs/${vars.config} \
           --output training/reddit \
           --paths.train corpora/reddit/train.spacy \
           --paths.dev corpora/reddit/dev.spacy \
           --paths.kb temp/reddit.kb \
-          --paths.base_nlp temp/reddit.nlp \
-          --gpu-id 0"
+          --paths.base_nlp temp/reddit.nlp"
     deps:
       - "temp/reddit.kb"
       - "temp/reddit.nlp"
