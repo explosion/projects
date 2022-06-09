@@ -60,6 +60,8 @@ commands:
     help: "Train a spancat model."
     script:
       - "python -m prodigy train ./training --spancat ${vars.database} --eval-split ${vars.eval_split} --gpu-id ${vars.gpu_id}"
+    outputs:
+      - "training/model-best"
 
   - name: "span_correct"
     help: "Correct entity spans predicted by the trained spancat model."
