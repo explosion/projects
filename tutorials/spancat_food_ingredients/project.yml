@@ -1,0 +1,82 @@
+title: "Span Categorization in Prodigy"
+description: "This project shows how to use Prodigy to annotate data for the spancat component"
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  database: "food_recipes"
+  eval_split: 0.25
+  gpu_id: -1
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "scripts", "data", "training"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/food_recipes.jsonl"
+    description: "Extract of the [Food.com Recipe & Review](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews) dataset with 25.000 entries."
+  - dest: "assets/instructions.html"
+    description: "Example .HTML file for annotation instructions."
+  - dest: "assets/patterns.jsonl"
+    description: "Example patterns for pre-selecting spans in text."
+  - dest: "prodigy.json"
+    description: "Example prodigy.json file for using instruction files."
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "download"
+    help: "Download the required spaCy model."
+    script:
+      - "python -m spacy download en_core_web_sm"
+
+  - name: "span_manual"
+    help: "Mark entity spans in a text by highlighting them and selecting the respective labels."
+    script:
+      - "python -m prodigy spans.manual ${vars.database} blank:en assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION"
+    deps:
+      - "assets/food_recipes.jsonl"
+
+  - name: "span_manual_pattern"
+    help: "Mark entity spans in a text with patterns."
+    script:
+      - "python -m prodigy spans.manual ${vars.database} blank:en assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION --patterns assets/patterns.jsonl"
+    deps:
+      - "assets/food_recipes.jsonl"
+      - "assets/patterns.jsonl"
+
+  - name: "span_manual_suggester"
+    help: "Mark entity spans in a text with suggester validation."
+    script:
+      - "python -m prodigy spans.manual ${vars.database} en_core_web_sm assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION --suggester custom_suggester -F scripts/suggester.py"
+    deps:
+      - "assets/food_recipes.jsonl"
+      - "scripts/suggester.py"
+
+  - name: "train_spancat"
+    help: "Train a spancat model."
+    script:
+      - "python -m prodigy train ./training --spancat ${vars.database} --eval-split ${vars.eval_split} --gpu-id ${vars.gpu_id}"
+    outputs:
+      - "training/model-best"
+
+  - name: "span_correct"
+    help: "Correct entity spans predicted by the trained spancat model."
+    script:
+      - "python -m prodigy spans.correct ${vars.database} ./training/model-best assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION"
+    deps:
+      - "assets/food_recipes.jsonl"
+      - "training/model-best"
+
+  - name: "db_drop"
+    help: "Drop the prodigy database defined in the project.yml"
+    script:
+      - "python -m prodigy drop ${vars.database}"
+
+  - name: "db_export"
+    help: "Export the database defined in the project.yml to `.spacy` files"
+    script:
+      - "python -m prodigy data-to-spacy ./data --spancat ${vars.database} --eval-split ${vars.eval_split}"
