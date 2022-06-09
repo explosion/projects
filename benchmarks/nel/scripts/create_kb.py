@@ -18,5 +18,4 @@ def main(dataset_id: str, vectors_model: str):
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main("reddit", "en_core_web_md")
+    typer.run(main)

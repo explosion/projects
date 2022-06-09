@@ -15,5 +15,4 @@ def main(dataset_id: str):
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main("reddit")
+    typer.run(main)

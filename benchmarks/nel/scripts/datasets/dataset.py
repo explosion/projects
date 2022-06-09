@@ -41,7 +41,7 @@ class Dataset(abc.ABC):
         self._failed_entity_lookups: Optional[Set[str]] = None
         self._annotations: Optional[ANNOTATIONS_TYPE] = None
         self._kb: Optional[KnowledgeBase] = None
-        self._nlp_temp: Optional[Language] = None
+        self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
         self._annotated_docs: Optional[List[Doc]] = None
 
@@ -58,7 +58,7 @@ class Dataset(abc.ABC):
         return {
             "root": root_path,
             "assets": assets_path,
-            "nlp_temp": root_path / "temp" / f"{dataset_id}.nlp",
+            "nlp_base": root_path / "temp" / f"{dataset_id}.nlp",
             "nlp_best": root_path / "training" / dataset_id / "model-best",
             "kb": root_path / "temp" / f"{dataset_id}.kb",
             "corpora": root_path / "corpora" / dataset_id,
@@ -78,11 +78,11 @@ class Dataset(abc.ABC):
         vectors_model (str): Name of model with word vectors to use.
         """
 
-        self._nlp_temp = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
+        self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
         self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
-        self._kb = KnowledgeBase(vocab=self._nlp_temp.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
+        self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
         self._kb.initialize_entities(len(self._entities))
         self._kb.initialize_vectors(len(self._entities))
         entity_list: List[str] = []
@@ -91,7 +91,7 @@ class Dataset(abc.ABC):
         for qid, info in self._entities.items():
             entity_list.append(qid)
             freq_list.append(info["frequency"])
-            vector_list.append(self._nlp_temp(info["description"]).vector)
+            vector_list.append(self._nlp_base(info["description"]).vector)
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
         for qid, info in self._entities.items():
             for name in info["names"]:
@@ -106,9 +106,9 @@ class Dataset(abc.ABC):
             with open(to_serialize[0], 'wb') as fp:
                 pickle.dump(to_serialize[1], fp)
         self._kb.to_disk(self._paths["kb"])
-        if not os.path.exists(self._paths["nlp_temp"]):
-            os.mkdir(self._paths["nlp_temp"])
-        self._nlp_temp.to_disk(self._paths["nlp_temp"])
+        if not os.path.exists(self._paths["nlp_base"]):
+            os.mkdir(self._paths["nlp_base"])
+        self._nlp_base.to_disk(self._paths["nlp_base"])
 
     def compile_corpora(self) -> None:
         """ Creates train/dev/test corpora for Reddit entity linking dataset.
@@ -117,7 +117,7 @@ class Dataset(abc.ABC):
         self._load_resource("entities")
         self._load_resource("failed_entity_lookups")
         self._load_resource("annotations")
-        self._load_resource("nlp_temp")
+        self._load_resource("nlp_base")
 
         Doc.set_extension("overlapping_annotations", default=None)
         self._annotated_docs = self._create_annotated_docs()
@@ -174,13 +174,13 @@ class Dataset(abc.ABC):
 
         path = self._paths[key]
 
-        if key == "nlp_temp" and (force or not self._nlp_temp):
-            self._nlp_temp = spacy.load(path)
+        if key == "nlp_base" and (force or not self._nlp_base):
+            self._nlp_base = spacy.load(path)
         elif key == "nlp_best" and (force or not self._nlp_best):
             self._nlp_best = spacy.load(path)
         elif key == "kb" and (force or not self._kb):
-            self._load_resource("nlp_temp")
-            self._kb = KnowledgeBase(vocab=self._nlp_temp.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
+            self._load_resource("nlp_base")
+            self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
             self._kb.from_disk(path)
         elif key == "annotations" and (force or not self._annotations):
             with open(path, "rb") as file:

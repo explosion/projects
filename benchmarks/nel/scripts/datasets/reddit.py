@@ -62,12 +62,10 @@ class RedditDataset(Dataset):
         # situations with entity interdependencies at the cost of lookup speed.
         entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities)
         if len(failed_entity_lookups):
-            print(failed_entity_lookups)
             print(f"Trying to salvage {len(failed_entity_lookups)} failed lookups")
             entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
                 entities=entities, entity_titles=failed_entity_lookups, batch_size=1
             )
-            print(failed_entity_lookups)
             title_qid_mappings = {**title_qid_mappings, **_title_qid_mapping}
         for entity_title in failed_entity_lookups:
             entities.pop(entity_title)
@@ -106,19 +104,18 @@ class RedditDataset(Dataset):
 
         # Create spans from annotations.
         for row in rows:
-            doc = self._nlp_temp(row[-1])
+            doc = self._nlp_base(row[-1])
             # There might be multiple annotations for the same tokens/spans. This is handled by (1) sorting all
             # entities for this document by their frequency and (2) afterwards moving all overlapping entities to
             # the doc's _ attribute, so we might still consider that during evaluation.
             # Additionally, there is a number of index errors in the annotations (especially in the bronze dataset).
             # Some of these are resolved by aligning annotation with token indices.
-            doc_spans, overlapping_doc_annotations = _create_spans_from_doc_annotation(
+            doc.ents, overlapping_doc_annotations = _create_spans_from_doc_annotation(
                 doc=doc,
                 entities_info=self._entities,
                 annotations=self._annotations.get(row[0], []),
                 entities_failed_lookups=self._failed_entity_lookups
             )
-            doc.ents = doc_spans
             doc._.overlapping_annotations = overlapping_doc_annotations
             annotated_docs.append(doc)
 
