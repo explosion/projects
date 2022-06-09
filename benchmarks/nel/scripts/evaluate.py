@@ -1,7 +1,7 @@
 """ Evaluation on test data. """
 
-import typer
 from datasets.dataset import Dataset
+from custom_functions import create_candidates_via_embeddings
 
 
 def main(dataset_id: str):

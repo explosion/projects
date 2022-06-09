@@ -1,27 +1,24 @@
 """ Dataset class. """
 import abc
-import fileinput
 import importlib
 import inspect
 import os
 import pickle
-import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Tuple, Set, List, Dict, Optional, Union, TypeVar, Type
+from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
 
 import numpy
 import spacy
-import yaml
 import tqdm
-
+import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
-from spacy.tokens import Doc, Span, DocBin
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 
 from . import evaluation
-from .utils import ENTITIES_TYPE, _does_token_overlap_with_annotation, ANNOTATIONS_TYPE
+from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
 
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
@@ -35,21 +32,9 @@ class Dataset(abc.ABC):
         """ Initializes new Dataset.
         """
 
-        root_path = Path(os.path.abspath(__file__)).parent.parent.parent
-        assets_path = root_path / "assets" / self.dataset_id
-        self._paths = {
-            "root": root_path,
-            "assets": assets_path,
-            "nlp_temp": root_path / "temp" / f"{self.dataset_id}.nlp",
-            "nlp_best": root_path / "training" / self.dataset_id / "model-best",
-            "kb": root_path / "temp" / f"{self.dataset_id}.kb",
-            "corpora": root_path / "corpora" / self.dataset_id,
-            "entities": assets_path / "entities.pkl",
-            "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
-            "annotations": assets_path / "annotations.pkl"
-        }
+        self._paths = self.assemble_paths(self.dataset_id)
 
-        with open(root_path / "configs" / "datasets.yml", "r") as stream:
+        with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.dataset_id]
 
         self._entities: Optional[ENTITIES_TYPE] = None
@@ -59,6 +44,28 @@ class Dataset(abc.ABC):
         self._nlp_temp: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
         self._annotated_docs: Optional[List[Doc]] = None
+
+    @staticmethod
+    def assemble_paths(dataset_id: str) -> Dict[str, Path]:
+        """ Assemble paths w.r.t. dataset ID.
+        dataset_id (str): Dataset ID.
+        RETURNS (Dict[str, Path]): Dictionary with internal resource name to path.
+        """
+
+        root_path = Path(os.path.abspath(__file__)).parent.parent.parent
+        assets_path = root_path / "assets" / dataset_id
+
+        return {
+            "root": root_path,
+            "assets": assets_path,
+            "nlp_temp": root_path / "temp" / f"{dataset_id}.nlp",
+            "nlp_best": root_path / "training" / dataset_id / "model-best",
+            "kb": root_path / "temp" / f"{dataset_id}.kb",
+            "corpora": root_path / "corpora" / dataset_id,
+            "entities": assets_path / "entities.pkl",
+            "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
+            "annotations": assets_path / "annotations.pkl"
+        }
 
     @property
     def dataset_id(self) -> str:
@@ -73,11 +80,20 @@ class Dataset(abc.ABC):
 
         self._nlp_temp = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
         self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
+
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_temp.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
+        self._kb.initialize_entities(len(self._entities))
+        self._kb.initialize_vectors(len(self._entities))
+        entity_list: List[str] = []
+        freq_list: List[int] = []
+        vector_list: List[numpy.ndarray] = []
         for qid, info in self._entities.items():
-            desc_doc = self._nlp_temp(info["description"])
-            self._kb.add_entity(entity=qid, entity_vector=desc_doc.vector, freq=info["frequency"])
+            entity_list.append(qid)
+            freq_list.append(info["frequency"])
+            vector_list.append(self._nlp_temp(info["description"]).vector)
+        self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
+        for qid, info in self._entities.items():
             for name in info["names"]:
                 self._kb.add_alias(alias=name.replace("_", " "), entities=[qid], probabilities=[1])
 

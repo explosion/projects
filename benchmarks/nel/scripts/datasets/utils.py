@@ -87,8 +87,10 @@ def _resolve_wiki_titles(
         # Replace entity titles keys in dict with Wikidata QIDs. Add entity description.
         for page_id, entity_info in entities_info.items():
             # Fetch original (non-normalized, non-redirected) entity title to ensure correct association of Wikidata
-            # ID with entity.
-            entity_title = redirections_to_from.get(entity_info["title"], entity_info["title"])
+            # ID with entity. There may be multiple redirections, so we loop through them.
+            entity_title = entity_info["title"]
+            while entity_title in redirections_to_from:
+                entity_title = redirections_to_from[entity_title]
             entity_title = normalizations_to_from.get(entity_title.lower(), entity_title).replace(" ", "_")
 
             # Ignore lookup failures.

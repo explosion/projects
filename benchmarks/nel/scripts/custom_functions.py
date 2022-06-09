@@ -1,24 +1,24 @@
-""" Custom functions for training preparation. Currently not used. """
-
+""" Custom functions to be hooked up into the registry. """
 from functools import partial
-from pathlib import Path
-from typing import Iterable, Callable
+
 import spacy
-from spacy import Language
-from spacy.training import Example
-from spacy.tokens import DocBin
+from typing import Iterable, Callable
+
+import typing
+from spacy.kb import Candidate, KnowledgeBase
+from spacy.tokens import Span
+from scripts.candidate_generation.embeddings import create_candidates
 
 
-@spacy.registry.readers("MyCorpus.v1")
-def create_docbin_reader(file: Path) -> Callable[[Language], Iterable[Example]]:
-    return partial(read_files, file)
+@spacy.registry.misc("EmbeddingGetCandidates.v1")
+def create_candidates_via_embeddings(dataset_id: str) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+    """ Returns Callable for identification of candidates via their embeddings.
+    dataset_id (str): Dataset ID.
+    RETURNS (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Callable for identification of entity candidates.
+    """
 
-
-def read_files(file: Path, nlp: Language) -> Iterable[Example]:
-    # we run the full pipeline and not just nlp.make_doc to ensure we have entities and sentences
-    # which are needed during training of the entity linker
-    with nlp.select_pipes(disable="entity_linker"):
-        doc_bin = DocBin().from_disk(file)
-        docs = doc_bin.get_docs(nlp.vocab)
-        for doc in docs:
-            yield Example(nlp(doc.text), doc)
+    # More elegant way to enforce proper typing for partial object?
+    return typing.cast(
+        Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        partial(create_candidates, dataset_id)
+    )

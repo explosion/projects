@@ -1,13 +1,13 @@
 """ Dataset for Reddit EL data. """
 
 import csv
-from typing import Set, List, Tuple
 import fileinput
+from typing import Set, List, Tuple
 
 from spacy.tokens import Doc
 
-from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE
 from .dataset import Dataset
+from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE
 
 
 class RedditDataset(Dataset):
@@ -29,9 +29,9 @@ class RedditDataset(Dataset):
 
         # Load data from .tsv files, track entity frequency.
         for file_name in file_names:
-            with open(self._paths["assets"] / file_name) as file_path:
+            with open(self._paths["assets"] / file_name, encoding="utf-8") as file_path:
                 quality = file_name.split("_")[0]
-                for row in csv.reader(file_path, delimiter="\t"):
+                for i, row in enumerate(csv.reader(file_path, delimiter="\t")):
                     assert len(row) == 7
                     # Ditch anchor information in article URLs, as we can't use this in Wikidata lookups anyway.
                     row[3] = row[3].split("#")[0].split("?")[0]
@@ -62,10 +62,12 @@ class RedditDataset(Dataset):
         # situations with entity interdependencies at the cost of lookup speed.
         entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities)
         if len(failed_entity_lookups):
+            print(failed_entity_lookups)
             print(f"Trying to salvage {len(failed_entity_lookups)} failed lookups")
             entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
                 entities=entities, entity_titles=failed_entity_lookups, batch_size=1
             )
+            print(failed_entity_lookups)
             title_qid_mappings = {**title_qid_mappings, **_title_qid_mapping}
         for entity_title in failed_entity_lookups:
             entities.pop(entity_title)
@@ -91,7 +93,7 @@ class RedditDataset(Dataset):
         rows: List[List[str]] = []
         for file_name in [self._paths["assets"] / file_name for file_name in file_names]:
             row_length = 3 if file_name.name.endswith("posts.tsv") else 5
-            with open(file_name) as file_path:
+            with open(file_name, encoding="utf-8") as file_path:
                 for row in csv.reader(file_path, delimiter="\t"):
                     assert len(row) <= row_length
                     # If row has fewer than the specified number of entries: newlines from comments have been
@@ -133,11 +135,18 @@ class RedditDataset(Dataset):
                 "Money\t325\t330\tmoney\n": "Money\t323\t328\tmoney\n"
             }
         }
+        encoding = "utf-8"
 
         for file_name in to_replace:
-            for line in fileinput.input(self._paths["assets"] / file_name, inplace=True):
-                if line not in to_remove[file_name]:
-                    for snippet in to_replace[file_name]:
-                        if snippet in line:
-                            line = line.replace(snippet, to_replace[file_name][snippet])
-                    print(line, end='')
+            lines: List[str] = []
+            with open(self._paths["assets"] / file_name, "r", encoding=encoding) as file:
+                for line in file:
+                    if line not in to_remove[file_name]:
+                        for snippet in to_replace[file_name]:
+                            if snippet in line:
+                                line = line.replace(snippet, to_replace[file_name][snippet])
+                        lines.append(line)
+
+            (self._paths["assets"] / file_name).write_text("".join(lines), encoding=encoding)
+
+

@@ -1,5 +1,6 @@
 """ Compiles train/dev/test corpora. """
 import typer
+
 from datasets.dataset import Dataset
 
 

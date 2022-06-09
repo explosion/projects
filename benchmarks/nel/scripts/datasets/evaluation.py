@@ -5,13 +5,12 @@ Adapated from https://github.com/explosion/projects/blob/master/nel-wikipedia/en
 import logging
 import random
 from collections import defaultdict
-from typing import Dict, List, Set, Union, Tuple
-
-from spacy import Language
-from spacy.kb import KnowledgeBase, Candidate
-from spacy.tokens import Doc
+from typing import Dict, List, Set, Tuple
 
 import prettytable
+from spacy import Language
+from spacy.kb import KnowledgeBase
+from spacy.tokens import Doc
 
 logger = logging.getLogger(__name__)
 
@@ -71,21 +70,6 @@ class EvaluationResults(object):
         """
         self.metrics.update_results(true_ent_kb_id_, cand_kb_ids_)
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
-
-    def report_metrics(self):
-        model_str = self.name.title()
-        recall = self.metrics.calculate_recall()
-        precision = self.metrics.calculate_precision()
-        fscore = self.metrics.calculate_fscore()
-        return (
-            "{}: ".format(model_str)
-            + "F-score = {} | ".format(round(fscore, 3))
-            + "Recall = {} | ".format(round(recall, 3))
-            + "Precision = {} | ".format(round(precision, 3))
-            + "F-score by label = {}".format(
-                {k: v.calculate_fscore() for k, v in sorted(self.metrics_by_label.items())}
-            )
-        )
 
     def _extend_report_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
         """ Extend existing PrettyTable with collected metrics.

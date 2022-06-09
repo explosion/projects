@@ -85,11 +85,13 @@ commands:
     help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
     script:
       - "python -m spacy train configs/${vars.config} \
+          --paths.dataset_id reddit \
           --output training/reddit \
           --paths.train corpora/reddit/train.spacy \
           --paths.dev corpora/reddit/dev.spacy \
           --paths.kb temp/reddit.kb \
-          --paths.base_nlp temp/reddit.nlp"
+          --paths.base_nlp temp/reddit.nlp \
+          -c scripts/custom_functions.py"
     deps:
       - "temp/reddit.kb"
       - "temp/reddit.nlp"
