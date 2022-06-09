@@ -2,3 +2,4 @@ pyyaml
 requests
 tqdm
 prettytable
+scikit-learn

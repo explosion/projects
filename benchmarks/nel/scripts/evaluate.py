@@ -1,6 +1,7 @@
 """ Evaluation on test data. """
 
 from datasets.dataset import Dataset
+import typer
 from custom_functions import create_candidates_via_embeddings
 
 
@@ -15,4 +16,5 @@ def main(dataset_id: str):
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    # typer.run(main)
+    main("reddit")
