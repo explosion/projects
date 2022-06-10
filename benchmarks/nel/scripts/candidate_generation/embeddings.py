@@ -36,11 +36,6 @@ class CandidateSelector:
 
         ent_ids = kb.get_entity_strings()
 
-        # todo @RM
-        #  - draft postprocessing steps
-        #  - compare with get_candidates()
-        #  - post summary on slack
-
         if dataset_id not in self._pipelines:
             self._pipelines[dataset_id] = spacy.load(Dataset.assemble_paths(dataset_id)["nlp_base"])
             with open(Dataset.assemble_paths(dataset_id)["entities"], "rb") as file:
