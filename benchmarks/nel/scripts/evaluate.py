@@ -10,11 +10,10 @@ def main(dataset_id: str):
 
     Dataset.generate_dataset_from_id(dataset_id).evaluate(
         candidate_generation=True,
-        baseline=False,
-        context=False
+        baseline=True,
+        context=True
     )
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main("reddit")
+    typer.run(main)

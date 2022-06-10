@@ -14,6 +14,8 @@ import tqdm
 import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
+from spacy.pipeline import Pipe
+from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 
@@ -73,13 +75,17 @@ class Dataset(abc.ABC):
         """
         raise NotImplementedError
 
-    def create_knowledge_base(self, model_name: str, **kwargs) -> None:
+    def create_knowledge_base(self, model_name: str, n_kb_tokens: int) -> None:
         """ Creates and serializes knowledge base.
-        vectors_model (str): Name of model with word vectors to use.
+        model_name (str): Name of model with word vectors to use.
+        n_kb_tokens (int): Number of tokens in entity description to include when inferring embedding.
         """
 
         self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
-        self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
+        self._load_resource("entities")
+        self._load_resource("failed_entity_lookups")
+        self._load_resource("annotations")
+        # self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
@@ -87,11 +93,20 @@ class Dataset(abc.ABC):
         self._kb.initialize_vectors(len(self._entities))
         entity_list: List[str] = []
         freq_list: List[int] = []
-        vector_list: List[numpy.ndarray] = []
+        vector_list: List[numpy.ndarray] = []  # type: ignore
+        desc_doc_texts: List[str] = []
+        trunc_doc_texts: List[str] = []
+
         for qid, info in self._entities.items():
             entity_list.append(qid)
             freq_list.append(info["frequency"])
-            vector_list.append(self._nlp_base(info["description"]).vector)
+            desc_doc_texts.append(info["description"])
+            trunc_doc_texts.append(" ".join([name.replace("_", " ") for name in info["names"]]))
+        for i, desc_doc in enumerate(self._nlp_base.pipe(desc_doc_texts, batch_size=100)):
+            trunc_doc_texts[i] += " " + desc_doc[:n_kb_tokens].text
+        for doc in self._nlp_base.pipe(trunc_doc_texts, batch_size=100):
+            vector_list.append(doc.vector if isinstance(doc.vector, numpy.ndarray) else doc.vector.get())  # type: ignore
+
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
         for qid, info in self._entities.items():
             for name in info["names"]:
@@ -237,9 +252,11 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_labels.get((ent.start_char, ent.end_char), "NIL")
                         cand_gen_label_counts[label] += 1
-                        # print(ent.text, ent.kb_id_, label, "\t", {(cand.entity_, cand.alias_) for cand in self._kb.get_alias_candidates(ent.text)})
+                        entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
+                            self._nlp_best.component_names.index("entity_linker")
+                        ][1]
                         candidate_results.update_metrics(
-                            label, ent.kb_id_, {cand.entity_ for cand in self._kb.get_alias_candidates(ent.text)}
+                            label, ent.kb_id_, {cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)}
                         )
 
                 # Update entity disambiguation stats.

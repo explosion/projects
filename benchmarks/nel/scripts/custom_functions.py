@@ -7,9 +7,13 @@ from typing import Iterable, Callable
 import typing
 from spacy.kb import Candidate, KnowledgeBase
 from spacy.tokens import Span
-import scripts.candidate_generation.embeddings
+# More elegant way to resolve import conflicts between training and evaluation calls?
+try:
+    import scripts.candidate_generation.embeddings as embedding_candidate_generation
+except ModuleNotFoundError:
+    import candidate_generation.embeddings as embedding_candidate_generation
 
-embedding_candidate_selector = scripts.candidate_generation.embeddings.CandidateSelector()
+embedding_candidate_selector = embedding_candidate_generation.CandidateSelector()
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")

@@ -5,6 +5,7 @@ vars:
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
   version: "0.0.1"
+  n_kb_tokens: 25
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
 
@@ -54,7 +55,7 @@ commands:
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} ${vars.n_kb_tokens}"
     deps:
       - "assets/reddit"
     outputs:
