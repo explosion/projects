@@ -240,29 +240,33 @@ class Dataset(abc.ABC):
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
         for example in tqdm.tqdm(test_set, total=n_items, leave=False, desc='Processing test set'):
+            example: Example
             if len(example) > 0:
-                correct_ents = {
+                ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
-                ent_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
-
+                ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
                 # Update candidate generation stats.
                 if candidate_generation:
                     for ent in example.reference.ents:
                         # For the candidate generation evaluation also mis-aligned entities are considered.
-                        label = ent_labels.get((ent.start_char, ent.end_char), "NIL")
+                        label = ent_pred_labels.get((ent.start_char, ent.end_char), "NIL")
                         cand_gen_label_counts[label] += 1
                         entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
                             self._nlp_best.component_names.index("entity_linker")
                         ][1]
+                        cands = entity_linker.get_candidates(self._kb, ent)
+                        pos_before = candidate_results.metrics.true_pos
                         candidate_results.update_metrics(
                             label, ent.kb_id_, {cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)}
                         )
+                        pos_after = candidate_results.metrics.true_pos
+                        x = 3
 
                 # Update entity disambiguation stats.
                 if baseline:
                     evaluation.add_disambiguation_baseline(
-                        baseline_results, label_counts, example.predicted, correct_ents, self._kb
+                        baseline_results, label_counts, example.predicted, ent_gold_ids, self._kb
                     )
 
                 if context:
@@ -270,14 +274,14 @@ class Dataset(abc.ABC):
                     self._nlp_best.config["incl_context"] = True
                     self._nlp_best.config["incl_prior"] = False
                     evaluation.add_disambiguation_eval_result(
-                        context_results, example.predicted, correct_ents, self._nlp_best
+                        context_results, example.predicted, ent_gold_ids, self._nlp_best
                     )
 
                     # measuring combined accuracy (prior + context)
                     self._nlp_best.config["incl_context"] = True
                     self._nlp_best.config["incl_prior"] = True
                     evaluation.add_disambiguation_eval_result(
-                        combo_results, example.predicted, correct_ents, self._nlp_best
+                        combo_results, example.predicted, ent_gold_ids, self._nlp_best
                     )
 
         # Print result table.
