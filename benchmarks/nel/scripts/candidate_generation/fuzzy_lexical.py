@@ -1,24 +1,23 @@
 """ Candidate generation via distance in lexical space. """
+from itertools import chain
 from typing import Iterable
 
-import numpy
-from sklearn.neighbors import NearestNeighbors
-from thefuzz import fuzz
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
+from fuzzyset import FuzzySet
 
 
 class CandidateSelector(NearestNeighborCandidateSelector):
     """ Callable object selecting candidates as nearest neighbours in lexical space. """
 
-    def _init_container(self, dataset_id: str, kb: KnowledgeBase, k: int) -> None:
-        self._container[dataset_id] = NearestNeighbors(
-            n_neighbors=k, algorithm="ball_tree", metric=lambda v, w: 100 - fuzz.ratio(v, w)
-        )
-        # todo @RM encode string numerically -
-        #  https://stackoverflow.com/questions/227459/how-to-get-the-ascii-value-of-a-character
-        self._container[dataset_id].fit(numpy.asarray([ent_id for ent_id in kb.get_entity_strings()]).reshape(-1, 1))
+    def _init_container(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> FuzzySet:
+        return FuzzySet(kb.get_alias_strings())
 
-    def _fetch_candidates_idx(self, dataset_id: str, span: Span, kb: KnowledgeBase) -> Iterable[int]:
-        return self._container[dataset_id].kneighbors(span.text)[1][0]
+    def _fetch_candidates(
+        self, dataset_id: str, span: Span, kb: KnowledgeBase, max_n_candidates: int, **kwargs
+    ) -> Iterable[int]:
+        return chain.from_iterable([
+            kb.get_alias_candidates(entry[1])
+            for entry in self._container[dataset_id].get(span.text, [])[:max_n_candidates]
+        ])

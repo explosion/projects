@@ -255,13 +255,9 @@ class Dataset(abc.ABC):
                         entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
                             self._nlp_best.component_names.index("entity_linker")
                         ][1]
-                        cands = entity_linker.get_candidates(self._kb, ent)
-                        pos_before = candidate_results.metrics.true_pos
                         candidate_results.update_metrics(
                             label, ent.kb_id_, {cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)}
                         )
-                        pos_after = candidate_results.metrics.true_pos
-                        x = 3
 
                 # Update entity disambiguation stats.
                 if baseline:
