@@ -72,10 +72,6 @@ class RedditDataset(Dataset):
         for entity_title in failed_entity_lookups:
             entities.pop(entity_title)
 
-        # Resolve mentions to their names and aliases.
-        # print("Resolving Wiki entity mentions")
-        # entities = _resolve_wiki_mentions(entities)
-
         # Update annotations with corresponding entity IDs.
         for source_id in annotations:
             for annotation in annotations[source_id]:
@@ -120,7 +116,8 @@ class RedditDataset(Dataset):
                 doc=doc,
                 entities_info=self._entities,
                 annotations=self._annotations.get(row[0], []),
-                entities_failed_lookups=self._failed_entity_lookups
+                entities_failed_lookups=self._failed_entity_lookups,
+                harmonize_with_doc_ents=True
             )
             doc._.overlapping_annotations = overlapping_doc_annotations
             annotated_docs.append(doc)

@@ -6,6 +6,7 @@ from typing import Tuple, Set, List, Dict, Optional, Union, Any, Iterable
 
 import requests
 import tqdm
+from spacy import Language
 from spacy.tokens import Token, Doc, Span
 
 # todo @RM replace with pydantic schemas
@@ -191,7 +192,6 @@ def _resolve_wiki_titles(
             failed_lookups.add(entity_title)
 
         pbar.update(len(chunk))
-
     pbar.close()
 
     return _entities, failed_lookups, title_qid_mappings
@@ -201,7 +201,8 @@ def _create_spans_from_doc_annotation(
     doc: Doc,
     entities_info: ENTITIES_TYPE,
     annotations: List[Dict[str, Union[Set[str], str, int]]],
-    entities_failed_lookups: Set[str]
+    entities_failed_lookups: Set[str],
+    harmonize_with_doc_ents: bool
 ) -> Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]:
     """ Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
@@ -209,21 +210,28 @@ def _create_spans_from_doc_annotation(
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
     entities_entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed).
     source_id (str): Unique source ID to look up annotation.
+    harmonize_harmonize_with_doc_ents (Language): Whether to only keep those annotations matched by entities in the
+        provided Doc object.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
 
-    doc_annots: List[Dict[str, Union[Set[str], str, int]]] = []
+    final_annots: List[Dict[str, Union[Set[str], str, int]]] = []
+    doc_ents = {(ent.start_char, ent.end_char) for ent in doc.ents}
     overlapping_doc_annotations: List[Dict[str, Union[Set[str], str, int]]] = []
+
+    if harmonize_with_doc_ents and not doc_ents:
+        return [], []
+
     for i, annot in enumerate(
-            sorted(
-                [
-                    {**annot, "frequency": entities_info.get(annot["entity_id"], {"frequency": -1})["frequency"]}
-                    for annot in annotations
-                ],
-                key=lambda a: a["frequency"],
-                reverse=True
-            )
+        sorted(
+            [
+                {**annot, "frequency": entities_info.get(annot["entity_id"], {"frequency": -1})["frequency"]}
+                for annot in annotations
+            ],
+            key=lambda a: a["frequency"],
+            reverse=True
+        )
     ):
         # Indexing mistakes in the dataset might lead to wrong and/or overlapping annotations. We align the annotation
         # indices with spaCy's token indices to avoid at least some of these.
@@ -236,24 +244,28 @@ def _create_spans_from_doc_annotation(
                 annot["end_pos"] = t.idx + len(t)
                 break
 
+        # After token alignment: filter with NER pipeline, if available.
+        if harmonize_with_doc_ents and (annot["start_pos"], annot["end_pos"]) not in doc_ents:
+            continue
+
         # If there is an overlap between annotation's start and end position and this token's parsed start
         # and end, we try to create a span with this token's position.
         overlaps = False
         if annot["frequency"] == -1:
             assert annot["entity_id"] not in entities_info and annot["name"] in entities_failed_lookups
             continue
-        for j in range(0, len(doc_annots)):
-            if not (annot["end_pos"] < doc_annots[j]["start_pos"] or annot["start_pos"] > doc_annots[j]["end_pos"]):
+        for j in range(0, len(final_annots)):
+            if not (annot["end_pos"] < final_annots[j]["start_pos"] or annot["start_pos"] > final_annots[j]["end_pos"]):
                 overlaps = True
                 overlapping_doc_annotations.append(annot)
                 break
         if not overlaps:
-            doc_annots.append(annot)
+            final_annots.append(annot)
 
     doc_spans = [
         # No label/entity type information available.
         doc.char_span(annot["start_pos"], annot["end_pos"], label="NIL", kb_id=annot["entity_id"])
-        for annot in doc_annots
+        for annot in final_annots
     ]
     assert all([span is not None for span in doc_spans])
 
