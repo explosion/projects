@@ -85,7 +85,8 @@ class Dataset(abc.ABC):
         self._load_resource("entities")
         self._load_resource("failed_entity_lookups")
         self._load_resource("annotations")
-        # self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
+        print("Parsing external corpus")
+        # self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus()
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
@@ -108,9 +109,12 @@ class Dataset(abc.ABC):
             vector_list.append(doc.vector if isinstance(doc.vector, numpy.ndarray) else doc.vector.get())  # type: ignore
 
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
+        added_aliases: Set[str] = set()
         for qid, info in self._entities.items():
             for name in info["names"]:
-                self._kb.add_alias(alias=name.replace("_", " "), entities=[qid], probabilities=[1])
+                if name not in added_aliases:
+                    self._kb.add_alias(alias=name.replace("_", " "), entities=[qid], probabilities=[1])
+                    added_aliases.add(name)
 
         # Serialize knowledge base & entity information.
         for to_serialize in (

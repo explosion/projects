@@ -7,7 +7,8 @@ from typing import Set, List, Tuple
 from spacy.tokens import Doc
 
 from .dataset import Dataset
-from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE
+from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE, \
+    _resolve_wiki_mentions
 
 
 class RedditDataset(Dataset):
@@ -42,7 +43,8 @@ class RedditDataset(Dataset):
                             "frequency": 0,
                             "description": None,
                             "quality": quality,
-                            "source_id": row[0]
+                            "source_id": row[0],
+                            "categories": set()
                         }
                     entities[row[3]]["frequency"] += 1
 
@@ -60,7 +62,7 @@ class RedditDataset(Dataset):
         # one entity. Associating the remaining title with the correct entity can bloat up the code).
         # Since we don't expect many failures, we instead run failed lookups again individually. This should avoid any
         # situations with entity interdependencies at the cost of lookup speed.
-        entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities)
+        entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities, batch_size=5)
         if len(failed_entity_lookups):
             print(f"Trying to salvage {len(failed_entity_lookups)} failed lookups")
             entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
@@ -70,7 +72,11 @@ class RedditDataset(Dataset):
         for entity_title in failed_entity_lookups:
             entities.pop(entity_title)
 
-        # Update mentions with corresponding entity IDs.
+        # Resolve mentions to their names and aliases.
+        # print("Resolving Wiki entity mentions")
+        # entities = _resolve_wiki_mentions(entities)
+
+        # Update annotations with corresponding entity IDs.
         for source_id in annotations:
             for annotation in annotations[source_id]:
                 if annotation["name"] not in failed_entity_lookups:
