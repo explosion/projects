@@ -41,10 +41,10 @@ commands:
     script:
       - "unzip -q -d assets/reddit assets/reddit.zip"
       - "python ./scripts/clean_data.py reddit"
-    outputs:
-      - "assets/reddit"
     deps:
       - "assets/reddit.zip"
+    outputs:
+      - "assets/reddit"
 
   - name: download
     help: "Download a model with pretrained vectors and NER component"
