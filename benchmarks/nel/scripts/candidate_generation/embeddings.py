@@ -25,8 +25,12 @@ class CandidateSelector(NearestNeighborCandidateSelector):
         if not isinstance(target_vec, numpy.ndarray):
             target_vec = target_vec.get()
 
+        nn_idx = self._container[dataset_id].kneighbors(target_vec.reshape((1, -1)))[1][0]
         ent_ids = kb.get_entity_strings()
-        return chain.from_iterable([
-            kb.get_alias_candidates(next(iter(self._entities[dataset_id][ent_ids[i]]["names"])).replace("_", " "))
-            for i in self._container[dataset_id].kneighbors(target_vec.reshape((1, -1)))[1][0]
-        ])
+        nn_entities = {ent_ids[i]: self._entities[dataset_id][ent_ids[i]] for i in nn_idx}
+        print(span.text)
+        from pprint import pprint
+        pprint(nn_entities)
+        exit()
+
+        return chain.from_iterable([kb.get_alias_candidates("_" + ent_ids[i] + "_") for i in nn_idx])

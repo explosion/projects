@@ -1,6 +1,7 @@
 """ Utilities for NEL benchmark. """
 
 import copy
+import math
 import urllib.parse
 from typing import Tuple, Set, List, Dict, Optional, Union, Any, Iterable
 
@@ -10,7 +11,8 @@ from spacy import Language
 from spacy.tokens import Token, Doc, Span
 
 # todo @RM replace with pydantic schemas
-ENTITIES_TYPE = Dict[str, Dict[str, Union[Set[str], str, int, Dict[str, Set[str]]]]]
+ENTITY_TYPE = Dict[str, Union[Set[str], str, int, Dict[str, Set[str]]]]
+ENTITIES_TYPE = Dict[str, ENTITY_TYPE]
 ANNOTATIONS_TYPE = Dict[str, List[Dict[str, Union[Set[str], str, int]]]]
 
 MAX_WIKI_API_QUERY_BATCH_SIZE = 20
@@ -93,22 +95,24 @@ def _prune_category_titles(cat_titles: Iterable[Dict[str, str]]) -> Set[str]:
 def _resolve_wiki_titles(
     entities: ENTITIES_TYPE,
     entity_titles: Optional[Set[str]] = None,
-    batch_size: int = MAX_WIKI_API_QUERY_BATCH_SIZE
+    batch_size: int = MAX_WIKI_API_QUERY_BATCH_SIZE,
+    progress_bar_desc: str = ""
 ) -> Tuple[ENTITIES_TYPE, Set[str], Dict[str, str]]:
     """ Resolves Wikipedia titles to Wikidata IDs. Also fetches descriptions for entities.
     This is currently very slow (~10 entries/s) due to having to limit the batch size as to not exceed the Wiki API's
-    limitations. This could be circumvented by implementing the continuation mechanism offered by the API and/or
-    parallel querying.
+    limitations. This could be circumvented by parallel querying (even better: preprocessed dump instead of accessing
+    API, which isn't fit for production anyway).
     entities (ENTITIES_TYPE): Entities to resolve.
     entity_titles (Set[str]): List of entity titles to resolve.
     batch_size (int): Number of entity titles to resolve in the same API request. Between 1 and 50.
+    tqdm_str (str): String to pass on to TQDM progress bar as description.
     RETURNS (Dict[str, str]): Mapping of titles to entity IDs.
     """
 
     assert 1 <= batch_size <= MAX_WIKI_API_QUERY_BATCH_SIZE, \
         f"Batch size has to be between 1 and {MAX_WIKI_API_QUERY_BATCH_SIZE}."
     entity_titles = list(entity_titles if entity_titles else entities.keys())
-    pbar = tqdm.tqdm(desc="Resolving entity titles", total=len(entity_titles), leave=False)
+    pbar = tqdm.tqdm(desc=progress_bar_desc, total=len(entity_titles), leave=False)
     failed_lookups: Set[str] = set()
     _entities = copy.deepcopy(entities)
     title_qid_mappings: Dict[str, str] = {}
@@ -120,7 +124,7 @@ def _resolve_wiki_titles(
         chunk = entity_titles[i:i + batch_size]
         request_params = {
             "action": "query",
-            "prop": "pageprops|extracts|wbentityusage|categories",
+            "prop": "pageprops|extracts|categories|pageterms|pageviews",
             "ppprop": "wikibase_item",
             # Some special chars such as & are not escaped by requests, so we do that with urllib.parse.quote().
             "titles": urllib.parse.quote("|".join(chunk)),
@@ -128,11 +132,11 @@ def _resolve_wiki_titles(
             "exintro": None,
             "explaintext": None,
             # Make sure descriptions are available for all requested articles.
-            "exlimit": len(chunk),
+            "exlimit": min(len(chunk), 20),
             "redirects": 1,
-            "wbeuprop": "url",
-            "wbeulimit": 500,
-            "cllimit": 500
+            "cllimit": 500,
+            "wbptlanguage": "en",
+            "pvipdays": 5
         }
         request = requests.get(
             "https://en.wikipedia.org/w/api.php",
@@ -160,7 +164,7 @@ def _resolve_wiki_titles(
             # ID with entity. There may be multiple redirections, so we loop through them.
             entity_title = entity_info["title"]
             while entity_title in redirections_to_from:
-                redirection_names.add(entity_title)
+                redirection_names.add(entity_title.replace("_", " "))
                 entity_title = redirections_to_from[entity_title]
             entity_title = normalizations_to_from.get(entity_title.lower(), entity_title).replace(" ", "_")
 
@@ -177,11 +181,14 @@ def _resolve_wiki_titles(
                 if qid not in _entities:
                     _entities[qid] = _entities.pop(entity_title)
                     _entities[qid]["categories"] = _prune_category_titles(entity_info["categories"])
+                    _entities[qid]["pageviews"] = sum([int(vc) for vc in entity_info["pageviews"].values() if vc])
                 else:
-                    _entities[qid]["names"].add(entity_title)
+                    _entities[qid]["names"].add(entity_title.replace("_", " "))
                     _entities[qid]["frequency"] += _entities.pop(entity_title)["frequency"]
-                _entities[qid]["names"] |= redirection_names
+                _entities[qid]["names"] |= redirection_names | \
+                    set(entity_info["terms"].get("alias", {})) | set(entity_info["terms"].get("label", {}))
                 _entities[qid]["description"] = entity_info["extract"]
+                _entities[qid]["short_description"] = " ".join(entity_info["terms"]["description"])
                 title_qid_mappings[entity_title] = qid
             except KeyError:
                 failed_lookups.add(entity_title)

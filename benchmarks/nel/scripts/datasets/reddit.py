@@ -42,17 +42,22 @@ class RedditDataset(Dataset):
                 quality = file_name.split("_")[0]
                 for i, row in enumerate(csv.reader(file_path, delimiter="\t")):
                     assert len(row) == 7
+                    if len(rows) == 100:
+                        continue
                     # Ditch anchor information in article URLs, as we can't use this in Wikidata lookups anyway.
                     row[3] = row[3].split("#")[0].split("?")[0]
                     rows.append(row)
                     if row[3] not in entities:
+                        # todo @RM Standardize as Pydantic type, move generation of object with defaults into generics.
                         entities[row[3]] = {
                             "names": {row[3]},
                             "frequency": 0,
                             "description": None,
+                            "short_description": None,
                             "quality": quality,
                             "source_id": row[0],
-                            "categories": set()
+                            "categories": set(),
+                            "pageviews": None
                         }
                     entities[row[3]]["frequency"] += 1
 
@@ -72,9 +77,11 @@ class RedditDataset(Dataset):
         # situations with entity interdependencies at the cost of lookup speed.
         entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities, batch_size=5)
         if len(failed_entity_lookups):
-            print(f"Trying to salvage {len(failed_entity_lookups)} failed lookups")
             entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
-                entities=entities, entity_titles=failed_entity_lookups, batch_size=1
+                entities=entities,
+                entity_titles=failed_entity_lookups,
+                batch_size=1,
+                progress_bar_desc=f"Trying to salvage {len(failed_entity_lookups)} failed lookups"
             )
             title_qid_mappings = {**title_qid_mappings, **_title_qid_mapping}
         for entity_title in failed_entity_lookups:

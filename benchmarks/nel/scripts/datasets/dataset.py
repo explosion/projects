@@ -19,7 +19,7 @@ from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 
 from . import evaluation
-from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
+from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE, ENTITY_TYPE
 
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
@@ -81,11 +81,11 @@ class Dataset(abc.ABC):
         """
 
         self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
-        self._load_resource("entities")
-        self._load_resource("failed_entity_lookups")
-        self._load_resource("annotations")
+        # self._load_resource("entities")
+        # self._load_resource("failed_entity_lookups")
+        # self._load_resource("annotations")
         print("Parsing external corpus")
-        # self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus()
+        self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus()
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
@@ -98,6 +98,7 @@ class Dataset(abc.ABC):
         for qid, info in self._entities.items():
             entity_list.append(qid)
             freq_list.append(info["frequency"])
+            # todo @RM Use short_description instead of description?
             desc_doc_texts.append(info["description"])
             trunc_doc_texts.append(" ".join([name.replace("_", " ") for name in info["names"]]))
         for i, desc_doc in enumerate(self._nlp_base.pipe(desc_doc_texts, batch_size=100)):
@@ -107,10 +108,20 @@ class Dataset(abc.ABC):
 
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
         added_aliases: Set[str] = set()
+        # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
+        # entitiy popularity, not actual alias-specific priors).
+        aliases_to_entity_ids: Dict[str, Set[Tuple[str, int]]] = {}
+        # for qid, info in self._entities.items():
+        #     for alias in info["names"]:
+        #         pass
+
         for qid, info in self._entities.items():
+            self._kb.add_alias(alias="_" + qid + "_", entities=[qid], probabilities=[1])
+            # todo @RM consider n:m between entities and aliases, determine priors from entities' pageviews
             for name in info["names"]:
+                name = name.replace("_", " ")
                 if name not in added_aliases:
-                    self._kb.add_alias(alias=name.replace("_", " "), entities=[qid], probabilities=[1])
+                    self._kb.add_alias(alias=name, entities=[qid], probabilities=[1])
                     added_aliases.add(name)
 
         # Serialize knowledge base & entity information.
