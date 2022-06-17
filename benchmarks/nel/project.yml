@@ -41,10 +41,10 @@ commands:
     script:
       - "unzip -q -d assets/reddit assets/reddit.zip"
       - "python ./scripts/clean_data.py reddit"
-    outputs:
-      - "assets/reddit"
     deps:
       - "assets/reddit.zip"
+    outputs:
+      - "assets/reddit"
 
   - name: download
     help: "Download a model with pretrained vectors and NER component"
@@ -62,8 +62,8 @@ commands:
       - "assets/reddit/entities_failed_lookup.pkl"
       - "assets/reddit/annotations.pkl"
     outputs_no_cache:
-      - "temp/reddit.kb"
-      - "temp/reddit.nlp"
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
 
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets"
@@ -73,8 +73,8 @@ commands:
       - "assets/reddit/entities.pkl"
       - "assets/reddit/entities_failed_lookups.pkl"
       - "assets/reddit/annotations.pkl"
-      - "temp/reddit.kb"
-      - "temp/reddit.nlp"
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
       - "configs/datasets.yml"
     outputs_no_cache:
       - "corpora/reddit/train.spacy"
@@ -85,16 +85,16 @@ commands:
     help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
     script:
       - "python -m spacy train configs/${vars.config} \
-          --paths.dataset_id reddit \
+          --paths.dataset_name reddit \
           --output training/reddit \
           --paths.train corpora/reddit/train.spacy \
           --paths.dev corpora/reddit/dev.spacy \
-          --paths.kb temp/reddit.kb \
-          --paths.base_nlp temp/reddit.nlp \
+          --paths.kb temp/reddit/kb \
+          --paths.base_nlp temp/reddit/nlp \
           -c scripts/custom_functions.py"
     deps:
-      - "temp/reddit.kb"
-      - "temp/reddit.nlp"
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
       - "corpora/reddit/train.spacy"
       - "corpora/reddit/dev.spacy"
 

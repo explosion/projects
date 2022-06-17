@@ -7,13 +7,13 @@ import typer
 from datasets.dataset import Dataset
 
 
-def main(dataset_id: str):
+def main(dataset_name: str):
     """
     Removes/fixes error in downloaded datasets.
-    dataset_id (str): Dataset ID.
+    dataset_name (str): Dataset name.
     """
 
-    Dataset.generate_dataset_from_id(dataset_id).clean_assets()
+    Dataset.generate_dataset_from_id(dataset_name).clean_assets()
 
 
 if __name__ == '__main__':
