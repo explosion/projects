@@ -9,9 +9,8 @@ from datasets.dataset import Dataset
 def main(dataset_name: str, vectors_model: str):
     """ Create the Knowledge Base in spaCy and write it to file.
 
-     dataset_name (str): Dataset name.
+    dataset_name (str): Dataset name.
      vectors_model (str): Name of model with word vectors to use.
-     temp_dir (Path): Path to save knowledge base and NLP pipeline at.
      """
 
     Dataset.generate_dataset_from_id(dataset_name).create_knowledge_base(vectors_model)
