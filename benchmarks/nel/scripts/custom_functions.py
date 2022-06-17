@@ -19,9 +19,9 @@ fuzzy_lexical_candidate_selector = fuzzy_lexical_candidate_generation.CandidateS
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")
-def create_candidates_via_embeddings(dataset_id: str, max_n_candidates: int) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
-    """ Returns Callable for identification of candidates via NN search in embedding space.
-    dataset_id (str): Dataset ID.
+def create_candidates_via_embeddings(dataset_name: str, max_n_candidates: int) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+    """ Returns Callable for identification of candidates via their embeddings.
+    dataset_name (str): Dataset name.
     max_n_candidates (int): Numbers of nearest neighbours to query.
     RETURNS (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Callable for identification of entity candidates.
     """
@@ -31,7 +31,7 @@ def create_candidates_via_embeddings(dataset_id: str, max_n_candidates: int) -> 
         Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         partial(
             embedding_candidate_selector,
-            dataset_id=dataset_id,
+            dataset_id=dataset_name,
             max_n_candidates=max_n_candidates
         )
     )
@@ -39,10 +39,10 @@ def create_candidates_via_embeddings(dataset_id: str, max_n_candidates: int) -> 
 
 @spacy.registry.misc("FuzzyStringGetCandidates.v1")
 def create_candidates_via_fuzzy_string_matching(
-    dataset_id: str, max_n_candidates: int, similarity_cutoff: float
+    dataset_name: str, max_n_candidates: int, similarity_cutoff: float
 ) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     """ Returns Callable for identification of candidates via NN search in lexical space.
-    dataset_id (str): Dataset ID.
+    dataset_name (str): Dataset name.
     max_n_candidates (int): Numbers of nearest neighbours to query.
     similarity_cutoff (float): Similarity value below which candidates won't be included.
     RETURNS (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Callable for identification of entity candidates.
@@ -55,7 +55,7 @@ def create_candidates_via_fuzzy_string_matching(
         Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         partial(
             fuzzy_lexical_candidate_selector,
-            dataset_id=dataset_id,
+            dataset_id=dataset_name,
             max_n_candidates=max_n_candidates,
             similarity_cutoff=similarity_cutoff
         )

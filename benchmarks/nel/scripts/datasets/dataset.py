@@ -14,7 +14,6 @@ import tqdm
 import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
-from spacy.pipeline import Pipe
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
@@ -34,10 +33,10 @@ class Dataset(abc.ABC):
         """ Initializes new Dataset.
         """
 
-        self._paths = self.assemble_paths(self.dataset_id)
+        self._paths = self.assemble_paths(self.name)
 
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
-            self._options = yaml.safe_load(stream)[self.dataset_id]
+            self._options = yaml.safe_load(stream)[self.name]
 
         self._entities: Optional[ENTITIES_TYPE] = None
         self._failed_entity_lookups: Optional[Set[str]] = None
@@ -48,30 +47,30 @@ class Dataset(abc.ABC):
         self._annotated_docs: Optional[List[Doc]] = None
 
     @staticmethod
-    def assemble_paths(dataset_id: str) -> Dict[str, Path]:
+    def assemble_paths(dataset_name: str) -> Dict[str, Path]:
         """ Assemble paths w.r.t. dataset ID.
-        dataset_id (str): Dataset ID.
+        dataset_name (str): Dataset name.
         RETURNS (Dict[str, Path]): Dictionary with internal resource name to path.
         """
 
         root_path = Path(os.path.abspath(__file__)).parent.parent.parent
-        assets_path = root_path / "assets" / dataset_id
+        assets_path = root_path / "assets" / dataset_name
 
         return {
             "root": root_path,
             "assets": assets_path,
-            "nlp_base": root_path / "temp" / f"{dataset_id}.nlp",
-            "nlp_best": root_path / "training" / dataset_id / "model-best",
-            "kb": root_path / "temp" / f"{dataset_id}.kb",
-            "corpora": root_path / "corpora" / dataset_id,
+            "nlp_base": root_path / "temp" / dataset_name / "nlp",
+            "nlp_best": root_path / "training" / dataset_name / "model-best",
+            "kb": root_path / "temp" / dataset_name / "kb",
+            "corpora": root_path / "corpora" / dataset_name,
             "entities": assets_path / "entities.pkl",
             "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl"
         }
 
     @property
-    def dataset_id(self) -> str:
-        """ Returns dataset ID.
+    def name(self) -> str:
+        """ Returns dataset name.
         """
         raise NotImplementedError
 
@@ -90,8 +89,6 @@ class Dataset(abc.ABC):
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
-        self._kb.initialize_entities(len(self._entities))
-        self._kb.initialize_vectors(len(self._entities))
         entity_list: List[str] = []
         freq_list: List[int] = []
         vector_list: List[numpy.ndarray] = []  # type: ignore
@@ -128,6 +125,7 @@ class Dataset(abc.ABC):
         if not os.path.exists(self._paths["nlp_base"]):
             os.mkdir(self._paths["nlp_base"])
         self._nlp_base.to_disk(self._paths["nlp_base"])
+        print("Successfully constructed knowledge base.")
 
     def compile_corpora(self) -> None:
         """ Creates train/dev/test corpora for Reddit entity linking dataset.
@@ -299,14 +297,14 @@ class Dataset(abc.ABC):
         self._nlp_best.config["incl_prior"] = False
 
     @classmethod
-    def generate_dataset_from_id(cls: Type[DatasetType], dataset_id: str, **kwargs) -> DatasetType:
+    def generate_dataset_from_id(cls: Type[DatasetType], dataset_name: str, **kwargs) -> DatasetType:
         """ Generates dataset instance from ID.
-        dataset_id (str): Dataset ID.
+        dataset_name (str): Dataset name.
         RETURNS (DatasetType): Instance of dataset with type determined by dataset ID.
         """
 
         # Assuming dataset class is in same package and name is identical to dataset ID.
-        module_name = f'{__name__.split(".")[0]}.{dataset_id}'
+        module_name = f'{__name__.split(".")[0]}.{dataset_name}'
         classes = [
             m for m in inspect.getmembers(importlib.import_module(module_name), inspect.isclass)
             if m[1].__module__ == module_name and issubclass(m[1], Dataset)

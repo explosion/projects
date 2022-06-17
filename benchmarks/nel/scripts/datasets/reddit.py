@@ -14,15 +14,23 @@ from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTI
 class RedditDataset(Dataset):
     """ RedditEL dataset. """
 
+    def __init__(self):
+        super().__init__()
+        assert self._options["gold"] or self._options["silver"] or self._options["bronze"], \
+            "At least one out of (gold, silver, bronze) has to be enabled."
+        assert self._options["posts"] or self._options["comments"], \
+            "At least one out of (posts, comments) has to be enabled."
+
     @property
-    def dataset_id(self) -> str:
+    def name(self) -> str:
         return "reddit"
 
     def _parse_external_corpus(self) -> Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]:
         file_names = [
-            f"{quality}_{source}_annotations.tsv"
+            f"{quality}_{source[:-1]}_annotations.tsv"
             for quality in ("gold", "silver", "bronze")
-            for source in ("post", "comment")
+            for source in ("posts", "comments")
+            if self._options[quality] and self._options[source]
         ]
         rows: List[List[str]] = []
         entities: ENTITIES_TYPE = {}
@@ -83,11 +91,11 @@ class RedditDataset(Dataset):
     def _create_annotated_docs(self) -> List[Doc]:
         annotated_docs: List[Doc] = []
         file_names: List[str] = []
-        if self._options["titles"]:
+        if self._options["posts"]:
             file_names.append("posts.tsv")
         if self._options["comments"]:
             file_names.append("comments.tsv")
-        assert file_names, "Either 'titles' or 'comments' have to be True in corpus config."
+        assert file_names, "Either 'posts' or 'comments' have to be True in corpus config."
 
         # Join records with line breaks.
         rows: List[List[str]] = []
