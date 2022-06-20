@@ -188,7 +188,7 @@ def _resolve_wiki_titles(
                 _entities[qid]["names"] |= redirection_names | \
                     set(entity_info["terms"].get("alias", {})) | set(entity_info["terms"].get("label", {}))
                 _entities[qid]["description"] = entity_info["extract"]
-                _entities[qid]["short_description"] = " ".join(entity_info["terms"]["description"])
+                _entities[qid]["short_description"] = " ".join(entity_info["terms"].get("description", []))
                 title_qid_mappings[entity_title] = qid
             except KeyError:
                 failed_lookups.add(entity_title)

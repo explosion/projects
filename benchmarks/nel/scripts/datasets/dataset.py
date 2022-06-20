@@ -95,6 +95,7 @@ class Dataset(abc.ABC):
         desc_doc_texts: List[str] = []
         trunc_doc_texts: List[str] = []
 
+        # Prepare and add entities to KB.
         for qid, info in self._entities.items():
             entity_list.append(qid)
             freq_list.append(info["frequency"])
@@ -105,24 +106,29 @@ class Dataset(abc.ABC):
             trunc_doc_texts[i] += " " + desc_doc[:n_kb_tokens].text
         for doc in self._nlp_base.pipe(trunc_doc_texts, batch_size=100):
             vector_list.append(doc.vector if isinstance(doc.vector, numpy.ndarray) else doc.vector.get())  # type: ignore
-
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
-        added_aliases: Set[str] = set()
-        # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
-        # entitiy popularity, not actual alias-specific priors).
-        aliases_to_entity_ids: Dict[str, Set[Tuple[str, int]]] = {}
-        # for qid, info in self._entities.items():
-        #     for alias in info["names"]:
-        #         pass
 
+        # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
+        # entity popularity, not actual alias-specific priors).
+        aliases_to_entity_ids: Dict[str, Dict[str, int]] = {}
+        for qid, info in self._entities.items():
+            for alias in info["names"]:
+                if alias not in aliases_to_entity_ids:
+                    aliases_to_entity_ids[alias] = {}
+                # We could also use e.g. in-corpus frequency instead of page views.
+                aliases_to_entity_ids[alias][qid] = info["pageviews"]
+        # Add aliases with normalized priors to KB.
+        for alias in aliases_to_entity_ids:
+            alias_qids = [qid for qid in aliases_to_entity_ids[alias]]
+            n_pageviews = sum(self._entities[qid]["pageviews"] for qid in alias_qids)
+            self._kb.add_alias(
+                alias=alias,
+                entities=alias_qids,
+                probabilities=[aliases_to_entity_ids[alias][qid] / n_pageviews for qid in alias_qids]
+            )
+        # Workaround: add alias for QID for easier lookup in candidate generation.
         for qid, info in self._entities.items():
             self._kb.add_alias(alias="_" + qid + "_", entities=[qid], probabilities=[1])
-            # todo @RM consider n:m between entities and aliases, determine priors from entities' pageviews
-            for name in info["names"]:
-                name = name.replace("_", " ")
-                if name not in added_aliases:
-                    self._kb.add_alias(alias=name, entities=[qid], probabilities=[1])
-                    added_aliases.add(name)
 
         # Serialize knowledge base & entity information.
         for to_serialize in (

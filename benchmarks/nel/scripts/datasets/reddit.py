@@ -42,8 +42,6 @@ class RedditDataset(Dataset):
                 quality = file_name.split("_")[0]
                 for i, row in enumerate(csv.reader(file_path, delimiter="\t")):
                     assert len(row) == 7
-                    if len(rows) == 100:
-                        continue
                     # Ditch anchor information in article URLs, as we can't use this in Wikidata lookups anyway.
                     row[3] = row[3].split("#")[0].split("?")[0]
                     rows.append(row)
