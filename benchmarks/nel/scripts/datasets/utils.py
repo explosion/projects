@@ -1,13 +1,11 @@
 """ Utilities for NEL benchmark. """
 
 import copy
-import math
 import urllib.parse
 from typing import Tuple, Set, List, Dict, Optional, Union, Any, Iterable
 
 import requests
 import tqdm
-from spacy import Language
 from spacy.tokens import Token, Doc, Span
 
 # todo @RM replace with pydantic schemas

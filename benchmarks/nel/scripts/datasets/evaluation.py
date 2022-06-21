@@ -141,7 +141,7 @@ def add_disambiguation_eval_result(
     pred_doc: Doc,
     correct_ents: Dict[str, str],
     el_pipe: Language,
-    ent_cand_ids: Dict[str, Set[str]]
+    ent_cand_ids: Dict[Tuple[int, int], Set[str]]
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -153,13 +153,31 @@ def add_disambiguation_eval_result(
     ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
     """
     try:
-        for ent in el_pipe(pred_doc).ents:
+        for ent in pred_doc.ents:
             idx = (ent.start_char, ent.end_char)
             gold_entity = correct_ents.get(offset(*idx), None)
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
             if gold_entity in ent_cand_ids.get(idx, {}):
-                pred_entity = ent.kb_id_
-                results.update_metrics(ent.label_, gold_entity, {pred_entity})
+                results.update_metrics(ent.label_, gold_entity, {ent.kb_id_})
+
+    except Exception as e:
+        logging.error("Error assessing accuracy " + str(e))
+
+
+def add_disambiguation_spacyfishing_eval_result(
+    results: EvaluationResults,
+    pred_doc: Doc,
+    correct_ents: Dict[str, str]
+) -> None:
+    """ Measure NEL performance with spacyfishing.
+
+    """
+
+    try:
+        for ent in pred_doc.ents:
+            gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
+            if gold_entity is not None:
+                results.update_metrics(ent.label_, gold_entity, {ent._.kb_qid})
 
     except Exception as e:
         logging.error("Error assessing accuracy " + str(e))

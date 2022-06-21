@@ -4,3 +4,4 @@ tqdm
 prettytable
 scikit-learn
 thefuzz[speedup]
+spacyfishing

@@ -102,7 +102,7 @@ commands:
   - name: evaluate
     help: "Evaluation on the test set"
     script:
-      - "python ./scripts/evaluate.py reddit"
+      - "python ./scripts/evaluate.py reddit ${vars.vectors_model}"
     deps:
       - "training/reddit/model-best"
       - "corpora/reddit/dev.spacy"

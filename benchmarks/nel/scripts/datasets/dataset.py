@@ -15,11 +15,11 @@ import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
-from spacy.tokens import Doc, DocBin
+from spacy.tokens import Doc, DocBin, Span
 from spacy.training import Example
 
 from . import evaluation
-from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE, ENTITY_TYPE
+from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
 
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
@@ -125,7 +125,7 @@ class Dataset(abc.ABC):
             self._kb.add_alias(
                 alias=alias,
                 entities=alias_qids,
-                probabilities=[aliases_to_entity_ids[alias][qid] / n_pageviews for qid in alias_qids]
+                probabilities=[aliases_to_entity_ids[alias][qid] / max(1, n_pageviews) for qid in alias_qids]
             )
         # Workaround for easier lookup in candidate generation: add alias for QID.
         for qid, info in self._entities.items():
@@ -232,16 +232,19 @@ class Dataset(abc.ABC):
         candidate_generation: bool = True,
         baseline: bool = True,
         context: bool = True,
+        spacyfishing: bool = True,
         n_items: Optional[int] = None
     ) -> None:
         """ Evaluates trained pipeline on test set.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
+        spacyfishing (bool): Whether to include evaluation with spacyfishing.
         n_items (Optional[int]): How many items to consider in evaluation. If None, all items in test set are used.
         """
 
         # Load resources.
         self._load_resource("nlp_best")
+        self._load_resource("nlp_base")
         self._load_resource("kb")
         test_set_path = self._paths["corpora"] / "test.spacy"
         with open(test_set_path, "rb"):
@@ -250,6 +253,8 @@ class Dataset(abc.ABC):
                 for doc in DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab)
             ]
         self._nlp_best.config["incl_prior"] = False
+        # Set up spacyfishing.
+        self._nlp_base.add_pipe("entityfishing", last=True)
 
         # Evaluation loop.
         label_counts = dict()
@@ -257,6 +262,7 @@ class Dataset(abc.ABC):
         baseline_results = evaluation.DisambiguationBaselineResults()
         context_results = evaluation.EvaluationResults("Context only")
         combo_results = evaluation.EvaluationResults("Context and Prior")
+        spacyfishing_results = evaluation.EvaluationResults("spacyfishing")
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
         for example in tqdm.tqdm(test_set, total=n_items, leave=False, desc='Processing test set'):
@@ -306,6 +312,11 @@ class Dataset(abc.ABC):
                         combo_results, example.predicted, ent_gold_ids, self._nlp_best, ent_cand_ids
                     )
 
+                if spacyfishing:
+                    evaluation.add_disambiguation_spacyfishing_eval_result(
+                        spacyfishing_results, self._nlp_base(example.reference.text), ent_gold_ids
+                    )
+
         # Print result table.
         eval_results: List[evaluation.EvaluationResults] = []
         if candidate_generation:
@@ -314,6 +325,9 @@ class Dataset(abc.ABC):
             eval_results.extend([baseline_results.random, baseline_results.prior, baseline_results.oracle])
         if context:
             eval_results.extend([context_results, combo_results])
+        if spacyfishing:
+            eval_results.append(spacyfishing_results)
+
         print(dict(cand_gen_label_counts))
         evaluation.EvaluationResults.report(tuple(eval_results))
 
