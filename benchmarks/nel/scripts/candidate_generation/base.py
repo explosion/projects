@@ -1,7 +1,8 @@
 """ Base class generation for candidate selection. """
+import abc
 import pickle
 from itertools import chain
-from typing import Iterator, Dict, Any, Iterable, Optional
+from typing import Iterator, Dict, Any, Iterable, Optional, overload
 
 import numpy
 from sklearn.neighbors import NearestNeighbors
@@ -19,11 +20,11 @@ except ValueError:
     from datasets.dataset import Dataset
 
 
-class NearestNeighborCandidateSelector:
+class NearestNeighborCandidateSelector(abc.ABC):
     """ Callable object selecting candidates via nearest neighbour search. """
 
     _pipelines: Dict[str, Language] = {}
-    _container: Dict[str, Any] = {}
+    _lookup_structs: Dict[str, Any] = {}
     _entities: Dict[str, Any] = {}
 
     def __call__(self, kb: KnowledgeBase, span: Span, dataset_id: str, max_n_candidates: int, **kwargs) -> Iterator[Candidate]:
@@ -39,22 +40,23 @@ class NearestNeighborCandidateSelector:
             self._pipelines[dataset_id] = spacy.load(Dataset.assemble_paths(dataset_id)["nlp_base"])
             with open(Dataset.assemble_paths(dataset_id)["entities"], "rb") as file:
                 self._entities[dataset_id] = pickle.load(file)
-        if dataset_id not in self._container:
-            self._container[dataset_id] = self._init_container(dataset_id, kb, max_n_candidates, **kwargs)
+        if dataset_id not in self._lookup_structs:
+            self._lookup_structs[dataset_id] = self._init_lookup_structure(dataset_id, kb, max_n_candidates, **kwargs)
 
         # Retrieve candidates from KB via their aliases.
         return self._fetch_candidates(dataset_id, span, kb, max_n_candidates, **kwargs)
 
-    def _init_container(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> Any:
-        """ Init data structure for container.
+    @abc.abstractmethod
+    def _init_lookup_structure(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> Any:
+        """ Init container for lookups for new dataset. Doesn't do anything if initialized for this dataset already.
         dataset_id (str): ID of dataset for which to select candidates.
-        span (Span): candidate span.
         kb (KnowledgeBase): KnowledgeBase containing all possible entity candidates.
         max_n_candidates (int): Max. number of candidates to generate.
         RETURNS (Any): Initialized container.
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def _fetch_candidates(
         self, dataset_id: str, span: Span, kb: KnowledgeBase, max_n_candidates: int, **kwargs
     ) -> Iterator[Candidate]:

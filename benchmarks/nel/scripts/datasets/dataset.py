@@ -101,11 +101,12 @@ class Dataset(abc.ABC):
             freq_list.append(info["frequency"])
             # todo @RM Use short_description instead of description?
             desc_doc_texts.append(info["description"])
+            # desc_doc_texts.append(info["short_description"])
             trunc_doc_texts.append(" ".join([name.replace("_", " ") for name in info["names"]]))
         for i, desc_doc in enumerate(self._nlp_base.pipe(desc_doc_texts, batch_size=100)):
             trunc_doc_texts[i] += " " + desc_doc[:n_kb_tokens].text
         for doc in self._nlp_base.pipe(trunc_doc_texts, batch_size=100):
-            vector_list.append(doc.vector if isinstance(doc.vector, numpy.ndarray) else doc.vector.get())  # type: ignore
+            vector_list.append(doc.vector if isinstance(doc.vector, numpy.ndarray) else doc.vector.get())
         self._kb.set_entities(entity_list=entity_list, vector_list=vector_list, freq_list=freq_list)
 
         # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
@@ -126,7 +127,7 @@ class Dataset(abc.ABC):
                 entities=alias_qids,
                 probabilities=[aliases_to_entity_ids[alias][qid] / n_pageviews for qid in alias_qids]
             )
-        # Workaround: add alias for QID for easier lookup in candidate generation.
+        # Workaround for easier lookup in candidate generation: add alias for QID.
         for qid, info in self._entities.items():
             self._kb.add_alias(alias="_" + qid + "_", entities=[qid], probabilities=[1])
 
@@ -261,27 +262,33 @@ class Dataset(abc.ABC):
         for example in tqdm.tqdm(test_set, total=n_items, leave=False, desc='Processing test set'):
             example: Example
             if len(example) > 0:
+                entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
+                    self._nlp_best.component_names.index("entity_linker")
+                ][1]
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
+                ent_cand_ids = {
+                    (ent.start_char, ent.end_char): {
+                        cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)
+                    }
+                    for ent in example.reference.ents
+                }
+
                 # Update candidate generation stats.
                 if candidate_generation:
                     for ent in example.reference.ents:
+                        ent_offset = (ent.start_char, ent.end_char)
                         # For the candidate generation evaluation also mis-aligned entities are considered.
-                        label = ent_pred_labels.get((ent.start_char, ent.end_char), "NIL")
+                        label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
-                            self._nlp_best.component_names.index("entity_linker")
-                        ][1]
-                        candidate_results.update_metrics(
-                            label, ent.kb_id_, {cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)}
-                        )
+                        candidate_results.update_metrics(label, ent.kb_id_, ent_cand_ids.get(ent_offset, {}))
 
                 # Update entity disambiguation stats.
                 if baseline:
                     evaluation.add_disambiguation_baseline(
-                        baseline_results, label_counts, example.predicted, ent_gold_ids, self._kb
+                        baseline_results, label_counts, example.predicted, ent_gold_ids, self._kb, ent_cand_ids
                     )
 
                 if context:
@@ -289,14 +296,14 @@ class Dataset(abc.ABC):
                     self._nlp_best.config["incl_context"] = True
                     self._nlp_best.config["incl_prior"] = False
                     evaluation.add_disambiguation_eval_result(
-                        context_results, example.predicted, ent_gold_ids, self._nlp_best
+                        context_results, example.predicted, ent_gold_ids, self._nlp_best, ent_cand_ids
                     )
 
                     # measuring combined accuracy (prior + context)
                     self._nlp_best.config["incl_context"] = True
                     self._nlp_best.config["incl_prior"] = True
                     evaluation.add_disambiguation_eval_result(
-                        combo_results, example.predicted, ent_gold_ids, self._nlp_best
+                        combo_results, example.predicted, ent_gold_ids, self._nlp_best, ent_cand_ids
                     )
 
         # Print result table.

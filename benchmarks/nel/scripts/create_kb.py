@@ -17,5 +17,4 @@ def main(dataset_name: str, vectors_model: str, n_kb_tokens: int):
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main("reddit", "en_core_web_md", 25)
+    typer.run(main)

@@ -23,6 +23,11 @@ class Metrics(object):
     n_candidates = 0
 
     def update_results(self, true_entity: str, candidates: Set[str]):
+        """ Update metric results. Note that len(candidates) will always be 1 for NEL checks, as only one suggestion is
+        picked. For candidate generation however there an arbitrary number of candidates is possible.
+        true_entity (str): ID of correct entity.
+        candidates (Set[str]): Suggested entity ID(s).
+        """
         self.n_updates += 1
         self.n_candidates += len(candidates)
         candidate_is_correct = true_entity in candidates
@@ -82,6 +87,7 @@ class EvaluationResults(object):
             str(self.metrics.true_pos),
             str(self.metrics.false_pos),
             str(self.metrics.false_neg),
+            str(self.metrics.n_candidates),
             f"{round(self.metrics.calculate_fscore(), 3)}",
             f"{round(self.metrics.calculate_recall(), 3)}",
             f"{round(self.metrics.calculate_precision(), 3)}",
@@ -96,7 +102,7 @@ class EvaluationResults(object):
         labels = sorted(list({label for eval_res in evaluation_results for label in eval_res.metrics_by_label}))
         table = prettytable.PrettyTable(
             field_names=[
-                "model_name", "TPOS", "FPOS", "FNEG", "F-score", "Recall", "Precision",
+                "model_name", "TPOS", "FPOS", "FNEG", "N_CAND", "F-score", "Recall", "Precision",
                 *[f"F-score ({label})" for label in labels]
             ]
         )
@@ -131,7 +137,11 @@ class DisambiguationBaselineResults(object):
 
 
 def add_disambiguation_eval_result(
-    results: EvaluationResults, pred_doc: Doc, correct_ents: Dict[str, str], el_pipe: Language
+    results: EvaluationResults,
+    pred_doc: Doc,
+    correct_ents: Dict[str, str],
+    el_pipe: Language,
+    ent_cand_ids: Dict[str, Set[str]]
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -140,12 +150,14 @@ def add_disambiguation_eval_result(
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
     el_pipe (Language): Pipeline.
+    ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
     """
     try:
         for ent in el_pipe(pred_doc).ents:
-            gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
+            idx = (ent.start_char, ent.end_char)
+            gold_entity = correct_ents.get(offset(*idx), None)
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
-            if gold_entity is not None:
+            if gold_entity in ent_cand_ids.get(idx, {}):
                 pred_entity = ent.kb_id_
                 results.update_metrics(ent.label_, gold_entity, {pred_entity})
 
@@ -158,7 +170,8 @@ def add_disambiguation_baseline(
     counts: Dict[str, int],
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    kb: KnowledgeBase
+    kb: KnowledgeBase,
+    ent_cand_ids: Dict[str, Set[str]]
 ) -> None:
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
@@ -168,14 +181,15 @@ def add_disambiguation_baseline(
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Offsets in the shape of {f"{start_char}_{end_char}": QID}.
     kb (KnowledgeBase): Knowledge base.
+        ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
     """
     for ent in pred_doc.ents:
         ent_label = ent.label_
-        gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
+        idx = (ent.start_char, ent.end_char)
+        gold_entity = correct_ents.get(offset(*idx), None)
 
         # The gold annotations are not necessarily complete so we can't evaluate missing annotations as wrong.
-        if gold_entity is not None:
-
+        if gold_entity in ent_cand_ids.get(idx, {}):
             candidates = kb.get_alias_candidates(ent.text)
             oracle_candidate = ""
             prior_candidate = ""

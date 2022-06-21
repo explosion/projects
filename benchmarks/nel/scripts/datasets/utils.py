@@ -164,7 +164,7 @@ def _resolve_wiki_titles(
             # ID with entity. There may be multiple redirections, so we loop through them.
             entity_title = entity_info["title"]
             while entity_title in redirections_to_from:
-                redirection_names.add(entity_title.replace("_", " "))
+                redirection_names.add(entity_title)
                 entity_title = redirections_to_from[entity_title]
             entity_title = normalizations_to_from.get(entity_title.lower(), entity_title).replace(" ", "_")
 
@@ -183,7 +183,7 @@ def _resolve_wiki_titles(
                     _entities[qid]["categories"] = _prune_category_titles(entity_info["categories"])
                     _entities[qid]["pageviews"] = sum([int(vc) for vc in entity_info["pageviews"].values() if vc])
                 else:
-                    _entities[qid]["names"].add(entity_title.replace("_", " "))
+                    _entities[qid]["names"].add(entity_title)
                     _entities[qid]["frequency"] += _entities.pop(entity_title)["frequency"]
                 _entities[qid]["names"] |= redirection_names | \
                     set(entity_info["terms"].get("alias", {})) | set(entity_info["terms"].get("label", {}))
@@ -200,6 +200,9 @@ def _resolve_wiki_titles(
 
         pbar.update(len(chunk))
     pbar.close()
+
+    for qid in _entities:
+        _entities[qid]["names"] = {name.replace("_", " ") for name in _entities[qid]["names"]}
 
     return _entities, failed_lookups, title_qid_mappings
 
