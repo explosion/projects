@@ -4,9 +4,6 @@
 
 This project shows how to use Prodigy to annotate data for the spancat component
 
-## ⚠️ Please note
-You can only use this spaCy project when you own [prodigy](https://prodi.gy/)
-
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
@@ -24,11 +21,10 @@ Commands are only re-run if their inputs have changed.
 | `download` | Download the required spaCy model. |
 | `span_manual` | Mark entity spans in a text by highlighting them and selecting the respective labels. |
 | `span_manual_pattern` | Mark entity spans in a text with patterns. |
-| `span_manual_suggester` | Mark entity spans in a text with suggester validation. |
 | `train_spancat` | Train a spancat model. |
 | `span_correct` | Correct entity spans predicted by the trained spancat model. |
 | `db_drop` | Drop the prodigy database defined in the project.yml |
-| `db_export` | Export the database defined in the project.yml to .spaCy files |
+| `db_export` | Export the database defined in the project.yml to `.spacy` files |
 
 ### 🗂 Assets
 
