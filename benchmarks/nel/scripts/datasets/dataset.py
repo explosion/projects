@@ -139,7 +139,6 @@ class Dataset(abc.ABC):
 
     def _serialize_corpora(self) -> None:
         """ Serializes corpora.
-        docs (List[Doc]): List of documents with entity annotations.
         """
 
         assert self._options["frac_train"] + self._options["frac_dev"] + self._options["frac_test"] == 1
