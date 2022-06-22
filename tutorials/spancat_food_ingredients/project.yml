@@ -8,7 +8,7 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "scripts", "data", "training"]
+directories: ["assets", "data", "training"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded. But the
@@ -47,14 +47,6 @@ commands:
     deps:
       - "assets/food_recipes.jsonl"
       - "assets/patterns.jsonl"
-
-  - name: "span_manual_suggester"
-    help: "Mark entity spans in a text with suggester validation."
-    script:
-      - "python -m prodigy spans.manual ${vars.database} en_core_web_sm assets/food_recipes.jsonl --label INGREDIENT,INSTRUCTION --suggester custom_suggester -F scripts/suggester.py"
-    deps:
-      - "assets/food_recipes.jsonl"
-      - "scripts/suggester.py"
 
   - name: "train_spancat"
     help: "Train a spancat model."
