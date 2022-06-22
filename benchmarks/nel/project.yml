@@ -12,6 +12,7 @@ assets:
   - dest: 'assets/reddit.zip'
     url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
     checksum: 'eea345cc7574a5c9c376748d1871d557'
+    description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
 
 workflows:
   all:
