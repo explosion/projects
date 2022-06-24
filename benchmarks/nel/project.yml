@@ -16,9 +16,10 @@ assets:
 
 workflows:
   all:
+    - download_mewsli-9
     - setup
     - preprocess
-    - download
+    - download_model
     - create_kb
     - compile_corpora
     - train
@@ -30,6 +31,11 @@ workflows:
     - evaluate
 
 commands:
+  - name: download_mewsli-9
+    help: Download Mewsli-9 dataset.
+    script:
+      - bash scripts/datasets/download_mewsli-9.sh
+
   - name: setup
     help: Install dependencies
     script:
@@ -47,7 +53,7 @@ commands:
     outputs:
       - "assets/reddit"
 
-  - name: download
+  - name: download_model
     help: "Download a model with pretrained vectors and NER component"
     script:
       - "python -m spacy download ${vars.vectors_model}"

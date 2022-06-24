@@ -50,3 +50,6 @@ in the project directory.
 | `assets/reddit.zip` | URL | Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228). |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
+Note that `svn` is required for downloading the Mewsli-9 dataset (should be replaceable by `git` with sparse 
+checkout).
