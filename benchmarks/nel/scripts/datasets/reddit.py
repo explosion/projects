@@ -1,4 +1,4 @@
-""" Dataset for Reddit EL data. """
+""" Dataset class for Reddit EL dataset. """
 
 import csv
 import fileinput
