@@ -1,14 +1,13 @@
 """ Dataset class for Reddit EL dataset. """
 
 import csv
-import fileinput
-from typing import Set, List, Tuple
+from typing import Set, List, Tuple, Dict
 
 from spacy.tokens import Doc
 
 from .dataset import Dataset
-from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE, \
-    _resolve_wiki_mentions
+from .schemas import Entity, Annotation
+from .utils import _create_spans_from_doc_annotation
 
 
 class RedditDataset(Dataset):
@@ -25,7 +24,7 @@ class RedditDataset(Dataset):
     def name(self) -> str:
         return "reddit"
 
-    def _parse_external_corpus(self) -> Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]:
+    def _parse_external_corpus(self) -> Tuple[Dict[str, Entity], Dict[str, List[Annotation]]]:
         file_names = [
             f"{quality}_{source[:-1]}_annotations.tsv"
             for quality in ("gold", "silver", "bronze")
@@ -33,8 +32,8 @@ class RedditDataset(Dataset):
             if self._options[quality] and self._options[source]
         ]
         rows: List[List[str]] = []
-        entities: ENTITIES_TYPE = {}
-        annotations: ANNOTATIONS_TYPE = {}
+        entities: Dict[str, Entity] = {}
+        annotations: Dict[str, List[Annotation]] = {}
 
         # Load data from .tsv files, track entity frequency.
         for file_name in file_names:
@@ -46,52 +45,18 @@ class RedditDataset(Dataset):
                     row[3] = row[3].split("#")[0].split("?")[0]
                     rows.append(row)
                     if row[3] not in entities:
-                        # todo @RM Standardize as Pydantic type, move generation of object with defaults into generics.
-                        entities[row[3]] = {
-                            "names": {row[3]},
-                            "frequency": 0,
-                            "description": None,
-                            "short_description": None,
-                            "quality": quality,
-                            "source_id": row[0],
-                            "categories": set(),
-                            "pageviews": None
-                        }
-                    entities[row[3]]["frequency"] += 1
+                        entities[row[3]] = Entity(
+                            names={row[3]},
+                            quality=quality,
+                            source_id=row[0]
+                        )
+                    entities[row[3]].frequency += 1
 
                     if row[0] not in annotations:
                         annotations[row[0]] = []
-                    annotations[row[0]].append({
-                        "name": row[3],
-                        "entity_id": None,
-                        "start_pos": int(row[4]),
-                        "end_pos": int(row[5])
-                    })
+                    annotations[row[0]].append(Annotation(entity_name=row[3], start_pos=int(row[4]), end_pos=int(row[5])))
 
-        # Fetch Wikidata IDs (QIDs). Some entities won't be resolved properly because of messy situations with redirects
-        # and normalizations (e.g.: two different titles are redirected to the same entity, Wikipedia only returns this
-        # one entity. Associating the remaining title with the correct entity can bloat up the code).
-        # Since we don't expect many failures, we instead run failed lookups again individually. This should avoid any
-        # situations with entity interdependencies at the cost of lookup speed.
-        entities, failed_entity_lookups, title_qid_mappings = _resolve_wiki_titles(entities, batch_size=5)
-        if len(failed_entity_lookups):
-            entities, failed_entity_lookups, _title_qid_mapping = _resolve_wiki_titles(
-                entities=entities,
-                entity_titles=failed_entity_lookups,
-                batch_size=1,
-                progress_bar_desc=f"Trying to salvage {len(failed_entity_lookups)} failed lookups"
-            )
-            title_qid_mappings = {**title_qid_mappings, **_title_qid_mapping}
-        for entity_title in failed_entity_lookups:
-            entities.pop(entity_title)
-
-        # Update annotations with corresponding entity IDs.
-        for source_id in annotations:
-            for annotation in annotations[source_id]:
-                if annotation["name"] not in failed_entity_lookups:
-                    annotation["entity_id"] = title_qid_mappings[annotation["name"]]
-
-        return entities, failed_entity_lookups, annotations
+        return entities, annotations
 
     def _create_annotated_docs(self) -> List[Doc]:
         annotated_docs: List[Doc] = []

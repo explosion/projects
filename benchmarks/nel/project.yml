@@ -49,10 +49,13 @@ commands:
     script:
       - "unzip -q -d assets/reddit assets/reddit.zip"
       - "python ./scripts/clean_data.py reddit"
+      - "python ./scripts/clean_data.py mewsli-9"
     deps:
       - "assets/reddit.zip"
+      - "assets/mewsli_9"
     outputs:
       - "assets/reddit"
+      - "assets/mewsli_9"
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component"
@@ -62,57 +65,81 @@ commands:
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} ${vars.n_kb_tokens}"
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} 25"
+#      - "python ./scripts/create_kb.py mewsli_9 ${vars.vectors_model} 25"
     deps:
       - "assets/reddit"
+#      - "assets/mewsli_9"
     outputs:
       - "assets/reddit/entities.pkl"
       - "assets/reddit/entities_failed_lookup.pkl"
       - "assets/reddit/annotations.pkl"
+#      - "assets/mewsli_9/entities.pkl"
+#      - "assets/mewsli_9/entities_failed_lookup.pkl"
+#      - "assets/mewsli_9/annotations.pkl"
     outputs_no_cache:
       - "temp/reddit/kb"
       - "temp/reddit/nlp"
+      - "temp/mewsli_9/kb"
+      - "temp/mewsli_9/nlp"
 
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets"
     script:
       - "python ./scripts/compile_corpora.py reddit"
+#      - "python ./scripts/compile_corpora.py mewsli_9"
     deps:
       - "assets/reddit/entities.pkl"
       - "assets/reddit/entities_failed_lookups.pkl"
       - "assets/reddit/annotations.pkl"
+#      - "assets/mewsli_9/entities.pkl"
+#      - "assets/mewsli_9/entities_failed_lookups.pkl"
+#      - "assets/mewsli_9/annotations.pkl"
       - "temp/reddit/kb"
       - "temp/reddit/nlp"
+#      - "temp/mewsli_9/kb"
+#      - "temp/mewsli_9/nlp"
       - "configs/datasets.yml"
     outputs_no_cache:
       - "corpora/reddit/train.spacy"
       - "corpora/reddit/dev.spacy"
       - "corpora/reddit/test.spacy"
+#      - "corpora/mewsli_9/train.spacy"
+#      - "corpora/mewsli_9/dev.spacy"
+#      - "corpora/mewsli_9/test.spacy"
 
   - name: train
     help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
     script:
-      - "python -m spacy train configs/${vars.config} \
-          --paths.dataset_name reddit \
-          --output training/reddit \
-          --paths.train corpora/reddit/train.spacy \
-          --paths.dev corpora/reddit/dev.spacy \
-          --paths.kb temp/reddit/kb \
-          --paths.base_nlp temp/reddit/nlp \
-          -c scripts/custom_functions.py"
+      - "bash scripts/train.sh reddit ${vars.config}"
+#      - "python -m spacy train configs/${vars.config} \
+#          --paths.dataset_name mewsli_9 \
+#          --output training/mewsli_9 \
+#          --paths.train corpora/mewsli_9/train.spacy \
+#          --paths.dev corpora/mewsli_9/dev.spacy \
+#          --paths.kb temp/mewsli_9/kb \
+#          --paths.base_nlp temp/mewsli_9/nlp \
+#          -c scripts/custom_functions.py"
     deps:
       - "temp/reddit/kb"
       - "temp/reddit/nlp"
       - "corpora/reddit/train.spacy"
       - "corpora/reddit/dev.spacy"
+#      - "temp/mewsli_9/kb"
+#      - "temp/mewsli_9/nlp"
+#      - "corpora/mewsli_9/train.spacy"
+#      - "corpora/mewsli_9/dev.spacy"
 
   - name: evaluate
     help: "Evaluation on the test set"
     script:
       - "python ./scripts/evaluate.py reddit"
+#      - "python ./scripts/evaluate.py mewsli_9"
     deps:
       - "training/reddit/model-best"
       - "corpora/reddit/dev.spacy"
+#      - "training/mewsli_9/model-best"
+#      - "corpora/mewsli_9/dev.spacy"
 
   - name: clean
     help: "Remove intermediate files"
@@ -120,3 +147,5 @@ commands:
       - "rm -rf training/*"
       - "rm -rf corpora/*"
       - "rm -rf temp/*"
+      - "rm -rf assets/reddit"
+      - "rm -rf assets/mewsli_9"

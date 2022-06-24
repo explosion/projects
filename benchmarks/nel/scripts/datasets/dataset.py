@@ -15,11 +15,12 @@ import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
-from spacy.tokens import Doc, DocBin, Span
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 
 from . import evaluation
-from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
+from .schemas import Annotation, Entity
+from .wiki_api import enrich_entities
 
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
@@ -38,9 +39,9 @@ class Dataset(abc.ABC):
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
 
-        self._entities: Optional[ENTITIES_TYPE] = None
+        self._entities: Optional[Dict[str, Entity]] = None
         self._failed_entity_lookups: Optional[Set[str]] = None
-        self._annotations: Optional[ANNOTATIONS_TYPE] = None
+        self._annotations: Optional[Dict[str, List[Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
         self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
@@ -85,7 +86,9 @@ class Dataset(abc.ABC):
         # self._load_resource("failed_entity_lookups")
         # self._load_resource("annotations")
         print("Parsing external corpus")
-        self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus()
+        self._entities, self._annotations = self._parse_external_corpus()
+        self._entities, self._failed_entity_lookups, self._annotations = \
+            enrich_entities(self._entities, self._annotations)
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
@@ -98,11 +101,10 @@ class Dataset(abc.ABC):
         # Prepare and add entities to KB.
         for qid, info in self._entities.items():
             entity_list.append(qid)
-            freq_list.append(info["frequency"])
+            freq_list.append(info.frequency)
             # todo @RM Use short_description instead of description?
-            desc_doc_texts.append(info["description"])
-            # desc_doc_texts.append(info["short_description"])
-            trunc_doc_texts.append(" ".join([name.replace("_", " ") for name in info["names"]]))
+            desc_doc_texts.append(info.description)
+            trunc_doc_texts.append(" ".join([name.replace("_", " ") for name in info.names]))
         for i, desc_doc in enumerate(self._nlp_base.pipe(desc_doc_texts, batch_size=100)):
             trunc_doc_texts[i] += " " + desc_doc[:n_kb_tokens].text
         for doc in self._nlp_base.pipe(trunc_doc_texts, batch_size=100):
@@ -113,15 +115,15 @@ class Dataset(abc.ABC):
         # entity popularity, not actual alias-specific priors).
         aliases_to_entity_ids: Dict[str, Dict[str, int]] = {}
         for qid, info in self._entities.items():
-            for alias in info["names"]:
+            for alias in info.names:
                 if alias not in aliases_to_entity_ids:
                     aliases_to_entity_ids[alias] = {}
                 # We could also use e.g. in-corpus frequency instead of page views.
-                aliases_to_entity_ids[alias][qid] = info["pageviews"]
+                aliases_to_entity_ids[alias][qid] = info.pageviews
         # Add aliases with normalized priors to KB.
         for alias in aliases_to_entity_ids:
             alias_qids = [qid for qid in aliases_to_entity_ids[alias]]
-            n_pageviews = sum(self._entities[qid]["pageviews"] for qid in alias_qids)
+            n_pageviews = sum(self._entities[qid].pageviews for qid in alias_qids)
             self._kb.add_alias(
                 alias=alias,
                 entities=alias_qids,
@@ -132,6 +134,7 @@ class Dataset(abc.ABC):
             self._kb.add_alias(alias="_" + qid + "_", entities=[qid], probabilities=[1])
 
         # Serialize knowledge base & entity information.
+        # todo @RM: serialize in dict form (not as pydantic types), restore properly in _load_resource().
         for to_serialize in (
             (self._paths["entities"], self._entities),
             (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
@@ -164,11 +167,10 @@ class Dataset(abc.ABC):
         """
         raise NotImplementedError
 
-    def _parse_external_corpus(self, **kwargs) -> Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]:
+    def _parse_external_corpus(self, **kwargs) -> Tuple[Dict[str, Entity], Dict[str, List[Annotation]]]:
         """ Parses external corpus. Loads data on entities and mentions.
         Populates self._entities, self._failed_entity_lookups, self._annotations.
-        RETURNS (Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]): entities, titles of failed entity lookups,
-            annotations.
+        RETURNS (Tuple[Dict[str, Entity], Dict[str, List[Annotation]]): entities, annotations.
         """
         raise NotImplementedError
 
@@ -193,7 +195,7 @@ class Dataset(abc.ABC):
         }
 
         for key in indices:
-            corpus = DocBin(store_user_data=True)
+            corpus = DocBin(store_user_data=False)
             for idx in indices[key]:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():

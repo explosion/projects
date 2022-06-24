@@ -1,17 +1,12 @@
 """ Base class generation for candidate selection. """
 import abc
 import pickle
-from itertools import chain
-from typing import Iterator, Dict, Any, Iterable, Optional, overload
-
-import numpy
-from sklearn.neighbors import NearestNeighbors
+from typing import Iterator, Dict, Any
 
 import spacy
 from spacy import Language
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
-
 
 # More elegant way to resolve import conflicts between training and evaluation calls?
 try:
@@ -41,15 +36,14 @@ class NearestNeighborCandidateSelector(abc.ABC):
             with open(Dataset.assemble_paths(dataset_id)["entities"], "rb") as file:
                 self._entities[dataset_id] = pickle.load(file)
         if dataset_id not in self._lookup_structs:
-            self._lookup_structs[dataset_id] = self._init_lookup_structure(dataset_id, kb, max_n_candidates, **kwargs)
+            self._lookup_structs[dataset_id] = self._init_lookup_structure(kb, max_n_candidates, **kwargs)
 
         # Retrieve candidates from KB via their aliases.
         return self._fetch_candidates(dataset_id, span, kb, max_n_candidates, **kwargs)
 
     @abc.abstractmethod
-    def _init_lookup_structure(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> Any:
+    def _init_lookup_structure(self, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> Any:
         """ Init container for lookups for new dataset. Doesn't do anything if initialized for this dataset already.
-        dataset_id (str): ID of dataset for which to select candidates.
         kb (KnowledgeBase): KnowledgeBase containing all possible entity candidates.
         max_n_candidates (int): Max. number of candidates to generate.
         RETURNS (Any): Initialized container.

@@ -10,7 +10,7 @@ from fuzzyset import FuzzySet
 class CandidateSelector(NearestNeighborCandidateSelector):
     """ Callable object selecting candidates as nearest neighbours in lexical space. """
 
-    def _init_lookup_structure(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> FuzzySet:
+    def _init_lookup_structure(self, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> FuzzySet:
         return FuzzySet(kb.get_alias_strings())
 
     def _fetch_candidates(

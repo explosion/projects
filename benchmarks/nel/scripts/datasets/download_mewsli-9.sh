@@ -10,7 +10,6 @@ svn export https://github.com/google-research/google-research/trunk/$SUBDIR
 sed -i -e 's/absl_py>=0.8.1/absl-py/g' $SUBDIR/requirements.txt
 # Only download and process English data.
 LANGS="ar de en es fa ja sr ta tr"
-LANG_LIST=($(echo $LANGS | tr ' ' "\n"))
 sed -i -e "s/LANG_LIST=(${LANGS})/LANG_LIST=(en)/g" $SUBDIR/mel/mewsli-9/run_parse_wikinews_i18n.sh
 sed -i -e "s/LANG_LIST=(${LANGS})/LANG_LIST=(en)/g" $SUBDIR/mel/mewsli-9/get_wikinews_dumps.sh
 sed -i -e "s/LANG_LIST=(${LANGS})/LANG_LIST=(en)/g" $SUBDIR/mel/mewsli-9/run_wikiextractor.sh
@@ -22,11 +21,11 @@ chmod +x get-mewsli-9.sh
 PYTHONPATH=. bash get-mewsli-9.sh
 
 # Move output & log data to folder, clean up everything else.
-mkdir -p ../../mewsli-9
-cp -r mewsli-9/output/* ../../mewsli-9
+mkdir -p ../../mewsli_9
+cp -r mewsli-9/output/* ../../mewsli_9
 cd ../..
 rm -rf $SUBDIR
-for lang in "${LANG_LIST[@]}"
-do
-  rm -rf mewsli-9/dataset/${lang}
-done
+mkdir -p mewsli_9/en
+cp -r mewsli_9/dataset/en/* mewsli_9/en/
+rm -rf mewsli_9/dataset mewsli_9/download mewsli_9/wikiextractor
+rm -rf mewsli_9/en/wiki

@@ -13,7 +13,7 @@ import fuzzyset
 class CandidateSelector(NearestNeighborCandidateSelector):
     """ Callable object selecting candidates as nearest neighbours in embedding space. """
 
-    def _init_lookup_structure(self, dataset_id: str, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> NearestNeighbors:
+    def _init_lookup_structure(self, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> NearestNeighbors:
         container = NearestNeighbors(n_neighbors=max_n_candidates, metric="cosine")
         container.fit(numpy.asarray([kb.get_vector(ent_id) for ent_id in kb.get_entity_strings()]))
 
