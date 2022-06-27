@@ -2,12 +2,9 @@
 from pathlib import Path
 from typing import Iterator, Dict
 
-import spacy
 from spacy import Language
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
-
-from scripts.datasets.dataset import Dataset
 
 
 _pipelines: Dict[Path, Language] = {}
