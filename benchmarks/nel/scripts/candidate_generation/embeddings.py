@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
-import fuzzyset
+from rapidfuzz.string_metric import normalized_levenshtein
 
 
 class CandidateSelector(NearestNeighborCandidateSelector):
@@ -32,7 +32,7 @@ class CandidateSelector(NearestNeighborCandidateSelector):
         candidate_entity_ids = {
             match[0] for match in
             [
-                (nne, fuzzyset._distance(name.lower(), span.text.lower()))
+                (nne, normalized_levenshtein(name.lower(), span.text.lower()) / 100)
                 for nne in nn_entities
                 for name in nn_entities[nne]["names"]
             ]

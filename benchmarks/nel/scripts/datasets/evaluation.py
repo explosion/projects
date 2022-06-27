@@ -24,7 +24,7 @@ class Metrics(object):
 
     def update_results(self, true_entity: str, candidates: Set[str]):
         """ Update metric results. Note that len(candidates) will always be 1 for NEL checks, as only one suggestion is
-        picked. For candidate generation however there an arbitrary number of candidates is possible.
+        picked. For candidate generation however an arbitrary number of candidates is possible.
         true_entity (str): ID of correct entity.
         candidates (Set[str]): Suggested entity ID(s).
         """

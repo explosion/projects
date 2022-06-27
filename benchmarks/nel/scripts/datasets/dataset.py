@@ -80,9 +80,6 @@ class Dataset(abc.ABC):
         """
 
         self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"])
-        # self._load_resource("entities")
-        # self._load_resource("failed_entity_lookups")
-        # self._load_resource("annotations")
         print("Parsing external corpus")
         self._entities, self._annotations = self._parse_external_corpus()
         self._entities, self._failed_entity_lookups, self._annotations = \
@@ -255,7 +252,8 @@ class Dataset(abc.ABC):
             ]
         self._nlp_best.config["incl_prior"] = False
         # Set up spacyfishing.
-        self._nlp_base.add_pipe("entityfishing", last=True)
+        if spacyfishing:
+            self._nlp_base.add_pipe("entityfishing", last=True)
 
         # Evaluation loop.
         label_counts = dict()

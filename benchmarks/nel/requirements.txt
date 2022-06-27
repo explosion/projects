@@ -3,5 +3,5 @@ requests
 tqdm
 prettytable
 scikit-learn
-thefuzz[speedup]
+fuzzyset2
 spacyfishing
