@@ -5,15 +5,20 @@ from spacy.tokens import Token, Span, Doc
 from datasets.schemas import Entity, Annotation
 
 
-def _does_token_overlap_with_annotation(token: Token, annot_start: int, annot_end: int) -> bool:
-    """ Checks whether token overlaps with annotation span.
+def _does_token_overlap_with_annotation(
+    token: Token, annot_start: int, annot_end: int
+) -> bool:
+    """Checks whether token overlaps with annotation span.
     token (Token): Token to check.
     annot_start (int): Annotation's start index.
     annot_end (int): Annotation's end index.
     RETURNS (bool): Whether token overlaps with annotation span.
     """
 
-    return annot_start <= token.idx <= annot_end or token.idx <= annot_start <= token.idx + len(token)
+    return (
+        annot_start <= token.idx <= annot_end
+        or token.idx <= annot_start <= token.idx + len(token)
+    )
 
 
 def _create_spans_from_doc_annotation(
@@ -21,9 +26,9 @@ def _create_spans_from_doc_annotation(
     entities_info: Dict[str, Entity],
     annotations: List[Annotation],
     entities_failed_lookups: Set[str],
-    harmonize_with_doc_ents: bool
+    harmonize_with_doc_ents: bool,
 ) -> Tuple[List[Span], List[Annotation]]:
-    """ Creates spans from annotations for one document.
+    """Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
     entities_info (Dict[str, Entity]): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
@@ -47,12 +52,14 @@ def _create_spans_from_doc_annotation(
             [
                 {
                     "annot": annot,
-                    "freq": entities_info[annot.entity_id].frequency if annot.entity_id in entities_info else -1
+                    "freq": entities_info[annot.entity_id].frequency
+                    if annot.entity_id in entities_info
+                    else -1,
                 }
                 for annot in annotations
             ],
             key=lambda a: a["freq"],
-            reverse=True
+            reverse=True,
         )
     ):
         annot, freq = annot_data["annot"], annot_data["freq"]
@@ -64,7 +71,9 @@ def _create_spans_from_doc_annotation(
                 annot.start_pos = t.idx
                 break
         for t in reversed([t for t in doc]):
-            if _does_token_overlap_with_annotation(t, annot.start_pos, annot.end_pos - 1):
+            if _does_token_overlap_with_annotation(
+                t, annot.start_pos, annot.end_pos - 1
+            ):
                 annot.end_pos = t.idx + len(t)
                 break
 
@@ -76,10 +85,16 @@ def _create_spans_from_doc_annotation(
         # and end, we try to create a span with this token's position.
         overlaps = False
         if freq == -1:
-            assert annot.entity_id not in entities_info and annot.entity_name in entities_failed_lookups
+            assert (
+                annot.entity_id not in entities_info
+                and annot.entity_name in entities_failed_lookups
+            )
             continue
         for j in range(0, len(final_annots)):
-            if not (annot.end_pos < final_annots[j].start_pos or annot.start_pos > final_annots[j].end_pos):
+            if not (
+                annot.end_pos < final_annots[j].start_pos
+                or annot.start_pos > final_annots[j].end_pos
+            ):
                 overlaps = True
                 overlapping_doc_annotations.append(annot)
                 break
@@ -88,7 +103,9 @@ def _create_spans_from_doc_annotation(
 
     doc_spans = [
         # No label/entity type information available.
-        doc.char_span(annot.start_pos, annot.end_pos, label="NIL", kb_id=annot.entity_id)
+        doc.char_span(
+            annot.start_pos, annot.end_pos, label="NIL", kb_id=annot.entity_id
+        )
         for annot in final_annots
     ]
     assert all([span is not None for span in doc_spans])

@@ -23,7 +23,7 @@ class Metrics(object):
     n_candidates = 0
 
     def update_results(self, true_entity: str, candidates: Set[str]):
-        """ Update metric results. Note that len(candidates) will always be 1 for NEL checks, as only one suggestion is
+        """Update metric results. Note that len(candidates) will always be 1 for NEL checks, as only one suggestion is
         picked. For candidate generation however an arbitrary number of candidates is possible.
         true_entity (str): ID of correct entity.
         candidates (Set[str]): Suggested entity ID(s).
@@ -67,8 +67,10 @@ class EvaluationResults(object):
         self.metrics = Metrics()
         self.metrics_by_label = defaultdict(Metrics)
 
-    def update_metrics(self, ent_label: str, true_ent_kb_id_: str, cand_kb_ids_: Set[str]) -> None:
-        """ Update metrics over all candidate labels and per candidate labels.
+    def update_metrics(
+        self, ent_label: str, true_ent_kb_id_: str, cand_kb_ids_: Set[str]
+    ) -> None:
+        """Update metrics over all candidate labels and per candidate labels.
         ent_label (str): Recognized entity label.
         true_ent_kb_id_ (str): True entity's external KB ID.
         cand_kb_ids_ (Set[str]): Set of candidates' external KB IDs.
@@ -76,34 +78,53 @@ class EvaluationResults(object):
         self.metrics.update_results(true_ent_kb_id_, cand_kb_ids_)
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
 
-    def _extend_report_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
-        """ Extend existing PrettyTable with collected metrics.
+    def _extend_report_table(
+        self, table: prettytable.PrettyTable, labels: Tuple[str, ...]
+    ) -> None:
+        """Extend existing PrettyTable with collected metrics.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
         labels (Tuple[str, ...]): Labels in sequence to be added to table.
         """
-        table.add_row([
-            self.name.title(),
-            str(self.metrics.true_pos),
-            str(self.metrics.false_pos),
-            str(self.metrics.false_neg),
-            str(self.metrics.n_candidates),
-            f"{round(self.metrics.calculate_fscore(), 3)}",
-            f"{round(self.metrics.calculate_recall(), 3)}",
-            f"{round(self.metrics.calculate_precision(), 3)}",
-            *[self.metrics_by_label[label].calculate_fscore() for label in labels]
-        ])
+        table.add_row(
+            [
+                self.name.title(),
+                str(self.metrics.true_pos),
+                str(self.metrics.false_pos),
+                str(self.metrics.false_neg),
+                str(self.metrics.n_candidates),
+                f"{round(self.metrics.calculate_fscore(), 3)}",
+                f"{round(self.metrics.calculate_recall(), 3)}",
+                f"{round(self.metrics.calculate_precision(), 3)}",
+                *[self.metrics_by_label[label].calculate_fscore() for label in labels],
+            ]
+        )
 
     @staticmethod
     def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
-        """ Reports evaluation results.
+        """Reports evaluation results.
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
         """
-        labels = sorted(list({label for eval_res in evaluation_results for label in eval_res.metrics_by_label}))
+        labels = sorted(
+            list(
+                {
+                    label
+                    for eval_res in evaluation_results
+                    for label in eval_res.metrics_by_label
+                }
+            )
+        )
         table = prettytable.PrettyTable(
             field_names=[
-                "model_name", "TPOS", "FPOS", "FNEG", "N_CAND", "F-score", "Recall", "Precision",
-                *[f"F-score ({label})" for label in labels]
+                "model_name",
+                "TPOS",
+                "FPOS",
+                "FNEG",
+                "N_CAND",
+                "F-score",
+                "Recall",
+                "Precision",
+                *[f"F-score ({label})" for label in labels],
             ]
         )
 
@@ -141,7 +162,7 @@ def add_disambiguation_eval_result(
     pred_doc: Doc,
     correct_ents: Dict[str, str],
     el_pipe: Language,
-    ent_cand_ids: Dict[Tuple[int, int], Set[str]]
+    ent_cand_ids: Dict[Tuple[int, int], Set[str]],
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -165,13 +186,9 @@ def add_disambiguation_eval_result(
 
 
 def add_disambiguation_spacyfishing_eval_result(
-    results: EvaluationResults,
-    pred_doc: Doc,
-    correct_ents: Dict[str, str]
+    results: EvaluationResults, pred_doc: Doc, correct_ents: Dict[str, str]
 ) -> None:
-    """ Measure NEL performance with spacyfishing.
-
-    """
+    """Measure NEL performance with spacyfishing."""
 
     try:
         for ent in pred_doc.ents:
@@ -189,7 +206,7 @@ def add_disambiguation_baseline(
     pred_doc: Doc,
     correct_ents: Dict[str, str],
     kb: KnowledgeBase,
-    ent_cand_ids: Dict[str, Set[str]]
+    ent_cand_ids: Dict[str, Set[str]],
 ) -> None:
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
@@ -224,7 +241,7 @@ def add_disambiguation_baseline(
                 random_candidate = random.choice(candidates).entity_
 
             current_count = counts.get(ent_label, 0)
-            counts[ent_label] = current_count+1
+            counts[ent_label] = current_count + 1
 
             baseline_results.update_baselines(
                 gold_entity,

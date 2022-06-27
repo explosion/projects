@@ -6,7 +6,7 @@ from custom_functions import create_candidates_via_embeddings
 
 
 def main(dataset_name: str):
-    """ Evaluate the trained EL component by applying it to unseen text.
+    """Evaluate the trained EL component by applying it to unseen text.
     dataset_name (str): Name of dataset to evaluate on.
     """
 
