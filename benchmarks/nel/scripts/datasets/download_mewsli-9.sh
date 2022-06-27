@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # Downloads and sets up Mewsli-9 dataset.
 cd assets

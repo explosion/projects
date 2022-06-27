@@ -78,7 +78,7 @@ class Dataset(abc.ABC):
         vectors_model (str): Name of model with word vectors to use.
         """
 
-        self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer"])
+        self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"])
         print("Parsing external corpus")
         self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
 
