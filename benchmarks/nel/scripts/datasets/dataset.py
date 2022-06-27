@@ -26,8 +26,6 @@ DatasetType = TypeVar('DatasetType', bound='Dataset')
 class Dataset(abc.ABC):
     """ Base class for all datasets used in this benchmark. """
 
-    KB_VECTOR_LENGTH = 300
-
     def __init__(self):
         """ Initializes new Dataset.
         """
@@ -83,7 +81,7 @@ class Dataset(abc.ABC):
         self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
 
         print(f"Constructing knowledge base with {len(self._entities)} entries")
-        self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
+        self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=self._nlp_base.vocab.vectors_length)
         entity_list: List[str] = []
         freq_list: List[int] = []
         vector_list: List[numpy.ndarray] = []
@@ -179,7 +177,9 @@ class Dataset(abc.ABC):
             self._nlp_best = spacy.load(path)
         elif key == "kb" and (force or not self._kb):
             self._load_resource("nlp_base")
-            self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=Dataset.KB_VECTOR_LENGTH)
+            self._kb = KnowledgeBase(
+                vocab=self._nlp_base.vocab, entity_vector_length=self._nlp_base.vocab.vectors_length
+            )
             self._kb.from_disk(path)
         elif key == "annotations" and (force or not self._annotations):
             with open(path, "rb") as file:
