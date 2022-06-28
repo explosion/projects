@@ -149,6 +149,7 @@ class Dataset(abc.ABC):
 
         # Serialize knowledge base & entity information.
         # todo @RM: serialize in dict form (not as pydantic types), restore properly in _load_resource().
+        #  note: this should be avoidable if import path mess can be cleaned.
         for to_serialize in (
             (self._paths["entities"], self._entities),
             (self._paths["failed_entity_lookups"], self._failed_entity_lookups),

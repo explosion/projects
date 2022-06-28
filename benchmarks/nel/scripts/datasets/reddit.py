@@ -49,9 +49,7 @@ class RedditDataset(Dataset):
                     row[3] = row[3].split("#")[0].split("?")[0]
                     rows.append(row)
                     if row[3] not in entities:
-                        entities[row[3]] = Entity(
-                            names={row[3]}, quality=quality, source_id=row[0]
-                        )
+                        entities[row[3]] = Entity(names={row[3]}, quality=quality)
                     entities[row[3]].frequency += 1
 
                     if row[0] not in annotations:

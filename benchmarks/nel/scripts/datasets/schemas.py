@@ -17,8 +17,6 @@ class Entity(BaseModel):
     quality: Optional[str] = Field(
         None, title="Level of quality of documents in which entity was found."
     )
-    source_id: str = Field(..., title="ID of source document.")
-    categories: Set[str] = Field(set(), title="Wiki categories.")
     pageviews: StrictInt = Field(0, title="Number of page views.")
 
 

@@ -33,7 +33,6 @@ def _create_spans_from_doc_annotation(
     entities_info (Dict[str, Entity]): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
     entities_entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed).
-    source_id (str): Unique source ID to look up annotation.
     harmonize_harmonize_with_doc_ents (Language): Whether to only keep those annotations matched by entities in the
         provided Doc object.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;

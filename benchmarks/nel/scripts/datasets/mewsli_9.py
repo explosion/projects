@@ -17,17 +17,30 @@ class Mewsli9Dataset(Dataset):
 
     def _parse_external_corpus(
         self, **kwargs
-    ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
+    ) -> Tuple[Dict[str, Entity], Dict[str, List[Annotation]]]:
         entities: Dict[str, Entity] = {}
         annotations: Dict[str, List[Annotation]] = {}
 
-        with open(
-            self._paths["assets"] / "en" / "mentions.tsv", encoding="utf-8"
-        ) as file_path:
-            for i, row in enumerate(csv.reader(file_path, delimiter="\t")):
-                if i == 0:
-                    continue
-                assert len(row) == 8
+        with open(self._paths["assets"] / "en" / "mentions.tsv", encoding="utf-8") as file_path:
+            for i, row in enumerate(csv.DictReader(file_path, delimiter="\t")):
+                assert len(row) == 9
+                name = row["url"].split("/")[-1]
+                if name not in entities:
+                    entities[name] = Entity(names={name})
+                entities[name].frequency += 1
+
+                if row["docid"] not in annotations:
+                    annotations[row["docid"]] = []
+                annotations[row["docid"]].append(
+                    Annotation(
+                        entity_name=name,
+                        entity_id=row["qid"],
+                        start_pos=int(row["position"]),
+                        end_pos=int(row["position"]) + int(row["length"])
+                    )
+                )
+
+            return entities, annotations
 
     def clean_assets(self) -> None:
         pass

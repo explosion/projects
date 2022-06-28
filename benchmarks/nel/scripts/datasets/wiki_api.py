@@ -66,7 +66,7 @@ def _resolve_wiki_titles(
         chunk = entity_titles[i : i + batch_size]
         request_params = {
             "action": "query",
-            "prop": "pageprops|extracts|categories|pageterms|pageviews",
+            "prop": "pageprops|extracts|pageterms|pageviews",
             "ppprop": "wikibase_item",
             # Some special chars such as & are not escaped by requests, so we do that with urllib.parse.quote().
             "titles": urllib.parse.quote("|".join(chunk)),
@@ -76,7 +76,6 @@ def _resolve_wiki_titles(
             # Make sure descriptions are available for all requested articles.
             "exlimit": min(len(chunk), 20),
             "redirects": 1,
-            "cllimit": 500,
             "wbptlanguage": "en",
             "pvipdays": 5,
         }
@@ -86,6 +85,10 @@ def _resolve_wiki_titles(
             params="&".join(
                 [k if v is None else f"{k}={v}" for k, v in request_params.items()]
             ),
+            verify=True,
+            headers={
+                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
+            }
         )
 
         # Parse API responses.
