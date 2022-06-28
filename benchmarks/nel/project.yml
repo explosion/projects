@@ -13,6 +13,14 @@ assets:
     url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
     checksum: 'eea345cc7574a5c9c376748d1871d557'
     description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
+  - dest: 'assets/wikidata_entity_dump.json.bz2'
+    url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
+    checksum: 'eea345cc7574a5c9c376748d1871d557'
+    description: Wikidata entity dump.
+  - dest: 'assets/wikipedia_dump.xml.bz2'
+    url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
+    checksum: 'eea345cc7574a5c9c376748d1871d557'
+    description: Wikipedia dump.
 
 workflows:
   all:
@@ -31,6 +39,8 @@ workflows:
     - evaluate
 
 commands:
+  # bash scripts/wiki_dump/download.sh "https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2"
+
   - name: download_mewsli-9
     help: Download Mewsli-9 dataset.
     script:
