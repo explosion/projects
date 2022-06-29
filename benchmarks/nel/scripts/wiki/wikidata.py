@@ -7,8 +7,9 @@ from __future__ import unicode_literals
 import bz2
 import json
 import os
+import sqlite3
 from pathlib import Path
-from typing import Union, Optional, Dict, Tuple, Any, List
+from typing import Union, Optional, Dict, Tuple, Any, List, Set
 import tqdm
 
 from namespaces import WD_META_ITEMS
@@ -16,11 +17,13 @@ from namespaces import WD_META_ITEMS
 
 def read_entities(
     wikidata_file: Union[str, Path],
+    db_conn: sqlite3.Connection,
+    batch_size: int = 1000,
     limit: Optional[int] = None,
     to_print: bool = False,
     lang: str = "en",
     parse_descr: bool = True,
-    parse_properties: bool = False,
+    parse_properties: bool = True,
     parse_sitelinks: bool = True,
     parse_labels: bool = True,
     parse_aliases: bool = True,
@@ -28,6 +31,8 @@ def read_entities(
 ) -> Tuple[Dict[str, str], Dict[str, Dict[str, Any]]]:
     """ Reads entity information from wikidata dump.
     wikidata_file (Union[str, Path]): Path of wikidata dump file.
+    db_conn (sqlite3.Connection): DB connection.
+    batch_size (int): Batch size for DB commits.
     limit (Optional[int]): Max. number of entities to parse.
     to_print (bool): Whether to print information during the parsing process.
     lang (str): Language with which to filter entity information.
@@ -66,7 +71,7 @@ def read_entities(
     id_to_attrs: Dict[str, Dict[str, Any]] = {}
 
     with bz2.open(wikidata_file, mode="rb") as file:
-        with tqdm.tqdm(desc="Parsing entity data", total=os.path.getsize(wikidata_file)) as pbar:
+        with tqdm.tqdm(desc="Parsing entity data", leave=True) as pbar:
             for cnt, line in enumerate(file):
                 if limit and cnt >= limit:
                     break
@@ -111,6 +116,7 @@ def read_entities(
 
                             # parsing all properties that refer to other entities
                             if parse_properties:
+                                id_to_attrs[unique_id]["properties"] = []
                                 for prop, claim_property in claims.items():
                                     cp_dicts = [
                                         cp["mainsnak"]["datavalue"].get("value")
@@ -126,7 +132,7 @@ def read_entities(
                                     if cp_values:
                                         if to_print:
                                             print("prop:", prop, cp_values)
-                                        id_to_attrs[unique_id]["properties"] = cp_values
+                                        id_to_attrs[unique_id]["properties"].append((prop, cp_values))
 
                             found_link = False
                             if parse_sitelinks:
@@ -161,6 +167,7 @@ def read_entities(
                                         id_to_attrs[unique_id]["description"] = lang_descr["value"]
 
                             if parse_aliases:
+                                id_to_attrs[unique_id]["aliases"] = []
                                 aliases = obj["aliases"]
                                 if aliases:
                                     lang_aliases = aliases.get(lang, None)
@@ -170,10 +177,52 @@ def read_entities(
                                                 print(
                                                     "alias (" + lang + "):", item["value"]
                                                 )
-                                            alias_list = id_to_attrs[unique_id]["aliases"].get(unique_id, [])
-                                            alias_list.append(item["value"])
-                                            id_to_attrs[unique_id]["aliases"][unique_id] = alias_list
+                                            id_to_attrs[unique_id]["aliases"].append(item["value"])
 
-                pbar.update(len(line))
+                pbar.update(1)
+
+                # Save batch.
+                if pbar.n % batch_size == 0:
+                    _write_to_db(db_conn, title_to_id, id_to_attrs)
+                    title_to_id = {}
+                    id_to_attrs = {}
+
+    if pbar.n % batch_size != 0:
+        _write_to_db(db_conn, title_to_id, id_to_attrs)
 
     return title_to_id, id_to_attrs
+
+
+def _write_to_db(
+    db_conn: sqlite3.Connection, title_to_id: Dict[str, str], id_to_attrs: Dict[str, Dict[str, Any]]
+) -> None:
+    """ Persists entity information to database.
+    db_conn (Connection): Database connection.
+    title_to_id (Dict[str, str]): Titles to QIDs.
+    id_to_attrs (Dict[str, Dict[str, Any]]): For QID a dictionary with property name to property value(s).
+    """
+
+    entities: List[Tuple[Optional[str], ...]] = []
+    props_in_ents: Set[Tuple[str, str, str]] = set()
+    for title, qid in title_to_id.items():
+        entities.append((
+            qid,
+            title,
+            id_to_attrs[qid].get("description", None),
+            id_to_attrs[qid].get("labels", {}).get("value", None),
+            json.dumps(id_to_attrs[qid]["claims"])
+        ))
+        for prop in id_to_attrs[qid]["properties"]:
+            for second_qid in prop[1]:
+                props_in_ents.add((prop[0], qid, second_qid))
+
+    cur = db_conn.cursor()
+    cur.executemany(
+        "INSERT INTO entities (id, title, wd_description, label, claims) VALUES (?, ?, ?, ?, ?)",
+        entities
+    )
+    cur.executemany(
+        "INSERT INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
+        props_in_ents
+    )
+    db_conn.commit()

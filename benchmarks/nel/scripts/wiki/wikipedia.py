@@ -8,6 +8,7 @@ import csv
 import os
 import re
 import bz2
+import sqlite3
 
 from pathlib import Path
 from typing import Union, Optional, Tuple, List, Dict, Set, Any
@@ -58,15 +59,16 @@ category_regex = re.compile(cats)
 
 
 def read_prior_probs(
-    wikidata_input_path: Union[str, Path], prior_prob_output: Path, limit: Optional[int] = None
+    wikidata_input_path: Union[str, Path],
+    db_conn: sqlite3.Connection,
+    limit: Optional[int] = None
 ) -> None:
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
-    The full file takes about 2-3h to parse 1100M lines. Writes prior information to file.
-    It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from,
-    though dev test articles are excluded in order not to get an artificially strong baseline.
+    The full file takes about 2-3h to parse 1100M lines. Writes prior information to DB.
+    It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from.
     wikidata_input_path (Union[str, Path]): Path to Wikipedia dump.
-    prior_prob_output (Path): Path to store priors at.
+    db_conn (sqlite3.Connection): Database connection.
     n_article_limit (Optional[int]): Number of articles/entities to process.
     """
     cnt = 0
@@ -74,7 +76,7 @@ def read_prior_probs(
     current_article_id = None
 
     with bz2.open(wikidata_input_path, mode="rb") as file:
-        with tqdm.tqdm(desc="Parsing article texts", total=os.path.getsize(wikidata_input_path)) as pbar:
+        with tqdm.tqdm(desc="Parsing article texts.", leave=True) as pbar:
             line = file.readline()
             while line and (not limit or cnt < limit):
                 clean_line = line.strip().decode("utf-8")
@@ -93,28 +95,32 @@ def read_prior_probs(
                 # only processing prior probabilities from true training (non-dev) articles
                 if not is_dev(current_article_id):
                     aliases, entities, normalizations = _get_wp_links(clean_line)
-                    for alias, entity, norm in zip(aliases, entities, normalizations):
-                        _store_alias(
-                            alias, entity, normalize_alias=norm, normalize_entity=True
-                        )
+                    for alias, entity_id, norm in zip(aliases, entities, normalizations):
+                        _store_alias(alias, entity_id, normalize_alias=norm, normalize_entity=True)
 
                 line = file.readline()
                 cnt += 1
 
-            pbar.update(len(line))
+                pbar.update(1)
 
     # write all aliases and their entities and count occurrences to file
-    with prior_prob_output.open("w", encoding="utf8") as outputfile:
-        with tqdm.tqdm(desc="Writing prior probabilities", total=len(map_alias_to_link)) as pbar:
-            csv_writer = csv.DictWriter(
-                outputfile, delimiter=',', quotechar='"', fieldnames=["alias", "count", "entity_title"]
-            )
-            csv_writer.writeheader()
-            for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
-                s_dict = sorted(alias_dict.items(), key=lambda x: x[1], reverse=True)
-                for entity, count in s_dict:
-                    csv_writer.writerow({"alias": alias, "count": str(count), "entity_id": entity})
-                pbar.update(1)
+    with tqdm.tqdm(desc="Collecting prior probabilities.", total=len(map_alias_to_link)) as pbar:
+        aliases_for_entities: List[Tuple[str, str, float]] = []
+        for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
+            s_dict = sorted(alias_dict.items(), key=lambda x: x[1], reverse=True)
+            for entity_id, count in s_dict:
+                aliases_for_entities.append((alias, entity_id, count))
+
+            pbar.update(1)
+
+    # Save all alias-entity triples.
+    print("Persisting to database.")
+    cur = db_conn.cursor()
+    cur.executemany(
+        "INSERT INTO aliases_for_entities (alias, entity_id, frequency) VALUES (?, ?, ?)",
+        aliases_for_entities
+    )
+    db_conn.commit()
 
 
 def _store_alias(alias: str, entity_title: str, normalize_alias: bool = False, normalize_entity: bool = True) -> None:
