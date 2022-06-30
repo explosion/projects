@@ -62,8 +62,10 @@ class EvaluationResults(object):
         self.metrics = Metrics()
         self.metrics_by_label = defaultdict(Metrics)
 
-    def update_metrics(self, ent_label: str, true_ent_kb_id_: str, cand_kb_ids_: Set[str]) -> None:
-        """ Update metrics over all candidate labels and per candidate labels.
+    def update_metrics(
+        self, ent_label: str, true_ent_kb_id_: str, cand_kb_ids_: Set[str]
+    ) -> None:
+        """Update metrics over all candidate labels and per candidate labels.
         ent_label (str): Recognized entity label.
         true_ent_kb_id_ (str): True entity's external KB ID.
         cand_kb_ids_ (Set[str]): Set of candidates' external KB IDs.
@@ -71,33 +73,51 @@ class EvaluationResults(object):
         self.metrics.update_results(true_ent_kb_id_, cand_kb_ids_)
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
 
-    def _extend_report_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
-        """ Extend existing PrettyTable with collected metrics.
+    def _extend_report_table(
+        self, table: prettytable.PrettyTable, labels: Tuple[str, ...]
+    ) -> None:
+        """Extend existing PrettyTable with collected metrics.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
         labels (Tuple[str, ...]): Labels in sequence to be added to table.
         """
-        table.add_row([
-            self.name.title(),
-            str(self.metrics.true_pos),
-            str(self.metrics.false_pos),
-            str(self.metrics.false_neg),
-            f"{round(self.metrics.calculate_fscore(), 3)}",
-            f"{round(self.metrics.calculate_recall(), 3)}",
-            f"{round(self.metrics.calculate_precision(), 3)}",
-            *[self.metrics_by_label[label].calculate_fscore() for label in labels]
-        ])
+        table.add_row(
+            [
+                self.name.title(),
+                str(self.metrics.true_pos),
+                str(self.metrics.false_pos),
+                str(self.metrics.false_neg),
+                f"{round(self.metrics.calculate_fscore(), 3)}",
+                f"{round(self.metrics.calculate_recall(), 3)}",
+                f"{round(self.metrics.calculate_precision(), 3)}",
+                *[self.metrics_by_label[label].calculate_fscore() for label in labels],
+            ]
+        )
 
     @staticmethod
     def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
-        """ Reports evaluation results.
+        """Reports evaluation results.
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
         """
-        labels = sorted(list({label for eval_res in evaluation_results for label in eval_res.metrics_by_label}))
+        labels = sorted(
+            list(
+                {
+                    label
+                    for eval_res in evaluation_results
+                    for label in eval_res.metrics_by_label
+                }
+            )
+        )
         table = prettytable.PrettyTable(
             field_names=[
-                "model_name", "TPOS", "FPOS", "FNEG", "F-score", "Recall", "Precision",
-                *[f"F-score ({label})" for label in labels]
+                "model_name",
+                "TPOS",
+                "FPOS",
+                "FNEG",
+                "F-score",
+                "Recall",
+                "Precision",
+                *[f"F-score ({label})" for label in labels],
             ]
         )
 
@@ -131,7 +151,10 @@ class DisambiguationBaselineResults(object):
 
 
 def add_disambiguation_eval_result(
-    results: EvaluationResults, pred_doc: Doc, correct_ents: Dict[str, str], el_pipe: Language
+    results: EvaluationResults,
+    pred_doc: Doc,
+    correct_ents: Dict[str, str],
+    el_pipe: Language,
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -158,7 +181,7 @@ def add_disambiguation_baseline(
     counts: Dict[str, int],
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    kb: KnowledgeBase
+    kb: KnowledgeBase,
 ) -> None:
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
@@ -192,7 +215,7 @@ def add_disambiguation_baseline(
                 random_candidate = random.choice(candidates).entity_
 
             current_count = counts.get(ent_label, 0)
-            counts[ent_label] = current_count+1
+            counts[ent_label] = current_count + 1
 
             baseline_results.update_baselines(
                 gold_entity,

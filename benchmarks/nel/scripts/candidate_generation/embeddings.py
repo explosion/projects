@@ -10,8 +10,10 @@ from spacy.tokens import Span
 _pipelines: Dict[Path, Language] = {}
 
 
-def create_candidates(dataset_name: str, kb: KnowledgeBase, span: Span) -> Iterator[Candidate]:
-    """ Identifies entity candidates via their embeddings.
+def create_candidates(
+    dataset_name: str, kb: KnowledgeBase, span: Span
+) -> Iterator[Candidate]:
+    """Identifies entity candidates via their embeddings.
     kb (KnowledgeBase): KnowledgeBase containing all possible entity candidates.
     span (Span): Span to match potential entity candidates with.
     """

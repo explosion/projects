@@ -61,24 +61,42 @@ category_regex = re.compile(cats)
 def read_prior_probs(
     wikidata_input_path: Union[str, Path],
     db_conn: sqlite3.Connection,
-    limit: Optional[int] = None
+    batch_size: int = 5000,
+    limit: Optional[int] = None,
 ) -> None:
     """
     Read the XML wikipedia data and parse out intra-wiki links to estimate prior probabilities.
     The full file takes about 2-3h to parse 1100M lines. Writes prior information to DB.
     It works relatively fast because it runs line by line, irrelevant of which article the intrawiki is from.
     wikidata_input_path (Union[str, Path]): Path to Wikipedia dump.
+    batch_size (int): DB batch size.
     db_conn (sqlite3.Connection): Database connection.
     n_article_limit (Optional[int]): Number of articles/entities to process.
     """
-    cnt = 0
+
     read_id = False
     current_article_id = None
+    entity_title_to_id = {
+        row["title"]: row["id"]
+        for row in db_conn.execute("SELECT title, id FROM entities")
+    }
+
+    def write_to_db(_aliases_for_entities) -> None:
+        """Writes record triples to DB.
+        __aliases_for_entities (): alias-entity-frequency triples.
+        """
+        db_conn.cursor().executemany(
+            "INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)",
+            _aliases_for_entities,
+        )
+        db_conn.commit()
 
     with bz2.open(wikidata_input_path, mode="rb") as file:
-        with tqdm.tqdm(desc="Parsing article texts.", leave=True) as pbar:
+        with tqdm.tqdm(
+            desc="Parsing alias-entity prior probabilities", leave=True
+        ) as pbar:
             line = file.readline()
-            while line and (not limit or cnt < limit):
+            while line and (not limit or pbar.n < limit):
                 clean_line = line.strip().decode("utf-8")
 
                 # we attempt at reading the article's ID (but not the revision or contributor ID)
@@ -95,36 +113,48 @@ def read_prior_probs(
                 # only processing prior probabilities from true training (non-dev) articles
                 if not is_dev(current_article_id):
                     aliases, entities, normalizations = _get_wp_links(clean_line)
-                    for alias, entity_id, norm in zip(aliases, entities, normalizations):
-                        _store_alias(alias, entity_id, normalize_alias=norm, normalize_entity=True)
+                    for alias, entity_title, norm in zip(
+                        aliases, entities, normalizations
+                    ):
+                        _store_alias(
+                            alias,
+                            entity_title,
+                            normalize_alias=norm,
+                            normalize_entity=True,
+                        )
 
                 line = file.readline()
-                cnt += 1
-
                 pbar.update(1)
 
     # write all aliases and their entities and count occurrences to file
-    with tqdm.tqdm(desc="Collecting prior probabilities.", total=len(map_alias_to_link)) as pbar:
-        aliases_for_entities: List[Tuple[str, str, float]] = []
-        for alias, alias_dict in sorted(map_alias_to_link.items(), key=lambda x: x[0]):
-            s_dict = sorted(alias_dict.items(), key=lambda x: x[1], reverse=True)
-            for entity_id, count in s_dict:
-                aliases_for_entities.append((alias, entity_id, count))
+    # len(map_alias_to_link) == 1323974520
+    with tqdm.tqdm(
+        desc="Persisting prior probabilities", total=len(map_alias_to_link)
+    ) as pbar:
+        aliases_for_entities: List[Tuple[str, str, int]] = []
+        for alias, alias_dict in map_alias_to_link.items():
+            for entity_title, count in alias_dict.items():
+                if entity_title in entity_title_to_id:
+                    aliases_for_entities.append(
+                        (alias, entity_title_to_id[entity_title], count)
+                    )
+            if pbar.n % batch_size == 0:
+                write_to_db(aliases_for_entities)
+                aliases_for_entities = []
 
             pbar.update(1)
 
-    # Save all alias-entity triples.
-    print("Persisting to database.")
-    cur = db_conn.cursor()
-    cur.executemany(
-        "INSERT INTO aliases_for_entities (alias, entity_id, frequency) VALUES (?, ?, ?)",
-        aliases_for_entities
-    )
-    db_conn.commit()
+        if pbar.n % batch_size != 0:
+            write_to_db(aliases_for_entities)
 
 
-def _store_alias(alias: str, entity_title: str, normalize_alias: bool = False, normalize_entity: bool = True) -> None:
-    """ Stores (normalized) alias for (normalized) entity_title ID in mapping dictionaries.
+def _store_alias(
+    alias: str,
+    entity_title: str,
+    normalize_alias: bool = False,
+    normalize_entity: bool = True,
+) -> None:
+    """Stores (normalized) alias for (normalized) entity_title ID in mapping dictionaries.
     alias (str): Alias text.
     entity_title (str): Entity title.
     normalize_alias (bool): Whether to normalize the alias text, i.e. remove anchors.
@@ -148,7 +178,7 @@ def _store_alias(alias: str, entity_title: str, normalize_alias: bool = False, n
 
 
 def _get_wp_links(text: str) -> Tuple[List[str], List[str], List[bool]]:
-    """ Retrieve interwiki links from text.
+    """Retrieve interwiki links from text.
     text (str): Text to parse.
     RETURNS (Tuple[List[str], List[str], List[bool]]): List of aliases, entity titles, and whether normalization they
         were normalized.
@@ -190,7 +220,7 @@ def _get_wp_links(text: str) -> Tuple[List[str], List[str], List[bool]]:
 
 
 def _capitalize_first(text: str) -> Optional[str]:
-    """ Capitalize first character.
+    """Capitalize first character.
     text (str): String in which to capitalize first character.
     RETURN (Optional[str]): Text with first character capitalized.
     """
@@ -204,106 +234,123 @@ def _capitalize_first(text: str) -> Optional[str]:
 
 def read_texts(
     wikipedia_input_path: Union[str, Path],
-    entity_title_to_id: Dict[str, str],
-    output_path: Path,
-    n_article_limit: Optional[int] = None,
-    n_char_limit: int = 1000
+    db_conn: sqlite3.Connection,
+    batch_size: int = 5000,
+    limit: Optional[int] = None,
+    n_char_limit: int = 1000,
 ) -> None:
     """
     Read the XML Wikipedia data to parse out clean article texts. Texts are stored in file.
     wikipedia_input_path (Union[str, Path]): Path to Wikipedia dump.
-    entity_title_to_id (Dict[str, str]): Map for entity/article titles to their IDs.
-    output_path (Path): Path to ooutput file.
-    n_article_limit (Optional[int]): Max. number of articles to process. If None, all are processed.
+    db_conn (sqlite3.Connection): DB connection.
+    limit (Optional[int]): Max. number of articles to process. If None, all are processed.
     n_char_limit (Optional[int]): Max. number of characters to process per article.
     """
     read_ids: Set[str] = set()
+    entity_title_to_id = {
+        row["title"]: row["id"]
+        for row in db_conn.execute("SELECT title, id FROM entities")
+    }
+    records: List[Tuple[str, str, str]] = []
 
-    with output_path.open("a", encoding="utf8") as descr_file:
-        csv_writer = csv.DictWriter(
-            descr_file, delimiter=',', quotechar='"', fieldnames=["entity_id", "title", "text"]
+    def write_to_db(_records: List[Tuple[str, str, str]]) -> None:
+        """Writes records to list.
+        _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
+        """
+        db_conn.cursor().executemany(
+            "INSERT INTO articles (entity_id, title, text) VALUES (?, ?, ?)", records
         )
-        csv_writer.writeheader()
+        db_conn.commit()
 
-        with bz2.open(wikipedia_input_path, mode="rb") as file:
-            with tqdm.tqdm(desc="Parsing article texts", total=os.path.getsize(wikipedia_input_path)) as pbar:
-                article_count = 0
-                article_text = ""
-                article_title: Optional[str] = None
-                article_id: Optional[str] = None
-                reading_text = False
-                reading_revision = False
+    with bz2.open(wikipedia_input_path, mode="rb") as file:
+        with tqdm.tqdm(desc="Parsing article texts", leave=True) as pbar:
+            article_text = ""
+            article_title: Optional[str] = None
+            article_id: Optional[str] = None
+            reading_text = False
+            reading_revision = False
 
-                for line in file:
-                    clean_line = line.strip().decode("utf-8")
+            for line in file:
+                if limit and pbar.n >= limit:
+                    break
 
-                    if clean_line == "<revision>":
-                        reading_revision = True
-                    elif clean_line == "</revision>":
-                        reading_revision = False
+                clean_line = line.strip().decode("utf-8")
 
-                    # Start reading new page
-                    if clean_line == "<page>":
-                        article_text = ""
-                        article_title = None
-                        article_id = None
+                if clean_line == "<revision>":
+                    reading_revision = True
+                elif clean_line == "</revision>":
+                    reading_revision = False
 
-                    # finished reading this page
-                    elif clean_line == "</page>":
-                        if article_id:
-                            clean_text, entities = _process_wp_text(article_title, article_text, entity_title_to_id)
-                            if clean_text is not None and entities is not None:
-                                if article_title in entity_title_to_id:
-                                    csv_writer.writerow({
-                                        "entity_id": entity_title_to_id[article_title],
-                                        "title": article_title,
-                                        "text": " ".join(clean_text[:n_char_limit].split(" ")[:-1])
-                                    })
-                                article_count += 1
-                                if n_article_limit and article_count >= n_article_limit:
-                                    break
+                # Start reading new page
+                if clean_line == "<page>":
+                    article_text = ""
+                    article_title = None
+                    article_id = None
 
-                        article_text = ""
-                        article_title = None
-                        article_id = None
-                        reading_text = False
-                        reading_revision = False
+                # finished reading this page
+                elif clean_line == "</page>":
+                    if article_id:
+                        clean_text, entities = _process_wp_text(
+                            article_title, article_text, entity_title_to_id
+                        )
+                        if clean_text is not None and entities is not None:
+                            if article_title in entity_title_to_id:
+                                records.append(
+                                    (
+                                        entity_title_to_id[article_title],
+                                        article_title,
+                                        " ".join(
+                                            clean_text[:n_char_limit].split(" ")[:-1]
+                                        ),
+                                    )
+                                )
+                            pbar.update(1)
 
-                    # start reading text within a page
-                    if "<text" in clean_line:
-                        reading_text = True
+                            if pbar.n % batch_size == 0:
+                                write_to_db(records)
+                                records = []
 
-                    if reading_text:
-                        article_text += " " + clean_line
+                    article_text = ""
+                    article_title = None
+                    article_id = None
+                    reading_text = False
+                    reading_revision = False
 
-                    # stop reading text within a page (we assume a new page doesn't start on the same line)
-                    if "</text" in clean_line:
-                        reading_text = False
+                # start reading text within a page
+                if "<text" in clean_line:
+                    reading_text = True
 
-                    # read the ID of this article (outside the revision portion of the document)
-                    if not reading_revision:
-                        ids = id_regex.search(clean_line)
-                        if ids:
-                            article_id = ids[0]
-                            if article_id in read_ids:
-                                # This should never happen ...
-                                print("Found duplicate article ID", article_id, clean_line)
-                            read_ids.add(article_id)
+                if reading_text:
+                    article_text += " " + clean_line
 
-                    # read the title of this article (outside the revision portion of the document)
-                    if not reading_revision:
-                        titles = title_regex.search(clean_line)
-                        if titles:
-                            article_title = titles[0].strip()
+                # stop reading text within a page (we assume a new page doesn't start on the same line)
+                if "</text" in clean_line:
+                    reading_text = False
 
-                    pbar.update(len(line))
-    print("Finished. Processed {} articles".format(article_count))
+                # read the ID of this article (outside the revision portion of the document)
+                if not reading_revision:
+                    ids = id_regex.search(clean_line)
+                    if ids:
+                        article_id = ids[0]
+                        if article_id in read_ids:
+                            # This should never happen ...
+                            print("Found duplicate article ID", article_id, clean_line)
+                        read_ids.add(article_id)
+
+                # read the title of this article (outside the revision portion of the document)
+                if not reading_revision:
+                    titles = title_regex.search(clean_line)
+                    if titles:
+                        article_title = titles[0].strip()
+
+    if pbar.n % batch_size != 0:
+        write_to_db(records)
 
 
 def _process_wp_text(
     article_title: str, article_text: str, entity_title_to_id: Dict[str, str]
 ) -> Tuple[Optional[str], Optional[List[Tuple[str, Any, int, int]]]]:
-    """ Process article text.
+    """Process article text.
     article_title (str): Article title.
     article_text (str): Article text.
     entity_title_to_id (Dict[str, str]): Map for entity/article titles to their IDs.
@@ -330,7 +377,7 @@ def _process_wp_text(
 
 
 def _get_clean_wp_text(article_text: str) -> str:
-    """ Cleans article text.
+    """Cleans article text.
     article_text (str): Text to clean.
     RETURNS (str): Cleaned text.
     """
@@ -394,7 +441,7 @@ def _get_clean_wp_text(article_text: str) -> str:
 def _remove_links(
     clean_text: str, entity_title_to_id: Dict[str, str]
 ) -> Tuple[Optional[str], Optional[List[Tuple[str, Any, int, int]]]]:
-    """ Remove links from clean text.
+    """Remove links from clean text.
     clean_text (str): Cleaned article text.
     entity_title_to_id (Dict[str, str]): Map for entity/article titles to their IDs.
     RETURNS (Tuple[Optional[str], Optional[List[Tuple[str, Any, int, int]]]]): Cleaned text without links, information
@@ -470,7 +517,7 @@ def _remove_links(
 
 
 def is_dev(article_id: str) -> bool:
-    """ Checks whether article is dev article.
+    """Checks whether article is dev article.
     article_id (str): Article ID.
     RETURNS (bool): Whether article is dev article.
     """
@@ -480,7 +527,7 @@ def is_dev(article_id: str) -> bool:
 
 
 def is_valid_article(doc_text: str) -> bool:
-    """ Checks whether article is valid.
+    """Checks whether article is valid.
     doc_text (str): Article text to check.
     RETURNS (bool): Whether article text is valid.
     """
@@ -489,7 +536,7 @@ def is_valid_article(doc_text: str) -> bool:
 
 
 def is_valid_sentence(sent_text: str) -> bool:
-    """ Checks whether sentence is valid.
+    """Checks whether sentence is valid.
     sent_text (str): Sentence to check.
     RETURNS (bool): Whether sentence is valid.
     """

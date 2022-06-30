@@ -18,7 +18,7 @@ from namespaces import WD_META_ITEMS
 def read_entities(
     wikidata_file: Union[str, Path],
     db_conn: sqlite3.Connection,
-    batch_size: int = 1000,
+    batch_size: int = 5000,
     limit: Optional[int] = None,
     to_print: bool = False,
     lang: str = "en",
@@ -27,9 +27,9 @@ def read_entities(
     parse_sitelinks: bool = True,
     parse_labels: bool = True,
     parse_aliases: bool = True,
-    parse_claims: bool = True
-) -> Tuple[Dict[str, str], Dict[str, Dict[str, Any]]]:
-    """ Reads entity information from wikidata dump.
+    parse_claims: bool = True,
+) -> None:
+    """Reads entity information from wikidata dump.
     wikidata_file (Union[str, Path]): Path of wikidata dump file.
     db_conn (sqlite3.Connection): DB connection.
     batch_size (int): Batch size for DB commits.
@@ -42,8 +42,6 @@ def read_entities(
     parse_labels (bool): Whether to parse entity labels.
     parse_aliases (bool): Whether to parse entity aliases.
     parse_claims (bool): Whether to parse entity claims.
-    RETURNS (Tuple[Dict[str, str], Dict[str, Dict[str, Any]]]): (1) Titles to QIDs, (2) for each parsed property's name
-        a dictionary with QID to property value(s).
     """
 
     # Read the JSON wiki data and parse out the entities. Takes about 7-10h to parse 55M lines.
@@ -100,7 +98,10 @@ def read_entities(
                                             .get("id")
                                         )
                                         cp_rank = cp["rank"]
-                                        if cp_rank != "deprecated" and cp_id in value_set:
+                                        if (
+                                            cp_rank != "deprecated"
+                                            and cp_id in value_set
+                                        ):
                                             keep = False
 
                         if keep:
@@ -132,7 +133,9 @@ def read_entities(
                                     if cp_values:
                                         if to_print:
                                             print("prop:", prop, cp_values)
-                                        id_to_attrs[unique_id]["properties"].append((prop, cp_values))
+                                        id_to_attrs[unique_id]["properties"].append(
+                                            (prop, cp_values)
+                                        )
 
                             found_link = False
                             if parse_sitelinks:
@@ -151,7 +154,10 @@ def read_entities(
                                     lang_label = labels.get(lang, None)
                                     if lang_label:
                                         if to_print:
-                                            print("label (" + lang + "):", lang_label["value"])
+                                            print(
+                                                "label (" + lang + "):",
+                                                lang_label["value"],
+                                            )
                                         id_to_attrs[unique_id]["labels"] = lang_label
 
                             if found_link and parse_descr:
@@ -164,7 +170,9 @@ def read_entities(
                                                 "description (" + lang + "):",
                                                 lang_descr["value"],
                                             )
-                                        id_to_attrs[unique_id]["description"] = lang_descr["value"]
+                                        id_to_attrs[unique_id][
+                                            "description"
+                                        ] = lang_descr["value"]
 
                             if parse_aliases:
                                 id_to_attrs[unique_id]["aliases"] = []
@@ -175,9 +183,12 @@ def read_entities(
                                         for item in lang_aliases:
                                             if to_print:
                                                 print(
-                                                    "alias (" + lang + "):", item["value"]
+                                                    "alias (" + lang + "):",
+                                                    item["value"],
                                                 )
-                                            id_to_attrs[unique_id]["aliases"].append(item["value"])
+                                            id_to_attrs[unique_id]["aliases"].append(
+                                                item["value"]
+                                            )
 
                 pbar.update(1)
 
@@ -190,13 +201,13 @@ def read_entities(
     if pbar.n % batch_size != 0:
         _write_to_db(db_conn, title_to_id, id_to_attrs)
 
-    return title_to_id, id_to_attrs
-
 
 def _write_to_db(
-    db_conn: sqlite3.Connection, title_to_id: Dict[str, str], id_to_attrs: Dict[str, Dict[str, Any]]
+    db_conn: sqlite3.Connection,
+    title_to_id: Dict[str, str],
+    id_to_attrs: Dict[str, Dict[str, Any]],
 ) -> None:
-    """ Persists entity information to database.
+    """Persists entity information to database.
     db_conn (Connection): Database connection.
     title_to_id (Dict[str, str]): Titles to QIDs.
     id_to_attrs (Dict[str, Dict[str, Any]]): For QID a dictionary with property name to property value(s).
@@ -205,24 +216,27 @@ def _write_to_db(
     entities: List[Tuple[Optional[str], ...]] = []
     props_in_ents: Set[Tuple[str, str, str]] = set()
     for title, qid in title_to_id.items():
-        entities.append((
-            qid,
-            title,
-            id_to_attrs[qid].get("description", None),
-            id_to_attrs[qid].get("labels", {}).get("value", None),
-            json.dumps(id_to_attrs[qid]["claims"])
-        ))
+        entities.append(
+            (
+                qid,
+                title,
+                id_to_attrs[qid].get("description", None),
+                id_to_attrs[qid].get("labels", {}).get("value", None),
+                json.dumps(id_to_attrs[qid]["aliases"]),
+                json.dumps(id_to_attrs[qid]["claims"]),
+            )
+        )
         for prop in id_to_attrs[qid]["properties"]:
             for second_qid in prop[1]:
                 props_in_ents.add((prop[0], qid, second_qid))
 
     cur = db_conn.cursor()
     cur.executemany(
-        "INSERT INTO entities (id, title, wd_description, label, claims) VALUES (?, ?, ?, ?, ?)",
-        entities
+        "INSERT INTO entities (id, title, description, label, aliases, claims) VALUES (?, ?, ?, ?, ?, ?)",
+        entities,
     )
     cur.executemany(
         "INSERT INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
-        props_in_ents
+        props_in_ents,
     )
     db_conn.commit()
