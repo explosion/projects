@@ -132,11 +132,10 @@ def _create_spans_from_doc_annotation(
     entities_failed_lookups: Set[str]
 ) -> Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]:
     """ Creates spans from annotations for one document.
-    doc (Doc): Document for whom to create spans.
+    doc (Doc): Document for which to create spans.
     entities_info (ENTITIES_TYPE): All available entities.
-    annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
-    entities_entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed).
-    source_id (str): Unique source ID to look up annotation.
+    annotations (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
+    entities_failed_lookups (Set[str]): Set of entity names for which Wiki API lookup failed).
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
