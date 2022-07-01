@@ -24,7 +24,6 @@ assets:
 
 workflows:
   all:
-    - download_mewsli-9
     - setup
     - preprocess
     - download_model
@@ -39,13 +38,6 @@ workflows:
     - evaluate
 
 commands:
-  # bash scripts/wiki_dump/download.sh "https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2"
-
-  - name: download_mewsli-9
-    help: Download Mewsli-9 dataset.
-    script:
-      - bash scripts/datasets/download_mewsli-9.sh
-
   - name: setup
     help: Install dependencies
     script:

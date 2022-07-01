@@ -11,8 +11,9 @@ class Entity(BaseModel):
     """Schema for single entity."""
 
     qid: str = Field(..., title="Wiki QID.")
+    name: str = Field(..., title="Entity name.")
     aliases: Set[str] = Field(..., title="All found aliases.")
-    count: StrictInt = Field(0, title="Count in corpus.")
+    count: StrictInt = Field(0, title="Count in Wiki corpus.")
     description: Optional[str] = Field(None, title="Full description.")
     article_title: Optional[str] = Field(None, title="Article title.")
     article_text: Optional[str] = Field(None, title="Article text.")

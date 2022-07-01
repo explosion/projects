@@ -6,13 +6,12 @@ from __future__ import unicode_literals
 
 import bz2
 import json
-import os
 import sqlite3
 from pathlib import Path
 from typing import Union, Optional, Dict, Tuple, Any, List, Set
 import tqdm
 
-from namespaces import WD_META_ITEMS
+from wiki.namespaces import WD_META_ITEMS
 
 
 def read_entities(
@@ -69,7 +68,8 @@ def read_entities(
     id_to_attrs: Dict[str, Dict[str, Any]] = {}
 
     with bz2.open(wikidata_file, mode="rb") as file:
-        with tqdm.tqdm(desc="Parsing entity data", leave=True) as pbar:
+        pbar_params = {"total": limit} if limit else {}
+        with tqdm.tqdm(desc="Parsing entity data", leave=True, **pbar_params) as pbar:
             for cnt, line in enumerate(file):
                 if limit and cnt >= limit:
                     break
@@ -232,7 +232,7 @@ def _write_to_db(
 
     cur = db_conn.cursor()
     cur.executemany(
-        "INSERT INTO entities (id, title, description, label, aliases, claims) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO entities (id, name, description, label, aliases, claims) VALUES (?, ?, ?, ?, ?, ?)",
         entities,
     )
     cur.executemany(

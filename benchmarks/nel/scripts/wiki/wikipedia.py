@@ -15,7 +15,7 @@ from typing import Union, Optional, Tuple, List, Dict, Set, Any
 
 import tqdm
 
-from namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
+from wiki.namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
 
 """
 Process a Wikipedia dump to calculate entity_title frequencies and prior probabilities in combination with certain mentions.
@@ -77,8 +77,8 @@ def read_prior_probs(
     read_id = False
     current_article_id = None
     entity_title_to_id = {
-        row["title"]: row["id"]
-        for row in db_conn.execute("SELECT title, id FROM entities")
+        row["name"]: row["id"]
+        for row in db_conn.execute("SELECT name, id FROM entities")
     }
 
     def write_to_db(_aliases_for_entities) -> None:
@@ -92,8 +92,9 @@ def read_prior_probs(
         db_conn.commit()
 
     with bz2.open(wikidata_input_path, mode="rb") as file:
+        pbar_params = {"total": limit} if limit else {}
         with tqdm.tqdm(
-            desc="Parsing alias-entity prior probabilities", leave=True
+            desc="Parsing alias-entity prior probabilities", **pbar_params
         ) as pbar:
             line = file.readline()
             while line and (not limit or pbar.n < limit):
@@ -248,8 +249,8 @@ def read_texts(
     """
     read_ids: Set[str] = set()
     entity_title_to_id = {
-        row["title"]: row["id"]
-        for row in db_conn.execute("SELECT title, id FROM entities")
+        row["name"]: row["id"]
+        for row in db_conn.execute("SELECT name, id FROM entities")
     }
     records: List[Tuple[str, str, str]] = []
 
@@ -263,7 +264,8 @@ def read_texts(
         db_conn.commit()
 
     with bz2.open(wikipedia_input_path, mode="rb") as file:
-        with tqdm.tqdm(desc="Parsing article texts", leave=True) as pbar:
+        pbar_params = {"total": limit} if limit else {}
+        with tqdm.tqdm(desc="Parsing article texts", **pbar_params) as pbar:
             article_text = ""
             article_title: Optional[str] = None
             article_id: Optional[str] = None

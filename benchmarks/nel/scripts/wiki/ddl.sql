@@ -2,7 +2,7 @@
 
 CREATE TABLE entities (
     id TEXT PRIMARY KEY NOT NULL,
-    title TEXT NOT NULL,
+    name TEXT NOT NULL,
     description TEXT,
     label TEXT,
     -- These aliases are fetched directly from the Wikidata entity entry. This is different from the
@@ -15,8 +15,8 @@ CREATE TABLE entities (
     -- This could be normalized. Not worth it at the moment though, since they aren't used.
     claims TEXT
 );
-CREATE UNIQUE INDEX idx_entities_title
-ON entities (title);
+CREATE UNIQUE INDEX idx_entities_name
+ON entities (name);
 
 CREATE TABLE articles (
     entity_id TEXT PRIMARY KEY NOT NULL,

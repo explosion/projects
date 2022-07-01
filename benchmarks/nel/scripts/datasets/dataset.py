@@ -17,8 +17,8 @@ from spacy.kb import KnowledgeBase
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 
+from schemas import Annotation, Entity
 from . import evaluation
-from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
 
 DatasetType = TypeVar("DatasetType", bound="Dataset")
 
@@ -34,9 +34,9 @@ class Dataset(abc.ABC):
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
 
-        self._entities: Optional[ENTITIES_TYPE] = None
+        self._entities: Optional[Dict[str, Entity]] = None
         self._failed_entity_lookups: Optional[Set[str]] = None
-        self._annotations: Optional[ANNOTATIONS_TYPE] = None
+        self._annotations: Optional[Dict[str, List[Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
         self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
@@ -90,17 +90,17 @@ class Dataset(abc.ABC):
             entity_vector_length=self._nlp_base.vocab.vectors_length,
         )
         entity_list: List[str] = []
-        freq_list: List[int] = []
+        count_list: List[int] = []
         vector_list: List[numpy.ndarray] = []
         for qid, info in self._entities.items():
             entity_list.append(qid)
-            freq_list.append(info["frequency"])
-            vector_list.append(self._nlp_base(info["description"]).vector)
+            count_list.append(info.count)
+            vector_list.append(self._nlp_base(info.description).vector)
         self._kb.set_entities(
-            entity_list=entity_list, vector_list=vector_list, freq_list=freq_list
+            entity_list=entity_list, vector_list=vector_list, freq_list=count_list
         )
         for qid, info in self._entities.items():
-            for name in info["names"]:
+            for name in info.aliases:
                 self._kb.add_alias(
                     alias=name.replace("_", " "), entities=[qid], probabilities=[1]
                 )
@@ -139,11 +139,11 @@ class Dataset(abc.ABC):
 
     def _parse_external_corpus(
         self, **kwargs
-    ) -> Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]:
+    ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
         """Parses external corpus. Loads data on entities and mentions.
         Populates self._entities, self._failed_entity_lookups, self._annotations.
-        RETURNS (Tuple[ENTITIES_TYPE, Set[str], ANNOTATIONS_TYPE]): entities, titles of failed entity lookups,
-            annotations.
+        RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
+            lookups, annotations.
         """
         raise NotImplementedError
 
@@ -175,7 +175,7 @@ class Dataset(abc.ABC):
         }
 
         for key in indices:
-            corpus = DocBin(store_user_data=True)
+            corpus = DocBin(store_user_data=False)
             for idx in indices[key]:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():
