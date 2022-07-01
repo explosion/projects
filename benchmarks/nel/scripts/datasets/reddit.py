@@ -8,8 +8,9 @@ from spacy.tokens import Doc
 
 from .dataset import Dataset
 from .utils import _resolve_wiki_titles, _create_spans_from_doc_annotation, ENTITIES_TYPE, ANNOTATIONS_TYPE
+from utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class RedditDataset(Dataset):

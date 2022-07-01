@@ -10,8 +10,8 @@ def main(dataset_name: str):
 
     Dataset.generate_dataset_from_id(dataset_name).evaluate(
         candidate_generation=True,
-        baseline=False,
-        context=False
+        baseline=True,
+        context=True
     )
 
 

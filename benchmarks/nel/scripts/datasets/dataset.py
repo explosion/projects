@@ -20,8 +20,9 @@ from spacy.training import Example
 
 from . import evaluation
 from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
+from utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
 
@@ -164,6 +165,7 @@ class Dataset(abc.ABC):
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
+        logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
     def _load_resource(self, key: str, force: bool = False) -> None:
         """ Loads serialized resource.

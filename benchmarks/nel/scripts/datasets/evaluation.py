@@ -11,8 +11,9 @@ import prettytable
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.tokens import Doc
+from utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Metrics(object):
@@ -71,11 +72,10 @@ class EvaluationResults(object):
         self.metrics.update_results(true_ent_kb_id_, cand_kb_ids_)
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
 
-    def _extend_report_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
-        """ Extend existing PrettyTable with collected metrics.
+    def _extend_report_overview_table(self, table: prettytable.PrettyTable) -> None:
+        """ Extend existing PrettyTable with collected metrics for report overview.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
-        labels (Tuple[str, ...]): Labels in sequence to be added to table.
         """
         table.add_row([
             self.name.title(),
@@ -84,9 +84,24 @@ class EvaluationResults(object):
             str(self.metrics.false_neg),
             f"{round(self.metrics.calculate_fscore(), 3)}",
             f"{round(self.metrics.calculate_recall(), 3)}",
-            f"{round(self.metrics.calculate_precision(), 3)}",
-            *[self.metrics_by_label[label].calculate_fscore() for label in labels]
+            f"{round(self.metrics.calculate_precision(), 3)}"
         ])
+
+    def _extend_report_labels_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
+        """ Extend existing PrettyTable with collected metrics per label.
+        model_name (str): Model name.
+        table (prettytable.PrettyTable): PrettyTable object for evaluation results.
+        labels (Tuple[str, ...]): Labels in sequence to be added to table.
+        """
+
+        for label in labels:
+            table.add_row([
+                self.name.title(),
+                label,
+                self.metrics_by_label[label].calculate_fscore(),
+                self.metrics_by_label[label].calculate_recall(),
+                self.metrics_by_label[label].calculate_precision()
+            ])
 
     @staticmethod
     def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
@@ -94,17 +109,17 @@ class EvaluationResults(object):
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
         """
         labels = sorted(list({label for eval_res in evaluation_results for label in eval_res.metrics_by_label}))
-        table = prettytable.PrettyTable(
-            field_names=[
-                "model_name", "TPOS", "FPOS", "FNEG", "F-score", "Recall", "Precision",
-                *[f"F-score ({label})" for label in labels]
-            ]
+        overview_table = prettytable.PrettyTable(
+            field_names=["Model", "TPOS", "FPOS", "FNEG", "F-score", "Recall", "Precision"]
         )
+        label_table = prettytable.PrettyTable(field_names=["Model", "Label", "F-score", "Recall", "Precision"])
 
         for eval_result in evaluation_results:
-            eval_result._extend_report_table(table, tuple(labels))
+            eval_result._extend_report_overview_table(overview_table)
+            eval_result._extend_report_labels_table(label_table, tuple(labels))
 
-        logger.info(table)
+        logger.info(overview_table)
+        logger.info(label_table)
 
 
 class DisambiguationBaselineResults(object):
