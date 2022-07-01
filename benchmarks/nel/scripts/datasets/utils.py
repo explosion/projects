@@ -1,15 +1,10 @@
 """ Utilities for NEL benchmark. """
 
-import copy
-import sqlite3
-import urllib.parse
-from typing import Tuple, Set, List, Dict, Optional, Union
+from typing import Tuple, Set, List, Dict
 
-import requests
 import tqdm
 from spacy.tokens import Token, Doc, Span
 
-# todo @RM replace with pydantic schemas
 from schemas import Entity, Annotation
 from wiki import wiki_dump_api
 

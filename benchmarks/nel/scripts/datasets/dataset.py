@@ -266,7 +266,6 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_labels.get((ent.start_char, ent.end_char), "NIL")
                         cand_gen_label_counts[label] += 1
-                        # print(ent.text, ent.kb_id_, label, "\t", {(cand.entity_, cand.alias_) for cand in self._kb.get_alias_candidates(ent.text)})
                         candidate_results.update_metrics(
                             label,
                             ent.kb_id_,
