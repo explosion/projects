@@ -1,5 +1,5 @@
 """ Evaluation utilities.
-Adapated from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
+Adapted from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
 """
 
 import logging
