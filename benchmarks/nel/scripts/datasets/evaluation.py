@@ -104,7 +104,7 @@ class EvaluationResults(object):
         for eval_result in evaluation_results:
             eval_result._extend_report_table(table, tuple(labels))
 
-        print(table)
+        logger.info(table)
 
 
 class DisambiguationBaselineResults(object):

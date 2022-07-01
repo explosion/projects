@@ -2,6 +2,7 @@
 import abc
 import importlib
 import inspect
+import logging
 import os
 import pickle
 from collections import defaultdict
@@ -20,6 +21,7 @@ from spacy.training import Example
 from . import evaluation
 from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
 
+logger = logging.getLogger(__name__)
 DatasetType = TypeVar('DatasetType', bound='Dataset')
 
 
@@ -77,10 +79,10 @@ class Dataset(abc.ABC):
         """
 
         self._nlp_base = spacy.load(model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"])
-        print("Parsing external corpus")
+        logger.info("Parsing external corpus")
         self._entities, self._failed_entity_lookups, self._annotations = self._parse_external_corpus(**kwargs)
 
-        print(f"Constructing knowledge base with {len(self._entities)} entries")
+        logger.info(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(vocab=self._nlp_base.vocab, entity_vector_length=self._nlp_base.vocab.vectors_length)
         entity_list: List[str] = []
         freq_list: List[int] = []
@@ -106,7 +108,7 @@ class Dataset(abc.ABC):
         if not os.path.exists(self._paths["nlp_base"]):
             os.mkdir(self._paths["nlp_base"])
         self._nlp_base.to_disk(self._paths["nlp_base"])
-        print("Successfully constructed knowledge base.")
+        logger.info("Successfully constructed knowledge base.")
 
     def compile_corpora(self) -> None:
         """ Creates train/dev/test corpora for Reddit entity linking dataset.
@@ -155,9 +157,9 @@ class Dataset(abc.ABC):
             )
         }
 
-        for key in indices:
+        for key, value in indices.items():
             corpus = DocBin(store_user_data=True)
-            for idx in indices[key]:
+            for idx in value:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
@@ -236,7 +238,6 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_labels.get((ent.start_char, ent.end_char), "NIL")
                         cand_gen_label_counts[label] += 1
-                        # print(ent.text, ent.kb_id_, label, "\t", {(cand.entity_, cand.alias_) for cand in self._kb.get_alias_candidates(ent.text)})
                         candidate_results.update_metrics(
                             label, ent.kb_id_, {cand.entity_ for cand in self._kb.get_alias_candidates(ent.text)}
                         )
@@ -270,7 +271,7 @@ class Dataset(abc.ABC):
             eval_results.extend([baseline_results.random, baseline_results.prior, baseline_results.oracle])
         if context:
             eval_results.extend([context_results, combo_results])
-        print(dict(cand_gen_label_counts))
+        logger.info(dict(cand_gen_label_counts))
         evaluation.EvaluationResults.report(tuple(eval_results))
 
         self._nlp_best.config["incl_context"] = False
