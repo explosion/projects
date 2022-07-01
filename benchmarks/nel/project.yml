@@ -60,6 +60,11 @@ commands:
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
+  - name: parse_wiki_dumps
+    help: "Parses Wikipedia dumps. Note: This deletes any existing database file."
+    script:
+      - "python ./scripts/parse_wiki_dumps.py"
+
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
