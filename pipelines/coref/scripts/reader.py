@@ -114,10 +114,14 @@ for i, gold_doc in enumerate(tqdm.tqdm(docs)):
                         new_span_spangroup.append(
                             new_doc[target_span.start : target_span.end]
                         )
+                    else:
+                        # XXX This seems to happen a lot, why?
+                        pass
                 else:
                     duplicate_heads += 1
-        new_doc.spans[name] = new_head_spangroup
-        new_doc.spans[spans_name] = new_span_spangroup
+        if len(new_head_spangroup) > 0:
+            new_doc.spans[name] = new_head_spangroup
+            new_doc.spans[spans_name] = new_span_spangroup
     if new_doc.spans:
         output_docbin.add(new_doc)
     else:
