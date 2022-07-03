@@ -73,11 +73,13 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                         for x2 in span_starts:
                             rels[(x1, x2)] = {}
                     relations = example["relations"]
+                    print('3.5'*10)
                     for relation in relations:
                         # the 'head' and 'child' annotations refer to the end token in the span
                         # but we want the first token
                         start = span_end_to_start[relation["head"]]
                         end = span_end_to_start[relation["child"]]
+                        print('3.6'*10)
                         label = relation["label"]
                         label = MAP_LABELS[label]
                         print("RELS:", rels[(start, end)], "Label:", label)
