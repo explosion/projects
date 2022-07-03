@@ -9,13 +9,24 @@ from wasabi import Printer
 
 msg = Printer()
 
-SYMM_LABELS = ["Binds"]
+# SYMM_LABELS = ["Binds"]
+# MAP_LABELS = {
+#     "Pos-Reg": "Regulates",
+#     "Neg-Reg": "Regulates",
+#     "Reg": "Regulates",
+#     "No-rel": "Regulates",
+#     "Binds": "Binds",
+# }
+
+SYMM_LABELS = ["daughter", "father", "husband", "mother", "self", "son", "wife"]
 MAP_LABELS = {
-    "Pos-Reg": "Regulates",
-    "Neg-Reg": "Regulates",
-    "Reg": "Regulates",
-    "No-rel": "Regulates",
-    "Binds": "Binds",
+    "daughter": "daughter",
+    "father": "father",
+    "husband": "husband",
+    "mother": "mother",
+    "self": "self",
+    "son": "son",
+    "wife": "wife"
 }
 
 
@@ -69,6 +80,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                         end = span_end_to_start[relation["child"]]
                         label = relation["label"]
                         label = MAP_LABELS[label]
+                        print("RELS:", rels[(start, end)], "Label:", label)
                         if label not in rels[(start, end)]:
                             rels[(start, end)][label] = 1.0
                             pos += 1
