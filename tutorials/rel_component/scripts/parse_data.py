@@ -115,9 +115,9 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                     print("6"*10)
                 # except KeyError as e:
                 #     msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
-            except Exception as e:
-                print("Exception:", e)
-                break
+                except Exception as e:
+                    print("Exception:", e)
+                    break
 
     docbin = DocBin(docs=docs["train"], store_user_data=True)
     docbin.to_disk(train_file)
