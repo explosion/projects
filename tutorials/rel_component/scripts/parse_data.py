@@ -74,9 +74,11 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                             rels[(x1, x2)] = {}
                     relations = example["relations"]
                     print('3.5'*10)
+                    print('SPAN END TO START:', span_end_to_start)
                     for relation in relations:
                         # the 'head' and 'child' annotations refer to the end token in the span
                         # but we want the first token
+                        print('Head:', relation["head"], 'Child:', relation["child"])
                         start = span_end_to_start[relation["head"]]
                         end = span_end_to_start[relation["child"]]
                         print('3.6'*10)
