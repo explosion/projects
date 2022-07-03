@@ -88,8 +88,8 @@ commands:
   - name: "prep-span-data"
     help: "Prepare data for the span predictor component."
     script:
-      - python scripts/reader.py --model-path training/cluster/model-best/ --gpu --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
-      - python scripts/reader.py --model-path training/cluster/model-best/ --gpu --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
     deps:
       - corpus/train.spacy
       - corpus/dev.spacy
