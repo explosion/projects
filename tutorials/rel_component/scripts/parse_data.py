@@ -30,9 +30,10 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
     count_pos = {"train": 0, "dev": 0, "test": 0}
 
     with json_loc.open("r", encoding="utf8") as jsonfile:
-        for line in jsonfile:
+        for line_index, line in enumerate(jsonfile):
             example = json.loads(line)
             span_starts = set()
+            print("1"*10)
             if example["answer"] == "accept":
                 neg = 0
                 pos = 0
@@ -41,7 +42,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                     words = [t["text"] for t in example["tokens"]]
                     spaces = [t["ws"] for t in example["tokens"]]
                     doc = Doc(vocab, words=words, spaces=spaces)
-
+                    print("2"*10)
                     # Parse the GGP entities
                     spans = example["spans"]
                     entities = []
@@ -54,7 +55,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                         entities.append(entity)
                         span_starts.add(span["token_start"])
                     doc.ents = entities
-
+                    print("3"*10)
                     # Parse the relations
                     rels = {}
                     for x1 in span_starts:
@@ -75,7 +76,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                             if label not in rels[(end, start)]:
                                 rels[(end, start)][label] = 1.0
                                 pos += 1
-
+                    print("4"*10)
                     # The annotation is complete, so fill in zero's where the data is missing
                     for x1 in span_starts:
                         for x2 in span_starts:
@@ -84,20 +85,24 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                                     neg += 1
                                     rels[(x1, x2)][label] = 0.0
                     doc._.rel = rels
-
+                    print("5"*10)
                     # only keeping documents with at least 1 positive case
                     if pos > 0:
                         # use the original PMID/PMCID to decide on train/dev/test split
+                        '''
                         article_id = example["meta"]["source"]
                         article_id = article_id.replace("BioNLP 2011 Genia Shared Task, ", "")
                         article_id = article_id.replace(".txt", "")
                         article_id = article_id.split("-")[1]
-                        if article_id.endswith("4"):
+                        '''
+                        #if article_id.endswith("4"):
+                        if line_index % 10 in [7,8]:
                             ids["dev"].add(article_id)
                             docs["dev"].append(doc)
                             count_pos["dev"] += pos
                             count_all["dev"] += pos + neg
-                        elif article_id.endswith("3"):
+                        #elif article_id.endswith("3"):
+                        elif line_index % 10 == 5:
                             ids["test"].add(article_id)
                             docs["test"].append(doc)
                             count_pos["test"] += pos
@@ -107,8 +112,9 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                             docs["train"].append(doc)
                             count_pos["train"] += pos
                             count_all["train"] += pos + neg
-                except KeyError as e:
-                    msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
+                    print("6"*10)
+                    #except KeyError as e:
+                    #    msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
 
     docbin = DocBin(docs=docs["train"], store_user_data=True)
     docbin.to_disk(train_file)
