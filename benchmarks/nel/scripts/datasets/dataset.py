@@ -2,6 +2,7 @@
 import abc
 import importlib
 import inspect
+import logging
 import os
 import pickle
 from collections import defaultdict
@@ -16,9 +17,21 @@ from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
-
 from schemas import Annotation, Entity
 from . import evaluation
+from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
+from utils import get_logger
+
+logger = get_logger(__name__)
+DatasetType = TypeVar('DatasetType', bound='Dataset')
+
+
+class Dataset(abc.ABC):
+    """ Base class for all datasets used in this benchmark. """
+
+    def __init__(self):
+        """ Initializes new Dataset.
+        """
 
 DatasetType = TypeVar("DatasetType", bound="Dataset")
 
@@ -117,7 +130,7 @@ class Dataset(abc.ABC):
         if not os.path.exists(self._paths["nlp_base"]):
             os.mkdir(self._paths["nlp_base"])
         self._nlp_base.to_disk(self._paths["nlp_base"])
-        print("Successfully constructed knowledge base.")
+        logger.info("Successfully constructed knowledge base.")
 
     def compile_corpora(self) -> None:
         """Creates train/dev/test corpora for Reddit entity linking dataset."""
@@ -174,13 +187,14 @@ class Dataset(abc.ABC):
             )
         }
 
-        for key in indices:
-            corpus = DocBin(store_user_data=False)
-            for idx in indices[key]:
+        for key, value in indices.items():
+            corpus = DocBin(store_user_data=True)
+            for idx in value:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
+        logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
     def _load_resource(self, key: str, force: bool = False) -> None:
         """Loads serialized resource.

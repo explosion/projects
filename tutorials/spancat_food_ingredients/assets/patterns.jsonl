@@ -1,0 +1,4 @@
+{"pattern": [{"TEXT":"sugar"}], "label": "INGREDIENT"}
+{"pattern": [{"LEMMA":"berry"}], "label": "INGREDIENT"}
+{"pattern": [{"TEXT":"yogurt"}], "label": "INGREDIENT"}
+{"pattern": [{"TEXT":"blueberries"}], "label": "INGREDIENT"}

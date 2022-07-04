@@ -1,7 +1,6 @@
 """ Dataset class for Reddit EL dataset. """
 
 import csv
-import fileinput
 from typing import Set, List, Tuple, Dict
 
 from spacy.tokens import Doc
@@ -9,6 +8,9 @@ from spacy.tokens import Doc
 from schemas import Entity, Annotation
 from .dataset import Dataset
 from .utils import _fetch_entity_information, _create_spans_from_doc_annotation
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 
 class RedditDataset(Dataset):

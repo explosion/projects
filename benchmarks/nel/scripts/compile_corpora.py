@@ -5,7 +5,7 @@ from datasets.dataset import Dataset
 
 
 def main(dataset_name: str):
-    """Create corpora in spaCy format.
+    """ Create corpora in spaCy format.
     dataset_name (str): Dataset name.
     """
 

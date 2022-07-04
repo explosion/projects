@@ -77,7 +77,6 @@ def _create_spans_from_doc_annotation(
     entities_info (ENTITIES_TYPE): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
     entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed.
-    source_id (str): Unique source ID to look up annotation.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
