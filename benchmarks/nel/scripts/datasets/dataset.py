@@ -2,7 +2,6 @@
 import abc
 import importlib
 import inspect
-import logging
 import os
 import pickle
 from collections import defaultdict
@@ -19,21 +18,10 @@ from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from schemas import Annotation, Entity
 from . import evaluation
-from .utils import ENTITIES_TYPE, ANNOTATIONS_TYPE
 from utils import get_logger
 
 logger = get_logger(__name__)
 DatasetType = TypeVar('DatasetType', bound='Dataset')
-
-
-class Dataset(abc.ABC):
-    """ Base class for all datasets used in this benchmark. """
-
-    def __init__(self):
-        """ Initializes new Dataset.
-        """
-
-DatasetType = TypeVar("DatasetType", bound="Dataset")
 
 
 class Dataset(abc.ABC):
@@ -90,14 +78,14 @@ class Dataset(abc.ABC):
         self._nlp_base = spacy.load(
             model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"]
         )
-        print("Parsing external corpus")
+        logger.info("Parsing external corpus")
         (
             self._entities,
             self._failed_entity_lookups,
             self._annotations,
         ) = self._parse_external_corpus(**kwargs)
 
-        print(f"Constructing knowledge base with {len(self._entities)} entries")
+        logger.info(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(
             vocab=self._nlp_base.vocab,
             entity_vector_length=self._nlp_base.vocab.vectors_length,
@@ -188,7 +176,7 @@ class Dataset(abc.ABC):
         }
 
         for key, value in indices.items():
-            corpus = DocBin(store_user_data=True)
+            corpus = DocBin(store_user_data=False)
             for idx in value:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():
@@ -328,7 +316,7 @@ class Dataset(abc.ABC):
             )
         if context:
             eval_results.extend([context_results, combo_results])
-        print(dict(cand_gen_label_counts))
+        logger.info(dict(cand_gen_label_counts))
         evaluation.EvaluationResults.report(tuple(eval_results))
 
         self._nlp_best.config["incl_context"] = False
