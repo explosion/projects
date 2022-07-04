@@ -8,11 +8,7 @@ import typing
 from spacy.kb import Candidate, KnowledgeBase
 from spacy.tokens import Span
 
-# More elegant way to resolve import conflicts between training and evaluation calls?
-try:
-    from scripts.candidate_generation.embeddings import create_candidates
-except ModuleNotFoundError:
-    from candidate_generation.embeddings import create_candidates
+from scripts.candidate_generation.embeddings import create_candidates
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")

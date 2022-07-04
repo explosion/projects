@@ -15,14 +15,11 @@ from typing import Union, Optional, Tuple, List, Dict, Set, Any
 
 import tqdm
 
-try:
-    from wiki.namespaces import (
-        WP_META_NAMESPACE,
-        WP_FILE_NAMESPACE,
-        WP_CATEGORY_NAMESPACE,
-    )
-except ModuleNotFoundError:
-    from namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
+from wiki.namespaces import (
+    WP_META_NAMESPACE,
+    WP_FILE_NAMESPACE,
+    WP_CATEGORY_NAMESPACE,
+)
 
 """
 Process a Wikipedia dump to calculate entity_title frequencies and prior probabilities in combination with certain mentions.

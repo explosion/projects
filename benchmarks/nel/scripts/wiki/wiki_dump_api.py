@@ -4,16 +4,8 @@ from pathlib import Path
 from typing import Dict, Optional, Any, Tuple
 import sqlite3
 
-try:
-    from schemas import Entity
-except ModuleNotFoundError:
-    from scripts.schemas import Entity
-try:
-    import wikidata
-    import wikipedia
-except ModuleNotFoundError:
-    import wiki.wikidata as wikidata
-    import wiki.wikipedia as wikipedia
+from schemas import Entity
+from wiki import wikidata, wikipedia
 
 _assets_dir = Path(os.path.abspath(__file__)).parent.parent.parent / "assets" / "wiki"
 _paths = {

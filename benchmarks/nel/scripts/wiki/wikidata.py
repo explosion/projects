@@ -11,10 +11,7 @@ from pathlib import Path
 from typing import Union, Optional, Dict, Tuple, Any, List, Set
 import tqdm
 
-try:
-    from namespaces import WD_META_ITEMS
-except ModuleNotFoundError:
-    from wiki.namespaces import WD_META_ITEMS
+from wiki.namespaces import WD_META_ITEMS
 
 
 def read_entities(
