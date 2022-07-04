@@ -16,7 +16,6 @@ assets:
 
 workflows:
   all:
-    - download_mewsli-9
     - setup
     - preprocess
     - download_model
@@ -31,11 +30,6 @@ workflows:
     - evaluate
 
 commands:
-  - name: download_mewsli-9
-    help: Download Mewsli-9 dataset.
-    script:
-      - bash scripts/datasets/download_mewsli-9.sh
-
   - name: setup
     help: Install dependencies
     script:
