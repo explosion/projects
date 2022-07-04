@@ -7,7 +7,7 @@ from datasets.dataset import Dataset
 
 
 def main(dataset_name: str, vectors_model: str):
-    """ Create the Knowledge Base in spaCy and write it to file.
+    """Create the Knowledge Base in spaCy and write it to file.
 
     dataset_name (str): Dataset name.
     vectors_model (str): Name of model with word vectors to use.

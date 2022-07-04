@@ -15,6 +15,7 @@ from utils import get_logger
 
 logger = get_logger(__name__)
 
+
 class Metrics(object):
     true_pos = 0
     false_pos = 0
@@ -74,46 +75,70 @@ class EvaluationResults(object):
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
 
     def _extend_report_overview_table(self, table: prettytable.PrettyTable) -> None:
-        """ Extend existing PrettyTable with collected metrics for report overview.
+        """Extend existing PrettyTable with collected metrics for report overview.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
         """
-        table.add_row([
-            self.name.title(),
-            str(self.metrics.true_pos),
-            str(self.metrics.false_pos),
-            str(self.metrics.false_neg),
-            f"{round(self.metrics.calculate_fscore(), 3)}",
-            f"{round(self.metrics.calculate_recall(), 3)}",
-            f"{round(self.metrics.calculate_precision(), 3)}"
-        ])
+        table.add_row(
+            [
+                self.name.title(),
+                str(self.metrics.true_pos),
+                str(self.metrics.false_pos),
+                str(self.metrics.false_neg),
+                f"{round(self.metrics.calculate_fscore(), 3)}",
+                f"{round(self.metrics.calculate_recall(), 3)}",
+                f"{round(self.metrics.calculate_precision(), 3)}",
+            ]
+        )
 
-    def _extend_report_labels_table(self, table: prettytable.PrettyTable, labels: Tuple[str, ...]) -> None:
-        """ Extend existing PrettyTable with collected metrics per label.
+    def _extend_report_labels_table(
+        self, table: prettytable.PrettyTable, labels: Tuple[str, ...]
+    ) -> None:
+        """Extend existing PrettyTable with collected metrics per label.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
         labels (Tuple[str, ...]): Labels in sequence to be added to table.
         """
 
         for label in labels:
-            table.add_row([
-                self.name.title(),
-                label,
-                self.metrics_by_label[label].calculate_fscore(),
-                self.metrics_by_label[label].calculate_recall(),
-                self.metrics_by_label[label].calculate_precision()
-            ])
+            table.add_row(
+                [
+                    self.name.title(),
+                    label,
+                    self.metrics_by_label[label].calculate_fscore(),
+                    self.metrics_by_label[label].calculate_recall(),
+                    self.metrics_by_label[label].calculate_precision(),
+                ]
+            )
 
     @staticmethod
     def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
         """Reports evaluation results.
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
         """
-        labels = sorted(list({label for eval_res in evaluation_results for label in eval_res.metrics_by_label}))
-        overview_table = prettytable.PrettyTable(
-            field_names=["Model", "TPOS", "FPOS", "FNEG", "F-score", "Recall", "Precision"]
+        labels = sorted(
+            list(
+                {
+                    label
+                    for eval_res in evaluation_results
+                    for label in eval_res.metrics_by_label
+                }
+            )
         )
-        label_table = prettytable.PrettyTable(field_names=["Model", "Label", "F-score", "Recall", "Precision"])
+        overview_table = prettytable.PrettyTable(
+            field_names=[
+                "Model",
+                "TPOS",
+                "FPOS",
+                "FNEG",
+                "F-score",
+                "Recall",
+                "Precision",
+            ]
+        )
+        label_table = prettytable.PrettyTable(
+            field_names=["Model", "Label", "F-score", "Recall", "Precision"]
+        )
 
         for eval_result in evaluation_results:
             eval_result._extend_report_overview_table(overview_table)

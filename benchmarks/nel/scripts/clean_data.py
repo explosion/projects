@@ -16,5 +16,5 @@ def main(dataset_name: str):
     Dataset.generate_dataset_from_id(dataset_name).clean_assets()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     typer.run(main)

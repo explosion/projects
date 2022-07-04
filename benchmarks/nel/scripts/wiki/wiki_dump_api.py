@@ -82,7 +82,9 @@ def parse(
     )
 
 
-def load_entities(key: str, values: Tuple[str, ...], db_conn: Optional[sqlite3.Connection] = None) -> Dict[str, Entity]:
+def load_entities(
+    key: str, values: Tuple[str, ...], db_conn: Optional[sqlite3.Connection] = None
+) -> Dict[str, Entity]:
     """Loads information for entity or entities by querying information from DB.
     Note that this doesn't return all available information, only the part used in the current benchmark solution.
     key (str): Attribute to match values to. Must be one of ("id", "name").

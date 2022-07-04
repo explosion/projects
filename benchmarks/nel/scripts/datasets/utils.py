@@ -102,9 +102,7 @@ def _create_spans_from_doc_annotation(
         # Indexing mistakes in the dataset might lead to wrong and/or overlapping annotations. We align the annotation
         # indices with spaCy's token indices to avoid at least some of these.
         for t in doc:
-            if _does_token_overlap_with_annotation(
-                t, annot.start_pos, annot.end_pos
-            ):
+            if _does_token_overlap_with_annotation(t, annot.start_pos, annot.end_pos):
                 annot.start_pos = t.idx
                 break
         for t in reversed([t for t in doc]):

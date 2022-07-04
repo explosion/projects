@@ -21,7 +21,7 @@ from . import evaluation
 from utils import get_logger
 
 logger = get_logger(__name__)
-DatasetType = TypeVar('DatasetType', bound='Dataset')
+DatasetType = TypeVar("DatasetType", bound="Dataset")
 
 
 class Dataset(abc.ABC):
