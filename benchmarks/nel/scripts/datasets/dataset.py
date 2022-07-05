@@ -176,7 +176,7 @@ class Dataset(abc.ABC):
         }
 
         for key, value in indices.items():
-            corpus = DocBin(store_user_data=False)
+            corpus = DocBin(store_user_data=True)
             for idx in value:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():

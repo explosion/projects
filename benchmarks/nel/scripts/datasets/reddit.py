@@ -85,9 +85,8 @@ class RedditDataset(Dataset):
             file_names.append("posts.tsv")
         if self._options["comments"]:
             file_names.append("comments.tsv")
-        assert (
-            file_names
-        ), "Either 'posts' or 'comments' have to be True in corpus config."
+        msg = "Either 'posts' or 'comments' have to be True in corpus config."
+        assert file_names, msg
 
         # Join records with line breaks.
         rows: List[List[str]] = []
@@ -114,13 +113,12 @@ class RedditDataset(Dataset):
             # the doc's _ attribute, so we might still consider that during evaluation.
             # Additionally, there is a number of index errors in the annotations (especially in the bronze dataset).
             # Some of these are resolved by aligning annotation with token indices.
-            doc.ents, overlapping_doc_annotations = _create_spans_from_doc_annotation(
+            doc.ents, _ = _create_spans_from_doc_annotation(
                 doc=doc,
                 entities_info=self._entities,
                 annotations=self._annotations.get(row[0], []),
                 entities_failed_lookups=self._failed_entity_lookups,
             )
-            doc._.overlapping_annotations = overlapping_doc_annotations
             annotated_docs.append(doc)
 
         return annotated_docs

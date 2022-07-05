@@ -175,7 +175,7 @@ def add_disambiguation_eval_result(
     results: EvaluationResults,
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    el_pipe: Language,
+    el_nlp: Language,
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -183,10 +183,10 @@ def add_disambiguation_eval_result(
     results (EvaluationResults): Container for evaluation results.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
-    el_pipe (Language): Pipeline.
+    el_nlp (Language): Pipeline.
     """
     try:
-        for ent in el_pipe(pred_doc).ents:
+        for ent in el_nlp(pred_doc).ents:
             gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
             if gold_entity is not None:
