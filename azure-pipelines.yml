@@ -42,5 +42,5 @@ jobs:
                 pip install "wikiextractor @ git+https://github.com/adrianeboyd/wikiextractor.git@v3.0.7a0"
             displayName: 'Install dependencies'
 
-          - script: python -m pytest -s benchmarks experimental integrations pipelines tutorials
+          - script: bash run-tests.sh
             displayName: 'Run tests'
