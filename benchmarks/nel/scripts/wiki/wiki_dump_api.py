@@ -30,7 +30,7 @@ def parse(
     article_text_config: Optional[Dict[str, Any]] = None,
     alias_prior_prob_config: Optional[Dict[str, Any]] = None,
 ) -> None:
-    """Parses Wikipedia and Wikidata dumps. Writes parsing results to file. Note that this takes hours.
+    """Parses Wikipedia and Wikidata dumps. Writes parsing results to a database. Note that this takes hours.
     db_conn (Optional[sqlite3.Connection]): Database connection.
     entity_config (Dict[str, Any]): Arguments to be passed on to wikidata.read_entities().
     article_text_config (Dict[str, Any]): Arguments to be passed on to wikipedia.read_text().

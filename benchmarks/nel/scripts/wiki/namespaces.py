@@ -2,9 +2,6 @@
 Source: https://github.com/explosion/projects/blob/master/nel-wikipedia/wiki_namespaces.py.
 """
 
-# coding: utf8
-from __future__ import unicode_literals
-
 # List of meta pages in Wikidata, should be kept out of the Knowledge base
 WD_META_ITEMS = [
     "Q163875",

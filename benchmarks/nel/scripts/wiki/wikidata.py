@@ -2,8 +2,6 @@
 Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wikidata_processor.py.
 """
 
-from __future__ import unicode_literals
-
 import bz2
 import json
 import sqlite3

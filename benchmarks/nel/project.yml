@@ -15,11 +15,9 @@ assets:
     description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
     url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-    checksum: '42bc9dcb95adcef21121c04984412f97'
     description: Wikidata entity dump.
   - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
     url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
-    checksum: '19ec876f64a74bc01e0464bef5367998'
     description: Wikipedia dump.
 
 workflows:

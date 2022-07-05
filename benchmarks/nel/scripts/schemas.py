@@ -23,6 +23,6 @@ class Annotation(BaseModel):
     """Schema for single annotation."""
 
     entity_name: str = Field(..., title="Entity name.")
-    entity_id: Optional[str] = Field(None, title="Entity name.")
+    entity_id: Optional[str] = Field(None, title="Entity ID.")
     start_pos: StrictInt = Field(..., title="Start character position.")
     end_pos: StrictInt = Field(..., title="End character position.")

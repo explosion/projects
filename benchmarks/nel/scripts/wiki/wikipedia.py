@@ -2,10 +2,6 @@
 Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wikipedia_processor.py.
 """
 
-from __future__ import unicode_literals
-
-import csv
-import os
 import re
 import bz2
 import sqlite3
