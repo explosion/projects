@@ -26,32 +26,21 @@ def establish_db_connection() -> sqlite3.Connection:
 
 def parse(
     db_conn: Optional[sqlite3.Connection] = None,
-    force: bool = False,
     entity_config: Optional[Dict[str, Any]] = None,
     article_text_config: Optional[Dict[str, Any]] = None,
     alias_prior_prob_config: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Parses Wikipedia and Wikidata dumps. Writes parsing results to file. Note that this takes hours.
     db_conn (Optional[sqlite3.Connection]): Database connection.
-    force (bool): Whether to parse dumps even if all artefacts are available. Note: this deletes the entire database
-        file and builds it from scratch.
     entity_config (Dict[str, Any]): Arguments to be passed on to wikidata.read_entities().
     article_text_config (Dict[str, Any]): Arguments to be passed on to wikipedia.read_text().
     alias_prior_prob_config (Dict[str, Any]): Arguments to be passed on to wikipedia.read_prior_probs().
     """
 
-    if os.path.exists(_paths["db"]):
-        if not force:
-            return
-        else:
-            # Database exists and is overwritten.
-            if db_conn:
-                db_conn.close()
-                db_conn = None
-            os.remove(_paths["db"])
+    msg = "Database exists already. Execute `spacy project run delete_wiki_db` to remove it."
+    assert not os.path.exists(_paths["db"]), msg
 
     db_conn = db_conn if db_conn else establish_db_connection()
-
     with open(Path(os.path.abspath(__file__)).parent / "ddl.sql", "r") as ddl_sql:
         db_conn.cursor().executescript(ddl_sql.read())
 

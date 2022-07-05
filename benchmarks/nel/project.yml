@@ -61,7 +61,7 @@ commands:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: parse_wiki_dumps
-    help: "Parses Wikipedia dumps. Note: This deletes any existing database file."
+    help: "Parses Wikipedia dumps."
     script:
       - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
 
@@ -119,6 +119,11 @@ commands:
     deps:
       - "training/reddit/model-best"
       - "corpora/reddit/dev.spacy"
+
+  - name: delete_wiki_db
+    help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
+    script:
+      - "rm -f assets/wiki/wiki.sqlite3"
 
   - name: clean
     help: "Remove intermediate files"

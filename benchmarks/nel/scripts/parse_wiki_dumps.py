@@ -5,7 +5,7 @@ import typer
 
 def main():
     """Parses Wikidata and Wikipedia dumps. Persists parsing results to DB."""
-    wiki_dump_api.parse(force=True)
+    wiki_dump_api.parse()
 
 
 if __name__ == "__main__":
