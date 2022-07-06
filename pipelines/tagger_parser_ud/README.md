@@ -2,7 +2,8 @@
 
 # 🪐 spaCy Project: Part-of-speech Tagging & Dependency Parsing (Universal Dependencies)
 
-This project template lets you train a part-of-speech tagger, morphologizer and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `lang` and treebank settings in the variables below. Use `xx` for multi-language if no language-specific tokenizer is available in spaCy. Note that multi-word tokens will be merged together when the corpus is converted since spaCy does not support multi-word token expansion.
+This project template lets you train a part-of-speech tagger, morphologizer, lemmatizer and dependency parser from a [Universal Dependencies](https://universaldependencies.org/) corpus. It takes care of downloading the treebank, converting it to spaCy's format and training and evaluating the model. The template uses the [`UD_English-EWT`](https://github.com/UniversalDependencies/UD_English-EWT) treebank by default, but you can swap it out for any other available treebank. Just make sure to adjust the `lang` and treebank settings in the variables below. Use `xx` for multi-language if no language-specific tokenizer is available in spaCy. Note that multi-word tokens will be merged together when the corpus is converted since spaCy does not support multi-word token expansion.
+
 
 ## 📋 project.yml
 

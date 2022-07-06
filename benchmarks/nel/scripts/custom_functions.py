@@ -1,23 +1,17 @@
 """ Custom functions to be hooked up into the registry. """
 from functools import partial
+
 from typing import Iterable, Callable
 import typing
 import spacy
 from spacy.kb import Candidate, KnowledgeBase
 from spacy.tokens import Span
 
-# More elegant way to resolve import conflicts between training and evaluation calls?
-try:
-    import scripts.candidate_generation.embeddings as embedding_candidate_generation
-    import scripts.candidate_generation.lexical as fuzzy_lexical_candidate_generation
-except ModuleNotFoundError:
-    import candidate_generation.embeddings as embedding_candidate_generation
-    import candidate_generation.lexical as fuzzy_lexical_candidate_generation
+from scripts.candidate_generation import embeddings
+from scripts.candidate_generation import lexical
 
-embedding_candidate_selector = embedding_candidate_generation.CandidateSelector()
-fuzzy_lexical_candidate_selector = (
-    fuzzy_lexical_candidate_generation.CandidateSelector()
-)
+embedding_candidate_selector = embeddings.CandidateSelector()
+fuzzy_lexical_candidate_selector = lexical.CandidateSelector()
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")

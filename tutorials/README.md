@@ -1,6 +1,6 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Tutorials (10)
+# 🪐 Project Templates: Tutorials (11)
 
 | Template | Description |
 | --- | --- |
@@ -14,3 +14,4 @@
 | [`rel_component`](rel_component) | Example project of creating a novel nlp component to do relation extraction from scratch. |
 | [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about documentation (Text Classification) |
 | [`textcat_goemotions`](textcat_goemotions) | Categorization of emotions in Reddit posts (Text Classification) |
+| [`spancat_food_ingredients`](spancat_food_ingredients) | Span Categorization in [Prodigy](https://prodi.gy/) |

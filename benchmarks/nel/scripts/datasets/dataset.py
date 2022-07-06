@@ -15,13 +15,14 @@ import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
+
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
-
+from schemas import Annotation, Entity
 from . import evaluation
-from .schemas import Annotation, Entity
-from .wiki_api import enrich_entities
+from utils import get_logger
 
+logger = get_logger(__name__)
 DatasetType = TypeVar("DatasetType", bound="Dataset")
 
 
@@ -71,55 +72,41 @@ class Dataset(abc.ABC):
         """Returns dataset name."""
         raise NotImplementedError
 
-    def create_knowledge_base(self, model_name: str, n_kb_tokens: int) -> None:
+    def create_knowledge_base(self, model_name: str, **kwargs) -> None:
         """Creates and serializes knowledge base.
-        model_name (str): Name of model with word vectors to use.
-        n_kb_tokens (int): Number of tokens in entity description to include when inferring embedding.
+        vectors_model (str): Name of model with word vectors to use.
         """
 
         self._nlp_base = spacy.load(
             model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"]
         )
-        print("Parsing external corpus")
-        self._entities, self._annotations = self._parse_external_corpus()
+        logger.info("Parsing external corpus")
         (
             self._entities,
             self._failed_entity_lookups,
             self._annotations,
-        ) = enrich_entities(self._entities, self._annotations)
+        ) = self._parse_external_corpus(**kwargs)
 
-        print(f"Constructing knowledge base with {len(self._entities)} entries")
+        logger.info(f"Constructing knowledge base with {len(self._entities)} entries")
         self._kb = KnowledgeBase(
             vocab=self._nlp_base.vocab,
             entity_vector_length=self._nlp_base.vocab.vectors_length,
         )
         entity_list: List[str] = []
-        freq_list: List[int] = []
-        vector_list: List[numpy.ndarray] = []  # type: ignore
-        desc_doc_texts: List[str] = []
-        trunc_doc_texts: List[str] = []
-
-        # Prepare and add entities to KB.
+        count_list: List[int] = []
+        vector_list: List[numpy.ndarray] = []   # type: ignore
         for qid, info in self._entities.items():
             entity_list.append(qid)
-            freq_list.append(info.frequency)
+            count_list.append(info.count)
             # todo @RM Use short_description instead of description?
-            desc_doc_texts.append(info.description)
-            trunc_doc_texts.append(
-                " ".join([name.replace("_", " ") for name in info.names])
-            )
-        for i, desc_doc in enumerate(
-            self._nlp_base.pipe(desc_doc_texts, batch_size=100)
-        ):
-            trunc_doc_texts[i] += " " + desc_doc[:n_kb_tokens].text
-        for doc in self._nlp_base.pipe(trunc_doc_texts, batch_size=100):
+            desc_vector = self._nlp_base(info.description).vector
             vector_list.append(
-                doc.vector
-                if isinstance(doc.vector, numpy.ndarray)
-                else doc.vector.get()
+                desc_vector
+                if isinstance(desc_vector, numpy.ndarray)
+                else desc_vector.get()
             )
         self._kb.set_entities(
-            entity_list=entity_list, vector_list=vector_list, freq_list=freq_list
+            entity_list=entity_list, vector_list=vector_list, freq_list=count_list
         )
 
         # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
@@ -132,6 +119,7 @@ class Dataset(abc.ABC):
                 # We could also use e.g. in-corpus frequency instead of page views.
                 aliases_to_entity_ids[alias][qid] = info.pageviews
         # Add aliases with normalized priors to KB.
+        # todo @RM replace with alias information from DB. what to do if there aren't entries for these aliases though?
         for alias in aliases_to_entity_ids:
             alias_qids = [qid for qid in aliases_to_entity_ids[alias]]
             n_pageviews = sum(self._entities[qid].pageviews for qid in alias_qids)
@@ -143,13 +131,8 @@ class Dataset(abc.ABC):
                     for qid in alias_qids
                 ],
             )
-        # Workaround for easier lookup in candidate generation: add alias for QID.
-        for qid, info in self._entities.items():
-            self._kb.add_alias(alias="_" + qid + "_", entities=[qid], probabilities=[1])
 
         # Serialize knowledge base & entity information.
-        # todo @RM: serialize in dict form (not as pydantic types), restore properly in _load_resource().
-        #  note: this should be avoidable if import path mess can be cleaned.
         for to_serialize in (
             (self._paths["entities"], self._entities),
             (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
@@ -161,7 +144,7 @@ class Dataset(abc.ABC):
         if not os.path.exists(self._paths["nlp_base"]):
             os.mkdir(self._paths["nlp_base"])
         self._nlp_base.to_disk(self._paths["nlp_base"])
-        print("Successfully constructed knowledge base.")
+        logger.info("Successfully constructed knowledge base.")
 
     def compile_corpora(self) -> None:
         """Creates train/dev/test corpora for Reddit entity linking dataset."""
@@ -183,10 +166,11 @@ class Dataset(abc.ABC):
 
     def _parse_external_corpus(
         self, **kwargs
-    ) -> Tuple[Dict[str, Entity], Dict[str, List[Annotation]]]:
+    ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
         """Parses external corpus. Loads data on entities and mentions.
         Populates self._entities, self._failed_entity_lookups, self._annotations.
-        RETURNS (Tuple[Dict[str, Entity], Dict[str, List[Annotation]]): entities, annotations.
+        RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
+            lookups, annotations.
         """
         raise NotImplementedError
 
@@ -217,13 +201,14 @@ class Dataset(abc.ABC):
             )
         }
 
-        for key in indices:
-            corpus = DocBin(store_user_data=False)
-            for idx in indices[key]:
+        for key, value in indices.items():
+            corpus = DocBin(store_user_data=True)
+            for idx in value:
                 corpus.add(self._annotated_docs[idx])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
+        logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
     def _load_resource(self, key: str, force: bool = False) -> None:
         """Loads serialized resource.
@@ -392,7 +377,7 @@ class Dataset(abc.ABC):
         if spacyfishing:
             eval_results.append(spacyfishing_results)
 
-        print(dict(cand_gen_label_counts))
+        logger.info(dict(cand_gen_label_counts))
         evaluation.EvaluationResults.report(tuple(eval_results))
 
         self._nlp_best.config["incl_context"] = False

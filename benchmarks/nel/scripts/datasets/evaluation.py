@@ -1,5 +1,5 @@
 """ Evaluation utilities.
-Adapated from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
+Adapted from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
 """
 
 import logging
@@ -11,8 +11,9 @@ import prettytable
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.tokens import Doc
+from utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Metrics(object):
@@ -78,13 +79,10 @@ class EvaluationResults(object):
         self.metrics.update_results(true_ent_kb_id_, cand_kb_ids_)
         self.metrics_by_label[ent_label].update_results(true_ent_kb_id_, cand_kb_ids_)
 
-    def _extend_report_table(
-        self, table: prettytable.PrettyTable, labels: Tuple[str, ...]
-    ) -> None:
-        """Extend existing PrettyTable with collected metrics.
+    def _extend_report_overview_table(self, table: prettytable.PrettyTable) -> None:
+        """Extend existing PrettyTable with collected metrics for report overview.
         model_name (str): Model name.
         table (prettytable.PrettyTable): PrettyTable object for evaluation results.
-        labels (Tuple[str, ...]): Labels in sequence to be added to table.
         """
         table.add_row(
             [
@@ -92,13 +90,31 @@ class EvaluationResults(object):
                 str(self.metrics.true_pos),
                 str(self.metrics.false_pos),
                 str(self.metrics.false_neg),
-                str(self.metrics.n_candidates),
                 f"{round(self.metrics.calculate_fscore(), 3)}",
                 f"{round(self.metrics.calculate_recall(), 3)}",
                 f"{round(self.metrics.calculate_precision(), 3)}",
-                *[self.metrics_by_label[label].calculate_fscore() for label in labels],
             ]
         )
+
+    def _extend_report_labels_table(
+        self, table: prettytable.PrettyTable, labels: Tuple[str, ...]
+    ) -> None:
+        """Extend existing PrettyTable with collected metrics per label.
+        model_name (str): Model name.
+        table (prettytable.PrettyTable): PrettyTable object for evaluation results.
+        labels (Tuple[str, ...]): Labels in sequence to be added to table.
+        """
+
+        for label in labels:
+            table.add_row(
+                [
+                    self.name.title(),
+                    label,
+                    self.metrics_by_label[label].calculate_fscore(),
+                    self.metrics_by_label[label].calculate_recall(),
+                    self.metrics_by_label[label].calculate_precision(),
+                ]
+            )
 
     @staticmethod
     def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
@@ -114,24 +130,27 @@ class EvaluationResults(object):
                 }
             )
         )
-        table = prettytable.PrettyTable(
+        overview_table = prettytable.PrettyTable(
             field_names=[
-                "model_name",
+                "Model",
                 "TPOS",
                 "FPOS",
                 "FNEG",
-                "N_CAND",
                 "F-score",
                 "Recall",
                 "Precision",
-                *[f"F-score ({label})" for label in labels],
             ]
+        )
+        label_table = prettytable.PrettyTable(
+            field_names=["Model", "Label", "F-score", "Recall", "Precision"]
         )
 
         for eval_result in evaluation_results:
-            eval_result._extend_report_table(table, tuple(labels))
+            eval_result._extend_report_overview_table(overview_table)
+            eval_result._extend_report_labels_table(label_table, tuple(labels))
 
-        print(table)
+        logger.info(overview_table)
+        logger.info(label_table)
 
 
 class DisambiguationBaselineResults(object):
@@ -161,7 +180,7 @@ def add_disambiguation_eval_result(
     results: EvaluationResults,
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    el_pipe: Language,
+    el_nlp: Language,
     ent_cand_ids: Dict[Tuple[int, int], Set[str]],
 ) -> None:
     """
@@ -170,7 +189,7 @@ def add_disambiguation_eval_result(
     results (EvaluationResults): Container for evaluation results.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
-    el_pipe (Language): Pipeline.
+    el_nlp (Language): Pipeline.
     ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
     """
     try:
