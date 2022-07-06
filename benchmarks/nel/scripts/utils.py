@@ -1,7 +1,12 @@
 """ Various utils. """
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s \n %(message)s', datefmt='%H:%M:%S')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s \n %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 
 def get_logger(handle: str) -> logging.Logger:

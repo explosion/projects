@@ -8,16 +8,14 @@ import typing
 from spacy.kb import Candidate, KnowledgeBase
 from spacy.tokens import Span
 
-# More elegant way to resolve import conflicts between training and evaluation calls?
-try:
-    from scripts.candidate_generation.embeddings import create_candidates
-except ModuleNotFoundError:
-    from candidate_generation.embeddings import create_candidates
+from scripts.candidate_generation.embeddings import create_candidates
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")
-def create_candidates_via_embeddings(dataset_name: str) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
-    """ Returns Callable for identification of candidates via their embeddings.
+def create_candidates_via_embeddings(
+    dataset_name: str,
+) -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+    """Returns Callable for identification of candidates via their embeddings.
     dataset_name (str): Dataset name.
     RETURNS (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Callable for identification of entity candidates.
     """
@@ -25,5 +23,5 @@ def create_candidates_via_embeddings(dataset_name: str) -> Callable[[KnowledgeBa
     # More elegant way to enforce proper typing for partial object?
     return typing.cast(
         Callable[[KnowledgeBase, Span], Iterable[Candidate]],
-        partial(create_candidates, dataset_name)
+        partial(create_candidates, dataset_name),
     )
