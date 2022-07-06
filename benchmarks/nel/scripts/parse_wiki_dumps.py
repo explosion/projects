@@ -13,10 +13,7 @@ def main(entity_limit: Optional[int] = None, article_limit: Optional[int] = None
     article_limit (Optional[int]): Max. number of entities to parse. Unlimited if None.
     alias_limit (Optional[int]): Max. number of entity alias_entity_prior_probs to parse. Unlimited if None.
     """
-    try:
-        os.remove(Path(__file__).parent.parent / "assets" / "wiki" / "wiki.sqlite3")
-    except FileNotFoundError:
-        pass
+
     wiki_dump_api.parse(
         entity_config={"limit": entity_limit},
         article_text_config={"limit": article_limit},
@@ -26,3 +23,4 @@ def main(entity_limit: Optional[int] = None, article_limit: Optional[int] = None
 
 if __name__ == "__main__":
     typer.run(main)
+    # main(entity_limit=1000000, article_limit=1, alias_limit=1000000000)
