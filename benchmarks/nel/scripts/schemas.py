@@ -12,7 +12,7 @@ class Entity(BaseModel):
 
     qid: str = Field(..., title="Wiki QID.")
     name: str = Field(..., title="Entity name.")
-    aliases: Set[str] = Field(..., title="All found aliases.")
+    aliases: Set[str] = Field(..., title="All found alias_entity_prior_probs.")
     count: StrictInt = Field(0, title="Count in Wiki corpus.")
     description: Optional[str] = Field(None, title="Full description.")
     article_title: Optional[str] = Field(None, title="Article title.")

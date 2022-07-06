@@ -19,6 +19,7 @@ from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from schemas import Annotation, Entity
+from wiki import wiki_dump_api
 from . import evaluation
 from utils import get_logger
 
@@ -98,7 +99,6 @@ class Dataset(abc.ABC):
         for qid, info in self._entities.items():
             entity_list.append(qid)
             count_list.append(info.count)
-            # todo @RM Use short_description instead of description?
             desc_vector = self._nlp_base(info.description).vector
             vector_list.append(
                 desc_vector
@@ -109,27 +109,13 @@ class Dataset(abc.ABC):
             entity_list=entity_list, vector_list=vector_list, freq_list=count_list
         )
 
-        # Map aliases to their entities. Use entities' page views as priors (this is hacky, since these just reflect
-        # entity popularity, not actual alias-specific priors).
-        aliases_to_entity_ids: Dict[str, Dict[str, int]] = {}
-        for qid, info in self._entities.items():
-            for alias in info.names:
-                if alias not in aliases_to_entity_ids:
-                    aliases_to_entity_ids[alias] = {}
-                # We could also use e.g. in-corpus frequency instead of page views.
-                aliases_to_entity_ids[alias][qid] = info.pageviews
         # Add aliases with normalized priors to KB.
-        # todo @RM replace with alias information from DB. what to do if there aren't entries for these aliases though?
-        for alias in aliases_to_entity_ids:
-            alias_qids = [qid for qid in aliases_to_entity_ids[alias]]
-            n_pageviews = sum(self._entities[qid].pageviews for qid in alias_qids)
+        alias_entity_prior_probs = wiki_dump_api.load_alias_entity_prior_probabilities(set(self._entities.keys()))
+        for alias, entity_prior_probs in alias_entity_prior_probs.items():
             self._kb.add_alias(
                 alias=alias,
-                entities=alias_qids,
-                probabilities=[
-                    aliases_to_entity_ids[alias][qid] / max(1, n_pageviews)
-                    for qid in alias_qids
-                ],
+                entities=[epp[0] for epp in entity_prior_probs],
+                probabilities=[epp[1] for epp in entity_prior_probs],
             )
 
         # Serialize knowledge base & entity information.

@@ -5,7 +5,7 @@ from typing import Tuple, Set, List, Dict
 from spacy.tokens import Doc
 
 from datasets.dataset import Dataset
-from datasets.schemas import Entity, Annotation
+from schemas import Entity, Annotation
 
 
 class Mewsli9Dataset(Dataset):

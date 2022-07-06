@@ -83,6 +83,7 @@ def _create_spans_from_doc_annotation(
     """
 
     doc_ents = {(ent.start_char, ent.end_char) for ent in doc.ents}
+    doc_annots: List[Annotation] = []
     overlapping_doc_annotations: List[Annotation] = []
 
     if harmonize_with_doc_ents and not doc_ents:

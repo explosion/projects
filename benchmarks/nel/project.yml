@@ -76,8 +76,8 @@ commands:
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model} 25"
-#      - "python ./scripts/create_kb.py mewsli_9 ${vars.vectors_model} 25"
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
+#      - "python ./scripts/create_kb.py mewsli_9 ${vars.vectors_model}"
     deps:
       - "assets/reddit"
 #      - "assets/mewsli_9"
@@ -151,6 +151,11 @@ commands:
       - "corpora/reddit/dev.spacy"
 #      - "training/mewsli_9/model-best"
 #      - "corpora/mewsli_9/dev.spacy"
+
+  - name: delete_wiki_db
+    help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
+    script:
+      - "rm -f assets/wiki/wiki.sqlite3"
 
   - name: clean
     help: "Remove intermediate files"

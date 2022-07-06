@@ -1,7 +1,7 @@
 """ Wiki dataset for unified access to information from Wikipedia and Wikidata dumps. """
 import os.path
 from pathlib import Path
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any, Tuple, List, Set
 import sqlite3
 
 from schemas import Entity
@@ -127,3 +127,44 @@ def load_entities(
             tuple(set(values)),
         )
     }
+
+
+def load_alias_entity_prior_probabilities(
+    entity_ids: Set[str], db_conn: Optional[sqlite3.Connection] = None
+) -> Dict[str, List[Tuple[str, float]]]:
+    """Loads alias-entity counts from database and transforms them into prior probabilities per alias.
+    entity_ids (Set[str]): Set of entity IDs to allow.
+    RETURN (Dict[str, Tuple[Tuple[str, ...], Tuple[float, ...]]]): Mapping of alias to tuples of entities and the
+        corresponding prior probabilities.
+    """
+
+    db_conn = db_conn if db_conn else establish_db_connection()
+
+    alias_entity_prior_probs = {
+        rec["alias"]: [
+            (entity_id, int(count))
+            for entity_id, count in zip(rec["entity_ids"].split(","), rec["counts"].split(","))
+        ]
+        for rec in db_conn.cursor().execute(
+            """
+                SELECT 
+                    alias,
+                    GROUP_CONCAT(entity_id) as entity_ids,
+                    GROUP_CONCAT(count) as counts
+                FROM 
+                    aliases_for_entities                                   
+                WHERE 
+                    entity_id IN (%s)
+                GROUP BY
+                    alias
+            """
+            % ",".join("?" * len(entity_ids)),
+            tuple(entity_ids),
+        )
+    }
+
+    for alias, entity_counts in alias_entity_prior_probs.items():
+        total_count = sum([ec[1] for ec in entity_counts])
+        alias_entity_prior_probs[alias] = [(ec[0], ec[1] / max(total_count, 1)) for ec in entity_counts]
+
+    return alias_entity_prior_probs

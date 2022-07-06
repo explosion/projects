@@ -86,7 +86,11 @@ def read_prior_probs(
         __aliases_for_entities (): alias-entity-frequency triples.
         """
         db_conn.cursor().executemany(
-            "INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)",
+            """
+            INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)
+            ON CONFLICT (alias, entity_id) DO UPDATE SET
+                count=count + excluded.count
+            """,
             _aliases_for_entities,
         )
         db_conn.commit()
@@ -128,9 +132,8 @@ def read_prior_probs(
                 pbar.update(1)
 
     # write all aliases and their entities and count occurrences to file
-    # len(map_alias_to_link) == 1323974520
     with tqdm.tqdm(
-        desc="Persisting prior probabilities", total=len(map_alias_to_link)
+        desc="Persisting alias-entity prior probabilities", total=len(map_alias_to_link)
     ) as pbar:
         aliases_for_entities: List[Tuple[str, str, int]] = []
         for alias, alias_dict in map_alias_to_link.items():
@@ -181,7 +184,7 @@ def _store_alias(
 def _get_wp_links(text: str) -> Tuple[List[str], List[str], List[bool]]:
     """Retrieve interwiki links from text.
     text (str): Text to parse.
-    RETURNS (Tuple[List[str], List[str], List[bool]]): List of aliases, entity titles, and whether normalization they
+    RETURNS (Tuple[List[str], List[str], List[bool]]): List of alias_entity_prior_probs, entity titles, and whether normalization they
         were normalized.
     """
     aliases: List[str] = []
@@ -259,7 +262,7 @@ def read_texts(
         _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
         """
         db_conn.cursor().executemany(
-            "INSERT INTO articles (entity_id, title, text) VALUES (?, ?, ?)", records
+            "INSERT OR IGNORE INTO articles (entity_id, title, text) VALUES (?, ?, ?)", records
         )
         db_conn.commit()
 

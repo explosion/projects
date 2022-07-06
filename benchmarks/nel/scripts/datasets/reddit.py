@@ -61,11 +61,6 @@ class RedditDataset(Dataset):
                         )
                     )
 
-        # Fetch Wikidata IDs (QIDs). Some entities won't be resolved properly because of messy situations with redirects
-        # and normalizations (e.g.: two different titles are redirected to the same entity, Wikipedia only returns this
-        # one entity. Associating the remaining title with the correct entity can bloat up the code).
-        # Since we don't expect many failures, we instead run failed lookups again individually. This should avoid any
-        # situations with entity interdependencies at the cost of lookup speed.
         entities, failed_entity_lookups, title_qid_mappings = _fetch_entity_information(
             "name", tuple(entity_names)
         )
