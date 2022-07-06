@@ -18,5 +18,9 @@ def main(trained_pipeline: Path, input_str: str):
     print("Pipeline Components:", nlp.pipeline)
     print("Input String:", input_str)
 
+    print('--------NLP Tokens--------')
+    for tok in nlp(input_str):
+        print(tok.text)
+
 if __name__ == "__main__":
     typer.run(main)
