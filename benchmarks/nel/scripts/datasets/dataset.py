@@ -88,18 +88,23 @@ class Dataset(abc.ABC):
             self._annotations,
         ) = self._parse_external_corpus(**kwargs)
 
-        logger.info(f"Constructing knowledge base with {len(self._entities)} entries")
+        logger.info(
+            f"Constructing knowledge base with {len(self._entities)} entries and "
+            f"{len(self._failed_entity_lookups)} failed lookups."
+        )
         self._kb = KnowledgeBase(
             vocab=self._nlp_base.vocab,
             entity_vector_length=self._nlp_base.vocab.vectors_length,
         )
         entity_list: List[str] = []
         count_list: List[int] = []
-        vector_list: List[numpy.ndarray] = []   # type: ignore
+        vector_list: List[numpy.ndarray] = []  # type: ignore
         for qid, info in self._entities.items():
             entity_list.append(qid)
             count_list.append(info.count)
-            desc_vector = self._nlp_base(info.description).vector
+            desc_vector = self._nlp_base(
+                info.description if info.description else info.name
+            ).vector
             vector_list.append(
                 desc_vector
                 if isinstance(desc_vector, numpy.ndarray)
@@ -110,12 +115,19 @@ class Dataset(abc.ABC):
         )
 
         # Add aliases with normalized priors to KB.
-        alias_entity_prior_probs = wiki_dump_api.load_alias_entity_prior_probabilities(set(self._entities.keys()))
+        alias_entity_prior_probs = wiki_dump_api.load_alias_entity_prior_probabilities(
+            set(self._entities.keys())
+        )
         for alias, entity_prior_probs in alias_entity_prior_probs.items():
             self._kb.add_alias(
                 alias=alias,
                 entities=[epp[0] for epp in entity_prior_probs],
                 probabilities=[epp[1] for epp in entity_prior_probs],
+            )
+        # Add pseudo aliases for easier lookup with new candidate generators.
+        for entity_id in entity_list:
+            self._kb.add_alias(
+                alias="_" + entity_id + "_", entities=[entity_id], probabilities=[1]
             )
 
         # Serialize knowledge base & entity information.
@@ -340,9 +352,13 @@ class Dataset(abc.ABC):
                     )
 
                 if spacyfishing:
+                    try:
+                        doc = self._nlp_base(example.reference.text)
+                    except TypeError:
+                        doc = None
                     evaluation.add_disambiguation_spacyfishing_eval_result(
                         spacyfishing_results,
-                        self._nlp_base(example.reference.text),
+                        doc,
                         ent_gold_ids,
                     )
 

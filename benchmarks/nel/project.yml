@@ -5,6 +5,8 @@ vars:
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
   version: "0.0.1"
+  dataset: "mewsli_9"
+  gpu_id: ""
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
 
@@ -53,9 +55,8 @@ commands:
   - name: preprocess
     help: Preprocess test datasets
     script:
-      - "unzip -q -d assets/reddit assets/reddit.zip"
-      - "python ./scripts/clean_data.py reddit"
-      - "python ./scripts/clean_data.py mewsli-9"
+      - "unzip -q -o -d assets/reddit assets/reddit.zip"
+      - "python ./scripts/clean_data.py ${vars.config}"
     deps:
       - "assets/reddit.zip"
       - "assets/mewsli_9"
@@ -76,81 +77,50 @@ commands:
   - name: create_kb
     help: "Create the knowledge base and write it to file"
     script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
-#      - "python ./scripts/create_kb.py mewsli_9 ${vars.vectors_model}"
+      - "python ./scripts/create_kb.py ${vars.dataset} ${vars.vectors_model}"
     deps:
-      - "assets/reddit"
-#      - "assets/mewsli_9"
+      - "assets/${vars.dataset}"
     outputs:
-      - "assets/reddit/entities.pkl"
-      - "assets/reddit/entities_failed_lookup.pkl"
-      - "assets/reddit/annotations.pkl"
-#      - "assets/mewsli_9/entities.pkl"
-#      - "assets/mewsli_9/entities_failed_lookup.pkl"
-#      - "assets/mewsli_9/annotations.pkl"
+      - "assets/${vars.dataset}/entities.pkl"
+      - "assets/${vars.dataset}/entities_failed_lookup.pkl"
+      - "assets/${vars.dataset}/annotations.pkl"
     outputs_no_cache:
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
-#      - "temp/mewsli_9/kb"
-#      - "temp/mewsli_9/nlp"
+      - "temp/${vars.dataset}/kb"
+      - "temp/${vars.dataset}/nlp"
 
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets"
     script:
-      - "python ./scripts/compile_corpora.py reddit"
-#      - "python ./scripts/compile_corpora.py mewsli_9"
+      - "python ./scripts/compile_corpora.py ${vars.dataset}"
     deps:
-      - "assets/reddit/entities.pkl"
-      - "assets/reddit/entities_failed_lookups.pkl"
-      - "assets/reddit/annotations.pkl"
-#      - "assets/mewsli_9/entities.pkl"
-#      - "assets/mewsli_9/entities_failed_lookups.pkl"
-#      - "assets/mewsli_9/annotations.pkl"
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
-#      - "temp/mewsli_9/kb"
-#      - "temp/mewsli_9/nlp"
+      - "assets/${vars.dataset}/entities.pkl"
+      - "assets/${vars.dataset}/entities_failed_lookups.pkl"
+      - "assets/${vars.dataset}/annotations.pkl"
+      - "temp/${vars.dataset}/kb"
+      - "temp/${vars.dataset}/nlp"
       - "configs/datasets.yml"
     outputs_no_cache:
-      - "corpora/reddit/train.spacy"
-      - "corpora/reddit/dev.spacy"
-      - "corpora/reddit/test.spacy"
-#      - "corpora/mewsli_9/train.spacy"
-#      - "corpora/mewsli_9/dev.spacy"
-#      - "corpora/mewsli_9/test.spacy"
+      - "corpora/${vars.dataset}/train.spacy"
+      - "corpora/${vars.dataset}/dev.spacy"
+      - "corpora/${vars.dataset}/test.spacy"
 
   - name: train
-    help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
+    help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU"
     script:
-      - "bash scripts/train.sh reddit ${vars.config}"
-#      - "python -m spacy train configs/${vars.config} \
-#          --paths.dataset_name mewsli_9 \
-#          --output training/mewsli_9 \
-#          --paths.train corpora/mewsli_9/train.spacy \
-#          --paths.dev corpora/mewsli_9/dev.spacy \
-#          --paths.kb temp/mewsli_9/kb \
-#          --paths.base_nlp temp/mewsli_9/nlp \
-#          -c scripts/custom_functions.py"
+      - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.gpu_id}"
     deps:
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
-      - "corpora/reddit/train.spacy"
-      - "corpora/reddit/dev.spacy"
-#      - "temp/mewsli_9/kb"
-#      - "temp/mewsli_9/nlp"
-#      - "corpora/mewsli_9/train.spacy"
-#      - "corpora/mewsli_9/dev.spacy"
+      - "temp/${vars.dataset}/kb"
+      - "temp/${vars.dataset}/nlp"
+      - "corpora/${vars.dataset}/train.spacy"
+      - "corpora/${vars.dataset}/dev.spacy"
 
   - name: evaluate
     help: "Evaluation on the test set"
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py reddit"
-#      - "env PYTHONPATH=. python ./scripts/evaluate.py mewsli_9"
+      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset}"
     deps:
-      - "training/reddit/model-best"
-      - "corpora/reddit/dev.spacy"
-#      - "training/mewsli_9/model-best"
-#      - "corpora/mewsli_9/dev.spacy"
+      - "training/${vars.dataset}/model-best"
+      - "corpora/${vars.dataset}/dev.spacy"
 
   - name: delete_wiki_db
     help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
@@ -158,7 +128,7 @@ commands:
       - "rm -f assets/wiki/wiki.sqlite3"
 
   - name: clean
-    help: "Remove intermediate files"
+    help: "Remove intermediate files (excluding Wiki resources and database)"
     script:
       - "rm -rf training/*"
       - "rm -rf corpora/*"

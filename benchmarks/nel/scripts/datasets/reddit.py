@@ -7,7 +7,7 @@ from spacy.tokens import Doc
 
 from schemas import Entity, Annotation
 from .dataset import Dataset
-from .utils import _fetch_entity_information, _create_spans_from_doc_annotation
+from .utils import fetch_entity_information, create_spans_from_doc_annotation
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +38,6 @@ class RedditDataset(Dataset):
             for source in ("posts", "comments")
             if self._options[quality] and self._options[source]
         ]
-        rows: List[List[str]] = []
         entity_names: Set[str] = set()
         annotations: Dict[str, List[Annotation]] = {}
 
@@ -48,8 +47,7 @@ class RedditDataset(Dataset):
                 for i, row in enumerate(csv.reader(file_path, delimiter="\t")):
                     assert len(row) == 7
                     # Ditch anchor information in article URLs, as we can't use this in Wikidata lookups anyway.
-                    row[3] = row[3].split("#")[0].split("?")[0]
-                    rows.append(row)
+                    row[3] = row[3].split("#")[0].split("?")[0].replace("_", " ")
                     entity_names.add(row[3])
                     if row[0] not in annotations:
                         annotations[row[0]] = []
@@ -61,7 +59,7 @@ class RedditDataset(Dataset):
                         )
                     )
 
-        entities, failed_entity_lookups, title_qid_mappings = _fetch_entity_information(
+        entities, failed_entity_lookups, title_qid_mappings = fetch_entity_information(
             "name", tuple(entity_names)
         )
 
@@ -108,7 +106,7 @@ class RedditDataset(Dataset):
             # the doc's _ attribute, so we might still consider that during evaluation.
             # Additionally, there is a number of index errors in the annotations (especially in the bronze dataset).
             # Some of these are resolved by aligning annotation with token indices.
-            doc.ents, _ = _create_spans_from_doc_annotation(
+            doc.ents, _ = create_spans_from_doc_annotation(
                 doc=doc,
                 entities_info=self._entities,
                 annotations=self._annotations.get(row[0], []),

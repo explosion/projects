@@ -5,7 +5,7 @@ Adapted from https://github.com/explosion/projects/blob/master/nel-wikipedia/ent
 import logging
 import random
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
 from spacy import Language
@@ -149,8 +149,8 @@ class EvaluationResults(object):
             eval_result._extend_report_overview_table(overview_table)
             eval_result._extend_report_labels_table(label_table, tuple(labels))
 
-        logger.info(overview_table)
-        logger.info(label_table)
+        logger.info("\n", overview_table)
+        logger.info("\n", label_table)
 
 
 class DisambiguationBaselineResults(object):
@@ -205,11 +205,20 @@ def add_disambiguation_eval_result(
 
 
 def add_disambiguation_spacyfishing_eval_result(
-    results: EvaluationResults, pred_doc: Doc, correct_ents: Dict[str, str]
+    results: EvaluationResults, pred_doc: Optional[Doc], correct_ents: Dict[str, str]
 ) -> None:
-    """Measure NEL performance with spacyfishing."""
+    """Measure NEL performance with spacyfishing.
+    results (EvaluationResults): Eval. results object.
+    pred_doc (Optional[Doc]): Document after running it through spacyfishing pipeline. Might be None in case of pipeline
+        error.
+    correct_ents (Dict[str, str]): Mapping from stringified offsets to correct entity IDs.
+    """
 
     try:
+        if pred_doc is None:
+            results.update_metrics("NIL", "", {"NIL"})
+            return
+
         for ent in pred_doc.ents:
             gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
             if gold_entity is not None:

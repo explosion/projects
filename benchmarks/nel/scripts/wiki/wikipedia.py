@@ -184,7 +184,7 @@ def _store_alias(
 def _get_wp_links(text: str) -> Tuple[List[str], List[str], List[bool]]:
     """Retrieve interwiki links from text.
     text (str): Text to parse.
-    RETURNS (Tuple[List[str], List[str], List[bool]]): List of alias_entity_prior_probs, entity titles, and whether normalization they
+    RETURNS (Tuple[List[str], List[str], List[bool]]): List of aliases, entity titles, and whether normalization they
         were normalized.
     """
     aliases: List[str] = []
@@ -262,7 +262,8 @@ def read_texts(
         _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
         """
         db_conn.cursor().executemany(
-            "INSERT OR IGNORE INTO articles (entity_id, title, text) VALUES (?, ?, ?)", records
+            "INSERT OR IGNORE INTO articles (entity_id, title, text) VALUES (?, ?, ?)",
+            records,
         )
         db_conn.commit()
 

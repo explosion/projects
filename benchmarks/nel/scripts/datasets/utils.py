@@ -23,7 +23,7 @@ def _does_token_overlap_with_annotation(
     )
 
 
-def _fetch_entity_information(
+def fetch_entity_information(
     key: str,
     values: Tuple[str, ...],
     batch_size: int = 1000,
@@ -64,7 +64,7 @@ def _fetch_entity_information(
     return entities, failed_lookups, name_qid_map
 
 
-def _create_spans_from_doc_annotation(
+def create_spans_from_doc_annotation(
     doc: Doc,
     entities_info: Dict[str, Entity],
     annotations: List[Annotation],
@@ -94,17 +94,17 @@ def _create_spans_from_doc_annotation(
             [
                 {
                     "annot": annot,
-                    "freq": entities_info[annot.entity_id].count
+                    "count": entities_info[annot.entity_id].count
                     if annot.entity_id in entities_info
                     else -1,
                 }
                 for annot in annotations
             ],
-            key=lambda a: a["freq"],
+            key=lambda a: a["count"],
             reverse=True,
         )
     ):
-        annot, count = annot_data["annot"], annot_data["freq"]
+        annot, count = annot_data["annot"], annot_data["count"]
 
         # Indexing mistakes in the dataset might lead to wrong and/or overlapping annotations. We align the annotation
         # indices with spaCy's token indices to avoid at least some of these.

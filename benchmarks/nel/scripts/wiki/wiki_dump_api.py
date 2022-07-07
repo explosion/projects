@@ -143,7 +143,9 @@ def load_alias_entity_prior_probabilities(
     alias_entity_prior_probs = {
         rec["alias"]: [
             (entity_id, int(count))
-            for entity_id, count in zip(rec["entity_ids"].split(","), rec["counts"].split(","))
+            for entity_id, count in zip(
+                rec["entity_ids"].split(","), rec["counts"].split(",")
+            )
         ]
         for rec in db_conn.cursor().execute(
             """
@@ -165,6 +167,8 @@ def load_alias_entity_prior_probabilities(
 
     for alias, entity_counts in alias_entity_prior_probs.items():
         total_count = sum([ec[1] for ec in entity_counts])
-        alias_entity_prior_probs[alias] = [(ec[0], ec[1] / max(total_count, 1)) for ec in entity_counts]
+        alias_entity_prior_probs[alias] = [
+            (ec[0], ec[1] / max(total_count, 1)) for ec in entity_counts
+        ]
 
     return alias_entity_prior_probs

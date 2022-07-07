@@ -5,19 +5,18 @@ Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wi
 import bz2
 import io
 import json
-import os
 import sqlite3
 from pathlib import Path
-from typing import Union, Optional, Dict, Tuple, Any, List, Set, Iterable, Iterator
-import time
+from typing import Union, Optional, Dict, Tuple, Any, List, Set, Iterator
 
-import indexed_bzip2
 import tqdm
 
 from wiki.namespaces import WD_META_ITEMS
 
 
-def chunked_readlines(f: bz2.BZ2File, chunk_size: int = 1024 * 1024 * 32) -> Iterator[bytes]:
+def chunked_readlines(
+    f: bz2.BZ2File, chunk_size: int = 1024 * 1024 * 32
+) -> Iterator[bytes]:
     """Reads lines from compressed BZ2 file in chunks. Source: https://stackoverflow.com/a/65765814.
     chunk_size (int): Chunk size in bytes.
     RETURNS (Iterator[bytes]): Read bytes.
@@ -32,9 +31,10 @@ def chunked_readlines(f: bz2.BZ2File, chunk_size: int = 1024 * 1024 * 32) -> Ite
         l = s.readlines()
         yield from l[:-1]
         s = io.BytesIO()
-        s.write(l[-1])  # very important: the last line read in the 1 MB chunk might be
-                        # incomplete, so we keep it to be processed in the next iteration
-                        # TODO: check if this is ok if f.read() stopped in the middle of a \r\n?
+        # very important: the last line read in the 1 MB chunk might be
+        # incomplete, so we keep it to be processed in the next iteration
+        # check if this is ok if f.read() stopped in the middle of a \r\n?
+        s.write(l[-1])
 
 
 def read_entities(
@@ -92,7 +92,9 @@ def read_entities(
     with bz2.open(wikidata_file, mode="rb") as file:
         pbar_params = {"total": limit} if limit else {}
 
-        with tqdm.tqdm(desc="Parsing entity data", leave=True, miniters=1000, **pbar_params) as pbar:
+        with tqdm.tqdm(
+            desc="Parsing entity data", leave=True, miniters=1000, **pbar_params
+        ) as pbar:
             for cnt, line in enumerate(file):
                 if limit and cnt >= limit:
                     break
@@ -237,15 +239,19 @@ def _write_to_db(
 
     cur = db_conn.cursor()
     cur.executemany(
-        "INSERT INTO entities (id, name, description, label, claims) VALUES (?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO entities (id, name, description, label, claims) VALUES (?, ?, ?, ?, ?)",
         entities,
     )
     cur.executemany(
-        "INSERT INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
+        "INSERT OR IGNORE INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
         props_in_ents,
     )
     cur.executemany(
-        "INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)",
+        """
+        INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)
+        ON CONFLICT (alias, entity_id) DO UPDATE SET
+            count=count + excluded.count 
+        """,
         aliases_for_entities,
     )
     db_conn.commit()

@@ -47,7 +47,7 @@ class CandidateSelector(NearestNeighborCandidateSelector):
             for match in [
                 (nne, normalized_levenshtein(name.lower(), span.text.lower()) / 100)
                 for nne in nn_entities
-                for name in nn_entities[nne]["names"]
+                for name in nn_entities[nne].aliases
             ]
             if match[1] >= lexical_similarity_cutoff
         }

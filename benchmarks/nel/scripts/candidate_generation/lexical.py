@@ -4,7 +4,7 @@ from typing import Iterable
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
-from fuzzyset import FuzzySet
+from cfuzzyset import cFuzzySet as FuzzySet
 
 
 class CandidateSelector(NearestNeighborCandidateSelector):
