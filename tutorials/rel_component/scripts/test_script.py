@@ -22,5 +22,9 @@ def main(trained_pipeline: Path, input_str: str):
     for tok in nlp(input_str):
         print(tok.text)
 
+    print('--------NLP Entities--------')
+    for ent in example_doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
 if __name__ == "__main__":
     typer.run(main)
