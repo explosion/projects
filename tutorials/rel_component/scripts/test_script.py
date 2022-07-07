@@ -19,11 +19,12 @@ def main(trained_pipeline: Path, input_str: str):
     print("Input String:", input_str)
 
     print('--------NLP Tokens--------')
-    for tok in nlp(input_str):
+    doc = nlp(input_str)
+    for tok in doc:
         print(tok.text)
 
     print('--------NLP Entities--------')
-    for ent in example_doc.ents:
+    for ent in doc.ents:
         print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
 if __name__ == "__main__":
