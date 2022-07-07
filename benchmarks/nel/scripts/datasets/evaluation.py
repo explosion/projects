@@ -149,8 +149,8 @@ class EvaluationResults(object):
             eval_result._extend_report_overview_table(overview_table)
             eval_result._extend_report_labels_table(label_table, tuple(labels))
 
-        logger.info("\n", overview_table)
-        logger.info("\n", label_table)
+        logger.info("\n" + str(overview_table))
+        logger.info("\n" + str(label_table))
 
 
 class DisambiguationBaselineResults(object):
