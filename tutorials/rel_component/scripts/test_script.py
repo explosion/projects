@@ -27,5 +27,10 @@ def main(trained_pipeline: Path, input_str: str):
     for ent in doc.ents:
         print(ent.text, ent.start_char, ent.end_char, ent.label_)
 
+    print('--------RELS--------')
+    for tok in doc:
+        for child in tok.children:
+            print('child:', child, 'type:', type(child))
+
 if __name__ == "__main__":
     typer.run(main)
