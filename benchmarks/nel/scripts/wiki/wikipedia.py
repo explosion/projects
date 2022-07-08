@@ -255,14 +255,18 @@ def read_texts(
         row["name"]: row["id"]
         for row in db_conn.execute("SELECT name, id FROM entities")
     }
-    records: List[Tuple[str, str, str]] = []
+    records: List[Tuple[str, str, str, str]] = []
+    # Fetch IDs of entities whose articles are already in the DB.
+    article_ids_in_db: Set[str] = {
+        rec["id"] for rec in db_conn.cursor().execute("SELECT id FROM articles")
+    }
 
-    def write_to_db(_records: List[Tuple[str, str, str]]) -> None:
+    def write_to_db(_records: List[Tuple[str, str, str, str]]) -> None:
         """Writes records to list.
         _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
         """
         db_conn.cursor().executemany(
-            "INSERT OR IGNORE INTO articles (entity_id, title, text) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO articles (entity_id, id, title, text) VALUES (?, ?, ?, ?)",
             records,
         )
         db_conn.commit()
@@ -295,7 +299,7 @@ def read_texts(
 
                 # finished reading this page
                 elif clean_line == "</page>":
-                    if article_id:
+                    if article_id and article_id not in article_ids_in_db:
                         clean_text, entities = _process_wp_text(
                             article_title, article_text, entity_title_to_id
                         )
@@ -304,6 +308,7 @@ def read_texts(
                                 records.append(
                                     (
                                         entity_title_to_id[article_title],
+                                        article_id,
                                         article_title,
                                         " ".join(
                                             clean_text[:n_char_limit].split(" ")[:-1]

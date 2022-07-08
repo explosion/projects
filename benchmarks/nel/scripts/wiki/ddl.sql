@@ -13,10 +13,13 @@ ON entities (name);
 
 CREATE TABLE articles (
     entity_id TEXT PRIMARY KEY NOT NULL,
+    id TEXT NOT NULL,
     title TEXT NOT NULL,
     text TEXT NOT NULL,
     FOREIGN KEY(entity_id) REFERENCES entities(id)
 );
+CREATE UNIQUE INDEX idx_articles_id
+ON articles (id);
 
 CREATE TABLE properties_in_entities (
     property_id TEXT NOT NULL,
