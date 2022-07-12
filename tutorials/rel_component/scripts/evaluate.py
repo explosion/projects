@@ -24,9 +24,14 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
             words=[t.text for t in gold],
             spaces=[t.whitespace_ for t in gold],
         )
+        #print(pred.ents)
         pred.ents = gold.ents
+        print('-------------', pred.ents, '--------------')
+        return
         for name, proc in nlp.pipeline:
             pred = proc(pred)
+            #print('Name:', name, "Proc:", proc, "Pred:", pred)
+        #return
         examples.append(Example(pred, gold))
 
         # Print the gold and prediction, if gold label is not 0
@@ -35,11 +40,14 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
             print(f"Text: {gold.text}")
             print(f"spans: {[(e.start, e.text, e.label_) for e in pred.ents]}")
             for value, rel_dict in pred._.rel.items():
+                print("Value:", value, "Rel Dict:", rel_dict)
+                '''
                 gold_labels = [k for (k, v) in gold._.rel[value].items() if v == 1.0]
                 if gold_labels:
                     print(
                         f" pair: {value} --> gold labels: {gold_labels} --> predicted values: {rel_dict}"
                     )
+                '''
             print()
 
     random_examples = []
@@ -54,11 +62,16 @@ def main(trained_pipeline: Path, test_data: Path, print_details: bool):
         relation_extractor = nlp.get_pipe("relation_extractor")
         get_instances = relation_extractor.model.attrs["get_instances"]
         for (e1, e2) in get_instances(pred):
+            #print("E1:", e1, "E2:", e2)
             offset = (e1.start, e2.start)
+            #print("Offset:", offset)
             if offset not in pred._.rel:
                 pred._.rel[offset] = {}
             for label in relation_extractor.labels:
+                #print("Label:", label)
                 pred._.rel[offset][label] = random.uniform(0, 1)
+        #print('Pred:', pred)
+        #print("Gold:", gold)
         random_examples.append(Example(pred, gold))
 
     thresholds = [0.000, 0.050, 0.100, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99, 0.999]
