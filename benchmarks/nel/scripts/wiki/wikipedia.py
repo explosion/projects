@@ -273,7 +273,7 @@ def read_texts(
 
     with bz2.open(wikipedia_input_path, mode="rb") as file:
         pbar_params = {"total": limit} if limit else {}
-        with tqdm.tqdm(desc="Parsing article texts", **pbar_params) as pbar:
+        with tqdm.tqdm(desc="Parsing article texts", miniters=1000, **pbar_params) as pbar:
             article_text = ""
             article_title: Optional[str] = None
             article_id: Optional[str] = None
