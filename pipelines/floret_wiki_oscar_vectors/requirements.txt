@@ -1,0 +1,11 @@
+floret>=0.10.2
+
+# This is a patched version of wikiextractor v3.0.6 that supports spawn
+# for the options `--json --no-templates` and fixes a few small bugs.
+wikiextractor @ git+https://github.com/adrianeboyd/wikiextractor.git@v3.0.7a0
+
+# Tested with v8.8.0, earlier versions may also work.
+more-itertools>=8.8.0
+
+# Tested with v1.18.3, earlier versions may also work.
+datasets>=1.18.0

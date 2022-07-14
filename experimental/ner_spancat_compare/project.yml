@@ -1,0 +1,348 @@
+title: "Comparing SpanCat and NER using a corpus of biomedical literature (GENIA)"
+description: |
+  This project demonstrates how spaCy's Span Categorization (SpanCat) and
+  Named-Entity Recognition (NER) perform on different types of entities. Here, we used
+  a dataset of biomedical literature containing both overlapping and non-overlapping spans.
+
+  ### About the dataset
+
+  [GENIA](http://www.geniaproject.org/genia-corpus) is a dataset containing
+  biomedical literature from 1,999 Medline abstracts. It contains a collection
+  of overlapping and hierarchical spans. To make parsing easier, we will be
+  using the [pre-constructed IOB
+  tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia)
+  from the [Boundary Aware Nested NER
+  paper](https://aclanthology.org/D19-1034/)
+  [repository](https://github.com/thecharm/boundary-aware-nested-ner/). Running `debug data` gives us the
+  following span characteristics (**SD** = Span Distinctiveness, **BD** = Boundary Distinctiveness):
+
+  | Span Type | Span Length | SD                   | BD                       |
+  |-----------|-------------|----------------------|--------------------------|
+  | DNA       | 2.81        | 1.45                 | 0.80                     |
+  | protein   | 2.19        | 1.19                 | 0.57                     |
+  | cell_type | 2.09        | 2.35                 | 1.05                     |
+  | cell_line | 3.29        | 1.91                 | 1.04                     |
+  | RNA       | 2.73        | 2.68                 | 1.28                     |
+
+  The table above shows the average span length for each span type, and their
+  corresponding distinctiveness characteristics. The latter is computed using
+  the KL-divergence of the span's token distribution with respect to the overall
+  corpus's. The higher the number is, the more distinct the tokens are compared to the
+  rest of the corpus.
+
+  These characteristics can give us a good intuition as to how well the SpanCat
+  model identifies the correct spans. In the case of GENIA, the entities
+  themselves tend to be technical terms, which makes it more distinct and easier
+  to classify. Again, we measure distinctiveness not only within the entities
+  themselves (SD), but also in its boundaries (BD).
+
+  Here's some example data:
+
+  ![](./images/sample_00.png)
+  ![](./images/sample_01.png)
+
+
+  ### Experiments
+
+  Given what we know from the dataset, we will create the following pipelines:
+
+  | Pipeline | Description                                                                                                                             | Workflow Name |
+  |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
+  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
+  | NER      | Named-Entity Recognition for all types of entities. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
+
+
+  #### SpanCat Results
+
+  Below are the results for SpanCat. It seems that overall, span categorization
+  is biased towards precision. This means that a large number of the suggested
+  spans belong to the correct class. We can always tune how precise we want it
+  to be: make the suggester lenient and we might get a lot of irrelevant hits,
+  make it strict and we miss might out on some true positives.
+
+  |           | Precision   | Recall   | F-score   |
+  |-----------|-------------|----------|-----------|
+  | DNA       |    0.70     | 0.36     |  0.47     |
+  | protein   |    0.77     | 0.52     |  0.62     |
+  | cell_line |    0.77     | 0.30     |  0.44     |
+  | cell_type |    0.76     | 0.62     |  0.68     |
+  | RNA       |    0.77     | 0.25     |  0.38     |
+  | **Overall**| 0.76       | 0.47     |  0.58     |
+
+  #### NER Results
+
+  NER performs well against SpanCat for all entity types, but note that this
+  process entails training five (5) models per entity type. This might work if
+  you have a small number of entities, but can be computationally heavy if you
+  have a lot.
+
+  |           |   Precision | Recall |   F-score |
+  |-----------|-------------|--------|-----------|
+  | DNA       |    0.74     | 0.63   |  0.68     |
+  | protein   |    0.76     | 0.72   |  0.74     |
+  | cell_line |    0.74     | 0.57   |  0.64     |
+  | cell_type |    0.78     | 0.72   |  0.75     |
+  | RNA       |    0.86     | 0.65   |  0.74     |
+
+  Since we have five (5) separate models in NER, what we can do afterwards is
+  combine them into a single `Doc` that transfers `doc.ents` to `doc.spans`. Since
+  the tokens are the same, we don't need to worry about misalignments and the like.
+
+vars:
+  name: "ner_spancat_compare"
+  version: "1.0.0"
+  gpu_id: -1
+  spans_key: "sc"
+  # Labels
+  dna: "DNA"
+  rna: "RNA"
+  cell_line: "cell_line"
+  cell_type: "cell_type"
+  protein: "protein"
+
+directories:
+  - "assets"
+  - "configs"
+  - "corpus"
+  - "corpus/ner"
+  - "metrics"
+  - "scripts"
+  - "training"
+
+workflows:
+  all:
+    - "install"
+    - "convert"
+    - "create-ner"
+    - "train-ner"
+    - "assemble-ner"
+    - "train-spancat"
+    - "evaluate-ner"
+    - "evaluate-spancat"
+  spancat:
+    - "install"
+    - "convert"
+    - "train-spancat"
+    - "evaluate-spancat"
+  ner:
+    - "install"
+    - "convert"
+    - "create-ner"
+    - "train-ner"
+    - "evaluate-ner"
+    - "assemble-ner"
+
+assets:
+  - dest: "assets/train.iob2"
+    description: "The training dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.train.iob2
+  - dest: "assets/dev.iob2"
+    description: "The evaluation dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.dev.iob2
+  - dest: "assets/test.iob2"
+    description: "The test dataset for GENIA in IOB format."
+    url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.test.iob2
+
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script:
+      - "pip install --user -r requirements.txt"
+      - "python -m spacy download en_core_web_lg"
+  - name: "convert"
+    help: "Convert IOB file into the spaCy format"
+    script:
+      - "python -m scripts.convert assets/train.iob2 -o corpus/train.spacy"
+      - "python -m scripts.convert assets/dev.iob2 -o corpus/dev.spacy"
+      - "python -m scripts.convert assets/test.iob2 -o corpus/test.spacy"
+    deps:
+      - "assets/train.iob2"
+      - "assets/dev.iob2"
+      - "assets/test.iob2"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+
+  - name: "create-ner"
+    help: "Split corpus into separate NER datasets for each GENIA label"
+    script:
+      - >-
+        python -m scripts.create_ner
+        --train corpus/train.spacy
+        --dev corpus/dev.spacy
+        --test corpus/test.spacy
+        --output-dir corpus/ner
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+    outputs:
+      - "corpus/ner/train_${vars.dna}.spacy"
+      - "corpus/ner/train_${vars.rna}.spacy"
+      - "corpus/ner/train_${vars.cell_line}.spacy"
+      - "corpus/ner/train_${vars.cell_type}.spacy"
+      - "corpus/ner/train_${vars.protein}.spacy"
+      - "corpus/ner/dev_${vars.dna}.spacy"
+      - "corpus/ner/dev_${vars.rna}.spacy"
+      - "corpus/ner/dev_${vars.cell_line}.spacy"
+      - "corpus/ner/dev_${vars.cell_type}.spacy"
+      - "corpus/ner/dev_${vars.protein}.spacy"
+      - "corpus/ner/test_${vars.dna}.spacy"
+      - "corpus/ner/test_${vars.rna}.spacy"
+      - "corpus/ner/test_${vars.cell_line}.spacy"
+      - "corpus/ner/test_${vars.cell_type}.spacy"
+      - "corpus/ner/test_${vars.protein}.spacy"
+
+  - name: "train-ner"
+    help: "Train an NER model for each label"
+    script:
+      - >-
+        python -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.dna}
+        --paths.train corpus/ner/train_${vars.dna}.spacy
+        --paths.dev corpus/ner/dev_${vars.dna}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.rna}
+        --paths.train corpus/ner/train_${vars.rna}.spacy
+        --paths.dev corpus/ner/dev_${vars.rna}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.cell_line}
+        --paths.train corpus/ner/train_${vars.cell_line}.spacy
+        --paths.dev corpus/ner/dev_${vars.cell_line}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.cell_type}
+        --paths.train corpus/ner/train_${vars.cell_type}.spacy
+        --paths.dev corpus/ner/dev_${vars.cell_type}.spacy
+        --gpu-id ${vars.gpu_id}
+      - >-
+        python -m spacy train
+        configs/ner.cfg
+        --output training/ner/${vars.protein}
+        --paths.train corpus/ner/train_${vars.protein}.spacy
+        --paths.dev corpus/ner/dev_${vars.protein}.spacy
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - "corpus/ner/train_${vars.dna}.spacy"
+      - "corpus/ner/train_${vars.rna}.spacy"
+      - "corpus/ner/train_${vars.cell_line}.spacy"
+      - "corpus/ner/train_${vars.cell_type}.spacy"
+      - "corpus/ner/train_${vars.protein}.spacy"
+      - "corpus/ner/dev_${vars.dna}.spacy"
+      - "corpus/ner/dev_${vars.rna}.spacy"
+      - "corpus/ner/dev_${vars.cell_line}.spacy"
+      - "corpus/ner/dev_${vars.cell_type}.spacy"
+      - "corpus/ner/dev_${vars.protein}.spacy"
+    outputs:
+      - "training/ner/${vars.dna}/model-best"
+      - "training/ner/${vars.rna}/model-best"
+      - "training/ner/${vars.cell_line}/model-best"
+      - "training/ner/${vars.cell_type}/model-best"
+      - "training/ner/${vars.protein}/model-best"
+
+  - name: "train-spancat"
+    help: "Train a SpanCat model"
+    script:
+      - >-
+        python -m spacy train
+        configs/spancat.cfg
+        --output training/spancat/
+        --paths.train corpus/train.spacy
+        --paths.dev corpus/dev.spacy
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+    outputs:
+      - "training/spancat/model-best"
+
+  - name: "evaluate-ner"
+    help: "Evaluate all NER models"
+    script:
+      - "mkdir -p metrics/ner"
+      - >-
+        python -m spacy evaluate
+        training/ner/${vars.dna}/model-best
+        corpus/ner/test_${vars.dna}.spacy
+        --output metrics/ner/scores_${vars.dna}.json
+      - >-
+        python -m spacy evaluate
+        training/ner/${vars.rna}/model-best
+        corpus/ner/test_${vars.rna}.spacy
+        --output metrics/ner/scores_${vars.rna}.json
+      - >-
+        python -m spacy evaluate
+        training/ner/${vars.cell_line}/model-best
+        corpus/ner/test_${vars.cell_line}.spacy
+        --output metrics/ner/scores_${vars.cell_line}.json
+      - >-
+        python -m spacy evaluate
+        training/ner/${vars.cell_type}/model-best
+        corpus/ner/test_${vars.cell_type}.spacy
+        --output metrics/ner/scores_${vars.cell_type}.json
+      - >-
+        python -m spacy evaluate
+        training/ner/${vars.protein}/model-best
+        corpus/ner/test_${vars.protein}.spacy
+        --output metrics/ner/scores_${vars.protein}.json
+    deps:
+      - "training/ner/${vars.dna}/model-best"
+      - "training/ner/${vars.rna}/model-best"
+      - "training/ner/${vars.cell_line}/model-best"
+      - "training/ner/${vars.cell_type}/model-best"
+      - "training/ner/${vars.protein}/model-best"
+      - "corpus/ner/test_${vars.dna}.spacy"
+      - "corpus/ner/test_${vars.rna}.spacy"
+      - "corpus/ner/test_${vars.cell_line}.spacy"
+      - "corpus/ner/test_${vars.cell_type}.spacy"
+      - "corpus/ner/test_${vars.protein}.spacy"
+    outputs:
+      - "metrics/ner/scores_${vars.dna}.json"
+      - "metrics/ner/scores_${vars.rna}.json"
+      - "metrics/ner/scores_${vars.cell_line}.json"
+      - "metrics/ner/scores_${vars.cell_type}.json"
+      - "metrics/ner/scores_${vars.protein}.json"
+
+  - name: "assemble-ner"
+    help: "Assemble all NER models into a single pipeline"
+    script:
+      - >-
+        python -m spacy assemble
+        configs/ner_assemble.cfg
+        training/ner-assemble/
+        --code scripts/transfer_ent_component.py
+        --paths.ner_${vars.dna} training/ner/${vars.dna}/model-best
+        --paths.ner_${vars.rna} training/ner/${vars.rna}/model-best
+        --paths.ner_${vars.cell_line} training/ner/${vars.cell_line}/model-best
+        --paths.ner_${vars.cell_type} training/ner/${vars.cell_type}/model-best
+        --paths.ner_${vars.protein} training/ner/${vars.protein}/model-best
+        --paths.spans_key ${vars.spans_key}
+        --verbose
+    outputs:
+      - "training/ner-assemble/"
+
+  - name: "evaluate-spancat"
+    help: "Evaluate SpanCat model"
+    script:
+      - "mkdir -p metrics/spancat"
+      - >-
+        python -m spacy evaluate
+        training/spancat/model-best
+        corpus/test.spacy
+        --output metrics/spancat/scores.json
+    deps:
+      - "training/spancat/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/spancat/scores.json"

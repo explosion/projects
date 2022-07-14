@@ -1,0 +1,131 @@
+title: 'NEL Benchmark'
+description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
+vars:
+  name: "nel_benchmark"
+  config: "nel.cfg"
+  vectors_model: "en_core_web_md"
+  version: "0.0.1"
+
+directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
+
+assets:
+  - dest: 'assets/reddit.zip'
+    url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
+    checksum: 'eea345cc7574a5c9c376748d1871d557'
+    description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
+  - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
+    url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
+    description: Wikidata entity dump.
+  - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
+    url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
+    description: Wikipedia dump.
+
+workflows:
+  all:
+    - setup
+    - preprocess
+    - download_model
+    - create_kb
+    - compile_corpora
+    - train
+    - evaluate
+  training:
+    - create_kb
+    - compile_corpora
+    - train
+    - evaluate
+
+commands:
+  - name: setup
+    help: Install dependencies
+    script:
+      - "python -m pip install -r requirements.txt"
+    deps:
+      - "requirements.txt"
+
+  - name: preprocess
+    help: Preprocess test datasets
+    script:
+      - "unzip -q -d assets/reddit assets/reddit.zip"
+      - "python ./scripts/clean_data.py reddit"
+    deps:
+      - "assets/reddit.zip"
+    outputs:
+      - "assets/reddit"
+
+  - name: download_model
+    help: "Download a model with pretrained vectors and NER component"
+    script:
+      - "python -m spacy download ${vars.vectors_model}"
+
+  - name: parse_wiki_dumps
+    help: "Parses Wikipedia dumps."
+    script:
+      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
+
+  - name: create_kb
+    help: "Create the knowledge base and write it to file"
+    script:
+      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
+    deps:
+      - "assets/reddit"
+    outputs:
+      - "assets/reddit/entities.pkl"
+      - "assets/reddit/entities_failed_lookup.pkl"
+      - "assets/reddit/annotations.pkl"
+    outputs_no_cache:
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
+
+  - name: compile_corpora
+    help: "Compile corpora, separated in in train/dev/test sets"
+    script:
+      - "python ./scripts/compile_corpora.py reddit"
+    deps:
+      - "assets/reddit/entities.pkl"
+      - "assets/reddit/entities_failed_lookups.pkl"
+      - "assets/reddit/annotations.pkl"
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
+      - "configs/datasets.yml"
+    outputs_no_cache:
+      - "corpora/reddit/train.spacy"
+      - "corpora/reddit/dev.spacy"
+      - "corpora/reddit/test.spacy"
+
+  - name: train
+    help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
+    script:
+      - "python -m spacy train configs/${vars.config} \
+          --paths.dataset_name reddit \
+          --output training/reddit \
+          --paths.train corpora/reddit/train.spacy \
+          --paths.dev corpora/reddit/dev.spacy \
+          --paths.kb temp/reddit/kb \
+          --paths.base_nlp temp/reddit/nlp \
+          -c scripts/custom_functions.py"
+    deps:
+      - "temp/reddit/kb"
+      - "temp/reddit/nlp"
+      - "corpora/reddit/train.spacy"
+      - "corpora/reddit/dev.spacy"
+
+  - name: evaluate
+    help: "Evaluation on the test set"
+    script:
+      - "env PYTHONPATH=. python ./scripts/evaluate.py reddit"
+    deps:
+      - "training/reddit/model-best"
+      - "corpora/reddit/dev.spacy"
+
+  - name: delete_wiki_db
+    help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
+    script:
+      - "rm -f assets/wiki/wiki.sqlite3"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpora/*"
+      - "rm -rf temp/*"
