@@ -70,6 +70,8 @@ commands:
   - name: "preprocess"
     help: "Convert the data to spaCy's format"
     script:
+      # small model is needed to get heads of spans in preprocessing
+      - python -m spacy download en_core_web_sm
       - python scripts/preprocess.py assets/train.gold.conll corpus/train.spacy
       - python scripts/preprocess.py assets/dev.gold.conll corpus/dev.spacy
       - python scripts/preprocess.py assets/test.gold.conll corpus/test.spacy
