@@ -17,6 +17,9 @@ do
   if [ ! -z "$second_level_dir" -a "$second_level_dir" != " " ]; then
     if [[ ! " ${tested_dirs[*]} " =~ " ${full_second_level_dir} " ]]; then
       tested_dirs+=($full_second_level_dir)
+      if [ -e $full_second_level_dir/requirements.txt ]; then
+        python -m pip install -r $full_second_level_dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      fi
       python -m pytest -s $full_second_level_dir
     fi
   fi
