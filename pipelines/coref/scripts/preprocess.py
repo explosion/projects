@@ -16,7 +16,7 @@ def read_file(fname, outname):
         text = infile.read()
 
     # TODO use larger model
-    nlp = spacy.load("en_core_web_sm", disable=["tagger", "ner", "attribute_ruler", "lemmatizer"])
+    nlp = spacy.load("en_core_web_lg", disable=["tagger", "ner", "attribute_ruler", "lemmatizer"])
     db = DocBin()
 
     
