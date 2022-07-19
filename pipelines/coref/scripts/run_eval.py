@@ -4,7 +4,7 @@ import spacy
 from spacy.tokens import DocBin
 from pathlib import Path
 from spacy.training import Example
-from spacy.coref_scorer import Evaluator, get_cluster_info, lea
+from spacy_experimental.coref.coref_scorer import ClusterEvaluator, get_cluster_info, lea
 
 spacy.require_gpu()
 
@@ -60,7 +60,7 @@ def main():
     nlp = spacy.load(model_name)
     gold_db = DocBin().from_disk(infile)
     gold_docs = gold_db.get_docs(nlp.vocab)
-    lea_evaluator = Evaluator(lea)
+    lea_evaluator = ClusterEvaluator(lea)
     for gold_doc in tqdm.tqdm(gold_docs):
         if len(gold_doc) == 0:
             print("WARNING: empty doc")
