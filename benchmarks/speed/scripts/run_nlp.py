@@ -87,12 +87,6 @@ def _run_spacy_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
     if gpu:
         spacy.require_gpu(0)
     nlp = spacy.load(name)
-    # quick hack
-    if "trf" in name:
-        trf_model = nlp.get_pipe("transformer").model
-        max_length = trf_model.attrs["tokenizer"].model_max_length
-        config = {"min_length": max_length, "split_length": 2}
-        nlp.add_pipe("token_splitter", config=config, first=True)
 
     def run(texts: List[str], batch_size: int):
         list(nlp.pipe(texts, batch_size=batch_size))
@@ -169,7 +163,7 @@ def _run_flair_model(name: str, gpu: bool) -> Callable[[List[str]], None]:
         # re-batch, concatenating with \n\n
         for text in rebatch_texts(texts, batch_size):
             sentences = splitter.split(text)
-            tagger.predict(sentences, verbose=False)
+            tagger.predict(sentences)
 
     return run
 
