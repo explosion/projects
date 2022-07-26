@@ -18,14 +18,16 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `setup` | Install dependencies |
+| `download_mewsli-9` | Download Mewsli-9 dataset. |
 | `preprocess` | Preprocess test datasets |
-| `download` | Download a model with pretrained vectors and NER component |
+| `download_model` | Download a model with pretrained vectors and NER component |
+| `parse_wiki_dumps` | Parses Wikipedia dumps. This can take a long time! |
 | `create_kb` | Create the knowledge base and write it to file |
 | `compile_corpora` | Compile corpora, separated in in train/dev/test sets |
-| `train` | Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU |
+| `train` | Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time! |
 | `evaluate` | Evaluation on the test set |
-| `clean` | Remove intermediate files |
+| `delete_wiki_db` | Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump. |
+| `clean` | Remove intermediate files (excluding Wiki resources and database) |
 
 ### ⏭ Workflows
 
@@ -36,7 +38,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `setup` &rarr; `preprocess` &rarr; `download` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
+| `all` | `download_mewsli-9` &rarr; `preprocess` &rarr; `download_model` &rarr; `parse_wiki_dumps` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
 | `training` | `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
@@ -48,8 +50,9 @@ in the project directory.
 | File | Source | Description |
 | --- | --- | --- |
 | `assets/reddit.zip` | URL | Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228). |
+| `assets/wiki/wikidata_entity_dump.json.bz2` | URL | Wikidata entity dump. Download can take a long time! |
+| `assets/wiki/wikipedia_dump.xml.bz2` | URL | Wikipedia dump. Download can take a long time! |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
-Note that `svn` is required for downloading the Mewsli-9 dataset (should be replaceable by `git` with sparse 
-checkout).
+Note: `svn` is required for downloading the Mewsli-9 dataset.

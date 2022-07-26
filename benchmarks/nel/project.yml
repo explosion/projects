@@ -17,15 +17,14 @@ assets:
     description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
     url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-    description: Wikidata entity dump.
+    description: Wikidata entity dump. Download can take a long time!
   - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
     url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
-    description: Wikipedia dump.
+    description: Wikipedia dump. Download can take a long time!
 
 workflows:
   all:
     - download_mewsli-9
-    - setup
     - preprocess
     - download_model
     - parse_wiki_dumps
@@ -45,13 +44,6 @@ commands:
     script:
       - bash scripts/datasets/download_mewsli-9.sh
 
-  - name: setup
-    help: Install dependencies
-    script:
-      - "python -m pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
   - name: preprocess
     help: Preprocess test datasets
     script:
@@ -70,9 +62,11 @@ commands:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: parse_wiki_dumps
-    help: "Parses Wikipedia dumps."
+    help: "Parses Wikipedia dumps. This can take a long time!"
     script:
       - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
+    outputs:
+      - "assets/wiki/wiki.sqlite3"
 
   - name: create_kb
     help: "Create the knowledge base and write it to file"
@@ -80,6 +74,7 @@ commands:
       - "python ./scripts/create_kb.py ${vars.dataset} ${vars.vectors_model}"
     deps:
       - "assets/${vars.dataset}"
+      - "assets/wiki/wiki.sqlite3"
     outputs:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookup.pkl"
@@ -105,7 +100,7 @@ commands:
       - "corpora/${vars.dataset}/test.spacy"
 
   - name: train
-    help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU"
+    help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
       - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.gpu_id}"
     deps:
@@ -123,9 +118,11 @@ commands:
       - "corpora/${vars.dataset}/dev.spacy"
 
   - name: delete_wiki_db
-    help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
+    help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."
     script:
       - "rm -f assets/wiki/wiki.sqlite3"
+    deps:
+      - "assets/wiki/wiki.sqlite3"
 
   - name: clean
     help: "Remove intermediate files (excluding Wiki resources and database)"
