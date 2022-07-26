@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 def test_nel_emerson_project():
+    pass
     # Running the entire project takes too long. Alternative?
     # root = Path(__file__).parent
     # project_assets(root)
