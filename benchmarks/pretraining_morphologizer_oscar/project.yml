@@ -1,0 +1,81 @@
+title: 'spaCy project for pretraining a tok2vec layer for training a morphologizer'
+description: "This project runs various models on unannotated text, to measure the average speed in words per second (WPS). Note that a fair comparison should also take into account the type of annotations produced by each model, and the accuracy scores of the various pretrained NLP tasks. This example project only addresses the speed issue, but can be extended to perform more detailed comparisons on any data."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  max_pretraining_texts: 10
+  oscar_dir: "data/oscar_data.jsonl"
+  ud_treebank: "UD_English-EWT"
+  spacy_lang: "en"
+  gpu: 0
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets","scripts","data"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# some of them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
+assets:
+  - dest: "assets/ud-treebanks-v2.5.tgz"
+    url: "https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3105/ud-treebanks-v2.5.tgz?sequence=1&isAllowed=y"
+    checksum: "388456892760ada0db8e20ce58501025"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - download_oscar
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: download_oscar
+    help: "Download a subset of the oscar dataset"
+    script:
+      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.oscar_dir}"
+    outputs:
+      - "${vars.oscar_dir}"
+
+  - name: extract_ud
+    help: "Extract the ud-treebanks data"
+    script:
+      - "tar xf assets/ud-treebanks-v2.5.tgz -C assets/"
+    deps:
+      - "assets/ud-treebanks-v2.5.tgz"
+    outputs:
+      - "assets/ud-treebanks-v2.5/"
+
+  - name: convert_ud
+    help: "Convert the ud-treebanks data to spaCy's format"
+    script:
+      - "python scripts/copy_files.py train conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/train/"
+      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/dev/"
+      - "python -m spacy convert corpus/${vars.ud_treebank}/train/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+      - "python -m spacy convert corpus/${vars.ud_treebank}/dev/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+    deps:
+      - "assets/ud-treebanks-v2.5/"
+    outputs:
+      - "corpus/${vars.ud_treebank}/train.spacy"
+      - "corpus/${vars.ud_treebank}/dev.spacy"
+
+  - name: pretrain
+    help: "Pretrain a tok2vec component"
+    script:
+      - "python -m spacy pretrain configs/config.cfg pretraining/${vars.spacy_lang}/ --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_dir}"
+    deps:
+      - "${vars.oscar_dir}"
+      - "configs/config.cfg"
+
+  - name: train
+    help: "Train a morphologizer component"
+    script:
+      - "python -m spacy train configs/config.cfg -o training/${vars.ud_treebank}/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy"
+    deps:
+      - "assets/ud-treebanks-v2.5/"
+    outputs:
+      - "corpus/${vars.ud_treebank}/train.spacy"
+      - "corpus/${vars.ud_treebank}/dev.spacy"
+
