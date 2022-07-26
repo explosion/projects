@@ -43,6 +43,8 @@ commands:
     help: Download Mewsli-9 dataset.
     script:
       - bash scripts/datasets/download_mewsli-9.sh
+    outputs:
+      - assets/mewsli_9
 
   - name: preprocess
     help: Preprocess test datasets
