@@ -1,16 +1,18 @@
-title: 'spaCy project for pretraining a tok2vec layer for training a morphologizer'
+title: 'Improve training a morphologizer component with pretraining'
 description: "This project runs various models on unannotated text, to measure the average speed in words per second (WPS). Note that a fair comparison should also take into account the type of annotations produced by each model, and the accuracy scores of the various pretrained NLP tasks. This example project only addresses the speed issue, but can be extended to perform more detailed comparisons on any data."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  max_pretraining_texts: 10
-  oscar_dir: "data/oscar_data.jsonl"
-  ud_treebank: "UD_English-EWT"
   spacy_lang: "en"
   gpu: 0
 
+  oscar_path: "data/oscar_data.jsonl"
+  max_pretraining_texts: 10000
+  pretraining_model: "model10.bin"
+  ud_treebank: "UD_English-EWT"
+
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets","scripts","data"]
+directories: ["assets", "scripts", "data", "training", "pretraining", "metrics"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # some of them with the project, so they won't have to be downloaded. But the
@@ -24,8 +26,13 @@ assets:
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  all:
+  data:
     - download_oscar
+    - extract_ud
+    - convert_ud
+  training_char:
+    - pretrain_char
+    - train_char
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -35,9 +42,9 @@ commands:
   - name: download_oscar
     help: "Download a subset of the oscar dataset"
     script:
-      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.oscar_dir}"
+      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.oscar_path}"
     outputs:
-      - "${vars.oscar_dir}"
+      - "${vars.oscar_path}"
 
   - name: extract_ud
     help: "Extract the ud-treebanks data"
@@ -51,31 +58,58 @@ commands:
   - name: convert_ud
     help: "Convert the ud-treebanks data to spaCy's format"
     script:
-      - "python scripts/copy_files.py train conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/train/"
-      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ corpus/${vars.ud_treebank}/dev/"
-      - "python -m spacy convert corpus/${vars.ud_treebank}/train/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
-      - "python -m spacy convert corpus/${vars.ud_treebank}/dev/ corpus/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+      - "python scripts/copy_files.py train conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ data/${vars.ud_treebank}/train/"
+      - "python scripts/copy_files.py dev conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ data/${vars.ud_treebank}/dev/"
+      - "python scripts/copy_files.py test conllu assets/ud-treebanks-v2.5/${vars.ud_treebank}/ data/${vars.ud_treebank}/test/"
+      - "python -m spacy convert data/${vars.ud_treebank}/train/ data/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+      - "python -m spacy convert data/${vars.ud_treebank}/dev/ data/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
+      - "python -m spacy convert data/${vars.ud_treebank}/test/ data/${vars.ud_treebank}/ --converter conllu -n 10 -T -C"
     deps:
       - "assets/ud-treebanks-v2.5/"
     outputs:
-      - "corpus/${vars.ud_treebank}/train.spacy"
-      - "corpus/${vars.ud_treebank}/dev.spacy"
+      - "data/${vars.ud_treebank}/train.spacy"
+      - "data/${vars.ud_treebank}/dev.spacy"
+      - "data/${vars.ud_treebank}/test.spacy"
 
-  - name: pretrain
-    help: "Pretrain a tok2vec component"
+  - name: pretrain_char
+    help: "Pretrain a tok2vec component with the character objective"
     script:
-      - "python -m spacy pretrain configs/config.cfg pretraining/${vars.spacy_lang}/ --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_dir}"
+      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}"
     deps:
-      - "${vars.oscar_dir}"
-      - "configs/config.cfg"
+      - "${vars.oscar_path}"
+      - "configs/config_pretrain_char.cfg"
+    outputs:
+      - "pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
 
   - name: train
-    help: "Train a morphologizer component"
+    help: "Train a morphologizer component without pretrained weights"
     script:
-      - "python -m spacy train configs/config.cfg -o training/${vars.ud_treebank}/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train corpus/${vars.ud_treebank}/train.spacy --paths.dev corpus/${vars.ud_treebank}/dev.spacy"
+      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/no_pretraining/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy"
     deps:
-      - "assets/ud-treebanks-v2.5/"
+      - "data/${vars.ud_treebank}/train.spacy"
+      - "data/${vars.ud_treebank}/dev.spacy"
+      - "configs/config_pretrain_char.cfg"
     outputs:
-      - "corpus/${vars.ud_treebank}/train.spacy"
-      - "corpus/${vars.ud_treebank}/dev.spacy"
+      - "training/${vars.ud_treebank}/no_pretraining/model-best"
 
+  - name: evaluate
+    help: "Evaluate the trained morphologizer component without pretrained weights"
+    script:
+      - "python -m spacy evaluate training/${vars.ud_treebank}/no_pretraining/model-best data/${vars.ud_treebank}/test.spacy --output metrics/${vars.ud_treebank}_no_pretraining.json --gpu-id ${vars.gpu}"
+    deps:
+      - "training/${vars.ud_treebank}/no_pretraining/model-best"
+      - "data/${vars.ud_treebank}/test.spacy"
+    outputs:
+      - "metrics/${vars.ud_treebank}/no_pretraining/"
+
+  - name: train_char
+    help: "Train a morphologizer component with pretrained weights (character_objective)"
+    script:
+      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/character_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
+    deps:
+      - "data/${vars.ud_treebank}/train.spacy"
+      - "data/${vars.ud_treebank}/dev.spacy"
+      - "configs/config_pretrain_char.cfg"
+      - "pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
+    outputs:
+      - "training/${vars.ud_treebank}/character_objective/model-best"
