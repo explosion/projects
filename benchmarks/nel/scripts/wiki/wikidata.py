@@ -255,3 +255,56 @@ def _write_to_db(
         aliases_for_entities,
     )
     db_conn.commit()
+
+
+def extract_demo_dump(in_dump_path: Path, out_dump_path: Path, filter_terms: Set[str]) -> Tuple[Set[str], Set[str]]:
+    """Writes information on those entities having at least one of the filter_terms in their description to a new dump
+    at location filtered_dump_path.
+    in_dump_path (Path): Path to complete Wikidata dump.
+    out_dump_path (Path): Path to filtered Wikidata dump.
+    filter_terms (Set[str]): Terms having to appear in entity descriptions in order to be included in output dump.
+    RETURNS (Tuple[Set[str], Set[str]]): For retained entities: (1) set of QIDs, (2) set of labels (should match article
+        titles).
+    """
+
+    entity_ids: Set[str] = set()
+    entity_labels: Set[str] = set()
+
+    with bz2.open(in_dump_path, mode="rb") as in_file:
+        with bz2.open(out_dump_path, mode="wb") as out_file:
+            write_count = 0
+            with tqdm.tqdm(
+                desc="Parsing entity data", leave=True, miniters=1000
+            ) as pbar:
+                for cnt, line in enumerate(in_file):
+                    keep = cnt == 0
+
+                    if not keep:
+                        clean_line = line.strip()
+                        if clean_line.endswith(b","):
+                            clean_line = clean_line[:-1]
+                        if len(clean_line) > 1:
+                            obj = json.loads(clean_line)
+                            label = obj["labels"].get("en", {}).get("value", "")
+                            keep = not (
+                                filter_terms.isdisjoint(
+                                    {
+                                        label,
+                                        *{alias.get("value", "") for alias in obj["aliases"].get("en", [])},
+                                        *{token for token in obj["descriptions"].get("en", {}).get("value", "").split()}
+                                    }
+                                )
+                            )
+                            if keep:
+                                entity_ids.add(obj["id"])
+                                entity_labels.add(label)
+
+                    if keep:
+                        out_file.write(line)
+                        write_count += 1
+                        if write_count >= 50:
+                            return entity_ids, entity_labels
+
+                    pbar.update(1)
+
+    return entity_ids, entity_labels

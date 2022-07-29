@@ -358,6 +358,57 @@ def read_texts(
         write_to_db(records)
 
 
+def extract_demo_dump(
+    in_dump_path: Path, out_dump_path: Path, entity_ids: Set[str], entity_titles: Set[str], filter_terms: Set[str]
+) -> None:
+    """Writes information on those entities having at least one of the filter_terms in their description to a new dump
+    at location filtered_dump_path.
+    in_dump_path (Path): Path to complete Wikidata dump.
+    out_dump_path (Path): Path to filtered Wikidata dump.
+    entity_ids (Set[str]): Entity IDs to consider.
+    entity_titles (Set[str]): Entity titles to consider.
+    filter_terms (Set[str]): Terms having to appear in entity descriptions in order to be included in output dump.
+    """
+
+    with bz2.open(in_dump_path, mode="rb") as file:
+        with tqdm.tqdm(desc="Parsing article texts", miniters=1000, total=len(entity_titles)) as pbar:
+            article_id: Optional[str] = None
+            reading_revision = False
+            line_cache: List[bytes] = []
+
+            for line in file:
+                clean_line = line.strip().decode("utf-8")
+
+                if clean_line == "<revision>":
+                    reading_revision = True
+                elif clean_line == "</revision>":
+                    reading_revision = False
+
+                # Start reading new page
+                if clean_line == "<page>":
+                    line_cache.append(line)
+                    article_title = None
+                    article_id = None
+
+                # finished reading this page
+                elif clean_line == "</page>":
+                    if article_id and article_title in entity_titles:
+                        # todo write out (title here?)
+                        pbar.update(1)
+                    if article_title not in entity_titles:
+                        pass
+
+                    article_title = None
+                    article_id = None
+                    reading_revision = False
+
+                # read the title of this article (outside the revision portion of the document)
+                if not reading_revision:
+                    titles = title_regex.search(clean_line)
+                    if titles:
+                        article_title = titles[0].strip()
+
+
 def _process_wp_text(
     article_title: str, article_text: str, entity_title_to_id: Dict[str, str]
 ) -> Tuple[Optional[str], Optional[List[Tuple[str, Any, int, int]]]]:

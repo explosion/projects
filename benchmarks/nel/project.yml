@@ -47,7 +47,7 @@ commands:
       - assets/mewsli_9
 
   - name: preprocess
-    help: Preprocess test datasets
+    help: Preprocess test datasets.
     script:
       - "unzip -q -o -d assets/reddit assets/reddit.zip"
       - "python ./scripts/clean_data.py ${vars.config}"
@@ -59,19 +59,19 @@ commands:
       - "assets/mewsli_9"
 
   - name: download_model
-    help: "Download a model with pretrained vectors and NER component"
+    help: "Download a model with pretrained vectors and NER component."
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: parse_wiki_dumps
-    help: "Parses Wikipedia dumps. This can take a long time!"
+    help: "Parse Wikipedia dumps. This can take a long time!"
     script:
       - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
     outputs:
       - "assets/wiki/wiki.sqlite3"
 
   - name: create_kb
-    help: "Create the knowledge base and write it to file"
+    help: "Create the knowledge base and write it to file."
     script:
       - "python ./scripts/create_kb.py ${vars.dataset} ${vars.vectors_model}"
     deps:
@@ -86,7 +86,7 @@ commands:
       - "temp/${vars.dataset}/nlp"
 
   - name: compile_corpora
-    help: "Compile corpora, separated in in train/dev/test sets"
+    help: "Compile corpora, separated in in train/dev/test sets."
     script:
       - "python ./scripts/compile_corpora.py ${vars.dataset}"
     deps:
@@ -112,7 +112,7 @@ commands:
       - "corpora/${vars.dataset}/dev.spacy"
 
   - name: evaluate
-    help: "Evaluation on the test set"
+    help: "Evaluate on the test set."
     script:
       - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset}"
     deps:
