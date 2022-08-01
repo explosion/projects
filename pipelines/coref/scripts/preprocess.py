@@ -13,7 +13,7 @@ DOCID_REGEX = "#begin document \((.*)\); part (\d*)"
 
 
 def read_file(fname, outname):
-    with open(fname) as infile:
+    with open(fname, encoding="utf-8") as infile:
         text = infile.read()
 
     # TODO use larger model
