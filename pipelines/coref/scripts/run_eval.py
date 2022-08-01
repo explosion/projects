@@ -4,7 +4,8 @@ import spacy
 from spacy.tokens import DocBin
 from pathlib import Path
 from spacy.training import Example
-from spacy_experimental.coref.coref_scorer import ClusterEvaluator, get_cluster_info, lea
+from spacy_experimental.coref.coref_scorer import ClusterEvaluator
+from spacy_experimental.coref.coref_scorer import get_cluster_info, lea
 
 spacy.require_gpu()
 

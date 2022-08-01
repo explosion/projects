@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 # Convert conll annotations to DocBin
 # Coref uses a special CoNLL format, so the usual spaCy converters don't work.
 
@@ -11,15 +11,17 @@ from spacy.tokens import Doc, DocBin
 
 DOCID_REGEX = "#begin document \((.*)\); part (\d*)"
 
+
 def read_file(fname, outname):
     with open(fname) as infile:
         text = infile.read()
 
     # TODO use larger model
-    nlp = spacy.load("en_core_web_lg", disable=["tagger", "ner", "attribute_ruler", "lemmatizer"])
+    nlp = spacy.load(
+        "en_core_web_lg", disable=["tagger", "ner", "attribute_ruler", "lemmatizer"]
+    )
     db = DocBin()
 
-    
     docs = text.split("\n#end document\n")
     for doc in docs:
         name = None
@@ -34,7 +36,7 @@ def read_file(fname, outname):
             if name is None:
                 top = lines.pop(0)
                 # doc id line looks like this:
-                #begin document (/some/path); part 000
+                # begin document (/some/path); part 000
                 matches = re.match(DOCID_REGEX, top)
                 if not matches:
                     # happens on the last line
@@ -43,7 +45,8 @@ def read_file(fname, outname):
                 name = f"{matches.group(1)}_{matches.group(2)}"
 
             for line in lines:
-                if not line: continue # ignore blanks
+                if not line:
+                    continue  # ignore blanks
                 # note: file is not tsv, it uses ~aligned spaces~
                 fields = line.split()
                 surface = fields[3]
@@ -71,14 +74,14 @@ def read_file(fname, outname):
                     for mention in clusters:
                         if mention[0] == "(" and mention[-1] == ")":
                             cid = int(mention[1:-1])
-                            clustermap[cid].insert(0, (tokid, tokid + 1 ) )
+                            clustermap[cid].insert(0, (tokid, tokid + 1))
                         elif mention[0] == "(":
                             cid = int(mention[1:])
-                            clustermap[cid].append( tokid ) # this will be popped
+                            clustermap[cid].append(tokid)  # this will be popped
                         elif mention[-1] == ")":
                             cid = int(mention[:-1])
                             start = clustermap[cid].pop()
-                            clustermap[cid].insert(0, (start, tokid + 1 ) )
+                            clustermap[cid].insert(0, (start, tokid + 1))
         doc = Doc(nlp.vocab, words=words, sent_starts=sent_starts)
         for key, vals in clustermap.items():
             spans = [doc[ss:ee] for ss, ee in vals]
@@ -87,23 +90,25 @@ def read_file(fname, outname):
 
         # parse and get heads
         doc = nlp(doc)
-        headc = 0 # head cluster count
+        headc = 0  # head cluster count
         for ii, (key, vals) in enumerate(clustermap.items()):
             heads = [doc[ss:ee].root.i for ss, ee in vals]
             heads = list(set(heads))
             # debugging
-            #for ss, ee in vals:
+            # for ss, ee in vals:
             #    if ee - ss > 1:
             #        print("head", doc[ss:ee].root, "::", doc[ss:ee])
-            if len(heads) == 1: continue # ignore singletons
+            if len(heads) == 1:
+                continue  # ignore singletons
             headc += 1
-            spans = [doc[hh:hh+1] for hh in heads]
+            spans = [doc[hh : hh + 1] for hh in heads]
             doc.spans[f"coref_head_clusters_{headc}"] = spans
-        
+
         db.add(doc)
 
     print(f"Serializing {len(db)} documents")
     db.to_disk(outname)
+
 
 if __name__ == "__main__":
     read_file(sys.argv[1], sys.argv[2])

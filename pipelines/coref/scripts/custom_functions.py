@@ -8,7 +8,9 @@ from spacy.language import Language
 
 
 @spacy.registry.readers("HeadCopyingCorpus.v1")
-def create_head_copy_docbin_reader(path: Path, head_prefix) -> Callable[[Language], Iterable[Example]]:
+def create_head_copy_docbin_reader(
+    path: Path, head_prefix
+) -> Callable[[Language], Iterable[Example]]:
     return partial(copy_gold_heads, path, head_prefix)
 
 
@@ -27,5 +29,5 @@ def copy_gold_heads(path: Path, head_prefix: str, nlp: Language) -> Iterable[Exa
         )
         for name, span_group in doc.spans.items():
             if name.startswith(head_prefix):
-                pred.spans[name] = [pred[span.start:span.end] for span in span_group]
+                pred.spans[name] = [pred[span.start : span.end] for span in span_group]
         yield Example(predicted=pred, reference=doc)
