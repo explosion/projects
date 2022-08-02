@@ -1,3 +1,3 @@
 spacy-transformers>=1.1.6,<1.2.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.3.0/en_core_web_lg-3.3.0-py3-none-any.whl
+https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.4.0/en_core_web_lg-3.4.0-py3-none-any.whl
 git+https://github.com/explosion/spacy-experimental@feature/coref#egg=spacy-experimental
