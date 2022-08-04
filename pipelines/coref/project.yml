@@ -4,8 +4,8 @@ description: |
 
   Before using this project:
 
-  1. run `pip install -r requirements.txt`
-  2. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
+  1. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
+  2. run `pip install -r requirements.txt`
   3. modify `project.yml` to set your GPU ID and OntoNotes path
 
   After that you can just run `spacy project run all`.
