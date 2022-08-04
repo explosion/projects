@@ -62,6 +62,9 @@ commands:
       - tar xzf assets/conll-2012-test-official.v9.tar.gz -C assets/
       - tar xzf assets/conll-2012-train.v4.tar.gz -C assets/
 
+      # OPTIONAL uncomment the following line to only parse the English data
+      #- sed -i 's/arabic.english.chinese/english/' assets/conll-2012/v3/scripts/skeleton2conll.sh
+
       - echo "Rehydrating data... This will take roughly 20 minutes"
       - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D ${vars.ontonotes} assets/conll-2012"
 
