@@ -4,6 +4,14 @@
 
 This project trains a coreference model for spaCy using OntoNotes.
 
+Before using this project:
+
+1. run `pip install -r requirements.txt`
+2. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
+3. modify `project.yml` to set your GPU ID and OntoNotes path
+
+After that you can just run `spacy project run all`.
+
 
 ## 📋 project.yml
 
@@ -24,7 +32,7 @@ Commands are only re-run if their inputs have changed.
 | `train-cluster` | Train the clustering component |
 | `prep-span-data` | Prepare data for the span predictor component. |
 | `train-span-predictor` | Train the span predictor component. |
-| `assemble` | Assemble parts into complete coref pipeline. |
+| `assemble` | Assemble all parts into a complete coref pipeline. |
 | `eval` | Evaluate model on the test set. |
 
 ### ⏭ Workflows
@@ -38,7 +46,7 @@ inputs have changed.
 | --- | --- |
 | `prep` | `prep-data` &rarr; `preprocess` |
 | `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-predictor` &rarr; `assemble` |
-| `all` | `prep-data` &rarr; `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-predictor` &rarr; `assemble` |
+| `all` | `prep-data` &rarr; `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-predictor` &rarr; `assemble` &rarr; `eval` |
 
 ### 🗂 Assets
 
