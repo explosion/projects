@@ -16,7 +16,7 @@ def create_head_copy_docbin_reader(
 
 def copy_gold_heads(path: Path, head_prefix: str, nlp: Language) -> Iterable[Example]:
     """
-    Copy gold heads from reference to predicted documents so that the span predictor
+    Copy gold heads from reference to predicted documents so that the span resolver
     can predict spans.
     """
     doc_bin = DocBin().from_disk(path)

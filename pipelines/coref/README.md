@@ -30,8 +30,8 @@ Commands are only re-run if their inputs have changed.
 | `prep-data` | Rehydrate the data using OntoNotes |
 | `preprocess` | Convert the data to spaCy's format |
 | `train-cluster` | Train the clustering component |
-| `prep-span-data` | Prepare data for the span predictor component. |
-| `train-span-predictor` | Train the span predictor component. |
+| `prep-span-data` | Prepare data for the span resolver component. |
+| `train-span-resolver` | Train the span resolver component. |
 | `assemble` | Assemble all parts into a complete coref pipeline. |
 | `eval` | Evaluate model on the test set. |
 
@@ -45,8 +45,8 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `prep` | `prep-data` &rarr; `preprocess` |
-| `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-predictor` &rarr; `assemble` |
-| `all` | `prep-data` &rarr; `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-predictor` &rarr; `assemble` &rarr; `eval` |
+| `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` |
+| `all` | `prep-data` &rarr; `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
 
 ### 🗂 Assets
 

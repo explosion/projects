@@ -38,7 +38,7 @@ workflows:
   train:
     - train-cluster
     - prep-span-data
-    - train-span-predictor
+    - train-span-resolver
     - assemble
 
   all:
@@ -48,7 +48,7 @@ workflows:
     # train
     - train-cluster
     - prep-span-data
-    - train-span-predictor
+    - train-span-resolver
     - assemble
     # eval
     - eval
@@ -104,7 +104,7 @@ commands:
       - training/cluster/model-best
   
   - name: "prep-span-data"
-    help: "Prepare data for the span predictor component."
+    help: "Prepare data for the span resolver component."
     script:
       - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
       - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
@@ -116,8 +116,8 @@ commands:
       - corpus/spans.train.spacy
       - corpus/spans.dev.spacy
   
-  - name: "train-span-predictor"
-    help: "Train the span predictor component."
+  - name: "train-span-resolver"
+    help: "Train the span resolver component."
     script:
       - spacy train configs/span.cfg -c scripts/custom_functions.py -g ${vars.gpu_id} --paths.train corpus/spans.train.spacy --paths.dev corpus/spans.dev.spacy --training.max_epochs ${vars.max_epochs} --paths.transformer_source training/cluster/model-best -o training/span_resolver
     deps:
