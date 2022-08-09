@@ -46,7 +46,7 @@ def fetch_entity_information(
     entities: Dict[str, Entity] = {}
 
     for i in range(0, len(values), batch_size):
-        chunk = values[i : i + batch_size]
+        chunk = [v.replace("_", " ") for v in values[i : i + batch_size]]
         entities_chunk = wiki_dump_api.load_entities(key, chunk)
         _failed_lookups = set(chunk)
 

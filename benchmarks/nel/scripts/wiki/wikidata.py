@@ -102,6 +102,12 @@ def read_entities(
                 clean_line = line.strip()
                 if clean_line.endswith(b","):
                     clean_line = clean_line[:-1]
+                to_search = clean_line.decode("utf-8").lower()
+                if "boston" in to_search and "celtics" in to_search:
+                    obj = json.loads(clean_line)
+                    obj_lbl = obj["labels"].get("en", {}).get("value", "").lower()
+                    if "celtics" in obj_lbl:
+                        x = 3
                 if len(clean_line) > 1:
                     obj = json.loads(clean_line)
                     entry_type = obj["type"]
@@ -269,12 +275,13 @@ def extract_demo_dump(in_dump_path: Path, out_dump_path: Path, filter_terms: Set
 
     entity_ids: Set[str] = set()
     entity_labels: Set[str] = set()
+    filter_terms = {ft.lower() for ft in filter_terms}
 
     with bz2.open(in_dump_path, mode="rb") as in_file:
         with bz2.open(out_dump_path, mode="wb") as out_file:
             write_count = 0
             with tqdm.tqdm(
-                desc="Parsing entity data", leave=True, miniters=1000
+                desc="Filtering entity data", leave=True, miniters=100
             ) as pbar:
                 for cnt, line in enumerate(in_file):
                     keep = cnt == 0
@@ -284,26 +291,16 @@ def extract_demo_dump(in_dump_path: Path, out_dump_path: Path, filter_terms: Set
                         if clean_line.endswith(b","):
                             clean_line = clean_line[:-1]
                         if len(clean_line) > 1:
-                            obj = json.loads(clean_line)
-                            label = obj["labels"].get("en", {}).get("value", "")
-                            keep = not (
-                                filter_terms.isdisjoint(
-                                    {
-                                        label,
-                                        *{alias.get("value", "") for alias in obj["aliases"].get("en", [])},
-                                        *{token for token in obj["descriptions"].get("en", {}).get("value", "").split()}
-                                    }
-                                )
-                            )
+                            keep = any([ft in clean_line.decode("utf-8").lower() for ft in filter_terms])
                             if keep:
+                                obj = json.loads(clean_line)
+                                label = obj["labels"].get("en", {}).get("value", "")
                                 entity_ids.add(obj["id"])
                                 entity_labels.add(label)
 
                     if keep:
                         out_file.write(line)
                         write_count += 1
-                        if write_count >= 50:
-                            return entity_ids, entity_labels
 
                     pbar.update(1)
 

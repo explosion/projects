@@ -1,6 +1,6 @@
 """ Dataset class for Mewsli-9 dataset. """
 import csv
-from typing import Tuple, Set, List, Dict
+from typing import Tuple, Set, List, Dict, Optional
 
 import tqdm
 from spacy.tokens import Doc
@@ -35,7 +35,7 @@ class Mewsli9Dataset(Dataset):
                     annotations[row["docid"]] = []
                 annotations[row["docid"]].append(
                     Annotation(
-                        entity_name=name,
+                        entity_name=name.replace("_", " "),
                         entity_id=row["qid"],
                         start_pos=int(row["position"]),
                         end_pos=int(row["position"]) + int(row["length"]),
@@ -51,7 +51,7 @@ class Mewsli9Dataset(Dataset):
     def clean_assets(self) -> None:
         pass
 
-    def _create_annotated_docs(self) -> List[Doc]:
+    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         annotated_docs: List[Doc] = []
         texts: Dict[str, str]
         with open(
@@ -68,12 +68,26 @@ class Mewsli9Dataset(Dataset):
                         self._paths["assets"] / "en" / "text" / row["docid"],
                         encoding="utf-8",
                     ) as text_file:
+                        lines = text_file.readlines()
+                        doc_text = " ".join(
+                            " ".join(
+                                [
+                                    line.replace("\n", " ").replace("\xa0", ".")
+                                    for line in lines
+                                ]
+                            ).split()
+                        )
+
+                        if filter_terms and not any([ft in doc_text for ft in filter_terms]):
+                            pbar.update(1)
+                            continue
+
                         doc = self._nlp_base(
                             " ".join(
                                 " ".join(
                                     [
                                         line.replace("\n", " ").replace("\xa0", ".")
-                                        for line in text_file.readlines()
+                                        for line in lines
                                     ]
                                 ).split()
                             )

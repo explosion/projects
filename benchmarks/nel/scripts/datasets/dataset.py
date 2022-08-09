@@ -144,8 +144,11 @@ class Dataset(abc.ABC):
         self._nlp_base.to_disk(self._paths["nlp_base"])
         logger.info("Successfully constructed knowledge base.")
 
-    def compile_corpora(self) -> None:
-        """Creates train/dev/test corpora for Reddit entity linking dataset."""
+    def compile_corpora(self, filter_terms: Optional[Set[str]] = None) -> None:
+        """Creates train/dev/test corpora for Reddit entity linking dataset.
+        filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
+            terms will be included in corpora. If None, all documents are included.
+        """
 
         self._load_resource("entities")
         self._load_resource("failed_entity_lookups")
@@ -153,11 +156,13 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_base")
 
         Doc.set_extension("overlapping_annotations", default=None)
-        self._annotated_docs = self._create_annotated_docs()
+        self._annotated_docs = self._create_annotated_docs(filter_terms)
         self._serialize_corpora()
 
-    def _create_annotated_docs(self) -> List[Doc]:
+    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         """Creates docs annotated with entities.
+        filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
+            terms will be included in corpora. If None, all documents are included.
         RETURN (List[Doc]): List of docs reflecting all entity annotations.
         """
         raise NotImplementedError

@@ -4,7 +4,7 @@ vars:
   name: "nel_benchmark"
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
-  version: "0.0.1"
+  version: "0.0.2"
   dataset: "mewsli_9"
   gpu_id: ""
 
@@ -66,7 +66,7 @@ commands:
   - name: parse_wiki_dumps
     help: "Parse Wikipedia dumps. This can take a long time!"
     script:
-      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
+      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py --use_filtered_dumps True"
     outputs:
       - "assets/wiki/wiki.sqlite3"
 
@@ -88,7 +88,7 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py ${vars.dataset}"
+      - "python ./scripts/compile_corpora.py ${vars.dataset} True"
     deps:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookups.pkl"

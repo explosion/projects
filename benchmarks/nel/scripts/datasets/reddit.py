@@ -1,7 +1,7 @@
 """ Dataset class for Reddit EL dataset. """
 
 import csv
-from typing import Set, List, Tuple, Dict
+from typing import Set, List, Tuple, Dict, Optional
 
 from spacy.tokens import Doc
 
@@ -71,7 +71,7 @@ class RedditDataset(Dataset):
 
         return entities, failed_entity_lookups, annotations
 
-    def _create_annotated_docs(self) -> List[Doc]:
+    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         annotated_docs: List[Doc] = []
         file_names: List[str] = []
         if self._options["posts"]:
@@ -100,6 +100,9 @@ class RedditDataset(Dataset):
 
         # Create spans from annotations.
         for row in rows:
+            if filter_terms and not any([ft in row[-1] for ft in filter_terms]):
+                continue
+
             doc = self._nlp_base(row[-1])
             # There might be multiple annotations for the same tokens/spans. This is handled by (1) sorting all
             # entities for this document by their frequency and (2) afterwards moving all overlapping entities to
