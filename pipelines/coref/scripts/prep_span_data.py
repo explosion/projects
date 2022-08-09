@@ -54,6 +54,9 @@ def find_target_span(head, ex):
             for span in aligned_spans:
                 if span.start <= head.start and head.end <= span.end:
                     size = span.end - span.start
+                    if size == 1:
+                        # won't get smaller, short ciruit
+                        return target_span
                     if size < smallest:
                         target_span = span
                         smallest = size
