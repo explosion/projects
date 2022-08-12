@@ -21,6 +21,7 @@ vars:
   gpu_id: 0
   trials: 5
   config: "ner_accuracy.cfg"
+  max_steps: 20000
 
 workflows:
   all:
@@ -88,6 +89,7 @@ commands:
         --output training/
         --paths.train corpus/en-conll-train.spacy
         --paths.dev corpus/en-conll-dev.spacy
+        --training.max_steps ${vars.max_steps}
         --gpu-id ${vars.gpu_id}
     deps:
       - corpus/en-conll-train.spacy
@@ -106,3 +108,8 @@ commands:
         --gpu-id ${vars.gpu_id}
     outputs:
       - metrics/summarized_scores.json
+
+  - name: "clean"
+    help: "Remove cached files"
+    script:
+      - rm -rf training/
