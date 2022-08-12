@@ -109,10 +109,8 @@ commands:
         python -m scripts.evaluate_with_trials
         training/
         corpus/en-conll-test.spacy
-        --output metrics/summarized_scores.json
+        --output-dir metrics/
         --gpu-id ${vars.gpu_id}
-    outputs:
-      - metrics/summarized_scores.json
 
   - name: "clean"
     help: "Remove cached files"
