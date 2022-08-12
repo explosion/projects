@@ -1,12 +1,11 @@
 import typer
 
 import random
-from typing import Optional, Dict, Any, Union
+from typing import Optional
 from pathlib import Path
 from wasabi import msg
 import typer
 import logging
-import sys
 
 
 from spacy.cli._util import Arg, Opt, parse_config_overrides, show_validation_error
