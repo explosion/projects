@@ -1,0 +1,97 @@
+title: "Training a POS tagger and dependency parser for a low-resource language"
+description: |
+  This project trains a part-of-speech tagger and dependency parser for a
+  low-resource language such as Tagalog. We will be using the
+  [TRG](https://universaldependencies.org/treebanks/tl_trg/index.html) and
+  [Ugnayan](https://universaldependencies.org/treebanks/tl_ugnayan/index.html)
+  treebanks for this task. Since the number of sentences in each corpus is
+  small, we'll need to evaluate our model using [10-fold cross
+  validation](https://universaldependencies.org/release_checklist.html#data-split).
+  How to implement this split will be demonstrated in this project
+  (`scripts/kfold.py`). The cross validation results can be seen below.
+
+  ### Monolingual evaluation
+
+  Consists of k-fold cross validation and inter-treebank evaluation.
+
+  **TRG Treebank**
+
+  |         | TOKEN_ACC | POS_ACC | MORPH_ACC | TAG_ACC | DEP_UAS | DEP_LAS |
+  |---------|-----------|---------|-----------|---------|---------|---------|
+  | 10-fold | 1.000     | 0.843   | 0.749     | 0.833   | 0.846   | 0.554   |
+  | Ugnayan | 0.997     | 0.563   | 0.364     | 0.538   | 0.472   | 0.240   |
+
+  **Ugnayan Treebank**
+
+  |         | TOKEN_ACC | POS_ACC | MORPH_ACC | TAG_ACC | DEP_UAS | DEP_LAS |
+  |---------|-----------|---------|-----------|---------|---------|---------|
+  | 10-fold | 0.998     | 0.819   | 0.995     | 0.810   | 0.667   | 0.409   |
+  | TRG     | 1.000     | 0.789   | 0.424     | 0.779   | 0.793   | 0.572   |
+
+directories: ["assets", "corpus", "training", "metrics", "configs", "models"]
+
+vars:
+  config: "default"
+  gpu: 0
+  lang: "tl"
+  trg_treebank: "UD_Tagalog-TRG"
+  trg_data: "tl_trg-ud-test"
+  ugn_treebank: "UD_Tagalog-Ugnayan"
+  ugn_data: "tl_ugnayan-ud-test"
+
+assets:
+  - dest: "assets/${vars.trg_data}.conllu"
+    description: "Treebank data for UD_Tagalog-TRG"
+    url: "https://github.com/UniversalDependencies/UD_Tagalog-TRG/blob/master/tl_trg-ud-test.conllu"
+  - dest: "assets/${vars.ugn_data}.conllu"
+    description: "Treebank data for UD_Tagalog-Ugnayan"
+    url: "https://github.com/UniversalDependencies/UD_Tagalog-Ugnayan/blob/master/tl_ugnayan-ud-test.conllu"
+
+workflows:
+  all:
+    - preprocess
+    - evaluate-kfold
+
+commands:
+  - name: preprocess
+    help: "Convert the data to spaCy's format"
+    script:
+      - >-
+        python -m spacy convert 
+        assets/${vars.trg_data}.conllu
+        corpus/
+        --converter conllu
+        --n-sents 1
+        --merge-subtokens
+      - >-
+        python -m spacy convert 
+        assets/${vars.ugn_data}.conllu
+        corpus/
+        --converter conllu
+        --n-sents 1
+        --merge-subtokens
+    deps:
+      - "assets/${vars.trg_data}.conllu"
+      - "assets/${vars.ugn_data}.conllu"
+    outputs:
+      - "corpus/${vars.trg_data}.spacy"
+      - "corpus/${vars.ugn_data}.spacy"
+
+  - name: "evaluate-kfold"
+    help: "Evaluate using k-fold cross validation"
+    script:
+      - "python -m scripts.kfold corpus/${vars.trg_data}.spacy configs/${vars.config}.cfg --output metrics/${vars.trg_data}-kfold.json"
+      - "python -m scripts.kfold corpus/${vars.ugn_data}.spacy configs/${vars.config}.cfg --output metrics/${vars.ugn_data}-kfold.json"
+    deps:
+      - "corpus/${vars.trg_data}.spacy"
+      - "corpus/${vars.ugn_data}.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "metrics/${vars.trg_data}-kfold.json"
+      - "metrics/${vars.ugn_data}-kfold.json"
+
+  - name: "clean"
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpus/*"
