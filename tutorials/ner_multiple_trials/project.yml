@@ -12,6 +12,7 @@ description: |
 
 directories:
   - assets
+  - configs
   - corpus
   - metrics
   - training
