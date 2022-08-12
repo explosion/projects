@@ -41,11 +41,12 @@ def train_cli(
 
     seeds = [random.randint(0, MAX_SEED) for _ in range(num_trials)]
 
-    for seed in seeds:
+    for trial, seed in enumerate(seeds):
+        msg.divider(f"Performing trial {trial+1} of {num_trials} (seed={seed})")
         overrides["system.seed"] = seed
         train(
             config_path,
-            output_path / seed,
+            output_path / str(seed),
             num_trials=num_trials,
             use_gpu=use_gpu,
             overrides=overrides,
