@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import spacy
 import typer
+from spacy.cli._util import parse_config_overrides, setup_gpu
 from spacy.cli._util import show_validation_error
 from spacy.tokens import DocBin
 from spacy.training.corpus import Corpus
@@ -33,23 +34,31 @@ def flatten(l: List) -> List:
     return [item for sublist in l for item in sublist]
 
 
+app = typer.Typer()
+
+
+@app.command(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def main(
     # fmt: off
-    corpus: Path = typer.Argument(..., help="Path to the full corpus."),
+    ctx: typer.Context,  # this is only used to read additional arguments
+    corpus_path: Path = typer.Argument(..., help="Path to the full corpus."),
+    output_path: Path = typer.Argument(..., help="Path to save the output scores (JSON)."),
     config_path: Path = typer.Argument(..., help="Path to the spaCy configuration file."),
     n_folds: int = typer.Option(10, "--n-folds", "-n", help="Number of folds for cross-validation.", show_default=True),
     lang: Optional[str] = typer.Option("tl", "--lang", "-l", help="Language vocab to use.", show_default=True),
-    seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed for experimentation and shuffling.", show_default=True),
     shuffle: bool = typer.Option(False, "--shuffle", "-f", help="Flag for shuffling data"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Path to save the output scores (JSON)."),
+    use_gpu: int = typer.Option(0, help="GPU id to use. Pass -1 to use the CPU."),
     # fmt: on
 ):
+    overrides = parse_config_overrides(ctx.args)
+    setup_gpu(use_gpu)
+
     nlp = spacy.blank(lang)
-    doc_bin = DocBin().from_disk(corpus)
+    doc_bin = DocBin().from_disk(corpus_path)
     docs = list(doc_bin.get_docs(nlp.vocab))
 
-    if seed:
-        random.seed(seed)
     if shuffle:
         random.shuffle(docs)
 
@@ -65,10 +74,8 @@ def main(
         with tempfile.TemporaryDirectory() as tmpdir:
 
             msg.info("Preparing data for training")
-            overrides = {
-                "paths.train": str(Path(tmpdir) / "tmp_train.spacy"),
-                "paths.dev": str(Path(tmpdir) / "tmp_dev.spacy"),
-            }
+            overrides["paths.train"] = str(Path(tmpdir) / "tmp_train.spacy")
+            overrides["paths.dev"] = str(Path(tmpdir) / "tmp_dev.spacy")
             tmp_train_docbin = DocBin(docs=train)
             tmp_train_docbin.to_disk(overrides["paths.train"])
             tmp_dev_docbin = DocBin(docs=dev)
@@ -99,10 +106,10 @@ def main(
         metric: sum(scores) / len(scores) for metric, scores in all_scores.items()
     }
     msg.table(avg_scores, header=("Metric", "Score"))
-    if output:
-        with output.open("w") as fp:
-            json.dump(avg_scores, fp, indent=4)
+    output_path.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w") as fp:
+        json.dump(avg_scores, fp, indent=4)
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
