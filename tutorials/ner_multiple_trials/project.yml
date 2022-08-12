@@ -1,0 +1,95 @@
+title: "Training a named-entity recognition (NER) with multiple trials"
+description: |
+  This project demonstrates how to train a spaCy pipeline with multiple trials.
+  Having multiple trials is useful for experiments, especially if we want to
+  account for variance and *dependency* on a random seed. 
+
+  Under the hood, the training script in `scripts/train_with_trials.py`
+  generates a random seed per trial, and runs the `train` command as usual. 
+  During evaluation, we pass a directory containing all the models for each
+  trial and then summarize the results afterwards. You can see the implementation 
+  in `scripts/evaluate_with_trials.py`.
+
+vars:
+  gpu_id: 0
+  trials: 5
+  config: "default.cfg"
+
+workflows:
+  all:
+    - preprocess
+    - convert
+    - train
+    - evaluate
+
+assets:
+  - dest: "assets/raw-en-conll-train.iob"
+    description: "CoNLL 2003 (en) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/train.conllu
+  - dest: "assets/raw-en-conll-dev.iob"
+    description: "CoNLL 2003 (en) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/val.conllu
+  - dest: "assets/raw-en-conll-test.iob"
+    description: "CoNLL 2003 (en) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/test.conllu
+
+commands:
+  - name: "preprocess"
+    help: "Preprocess the ConLL 2003 dataset to remove indices and update delimiters."
+    script:
+      - python -m scripts.preprocess assets/raw-en-conll-train.iob assets/en-conll-train.iob
+      - python -m scripts.preprocess assets/raw-en-conll-dev.iob assets/en-conll-dev.iob
+      - python -m scripts.preprocess assets/raw-en-conll-test.iob assets/en-conll-test.iob
+    deps:
+      - assets/raw-en-conll-train.iob
+      - assets/raw-en-conll-dev.iob
+      - assets/raw-en-conll-test.iob
+    outputs:
+      - assets/en-conll-train.iob
+      - assets/en-conll-dev.iob
+      - assets/en-conll-test.iob
+
+  - name: "convert"
+    help: "Convert IOB dataset into the spaCy format."
+    script:
+      - python -m spacy convert assets/en-conll-train.iob corpus/
+      - python -m spacy convert assets/en-conll-dev.iob corpus/
+      - python -m spacy convert assets/en-conll-test.iob corpus/
+    deps:
+      - assets/en-conll-train.iob
+      - assets/en-conll-dev.iob
+      - assets/en-conll-test.iob
+    outputs:
+      - corpus/en-conll-train.spacy
+      - corpus/en-conll-dev.spacy
+      - corpus/en-conll-test.spacy
+
+  - name: "train"
+    help: "Train a named-entity recognition (NER) model for a multiple number of trials."
+    script:
+      - >-
+        python -m scripts.train_with_trials.py 
+        configs/${vars.config}
+        --n-trials ${vars.trials}
+        --nlp.lang en
+        --output training/
+        --paths.train corpus/en-conll-train.spacy
+        --paths.dev corpus/en-conll-dev.spacy
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - corpus/en-conll-train.spacy
+      - corpus/en-conll-dev.spacy
+    outputs:
+      - training
+
+  - name: "evaluate"
+    help: "Evaluate all models for each trial, then summarize the results."
+    script:
+      - >-
+        python -m scripts.evaluate_with_trials.py
+        training/
+        corpus/en-conll-test.spacy
+        --output metrics/summarized_scores.json
+        --gpu-id ${vars.gpu_id}
+    outputs:
+      - metrics/summarized_scores.json
