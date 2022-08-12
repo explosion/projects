@@ -9,11 +9,13 @@ import logging
 import sys
 
 
-from spacy.cli._util import Arg, Opt, app, parse_config_overrides, show_validation_error
+from spacy.cli._util import Arg, Opt, parse_config_overrides, show_validation_error
 from spacy.cli._util import import_code, setup_gpu
 from spacy.training.loop import train as train_nlp
 from spacy.training.initialize import init_nlp
 from spacy import util
+
+app = typer.Typer()
 
 
 @app.command(
@@ -51,7 +53,7 @@ def train(
     use_gpu: int = -1,
     overrides: Dict[str, Any] = util.SimpleFrozenDict(),
 ):
-    seeds = [random.randint(0, sys.maxsize) for _ in num_trials]
+    seeds = [random.randint(0, 2**32 - 1) for _ in range(num_trials)]
     config_path = util.ensure_path(config_path)
     # Make sure all files and paths exists if they are needed
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
@@ -91,3 +93,7 @@ def train(
         train_nlp(
             nlp, output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr
         )
+
+
+if __name__ == "__main__":
+    app()
