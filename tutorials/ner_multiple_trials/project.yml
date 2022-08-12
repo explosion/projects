@@ -20,7 +20,7 @@ directories:
 vars:
   gpu_id: 0
   trials: 5
-  config: "default.cfg"
+  config: "ner.cfg"
 
 workflows:
   all:
