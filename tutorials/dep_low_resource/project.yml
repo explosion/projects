@@ -19,7 +19,7 @@ directories: ["assets", "corpus", "training", "metrics", "configs", "models"]
 
 vars:
   config: "default"
-  gpu: 0
+  gpu_id: 0
   n_folds: 10
   seed: 42
   lang: "tl"
@@ -77,7 +77,7 @@ commands:
         --n-folds ${vars.n_folds}
         --lang ${vars.lang} 
         --system.seed ${vars.seed}
-        --use-gpu ${vars.gpu}
+        --use-gpu ${vars.gpu_id}
       - >-
         python -m scripts.kfold 
         corpus/${vars.ugn_data}.spacy 
@@ -86,7 +86,7 @@ commands:
         --n-folds ${vars.n_folds}
         --lang ${vars.lang} 
         --system.seed ${vars.seed}
-        --use-gpu ${vars.gpu}
+        --use-gpu ${vars.gpu_id}
     deps:
       - "corpus/${vars.trg_data}.spacy"
       - "corpus/${vars.ugn_data}.spacy"
