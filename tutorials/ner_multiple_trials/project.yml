@@ -10,6 +10,12 @@ description: |
   trial and then summarize the results afterwards. You can see the implementation 
   in `scripts/evaluate_with_trials.py`.
 
+directories:
+  - assets
+  - corpus
+  - metrics
+  - training
+
 vars:
   gpu_id: 0
   trials: 5
