@@ -1,9 +1,10 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Tutorials (11)
+# 🪐 Project Templates: Tutorials (12)
 
 | Template | Description |
 | --- | --- |
+| [`dep_low_resource`](dep_low_resource) | Training a POS tagger and dependency parser for a low-resource language |
 | [`nel_emerson`](nel_emerson) | Disambiguation of "Emerson" mentions in sentences (Entity Linking) |
 | [`ner_double`](ner_double) | Combining Multiple Trained NER Components |
 | [`ner_drugs`](ner_drugs) | Detecting drug names in online comments (Named Entity Recognition) |
