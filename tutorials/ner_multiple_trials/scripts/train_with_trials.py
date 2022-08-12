@@ -1,19 +1,13 @@
-import typer
-
-import random
-from typing import Optional
-from pathlib import Path
-from wasabi import msg
-import typer
 import logging
+import random
+from pathlib import Path
+from typing import Optional
 
-
-from spacy.cli._util import Arg, Opt, parse_config_overrides, show_validation_error
-from spacy.cli._util import import_code, setup_gpu
-from spacy.cli.train import train
-from spacy.training.loop import train as train_nlp
-from spacy.training.initialize import init_nlp
+import typer
 from spacy import util
+from spacy.cli._util import Arg, Opt, import_code, parse_config_overrides
+from spacy.cli.train import train
+from wasabi import msg
 
 app = typer.Typer()
 
