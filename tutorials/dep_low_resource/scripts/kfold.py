@@ -52,6 +52,14 @@ def main(
     use_gpu: int = typer.Option(0, help="GPU id to use. Pass -1 to use the CPU."),
     # fmt: on
 ):
+    """Train a dependency parser with k-fold cross validation
+
+    This command-line interface allows training a spaCy pipeline using k-fold
+    cross validation. You can set the number of folds by passing a parameter to
+    '--n-folds'. It performs the split automatically, so you need to pass the
+    full corpus (not split into training/dev) in 'corpus_path'. Lastly,
+    we get the average of the scores for each fold to obtain the final metrics.
+    """
     overrides = parse_config_overrides(ctx.args)
     setup_gpu(use_gpu)
 
