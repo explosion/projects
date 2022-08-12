@@ -65,14 +65,14 @@ def train(
         )
 
         # Include seed as a directory to output_path
-        output_path = util.ensure_path(output_path / str(seed))
-        if not output_path:
+        _output_path = util.ensure_path(output_path / str(seed))
+        if not _output_path:
             msg.info("No output directory provided")
         else:
-            if not output_path.exists():
-                output_path.mkdir(parents=True)
-                msg.good(f"Created output directory: {output_path}")
-            msg.info(f"Saving to output directory: {output_path}")
+            if not _output_path.exists():
+                _output_path.mkdir(parents=True)
+                msg.good(f"Created output directory: {_output_path}")
+            msg.info(f"Saving to output directory: {_output_path}")
         setup_gpu(use_gpu)
 
         # Override system.seed with the chosen seed value
@@ -91,7 +91,7 @@ def train(
         # Start training the pipeline
         msg.divider("Training pipeline")
         train_nlp(
-            nlp, output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr
+            nlp, _output_path, use_gpu=use_gpu, stdout=sys.stdout, stderr=sys.stderr
         )
 
 
