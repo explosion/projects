@@ -12,10 +12,9 @@ generates a random seed per trial, and runs the `train` command as usual.  You
 can find the trained model per trial in `training/{seed}/`.
 
 At evaluation, you can pass a directory containing all the models for each
-trial.  This process is demonstrated in `scripts/evaluate_with_trials.py`.
-This will result to multiple `metrics/scores.json` files that you can
-summarize using the `scripts/summarize_results.py` script (only written for
-this particular dataset).
+trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
+This will then result to multiple `metrics/scores.json` files that you can
+summarize.
 
 
 ## 📋 project.yml
