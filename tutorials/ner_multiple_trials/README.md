@@ -3,14 +3,19 @@
 # 🪐 spaCy Project: Training a named-entity recognition (NER) with multiple trials
 
 This project demonstrates how to train a spaCy pipeline with multiple trials.
-Having multiple trials is useful for experiments, especially if we want to
-account for variance and *dependency* on a random seed. 
+It trains a named-entity recognition (NER) model on the ConLL 2003 English
+dataset.  Having multiple trials is useful for experiments, especially if we
+want to account for variance and *dependency* on a random seed. 
 
 Under the hood, the training script in `scripts/train_with_trials.py`
-generates a random seed per trial, and runs the `train` command as usual. 
-During evaluation, we pass a directory containing all the models for each
-trial and then summarize the results afterwards. You can see the implementation 
-in `scripts/evaluate_with_trials.py`.
+generates a random seed per trial, and runs the `train` command as usual.  You
+can find the trained model per trial in `training/{seed}/`.
+
+At evaluation, you can pass a directory containing all the models for each
+trial.  This process is demonstrated in `scripts/evaluate_with_trials.py`.
+This will result to multiple `metrics/scores.json` files that you can
+summarize using the `scripts/summarize_results.py` script (only written for
+this particular dataset).
 
 
 ## 📋 project.yml
@@ -27,10 +32,12 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `install` | Install spaCy models |
 | `preprocess` | Preprocess the ConLL 2003 dataset to remove indices and update delimiters. |
 | `convert` | Convert IOB dataset into the spaCy format. |
 | `train` | Train a named-entity recognition (NER) model for a multiple number of trials. |
 | `evaluate` | Evaluate all models for each trial, then summarize the results. |
+| `clean` | Remove cached files |
 
 ### ⏭ Workflows
 
@@ -41,7 +48,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `preprocess` &rarr; `convert` &rarr; `train` &rarr; `evaluate` |
+| `all` | `install` &rarr; `preprocess` &rarr; `convert` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 

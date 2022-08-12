@@ -1,14 +1,19 @@
 title: "Training a named-entity recognition (NER) with multiple trials"
 description: |
   This project demonstrates how to train a spaCy pipeline with multiple trials.
-  Having multiple trials is useful for experiments, especially if we want to
-  account for variance and *dependency* on a random seed. 
+  It trains a named-entity recognition (NER) model on the ConLL 2003 English
+  dataset.  Having multiple trials is useful for experiments, especially if we
+  want to account for variance and *dependency* on a random seed. 
 
   Under the hood, the training script in `scripts/train_with_trials.py`
-  generates a random seed per trial, and runs the `train` command as usual. 
-  During evaluation, we pass a directory containing all the models for each
-  trial and then summarize the results afterwards. You can see the implementation 
-  in `scripts/evaluate_with_trials.py`.
+  generates a random seed per trial, and runs the `train` command as usual.  You
+  can find the trained model per trial in `training/{seed}/`.
+
+  At evaluation, you can pass a directory containing all the models for each
+  trial.  This process is demonstrated in `scripts/evaluate_with_trials.py`.
+  This will result to multiple `metrics/scores.json` files that you can
+  summarize using the `scripts/summarize_results.py` script (only written for
+  this particular dataset).
 
 directories:
   - assets
