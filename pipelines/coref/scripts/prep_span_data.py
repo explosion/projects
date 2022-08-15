@@ -92,10 +92,6 @@ for i, gold_doc in enumerate(tqdm.tqdm(docs)):
     else:
         num_docs += 1
     # Predict head-clusters first.
-    if not gold_doc.text:
-        # TODO find out why this happens, there should be no empties
-        # XXX note that this should not be an issue with latest spaCy master
-        continue
     processed_doc = nlp(gold_doc.text)
     # Create a new Doc based on the coref-pipeline tokens and spaces.
     new_doc = Doc(
