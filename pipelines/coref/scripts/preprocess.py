@@ -24,6 +24,9 @@ def read_file(fname, outname):
 
     docs = text.split("\n#end document\n")
     for doc in docs:
+        if doc == "":
+            # ignore empty docs
+            continue
         name = None
         sents = doc.split("\n\n")
         clustermap = defaultdict(list)
