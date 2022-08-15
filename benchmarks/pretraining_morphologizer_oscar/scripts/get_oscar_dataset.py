@@ -7,13 +7,14 @@ from wasabi import msg
 from tqdm import tqdm
 
 
-def main(max_texts: int, output_path: Path):
+def main(max_texts: int, lang: str, output_path: Path):
     """Uses the datasets API from HuggingFace to retrieve a set amount of data entries from the OSCAR corpus and saves it as a jsonl file"""
 
-    msg.info(f"Start downloading {max_texts} data entries from the OSCAR corpus")
-    dataset = load_dataset(
-        "oscar", "unshuffled_deduplicated_en", split="train", streaming=True
+    msg.info(
+        f"Start downloading {max_texts} data entries from the OSCAR corpus (lang: {lang})"
     )
+    language = f"unshuffled_deduplicated_{lang}"
+    dataset = load_dataset("oscar", language, split="train", streaming=True)
     data = []
     text_length = 0
     for line in tqdm(

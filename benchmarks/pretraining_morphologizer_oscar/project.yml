@@ -3,11 +3,12 @@ description: "This project runs various models on unannotated text, to measure t
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   spacy_lang: "en"
+  spacy_model: "en_core_web_sm"
   gpu: 0
 
-  oscar_path: "data/oscar_data.jsonl"
+  oscar_path: "data"
   max_pretraining_texts: 10000
-  pretraining_model: "model10.bin"
+  pretraining_model: "model0.bin"
   ud_treebank: "UD_English-EWT"
 
 # These are the directories that the project needs. The project CLI will make
@@ -42,9 +43,14 @@ commands:
   - name: download_oscar
     help: "Download a subset of the oscar dataset"
     script:
-      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.oscar_path}"
+      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.spacy_lang} ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
     outputs:
-      - "${vars.oscar_path}"
+      - "${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
+  
+  - name: download_model
+    help: "Download the specified spaCy model for vector-objective pretraining"
+    script:
+      - "python -m spacy download ${vars.spacy_model}"
 
   - name: extract_ud
     help: "Extract the ud-treebanks data"
@@ -71,16 +77,6 @@ commands:
       - "data/${vars.ud_treebank}/dev.spacy"
       - "data/${vars.ud_treebank}/test.spacy"
 
-  - name: pretrain_char
-    help: "Pretrain a tok2vec component with the character objective"
-    script:
-      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}"
-    deps:
-      - "${vars.oscar_path}"
-      - "configs/config_pretrain_char.cfg"
-    outputs:
-      - "pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
-
   - name: train
     help: "Train a morphologizer component without pretrained weights"
     script:
@@ -102,6 +98,16 @@ commands:
     outputs:
       - "metrics/${vars.ud_treebank}/no_pretraining/"
 
+  - name: pretrain_char
+    help: "Pretrain a tok2vec component with the character objective"
+    script:
+      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}"
+    deps:
+      - "${vars.oscar_path}"
+      - "configs/config_pretrain_char.cfg"
+    outputs:
+      - "pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
+
   - name: train_char
     help: "Train a morphologizer component with pretrained weights (character_objective)"
     script:
@@ -113,3 +119,22 @@ commands:
       - "pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
     outputs:
       - "training/${vars.ud_treebank}/character_objective/model-best"
+
+  - name: evaluate_char
+    help: "Evaluate the trained morphologizer component with pretrained weights (character-objective)"
+    script:
+      - "python -m spacy evaluate training/${vars.ud_treebank}/no_pretraining/model-best data/${vars.ud_treebank}/test.spacy --output metrics/${vars.ud_treebank}_no_pretraining.json --gpu-id ${vars.gpu}"
+    deps:
+      - "training/${vars.ud_treebank}/no_pretraining/model-best"
+      - "data/${vars.ud_treebank}/test.spacy"
+    outputs:
+      - "metrics/${vars.ud_treebank}/no_pretraining/"
+
+  - name: "reset"
+    help: "Reset the project to its original state and delete all training process"
+    script:
+      - "python scripts/reset.py training"
+      - "python scripts/reset.py metrics"
+      - "python scripts/reset.py assets"
+      - "python scripts/reset.py data"
+      - "python scripts/reset.py pretraining"
