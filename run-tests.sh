@@ -22,7 +22,7 @@ do
         python -m pip install -r $full_second_level_dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
       fi
       python -m pytest -s $full_second_level_dir
-      if [ $? -ne 0 ]; then
+      if [[ $? != @(0|5) ]]; then
         exit_code=1
       fi
     fi
