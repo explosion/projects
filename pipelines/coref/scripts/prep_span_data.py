@@ -41,11 +41,20 @@ def find_target_span(head, ex):
     Take the smallest enclosing gold-span as
     the target for each predicted head.
     """
-    # FIXME
-    # Its really slow because it goes through all
-    # clusters in gold_doc since I wasn't sure whether
-    # its true that head from the predicted coref_head_clusters_1
-    # would necessarily correspond to spans in coref_clusters_1
+
+    # Note: This is slow because it doesn't assume that the smallest enclosing
+    # span for a given token will necessarily be in the matching spangroup. For
+    # example, a token could be in word-level cluster 1, but the smallest
+    # enclosing span could be in cluster 2. When using word-level tokens
+    # predicted by a trained model, like in this script, this is a necessary
+    # assumption.
+
+    # If you know your spangroups are aligned, you could just check the
+    # matching spangroup. However that still wouldn't guarantee you get the
+    # smallest enclosing span, since it is possible (though rare/unlikely) for
+    # the same head to have different spans associated with it in different
+    # spangroups.
+
     smallest = float("inf")
     target_span = None
     for name, span_group in ex.reference.spans.items():
