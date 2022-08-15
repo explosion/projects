@@ -13,7 +13,7 @@ can find the trained model per trial in `training/{seed}/`.
 
 > **Note**
 > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
-> and dev corpus to 1000. You can adjust this by overriding `vars.limit`, or setting it to `0`
+> and dev corpus to 500. You can adjust this by overriding `vars.limit`, or setting it to `0`
 > to train on the whole training corpus.
 
 At evaluation, you can pass a directory containing all the models for each
