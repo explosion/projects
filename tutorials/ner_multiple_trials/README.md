@@ -3,13 +3,18 @@
 # 🪐 spaCy Project: Training a named-entity recognition (NER) with multiple trials
 
 This project demonstrates how to train a spaCy pipeline with multiple trials.
-It trains a named-entity recognition (NER) model on the ConLL 2003 English
+It trains a named-entity recognition (NER) model on the WikiNEuRal English
 dataset.  Having multiple trials is useful for experiments, especially if we
 want to account for variance and *dependency* on a random seed. 
 
 Under the hood, the training script in `scripts/train_with_trials.py`
 generates a random seed per trial, and runs the `train` command as usual.  You
 can find the trained model per trial in `training/{seed}/`.
+
+> **Note**
+> Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
+> and dev corpus to 1000. You can adjust this by overriding `vars.limit`, or setting it to `0`
+> to train on the whole training corpus.
 
 At evaluation, you can pass a directory containing all the models for each
 trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
@@ -32,7 +37,7 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `install` | Install spaCy models |
-| `preprocess` | Preprocess the ConLL 2003 dataset to remove indices and update delimiters. |
+| `preprocess` | Preprocess the WikiNEuRal dataset to remove indices and update delimiters. |
 | `convert` | Convert IOB dataset into the spaCy format. |
 | `train` | Train a named-entity recognition (NER) model for a multiple number of trials. |
 | `evaluate` | Evaluate all models for each trial, then summarize the results. |
@@ -57,8 +62,8 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/raw-en-conll-train.iob` | URL | CoNLL 2003 (en) training dataset |
-| `assets/raw-en-conll-dev.iob` | URL | CoNLL 2003 (en) dev dataset |
-| `assets/raw-en-conll-test.iob` | URL | CoNLL 2003 (en) test dataset |
+| `assets/raw-en-wikineural-train.iob` | URL | WikiNEuRal (en) training dataset |
+| `assets/raw-en-wikineural-dev.iob` | URL | WikiNEuRal (en) dev dataset |
+| `assets/raw-en-wikineural-test.iob` | URL | WikiNEuRal (en) test dataset |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

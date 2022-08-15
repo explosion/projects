@@ -1,13 +1,18 @@
 title: "Training a named-entity recognition (NER) with multiple trials"
 description: |
   This project demonstrates how to train a spaCy pipeline with multiple trials.
-  It trains a named-entity recognition (NER) model on the ConLL 2003 English
+  It trains a named-entity recognition (NER) model on the WikiNEuRal English
   dataset.  Having multiple trials is useful for experiments, especially if we
   want to account for variance and *dependency* on a random seed. 
 
   Under the hood, the training script in `scripts/train_with_trials.py`
   generates a random seed per trial, and runs the `train` command as usual.  You
   can find the trained model per trial in `training/{seed}/`.
+
+  > **Note**
+  > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
+  > and dev corpus to 1000. You can adjust this by overriding `vars.limit`, or setting it to `0`
+  > to train on the whole training corpus.
 
   At evaluation, you can pass a directory containing all the models for each
   trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
@@ -26,6 +31,7 @@ vars:
   trials: 5
   config: "ner_accuracy.cfg"
   max_steps: 20000
+  limit: 1000
 
 workflows:
   all:
@@ -36,15 +42,15 @@ workflows:
     - evaluate
 
 assets:
-  - dest: "assets/raw-en-conll-train.iob"
-    description: "CoNLL 2003 (en) training dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/train.conllu
-  - dest: "assets/raw-en-conll-dev.iob"
-    description: "CoNLL 2003 (en) dev dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/val.conllu
-  - dest: "assets/raw-en-conll-test.iob"
-    description: "CoNLL 2003 (en) test dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/test.conllu
+  - dest: "assets/raw-en-wikineural-train.iob"
+    description: "WikiNEuRal (en) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/train.conllu
+  - dest: "assets/raw-en-wikineural-dev.iob"
+    description: "WikiNEuRal (en) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/val.conllu
+  - dest: "assets/raw-en-wikineural-test.iob"
+    description: "WikiNEuRal (en) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/test.conllu
 
 commands:
   - name: "install"
@@ -53,34 +59,34 @@ commands:
       - python -m spacy download en_core_web_lg
 
   - name: "preprocess"
-    help: "Preprocess the ConLL 2003 dataset to remove indices and update delimiters."
+    help: "Preprocess the WikiNEuRal dataset to remove indices and update delimiters."
     script:
-      - python -m scripts.preprocess assets/raw-en-conll-train.iob assets/en-conll-train.iob
-      - python -m scripts.preprocess assets/raw-en-conll-dev.iob assets/en-conll-dev.iob
-      - python -m scripts.preprocess assets/raw-en-conll-test.iob assets/en-conll-test.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-train.iob assets/en-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-dev.iob assets/en-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-test.iob assets/en-wikineural-test.iob
     deps:
-      - assets/raw-en-conll-train.iob
-      - assets/raw-en-conll-dev.iob
-      - assets/raw-en-conll-test.iob
+      - assets/raw-en-wikineural-train.iob
+      - assets/raw-en-wikineural-dev.iob
+      - assets/raw-en-wikineural-test.iob
     outputs:
-      - assets/en-conll-train.iob
-      - assets/en-conll-dev.iob
-      - assets/en-conll-test.iob
+      - assets/en-wikineural-train.iob
+      - assets/en-wikineural-dev.iob
+      - assets/en-wikineural-test.iob
 
   - name: "convert"
     help: "Convert IOB dataset into the spaCy format."
     script:
-      - python -m spacy convert assets/en-conll-train.iob corpus/
-      - python -m spacy convert assets/en-conll-dev.iob corpus/
-      - python -m spacy convert assets/en-conll-test.iob corpus/
+      - python -m spacy convert assets/en-wikineural-train.iob corpus/
+      - python -m spacy convert assets/en-wikineural-dev.iob corpus/
+      - python -m spacy convert assets/en-wikineural-test.iob corpus/
     deps:
-      - assets/en-conll-train.iob
-      - assets/en-conll-dev.iob
-      - assets/en-conll-test.iob
+      - assets/en-wikineural-train.iob
+      - assets/en-wikineural-dev.iob
+      - assets/en-wikineural-test.iob
     outputs:
-      - corpus/en-conll-train.spacy
-      - corpus/en-conll-dev.spacy
-      - corpus/en-conll-test.spacy
+      - corpus/en-wikineural-train.spacy
+      - corpus/en-wikineural-dev.spacy
+      - corpus/en-wikineural-test.spacy
 
   - name: "train"
     help: "Train a named-entity recognition (NER) model for a multiple number of trials."
@@ -91,13 +97,15 @@ commands:
         --n-trials ${vars.trials}
         --nlp.lang en
         --output training/
-        --paths.train corpus/en-conll-train.spacy
-        --paths.dev corpus/en-conll-dev.spacy
+        --paths.train corpus/en-wikineural-train.spacy
+        --corpora.train.limit ${vars.limit}
+        --paths.dev corpus/en-wikineural-dev.spacy
+        --corpora.dev.limit ${vars.limit}
         --training.max_steps ${vars.max_steps}
         --gpu-id ${vars.gpu_id}
     deps:
-      - corpus/en-conll-train.spacy
-      - corpus/en-conll-dev.spacy
+      - corpus/en-wikineural-train.spacy
+      - corpus/en-wikineural-dev.spacy
     outputs:
       - training
 
@@ -107,7 +115,7 @@ commands:
       - >-
         python -m scripts.evaluate_with_trials
         training/
-        corpus/en-conll-test.spacy
+        corpus/en-wikineural-test.spacy
         --output-dir metrics/
         --gpu-id ${vars.gpu_id}
 
