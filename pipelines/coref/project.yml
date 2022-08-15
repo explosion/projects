@@ -107,6 +107,7 @@ commands:
       - assets/train.gold.conll
       - assets/dev.gold.conll
       - assets/test.gold.conll
+      - scripts/preprocess.py
     script:
       - python scripts/preprocess.py assets/train.gold.conll corpus/train.spacy
       - python scripts/preprocess.py assets/dev.gold.conll corpus/dev.spacy
@@ -133,6 +134,7 @@ commands:
       - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
       - python scripts/prep_span_data.py --model-path training/cluster/model-best/ --gpu --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
     deps:
+      - scripts/prep_span_data.py
       - corpus/train.spacy
       - corpus/dev.spacy
       - training/cluster/model-best
@@ -147,6 +149,7 @@ commands:
     deps:
       - corpus/spans.train.spacy
       - corpus/spans.dev.spacy
+      - configs/span.cfg
       - training/cluster/model-best
     outputs:
       - training/span_resolver/model-best
@@ -158,6 +161,7 @@ commands:
     deps:
       - training/cluster/model-best
       - training/span_resolver/model-best
+      - configs/coref.cfg
 
   - name: "eval"
     help: "Evaluate model on the test set."
