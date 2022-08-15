@@ -5,6 +5,7 @@
 # Fetch changed files.
 mapfile -t dirs < <( git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g')
 declare -a tested_dirs=()
+exit_code=0
 for dir in "${dirs[@]}"
 do
   # Get path with second level only. This will be empty if the change happened at the first level.
@@ -21,7 +22,11 @@ do
         python -m pip install -r $full_second_level_dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
       fi
       python -m pytest -s $full_second_level_dir
+      if [ $? -ne 0 ]; then
+        exit_code=1
+      fi
     fi
   fi
 
 done
+exit $exit_code
