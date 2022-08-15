@@ -46,8 +46,8 @@ def find_target_span(head, ex):
     # span for a given token will necessarily be in the matching spangroup. For
     # example, a token could be in word-level cluster 1, but the smallest
     # enclosing span could be in cluster 2. When using word-level tokens
-    # predicted by a trained model, like in this script, this is a necessary
-    # assumption.
+    # predicted by a trained model, like in this script, you have to check
+    # because there's no guarantee tokens and spans will align.
 
     # If you know your spangroups are aligned, you could just check the
     # matching spangroup. However that still wouldn't guarantee you get the
