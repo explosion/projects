@@ -13,6 +13,7 @@ def test_ner_multiple_trials_project():
         overrides={
             "vars.trials": 2,
             "vars.config": "ner_efficiency.cfg",
-            "vars.max_steps": 400,
+            "vars.max_steps": 200,
+            "vars.limit": 100,
         },
     )
