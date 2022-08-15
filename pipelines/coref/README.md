@@ -12,6 +12,12 @@ Before using this project:
 
 After that you can just run `spacy project run all`.
 
+Note that during training you will probably see a warning like `Token indices
+sequence length is longer than ...`. This is a rare condition that
+`spacy-transformers` handles internally, and it's safe to ignore if it
+happens occasionally. For more details see [this
+thread](https://github.com/explosion/spaCy/discussions/9277#discussioncomment-1374226).
+
 ## Using the Trained Pipeline
 
 After you've trained the pipeline, you can load and use it like this:
