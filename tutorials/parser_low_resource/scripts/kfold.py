@@ -60,6 +60,9 @@ def main(
     full corpus (not split into training/dev) in 'corpus_path'. Lastly,
     we get the average of the scores for each fold to obtain the final metrics.
     """
+    if n_folds <= 1:
+        raise ValueError("Cannot have folds less than or equal to 1.")
+
     overrides = parse_config_overrides(ctx.args)
     setup_gpu(use_gpu)
 
@@ -75,6 +78,7 @@ def main(
     for idx, fold in enumerate(folds):
         dev = fold
         train = flatten(get_all_except(folds, idx=idx))
+        breakpoint()
         msg.divider(f"Fold {idx+1}, train: {len(train)}, dev: {len(dev)}")
 
         # Save the train and test dataset into a temporary directory
