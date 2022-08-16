@@ -27,6 +27,12 @@ parser.add_argument(
 )
 parser.add_argument("--limit", type=int, help="Number of documents to process..")
 parser.add_argument(
+    "--use-gold-heads",
+    type=bool,
+    default=False,
+    help="Whether to use gold heads or heads predicted by the clustering component",
+)
+parser.add_argument(
     "--gpu", action="store_true", help="Run coreference pipeline on GPU."
 )
 
@@ -85,6 +91,11 @@ empty_clusters = 0
 num_docs = 0
 skipped_docs = 0
 
+# Gold heads can be used directly from the input data, or heads predicted by
+# the clustering component can be used. In tests with OntoNotes, accuracy and
+# processing time were similar for both options.
+use_gold_heads = args.use_gold_heads
+
 
 for i, gold_doc in enumerate(tqdm.tqdm(docs)):
     if i == args.limit:
@@ -92,38 +103,52 @@ for i, gold_doc in enumerate(tqdm.tqdm(docs)):
     else:
         num_docs += 1
     # Predict head-clusters first.
-    processed_doc = nlp(gold_doc.text)
+    if use_gold_heads:
+        # use the pipeline just for tokenization
+        processed_doc = nlp.make_doc(gold_doc.text)
+        # copy over gold heads
+        ex = Example(predicted=processed_doc, reference=gold_doc)
+        for name, sg in ex.reference.spans.items():
+            if not name.startswith(args.head_prefix):
+                continue
+            processed_doc.spans[name] = ex.get_aligned_spans_y2x(sg)
+    else:
+        # use predictions
+        processed_doc = nlp(gold_doc.text)
+        ex = Example(predicted=processed_doc, reference=gold_doc)
+
     # Create a new Doc based on the coref-pipeline tokens and spaces.
+    # This will go in the output DocBin.
     new_doc = Doc(
         nlp.vocab,
         words=[word.text for word in processed_doc],
         spaces=[bool(word.whitespace_) for word in processed_doc],
     )
     # Example helps with alignment
-    ex = Example(predicted=processed_doc, reference=gold_doc)
     seen_heads = set()
     # Try to find target spans for all predicted heads.
     for name, head_group in ex.predicted.spans.items():
         cluster_id = name.split("_")[-1]
-        if name.startswith(args.head_prefix):
-            new_head_spangroup = []
-            new_span_spangroup = []
-            spans_name = f"{args.span_prefix}_{cluster_id}"
-            for head in head_group:
-                total_heads += 1
-                # Only one sample per head for the SpanPredictor
-                if (head.start, head.end) not in seen_heads:
-                    seen_heads.add((head.start, head.end))
-                    # Find the shortest enclosing span if exists
-                    target_span = find_target_span(head, ex)
-                    if target_span:
-                        kept_heads += 1
-                        new_head_spangroup.append(new_doc[head.start : head.end])
-                        new_span_spangroup.append(
-                            new_doc[target_span.start : target_span.end]
-                        )
-                else:
-                    duplicate_heads += 1
+        if not name.startswith(args.head_prefix):
+            continue
+        new_head_spangroup = []
+        new_span_spangroup = []
+        spans_name = f"{args.span_prefix}_{cluster_id}"
+        for head in head_group:
+            total_heads += 1
+            # Only one sample per head for the SpanPredictor
+            if (head.start, head.end) not in seen_heads:
+                seen_heads.add((head.start, head.end))
+                # Find the shortest enclosing span if exists
+                target_span = find_target_span(head, ex)
+                if target_span:
+                    kept_heads += 1
+                    new_head_spangroup.append(new_doc[head.start : head.end])
+                    new_span_spangroup.append(
+                        new_doc[target_span.start : target_span.end]
+                    )
+            else:
+                duplicate_heads += 1
         new_doc.spans[name] = new_head_spangroup
         new_doc.spans[spans_name] = new_span_spangroup
     if new_doc.spans:
