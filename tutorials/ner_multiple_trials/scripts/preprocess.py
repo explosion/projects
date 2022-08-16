@@ -6,7 +6,7 @@ import typer
 
 def preprocess(input_path: Path, output_path: Path):
     """Helper function to remove the indices for the WikiNeural dataset"""
-    with input_path.open() as f:
+    with input_path.open(encoding="utf-8") as f:
         lines = f.readlines()
 
     with output_path.open("w") as f:
