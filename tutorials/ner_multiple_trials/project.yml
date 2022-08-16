@@ -29,13 +29,12 @@ directories:
 vars:
   gpu_id: -1
   trials: 5
-  config: "ner_accuracy.cfg"
+  config: "ner_efficiency.cfg"
   max_steps: 20000
   limit: 500
 
 workflows:
   all:
-    - install
     - preprocess
     - convert
     - train
@@ -53,11 +52,6 @@ assets:
     url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/test.conllu
 
 commands:
-  - name: "install"
-    help: "Install spaCy models"
-    script:
-      - python -m spacy download en_core_web_lg
-
   - name: "preprocess"
     help: "Preprocess the WikiNEuRal dataset to remove indices and update delimiters."
     script:
