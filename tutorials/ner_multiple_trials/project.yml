@@ -27,7 +27,7 @@ directories:
   - training
 
 vars:
-  gpu_id: 0
+  gpu_id: -1
   trials: 5
   config: "ner_accuracy.cfg"
   max_steps: 20000
