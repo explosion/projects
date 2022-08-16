@@ -4,7 +4,6 @@
 
 | Template | Description |
 | --- | --- |
-| [`dep_low_resource`](dep_low_resource) | Training a POS tagger and dependency parser for a low-resource language |
 | [`nel_emerson`](nel_emerson) | Disambiguation of "Emerson" mentions in sentences (Entity Linking) |
 | [`ner_double`](ner_double) | Combining Multiple Trained NER Components |
 | [`ner_drugs`](ner_drugs) | Detecting drug names in online comments (Named Entity Recognition) |
@@ -12,6 +11,7 @@
 | [`ner_food_ingredients`](ner_food_ingredients) | Analyzing how mentions of ingredients change over time (Named Entity Recognition) |
 | [`ner_pytorch_medical`](ner_pytorch_medical) | Detecting entities in Medical Records with PyTorch |
 | [`ner_tweets`](ner_tweets) | Detecting people entities in tweets (Named Entity Recognition) |
+| [`parser_low_resource`](parser_low_resource) | Training a POS tagger and dependency parser for a low-resource language |
 | [`rel_component`](rel_component) | Example project of creating a novel nlp component to do relation extraction from scratch. |
 | [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about documentation (Text Classification) |
 | [`textcat_goemotions`](textcat_goemotions) | Categorization of emotions in Reddit posts (Text Classification) |
