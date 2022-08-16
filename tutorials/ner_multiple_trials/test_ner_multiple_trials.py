@@ -16,4 +16,5 @@ def test_ner_multiple_trials_project():
             "vars.max_steps": 200,
             "vars.limit": 100,
         },
+        capture=True
     )
