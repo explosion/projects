@@ -78,7 +78,6 @@ def main(
     for idx, fold in enumerate(folds):
         dev = fold
         train = flatten(get_all_except(folds, idx=idx))
-        breakpoint()
         msg.divider(f"Fold {idx+1}, train: {len(train)}, dev: {len(dev)}")
 
         # Save the train and test dataset into a temporary directory
