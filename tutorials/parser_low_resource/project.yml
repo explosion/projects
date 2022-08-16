@@ -72,8 +72,8 @@ commands:
       - >-
         python -m scripts.kfold 
         corpus/${vars.trg_data}.spacy 
-        metrics/${vars.trg_data}-kfold.json 
         configs/${vars.config}.cfg 
+        --output-path metrics/${vars.trg_data}-kfold.json 
         --n-folds ${vars.n_folds}
         --lang ${vars.lang} 
         --system.seed ${vars.seed}
@@ -81,8 +81,8 @@ commands:
       - >-
         python -m scripts.kfold 
         corpus/${vars.ugn_data}.spacy 
-        metrics/${vars.ugn_data}-kfold.json 
         configs/${vars.config}.cfg 
+        --output-path metrics/${vars.ugn_data}-kfold.json 
         --n-folds ${vars.n_folds}
         --lang ${vars.lang} 
         --system.seed ${vars.seed}

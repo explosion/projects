@@ -1,10 +1,10 @@
-import json
 import random
 import tempfile
 from pathlib import Path
 from typing import List, Optional
 
 import spacy
+import srsly
 import typer
 from spacy.cli._util import parse_config_overrides, setup_gpu
 from spacy.cli._util import show_validation_error
@@ -44,8 +44,8 @@ def main(
     # fmt: off
     ctx: typer.Context,  # this is only used to read additional arguments
     corpus_path: Path = typer.Argument(..., help="Path to the full corpus."),
-    output_path: Path = typer.Argument(..., help="Path to save the output scores (JSON)."),
     config_path: Path = typer.Argument(..., help="Path to the spaCy configuration file."),
+    output_path: Path = typer.Option(..., "--output-path", "--output", "-o", help="Path to save the output scores (JSON)."),
     n_folds: int = typer.Option(10, "--n-folds", "-n", help="Number of folds for cross-validation.", show_default=True),
     lang: Optional[str] = typer.Option("tl", "--lang", "-l", help="Language vocab to use.", show_default=True),
     shuffle: bool = typer.Option(False, "--shuffle", "-f", help="Flag for shuffling data"),
@@ -117,9 +117,9 @@ def main(
         metric: sum(scores) / len(scores) for metric, scores in all_scores.items()
     }
     msg.table(avg_scores, header=("Metric", "Score"))
-    output_path.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w") as fp:
-        json.dump(avg_scores, fp, indent=4)
+    if output_path is not None:
+        srsly.write_json(output_path, avg_scores)
+        msg.good(f"Saved results to {output_path}")
 
 
 if __name__ == "__main__":
