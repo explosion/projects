@@ -19,7 +19,7 @@ directories: ["assets", "corpus", "training", "metrics", "configs", "models"]
 
 vars:
   config: "default"
-  gpu_id: 0
+  gpu_id: -1
   n_folds: 10
   seed: 42
   lang: "tl"
