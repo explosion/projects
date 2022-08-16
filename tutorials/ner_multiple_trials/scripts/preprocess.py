@@ -9,7 +9,7 @@ def preprocess(input_path: Path, output_path: Path):
     with input_path.open(encoding="utf-8") as f:
         lines = f.readlines()
 
-    with output_path.open("w") as f:
+    with output_path.open("w", encoding="utf-8") as f:
         for line in lines:
             new_line = line if line == "\n" else line.lstrip(digits)[1:]
             if new_line == "-DOCSTART-\tO\n":
