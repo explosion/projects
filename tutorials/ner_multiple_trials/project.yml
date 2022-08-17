@@ -70,9 +70,9 @@ commands:
   - name: "convert"
     help: "Convert IOB dataset into the spaCy format."
     script:
-      - python -m spacy convert assets/en-wikineural-train.iob corpus/
-      - python -m spacy convert assets/en-wikineural-dev.iob corpus/
-      - python -m spacy convert assets/en-wikineural-test.iob corpus/
+      - python -m spacy convert assets/en-wikineural-train.iob corpus/ -n 10
+      - python -m spacy convert assets/en-wikineural-dev.iob corpus/ -n 10
+      - python -m spacy convert assets/en-wikineural-test.iob corpus/ -n 10
     deps:
       - assets/en-wikineural-train.iob
       - assets/en-wikineural-dev.iob
