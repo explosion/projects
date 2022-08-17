@@ -43,13 +43,13 @@ workflows:
 assets:
   - dest: "assets/raw-en-wikineural-train.iob"
     description: "WikiNEuRal (en) training dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/train.conllu
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/train.conllu
   - dest: "assets/raw-en-wikineural-dev.iob"
     description: "WikiNEuRal (en) dev dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/val.conllu
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/val.conllu
   - dest: "assets/raw-en-wikineural-test.iob"
     description: "WikiNEuRal (en) test dataset"
-    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/test.conllu
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/test.conllu
 
 commands:
   - name: "preprocess"
