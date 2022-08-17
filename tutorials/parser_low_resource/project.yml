@@ -31,10 +31,10 @@ vars:
 assets:
   - dest: "assets/${vars.trg_data}.conllu"
     description: "Treebank data for UD_Tagalog-TRG"
-    url: "https://github.com/UniversalDependencies/UD_Tagalog-TRG/blob/master/tl_trg-ud-test.conllu"
+    url: "https://raw.githubusercontent.com/UniversalDependencies/UD_Tagalog-TRG/master/tl_trg-ud-test.conllu"
   - dest: "assets/${vars.ugn_data}.conllu"
     description: "Treebank data for UD_Tagalog-Ugnayan"
-    url: "https://github.com/UniversalDependencies/UD_Tagalog-Ugnayan/blob/master/tl_ugnayan-ud-test.conllu"
+    url: "https://raw.githubusercontent.com/UniversalDependencies/UD_Tagalog-Ugnayan/master/tl_ugnayan-ud-test.conllu"
 
 workflows:
   all:
