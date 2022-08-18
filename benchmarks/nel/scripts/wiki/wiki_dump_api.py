@@ -34,20 +34,15 @@ def extract_demo_dump(filter_terms: Set[str]) -> None:
     filter_terms (Set[str]): Terms having to appear in entity descriptions in order to be wrr
     """
 
-    # entity_ids, entity_labels = wikidata.extract_demo_dump(
-    #     _paths["wikidata_dump"], _paths["filtered_wikidata_dump"], filter_terms
-    # )
-    # with open(_paths["filtered_entity_entity_info"], "wb") as file:
-    #     pickle.dump((entity_ids, entity_labels), file)
+    entity_ids, entity_labels = wikidata.extract_demo_dump(
+        _paths["wikidata_dump"], _paths["filtered_wikidata_dump"], filter_terms
+    )
+    with open(_paths["filtered_entity_entity_info"], "wb") as file:
+        pickle.dump((entity_ids, entity_labels), file)
 
     with open(_paths["filtered_entity_entity_info"], "rb") as file:
         _, entity_labels = pickle.load(file)
     wikipedia.extract_demo_dump(_paths["wikipedia_dump"], _paths["filtered_wikipedia_dump"], entity_labels)
-
-    # try:
-    #     os.remove(_paths["filtered_entity_entity_info"])
-    # except OSError:
-    #     pass
 
 
 def parse(

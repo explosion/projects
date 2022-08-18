@@ -16,7 +16,7 @@ from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
 
-from spacy.tokens import Doc, DocBin
+from spacy.tokens import Doc, DocBin, Span
 from spacy.training import Example
 from schemas import Annotation, Entity
 from wiki import wiki_dump_api
@@ -263,16 +263,25 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_best")
         self._load_resource("nlp_base")
         self._load_resource("kb")
+
+        # Compile test set.
         test_set_path = self._paths["corpora"] / "test.spacy"
         with open(test_set_path, "rb"):
-            test_set = [
-                Example(self._nlp_best(doc.text), doc)
-                for doc in DocBin()
-                .from_disk(test_set_path)
-                .get_docs(self._nlp_best.vocab)
-            ]
+            test_set: List[Example] = []
+            for doc in DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab):
+                predicted_doc = self._nlp_best(doc.text)
+                ents: List[Span] = []
+                for ent in predicted_doc.ents:
+                    # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+                    # leading "the " and adjust the entity positions accordingly.
+                    ents.append(
+                        doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
+                        if ent.text.lower().startswith("the ") else ent
+                    )
+                predicted_doc.ents = ents
+                test_set.append(Example(predicted_doc, doc))
+
         self._nlp_best.config["incl_prior"] = False
-        # Set up spacyfishing.
         if spacyfishing:
             self._nlp_base.add_pipe("entityfishing", last=True)
 
@@ -292,13 +301,13 @@ class Dataset(abc.ABC):
             if len(example) > 0:
                 entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
                     self._nlp_best.component_names.index("entity_linker")
-                ][
-                    1
-                ]
+                ][1]
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_
                     for ent in example.reference.ents
                 }
+                if len(ent_gold_ids) == 0:
+                    continue
                 ent_pred_labels = {
                     (ent.start_char, ent.end_char): ent.label_
                     for ent in example.predicted.ents

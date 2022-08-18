@@ -68,30 +68,17 @@ class Mewsli9Dataset(Dataset):
                         self._paths["assets"] / "en" / "text" / row["docid"],
                         encoding="utf-8",
                     ) as text_file:
-                        lines = text_file.readlines()
-                        doc_text = " ".join(
-                            " ".join(
-                                [
-                                    line.replace("\n", " ").replace("\xa0", ".")
-                                    for line in lines
-                                ]
-                            ).split()
-                        )
+                        # Replace newlines with whitespace and a special whitespace character appearing after titles
+                        # with a period.
+                        doc_text = "".join([
+                            line.replace("\n", " ").replace("\xa0", ".") for line in text_file.readlines()
+                        ])
 
                         if filter_terms and not any([ft in doc_text for ft in filter_terms]):
                             pbar.update(1)
                             continue
 
-                        doc = self._nlp_base(
-                            " ".join(
-                                " ".join(
-                                    [
-                                        line.replace("\n", " ").replace("\xa0", ".")
-                                        for line in lines
-                                    ]
-                                ).split()
-                            )
-                        )
+                        doc = self._nlp_base(doc_text)
                         doc.ents, _ = create_spans_from_doc_annotation(
                             doc=doc,
                             entities_info=self._entities,

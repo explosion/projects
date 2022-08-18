@@ -102,12 +102,7 @@ def read_entities(
                 clean_line = line.strip()
                 if clean_line.endswith(b","):
                     clean_line = clean_line[:-1]
-                to_search = clean_line.decode("utf-8").lower()
-                if "boston" in to_search and "celtics" in to_search:
-                    obj = json.loads(clean_line)
-                    obj_lbl = obj["labels"].get("en", {}).get("value", "").lower()
-                    if "celtics" in obj_lbl:
-                        x = 3
+
                 if len(clean_line) > 1:
                     obj = json.loads(clean_line)
                     entry_type = obj["type"]

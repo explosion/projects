@@ -1,5 +1,4 @@
 """ Parsing of Wiki dump and persisting of parsing results to DB. """
-from pathlib import Path
 from typing import Optional
 import typer
 from wiki import wiki_dump_api
@@ -15,7 +14,7 @@ def main(
     entity_limit (Optional[int]): Max. number of entities to parse. Unlimited if None.
     article_limit (Optional[int]): Max. number of entities to parse. Unlimited if None.
     alias_limit (Optional[int]): Max. number of entity aliases to parse. Unlimited if None.
-    use_filtered_dumps (bool): Whether to use small, filtered Wiki dumps.
+    use_filtered_dumps (bool): Whether to use filtered Wiki dumps instead of the full ones.
     """
 
     wiki_dump_api.parse(
