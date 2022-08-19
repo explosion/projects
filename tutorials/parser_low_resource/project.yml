@@ -91,6 +91,7 @@ commands:
       - "corpus/${vars.trg_data}.spacy"
       - "corpus/${vars.ugn_data}.spacy"
       - "configs/${vars.config}.cfg"
+      - "scripts/kfold.py"
     outputs:
       - "metrics/${vars.trg_data}-kfold.json"
       - "metrics/${vars.ugn_data}-kfold.json"
