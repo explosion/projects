@@ -64,7 +64,7 @@ assets:
   - dest: assets/litbank
     extra: True
     git:
-      repo: "git@github.com:dbamman/litbank.git"
+      repo: "https://github.com/dbamman/litbank"
       branch: "master"
       path: "coref/conll"
     description: "LitBank dataset. Only used for building data for tests."
