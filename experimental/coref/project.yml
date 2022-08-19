@@ -48,6 +48,7 @@ vars:
   # XXX fill with your local path to OntoNotes
   ontonotes: /home/USER/ontonotes5/data
   max_epochs: 20
+  test_file: assets/litbank/95_the_prisoner_of_zenda_brat.conll
 
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
@@ -60,6 +61,13 @@ assets:
     description: "CoNLL-2012 scripts and dehydrated data."
   - dest: ${vars.ontonotes}
     description: "Ensure you have a local copy of OntoNotes: https://catalog.ldc.upenn.edu/LDC2013T19"    
+  - dest: assets/litbank
+    extra: True
+    git:
+      repo: "git@github.com:dbamman/litbank.git"
+      branch: "master"
+      path: "coref/conll"
+    description: "LitBank dataset. Only used for building data for tests."
 
 workflows:
   prep:
@@ -70,6 +78,13 @@ workflows:
     - prep-span-data
     - train-span-resolver
     - assemble
+  ci-test:
+    - prep-test-data
+    - train-cluster
+    - prep-span-data
+    - train-span-resolver
+    - assemble
+    - eval
 
   all:
     # prep
@@ -111,6 +126,21 @@ commands:
       - assets/train.gold.conll
       - assets/dev.gold.conll
       - assets/test.gold.conll
+
+  - name: "prep-test-data"
+    # Note this writes to the same paths as real data in order to re-use the actions.
+    help: "Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data!"
+    deps:
+      - ${vars.test_file}
+      - scripts/preprocess.py
+    script:
+      - python scripts/preprocess.py ${vars.test_file} corpus/train.spacy
+      - python scripts/preprocess.py ${vars.test_file} corpus/dev.spacy
+      - python scripts/preprocess.py ${vars.test_file} corpus/test.spacy
+    outputs:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - corpus/test.spacy
 
   - name: "preprocess"
     help: "Convert the data to spaCy's format"
