@@ -98,9 +98,14 @@ commands:
       - echo "Rehydrating data... This will take a few minutes"
       - "bash assets/conll-2012/v3/scripts/skeleton2conll.sh -D \"${vars.ontonotes}\" assets/conll-2012"
 
-      # Concatenate the data into single files to make it easier to work with
+      # Concatenate the data into single train/dev/test files to make it easier to work with
       - bash scripts/concat_data.sh
     deps:
+      - assets/conll-2012-development.v4.tar.gz
+      - assets/conll-2012-test-key.tar.gz
+      - assets/conll-2012-test-official.v9.tar.gz
+      - assets/conll-2012-train.v4.tar.gz
+      - assets/conll-2012/v3/scripts/skeleton2conll.sh
       - ${vars.ontonotes}
     outputs: 
       - assets/train.gold.conll
