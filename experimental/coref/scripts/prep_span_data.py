@@ -32,13 +32,11 @@ parser.add_argument(
     default=False,
     help="Whether to use gold heads or heads predicted by the clustering component",
 )
-parser.add_argument(
-    "--gpu", action="store_true", help="Run coreference pipeline on GPU."
-)
+parser.add_argument("--gpu", type=int, help="ID of GPU to run coreference pipeline on.")
 
 args = parser.parse_args()
-if args.gpu:
-    spacy.require_gpu()
+if args.gpu and args.gpu > -1:
+    spacy.require_gpu(args.gpu)
 nlp = spacy.load(args.model_path)
 
 
