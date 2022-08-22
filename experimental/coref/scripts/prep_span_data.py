@@ -28,8 +28,7 @@ parser.add_argument(
 parser.add_argument("--limit", type=int, help="Number of documents to process..")
 parser.add_argument(
     "--use-gold-heads",
-    type=bool,
-    default=False,
+    action="store_true",
     help="Whether to use gold heads or heads predicted by the clustering component",
 )
 parser.add_argument("--gpu", type=int, help="ID of GPU to run coreference pipeline on.")
