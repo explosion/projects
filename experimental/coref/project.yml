@@ -149,6 +149,8 @@ commands:
   - name: "train-cluster"
     help: "Train the clustering component"
     script: 
+      - echo check disk space
+      - df
       - "python -m spacy train configs/cluster.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training/cluster --training.max_epochs ${vars.max_epochs}"
     deps:
       - corpus/train.spacy
