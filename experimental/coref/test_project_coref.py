@@ -8,4 +8,4 @@ def test_experimental_coref():
     # provide a placeholder value here, since we won't have real OntoNotes
     overrides = {"vars.ontonotes": "assets", "vars.gpu_id": -1}
     project_assets(root, overrides=overrides, extra=True)
-    project_run(root, "ci-test")
+    project_run(root, "ci-test", overrides=overrides)
