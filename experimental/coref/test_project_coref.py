@@ -6,6 +6,11 @@ from pathlib import Path
 def test_experimental_coref():
     root = Path(__file__).parent
     # provide a placeholder value here, since we won't have real OntoNotes
-    overrides = {"vars.ontonotes": "assets", "vars.gpu_id": -1}
+    overrides = {
+        "vars.ontonotes": "assets",
+        "vars.gpu_id": -1,
+        "vars.max_epochs": 10,
+        "vars.config_dir": "configs/test",
+    }
     project_assets(root, overrides=overrides, extra=True)
     project_run(root, "ci-test", overrides=overrides)
