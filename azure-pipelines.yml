@@ -7,7 +7,8 @@ trigger:
 
 variables:
     # Make sure we're exiting training as early as possible
-    SPACY_CONFIG_OVERRIDES: '--training.max_epochs=1 --training.max_steps=1'
+    # TODO re-enable this, disabled for testing
+    #SPACY_CONFIG_OVERRIDES: '--training.max_epochs=1 --training.max_steps=1'
     WASABI_LOG_FRIENDLY: 1
 
 jobs:
