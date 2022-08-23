@@ -1,4 +1,4 @@
-import sys
+import argparse
 import tqdm
 import spacy
 from spacy.tokens import DocBin
@@ -6,8 +6,6 @@ from pathlib import Path
 from spacy.training import Example
 from spacy_experimental.coref.coref_scorer import ClusterEvaluator
 from spacy_experimental.coref.coref_scorer import get_cluster_info, lea
-
-spacy.require_gpu()
 
 
 PREFIX = "coref_clusters"
@@ -55,8 +53,20 @@ def example2clusters(example: Example):
 
 
 def main():
-    model_name = sys.argv[1]
-    infile = Path(sys.argv[2])
+
+    parser = argparse.ArgumentParser(description="Evaluate data using LEA.")
+    parser.add_argument("--model", help="Path to the trained pipeline.")
+    parser.add_argument("--test-data", help="Path to the test data.")
+    parser.add_argument(
+        "--gpu", type=int, help="ID of GPU to run coreference pipeline on."
+    )
+    args = parser.parse_args()
+
+    if args.gpu and args.gpu > -1:
+        spacy.require_gpu(args.gpu)
+
+    model_name = args.model
+    infile = args.test_data
     # output
     nlp = spacy.load(model_name)
     gold_db = DocBin().from_disk(infile)
