@@ -6,7 +6,7 @@ description: |
 
   1. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
   2. run `pip install -r requirements.txt`
-  3. modify `project.yml` to set your GPU ID and OntoNotes path
+  3. modify `project.yml` to set your GPU ID and OntoNotes path (see [Data Preparation](#data-preparation) for details)
 
   After that you can just run `spacy project run all`.
 
@@ -16,9 +16,23 @@ description: |
   happens occasionally. For more details see [this
   thread](https://github.com/explosion/spaCy/discussions/9277#discussioncomment-1374226).
 
+  ## Data Preparation
+
+  To use this project you need a copy of [OntoNotes](https://catalog.ldc.upenn.edu/LDC2013T19).
+
+  If you have OntoNotes and have not worked with the CoNLL 2012 coreference annotations before, set `vars.ontonotes` in `project.yml` to the local path to OntoNotes. The top level directory should contain directories named `arabic`, `chinese`, `english`, and `ontology`. Then run the following command to prepare the coreference data:
+
+  ```
+  spacy project run prep-conll-data
+  ```
+
+  After that you can execute `spacy project run all`.
+
+  If you already have CoNLL 2012 data prepared and concatenated into one file per split, you can specify the paths to the training, dev, and test files directly in `project.yml`, see the `vars` section. After doing so you can run `spacy project run all`.
+
   ## Using the Trained Pipeline
 
-  After you've trained the pipeline, you can load and use it like this:
+  After training the pipeline (or downloading a pretrained version), you can load and use it like this:
 
   ```
   import spacy
@@ -48,20 +62,26 @@ vars:
   # XXX fill with your local path to OntoNotes
   ontonotes: /home/USER/ontonotes5/data
   max_epochs: 20
+  # File to use for data in ci testing
   test_file: assets/litbank/95_the_prisoner_of_zenda_brat.conll
+  # Changed in testing to use CPU configs
   config_dir: configs/
+
+  # conll training data split files
+  train_conll: assets/train.gold.conll
+  dev_conll: assets/dev.gold.conll
+  test_conll: assets/test.gold.conll
 
 directories: ["assets", "corpus", "scripts", "configs", "training"]
 
 assets:
   - dest: assets/
+    extra: True
     git:
       repo: "https://github.com/explosion/conll-2012"
       branch: "main"
       path: ""
-    description: "CoNLL-2012 scripts and dehydrated data."
-  - dest: ${vars.ontonotes}
-    description: "Ensure you have a local copy of OntoNotes: https://catalog.ldc.upenn.edu/LDC2013T19"    
+    description: "CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes."
   - dest: assets/litbank
     extra: True
     git:
@@ -72,7 +92,6 @@ assets:
 
 workflows:
   prep:
-    - prep-data
     - preprocess
   train:
     - train-cluster
@@ -89,7 +108,6 @@ workflows:
 
   all:
     # prep
-    - prep-data
     - preprocess
     # train
     - train-cluster
@@ -100,7 +118,7 @@ workflows:
     - eval
 
 commands:
-  - name: "prep-data"
+  - name: "prep-ontonotes-data"
     help: "Rehydrate the data using OntoNotes"
     script: 
       - bash scripts/prep_data.sh "${vars.ontonotes}"
@@ -134,14 +152,14 @@ commands:
   - name: "preprocess"
     help: "Convert the data to spaCy's format"
     deps:
-      - assets/train.gold.conll
-      - assets/dev.gold.conll
-      - assets/test.gold.conll
+      - ${vars.train_conll}
+      - ${vars.dev_conll}
+      - ${vars.test_conll}
       - scripts/preprocess.py
     script:
-      - python scripts/preprocess.py assets/train.gold.conll corpus/train.spacy
-      - python scripts/preprocess.py assets/dev.gold.conll corpus/dev.spacy
-      - python scripts/preprocess.py assets/test.gold.conll corpus/test.spacy
+      - python scripts/preprocess.py ${vars.train_conll} corpus/train.spacy
+      - python scripts/preprocess.py ${vars.dev_conll} corpus/dev.spacy
+      - python scripts/preprocess.py ${vars.test_conll} corpus/test.spacy
     outputs:
       - corpus/train.spacy
       - corpus/dev.spacy

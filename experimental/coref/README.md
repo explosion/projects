@@ -8,7 +8,7 @@ Before using this project:
 
 1. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
 2. run `pip install -r requirements.txt`
-3. modify `project.yml` to set your GPU ID and OntoNotes path
+3. modify `project.yml` to set your GPU ID and OntoNotes path (see [Data Preparation](#data-preparation) for details)
 
 After that you can just run `spacy project run all`.
 
@@ -18,9 +18,23 @@ sequence length is longer than ...`. This is a rare condition that
 happens occasionally. For more details see [this
 thread](https://github.com/explosion/spaCy/discussions/9277#discussioncomment-1374226).
 
+## Data Preparation
+
+To use this project you need a copy of [OntoNotes](https://catalog.ldc.upenn.edu/LDC2013T19).
+
+If you have OntoNotes and have not worked with the CoNLL 2012 coreference annotations before, set `vars.ontonotes` in `project.yml` to the local path to OntoNotes. The top level directory should contain directories named `arabic`, `chinese`, `english`, and `ontology`. Then run the following command to prepare the coreference data:
+
+```
+spacy project run prep-conll-data
+```
+
+After that you can execute `spacy project run all`.
+
+If you already have CoNLL 2012 data prepared and concatenated into one file per split, you can specify the paths to the training, dev, and test files directly in `project.yml`, see the `vars` section. After doing so you can run `spacy project run all`.
+
 ## Using the Trained Pipeline
 
-After you've trained the pipeline, you can load and use it like this:
+After training the pipeline (or downloading a pretrained version), you can load and use it like this:
 
 ```
 import spacy
@@ -57,7 +71,8 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `prep-data` | Rehydrate the data using OntoNotes |
+| `prep-ontonotes-data` | Rehydrate the data using OntoNotes |
+| `prep-test-data` | Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data! |
 | `preprocess` | Convert the data to spaCy's format |
 | `train-cluster` | Train the clustering component |
 | `prep-span-data` | Prepare data for the span resolver component. |
@@ -74,9 +89,10 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `prep` | `prep-data` &rarr; `preprocess` |
+| `prep` | `preprocess` |
 | `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` |
-| `all` | `prep-data` &rarr; `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
+| `ci-test` | `prep-test-data` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
+| `all` | `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
 
 ### 🗂 Assets
 
@@ -86,7 +102,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/` | Git | CoNLL-2012 scripts and dehydrated data. |
-| `/home/USER/ontonotes5/data` | Local | Ensure you have a local copy of OntoNotes: https://catalog.ldc.upenn.edu/LDC2013T19 |
+| `assets/` | Git | CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes. |
+| `assets/litbank` | Git | LitBank dataset. Only used for building data for tests. |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
