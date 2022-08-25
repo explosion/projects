@@ -1,0 +1,810 @@
+title: "Spancat datasets"
+description: |
+  This project compiles various spancat datasets and their converters into the
+  [spaCy format](https://spacy.io/api/data-formats). You can use this in tandem
+  with the [`spancat-encoders`](https://github.com/explosion/spancat-encoders)
+  repository to run various experiments on these datasets.
+
+vars:
+  spans_key: "sc"
+  gpu_id: 0
+
+directories:
+  - "assets"
+  - "configs"
+  - "corpus"
+  - "corpus/spancat"
+  - "corpus/ner"
+  - "scripts"
+
+workflows:
+  wnut17:
+    - "convert-wnut17-ents"
+    - "convert-wnut17-spans"
+    - "inspect-wnut17"
+  wikineural:
+    - "clean-wikineural"
+    - "convert-wikineural-ents"
+    - "convert-wikineural-spans"
+    - "inspect-wikineural"
+  conll:
+    - "clean-conll"
+    - "convert-conll-spans"
+    - "convert-conll-ents"
+    - "inspect-conll"
+  archaeo:
+    - "convert-archaeo-ents"
+    - "convert-archaeo-spans"
+    - "inspect-archaeo"
+  anem:
+    - "convert-anem-ents"
+    - "convert-anem-spans"
+  all:
+    - "convert-wnut17-ents"
+    - "convert-wnut17-spans"
+    - "clean-wikineural"
+    - "convert-wikineural-ents"
+    - "convert-wikineural-spans"
+    - "clean-conll"
+    - "convert-conll-spans"
+    - "convert-conll-ents"
+    - "convert-archaeo-ents"
+    - "convert-archaeo-spans"
+    - "convert-anem-ents"
+    - "convert-anem-spans"
+
+assets:
+  # WNUT17
+  - dest: "assets/wnut17-train.iob"
+    description: "WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al., 2017"
+    url: https://github.com/juand-r/entity-recognition-datasets/blob/master/data/WNUT17/CONLL-format/data/train/wnut17train.conll
+  - dest: "assets/wnut17-dev.iob"
+    description: "WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al., 2017"
+    url: https://github.com/juand-r/entity-recognition-datasets/blob/master/data/WNUT17/CONLL-format/data/dev/emerging.dev.conll
+  - dest: "assets/wnut17-test.iob"
+    description: "WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al., 2017"
+    url: https://github.com/juand-r/entity-recognition-datasets/blob/master/data/WNUT17/CONLL-format/data/test/emerging.test.annotated
+  ### Wikineural datasets ###
+  # Wikineural (en)
+  - dest: "assets/raw-en-wikineural-train.iob"
+    description: "WikiNeural (en) training dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/train.conllu
+  - dest: "assets/raw-en-wikineural-dev.iob"
+    description: "WikiNeural (en) dev dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/val.conllu
+  - dest: "assets/raw-en-wikineural-test.iob"
+    description: "WikiNeural (en) test dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/en/test.conllu
+  # Wikineural (de)
+  - dest: "assets/raw-de-wikineural-train.iob"
+    description: "WikiNeural (de) training dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/de/train.conllu
+  - dest: "assets/raw-de-wikineural-dev.iob"
+    description: "WikiNeural (de) dev dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/de/val.conllu
+  - dest: "assets/raw-de-wikineural-test.iob"
+    description: "WikiNeural (de) test dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/de/test.conllu
+  # Wikineural (es)
+  - dest: "assets/raw-es-wikineural-train.iob"
+    description: "WikiNeural (es) training dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/es/train.conllu
+  - dest: "assets/raw-es-wikineural-dev.iob"
+    description: "WikiNeural (es) dev dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/es/val.conllu
+  - dest: "assets/raw-es-wikineural-test.iob"
+    description: "WikiNeural (es) test dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/es/test.conllu
+  # Wikineural (nl)
+  - dest: "assets/raw-nl-wikineural-train.iob"
+    description: "WikiNeural (nl) training dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/nl/train.conllu
+  - dest: "assets/raw-nl-wikineural-dev.iob"
+    description: "WikiNeural (nl) dev dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/nl/val.conllu
+  - dest: "assets/raw-nl-wikineural-test.iob"
+    description: "WikiNeural (nl) test dataset from Tedeschi et al. (EMNLP 2021)"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/wikineural/nl/test.conllu
+  ### ConLL datasets ###
+  #  CoNLL-2003 (en)
+  - dest: "assets/raw-en-conll-train.iob"
+    description: "CoNLL 2003 (en) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/train.conllu
+  - dest: "assets/raw-en-conll-dev.iob"
+    description: "CoNLL 2003 (en) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/val.conllu
+  - dest: "assets/raw-en-conll-test.iob"
+    description: "CoNLL 2003 (en) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/en/test.conllu
+  # CoNLL-2003 (de)
+  - dest: "assets/raw-de-conll-train.iob"
+    description: "CoNLL 2003 (de) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/de/train.conllu
+  - dest: "assets/raw-de-conll-dev.iob"
+    description: "CoNLL 2003 (de) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/de/val.conllu
+  - dest: "assets/raw-de-conll-test.iob"
+    description: "CoNLL 2003 (de) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/de/test.conllu
+  # CoNLL-2002 (es)
+  - dest: "assets/raw-es-conll-train.iob"
+    description: "CoNLL 2002 (es) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/es/train.conllu
+  - dest: "assets/raw-es-conll-dev.iob"
+    description: "CoNLL 2002 (es) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/es/val.conllu
+  - dest: "assets/raw-es-conll-test.iob"
+    description: "CoNLL (es) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/es/test.conllu
+  # CoNLL-2002 (nl)
+  - dest: "assets/raw-nl-conll-train.iob"
+    description: "CoNLL 2002 (nl) training dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/nl/train.conllu
+  - dest: "assets/raw-nl-conll-dev.iob"
+    description: "CoNLL 2002 (nl) dev dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/nl/val.conllu
+  - dest: "assets/raw-nl-conll-test.iob"
+    description: "CoNLL 202 (nl) test dataset"
+    url: https://github.com/Babelscape/wikineural/blob/master/data/conll/nl/test.conllu
+  ### Archaeo dataset ###
+  - dest: "assets/archaeo.bio"
+    description: "Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020)"
+    url: https://github.com/alexbrandsen/dutch-archaeo-NER-dataset/blob/master/complete-bio-gs.bio
+  ### AnEM dataset ###
+  - dest: "assets/anem-train.iob"
+    description: "Anatomical Entity Mention (AnEM) training corpus containing abstracts and full-text biomedical papers from Ohta et al. (ACL 2012)"
+    url: https://github.com/juand-r/entity-recognition-datasets/blob/master/data/AnEM/CONLL-format/data/AnEM.train
+  - dest: "assets/anem-test.iob"
+    description: "Anatomical Entity Mention (AnEM) test corpus containing abstracts and full-text biomedical papers from Ohta et al. (ACL 2012)"
+    url: https://github.com/juand-r/entity-recognition-datasets/blob/master/data/AnEM/CONLL-format/data/AnEM.test
+
+commands:
+  - name: "convert-wnut17-ents"
+    help: "Convert WNUT17 dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-test.iob corpus/ner/
+        --use-ents
+    deps:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+    outputs:
+      - corpus/ner/wnut17-train.spacy
+      - corpus/ner/wnut17-dev.spacy
+      - corpus/ner/wnut17-test.spacy
+
+  - name: "convert-wnut17-spans"
+    help: "Convert WNUT17 dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+    deps:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+    outputs:
+      - corpus/spancat/wnut17-train.spacy
+      - corpus/spancat/wnut17-dev.spacy
+      - corpus/spancat/wnut17-test.spacy
+
+  - name: "inspect-wnut17"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/wnut17-train.spacy 
+        --paths.dev corpus/spancat/wnut17-dev.spacy
+
+  - name: "clean-wikineural"
+    help: "Remove unnecessary indices from wikineural data"
+    script:
+      # Clean Wikineural datasets
+      - python -m scripts.preprocess assets/raw-de-wikineural-train.iob assets/de-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-de-wikineural-dev.iob assets/de-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-de-wikineural-test.iob assets/de-wikineural-test.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-train.iob assets/en-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-dev.iob assets/en-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-test.iob assets/en-wikineural-test.iob
+      - python -m scripts.preprocess assets/raw-es-wikineural-train.iob assets/es-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-es-wikineural-dev.iob assets/es-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-es-wikineural-test.iob assets/es-wikineural-test.iob
+      - python -m scripts.preprocess assets/raw-nl-wikineural-train.iob assets/nl-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-nl-wikineural-dev.iob assets/nl-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-nl-wikineural-test.iob assets/nl-wikineural-test.iob
+    deps:
+      # Wikineural datasets
+      - assets/raw-de-wikineural-train.iob
+      - assets/raw-de-wikineural-dev.iob
+      - assets/raw-en-wikineural-train.iob
+      - assets/raw-en-wikineural-dev.iob
+      - assets/raw-en-wikineural-test.iob
+      - assets/raw-es-wikineural-train.iob
+      - assets/raw-es-wikineural-dev.iob
+      - assets/raw-es-wikineural-test.iob
+      - assets/raw-nl-wikineural-train.iob
+      - assets/raw-nl-wikineural-dev.iob
+      - assets/raw-nl-wikineural-test.iob
+    outputs:
+      # Cleaned Wikineural datasets
+      - assets/de-wikineural-train.iob
+      - assets/de-wikineural-dev.iob
+      - assets/en-wikineural-train.iob
+      - assets/en-wikineural-dev.iob
+      - assets/en-wikineural-test.iob
+      - assets/es-wikineural-train.iob
+      - assets/es-wikineural-dev.iob
+      - assets/es-wikineural-test.iob
+      - assets/nl-wikineural-train.iob
+      - assets/nl-wikineural-dev.iob
+      - assets/nl-wikineural-test.iob
+
+  - name: "convert-wikineural-spans"
+    help: "Convert WikiNeural dataset (de, en, es, nl) into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - "assets/de-wikineural-train.iob"
+      - "assets/de-wikineural-dev.iob"
+      - "assets/de-wikineural-test.iob"
+      - "assets/en-wikineural-train.iob"
+      - "assets/en-wikineural-dev.iob"
+      - "assets/en-wikineural-test.iob"
+      - "assets/es-wikineural-train.iob"
+      - "assets/es-wikineural-dev.iob"
+      - "assets/es-wikineural-test.iob"
+      - "assets/nl-wikineural-train.iob"
+      - "assets/nl-wikineural-dev.iob"
+      - "assets/nl-wikineural-test.iob"
+    outputs:
+      - "corpus/spancat/de-wikineural-train.spacy"
+      - "corpus/spancat/de-wikineural-dev.spacy"
+      - "corpus/spancat/de-wikineural-test.spacy"
+      - "corpus/spancat/en-wikineural-train.spacy"
+      - "corpus/spancat/en-wikineural-dev.spacy"
+      - "corpus/spancat/en-wikineural-test.spacy"
+      - "corpus/spancat/es-wikineural-train.spacy"
+      - "corpus/spancat/es-wikineural-dev.spacy"
+      - "corpus/spancat/es-wikineural-test.spacy"
+      - "corpus/spancat/nl-wikineural-train.spacy"
+      - "corpus/spancat/nl-wikineural-dev.spacy"
+      - "corpus/spancat/nl-wikineural-test.spacy"
+
+  - name: "convert-wikineural-ents"
+    help: "Convert WikiNeural dataset (de, en, es, nl) into the spaCy format"
+    script:
+      # Convert de dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-wikineural-test.iob corpus/spancat/
+        --use-ents
+      # Convert en dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-wikineural-test.iob corpus/ner/
+        --use-ents
+      # Convert es dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-wikineural-test.iob corpus/ner/
+        --use-ents
+      # Convert nl dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-wikineural-test.iob corpus/ner/
+        --use-ents
+    deps:
+      - "assets/de-wikineural-train.iob"
+      - "assets/de-wikineural-dev.iob"
+      - "assets/de-wikineural-test.iob"
+      - "assets/en-wikineural-train.iob"
+      - "assets/en-wikineural-dev.iob"
+      - "assets/en-wikineural-test.iob"
+      - "assets/es-wikineural-train.iob"
+      - "assets/es-wikineural-dev.iob"
+      - "assets/es-wikineural-test.iob"
+      - "assets/nl-wikineural-train.iob"
+      - "assets/nl-wikineural-dev.iob"
+      - "assets/nl-wikineural-test.iob"
+    outputs:
+      - "corpus/ner/de-wikineural-train.spacy"
+      - "corpus/ner/de-wikineural-dev.spacy"
+      - "corpus/spancat/de-wikineural-test.spacy"
+      - "corpus/ner/en-wikineural-train.spacy"
+      - "corpus/ner/en-wikineural-dev.spacy"
+      - "corpus/ner/en-wikineural-test.spacy"
+      - "corpus/ner/es-wikineural-train.spacy"
+      - "corpus/ner/es-wikineural-dev.spacy"
+      - "corpus/ner/es-wikineural-test.spacy"
+      - "corpus/ner/nl-wikineural-train.spacy"
+      - "corpus/ner/nl-wikineural-dev.spacy"
+      - "corpus/ner/nl-wikineural-test.spacy"
+  
+  - name: "inspect-wikineural"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/de-wikineural-train.spacy 
+        --paths.dev corpus/spancat/de-wikineural-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/en-wikineural-train.spacy 
+        --paths.dev corpus/spancat/en-wikineural-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/es-wikineural-train.spacy 
+        --paths.dev corpus/spancat/es-wikineural-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/nl-wikineural-train.spacy 
+        --paths.dev corpus/spancat/nl-wikineural-dev.spacy
+
+
+  - name: "clean-conll"
+    help: "Remove unnecessary indices from ConLL data"
+    script:
+      # Clean CoNLL datasets
+      - python -m scripts.preprocess assets/raw-de-conll-train.iob assets/de-conll-train.iob
+      - python -m scripts.preprocess assets/raw-de-conll-dev.iob assets/de-conll-dev.iob
+      - python -m scripts.preprocess assets/raw-de-conll-test.iob assets/de-conll-test.iob
+      - python -m scripts.preprocess assets/raw-en-conll-train.iob assets/en-conll-train.iob
+      - python -m scripts.preprocess assets/raw-en-conll-dev.iob assets/en-conll-dev.iob
+      - python -m scripts.preprocess assets/raw-en-conll-test.iob assets/en-conll-test.iob
+      - python -m scripts.preprocess assets/raw-es-conll-train.iob assets/es-conll-train.iob
+      - python -m scripts.preprocess assets/raw-es-conll-dev.iob assets/es-conll-dev.iob
+      - python -m scripts.preprocess assets/raw-es-conll-test.iob assets/es-conll-test.iob
+      - python -m scripts.preprocess assets/raw-nl-conll-train.iob assets/nl-conll-train.iob
+      - python -m scripts.preprocess assets/raw-nl-conll-dev.iob assets/nl-conll-dev.iob
+      - python -m scripts.preprocess assets/raw-nl-conll-test.iob assets/nl-conll-test.iob
+    deps:
+      # CoNLL datasets
+      - assets/raw-de-conll-train.iob
+      - assets/raw-de-conll-dev.iob
+      - assets/raw-en-conll-train.iob
+      - assets/raw-en-conll-dev.iob
+      - assets/raw-en-conll-test.iob
+      - assets/raw-es-conll-train.iob
+      - assets/raw-es-conll-dev.iob
+      - assets/raw-es-conll-test.iob
+      - assets/raw-nl-conll-train.iob
+      - assets/raw-nl-conll-dev.iob
+      - assets/raw-nl-conll-test.iob
+    outputs:
+      # Cleaned CoNLL datasets
+      - assets/de-conll-train.iob
+      - assets/de-conll-dev.iob
+      - assets/en-conll-train.iob
+      - assets/en-conll-dev.iob
+      - assets/en-conll-test.iob
+      - assets/es-conll-train.iob
+      - assets/es-conll-dev.iob
+      - assets/es-conll-test.iob
+      - assets/nl-conll-train.iob
+      - assets/nl-conll-dev.iob
+      - assets/nl-conll-test.iob
+
+  - name: "convert-conll-spans"
+    help: "Convert CoNLL dataset (de, en, es, nl) into the spaCy format"
+    script:
+      # Convert de dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      # Convert en dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      # Convert es dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      # Convert nl dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - "assets/de-conll-train.iob"
+      - "assets/de-conll-dev.iob"
+      - "assets/de-conll-test.iob"
+      - "assets/en-conll-train.iob"
+      - "assets/en-conll-dev.iob"
+      - "assets/en-conll-test.iob"
+      - "assets/es-conll-train.iob"
+      - "assets/es-conll-dev.iob"
+      - "assets/es-conll-test.iob"
+      - "assets/nl-conll-train.iob"
+      - "assets/nl-conll-dev.iob"
+      - "assets/nl-conll-test.iob"
+    outputs:
+      - "corpus/spancat/de-conll-train.spacy"
+      - "corpus/spancat/de-conll-dev.spacy"
+      - "corpus/spancat/de-conll-test.spacy"
+      - "corpus/spancat/en-conll-train.spacy"
+      - "corpus/spancat/en-conll-dev.spacy"
+      - "corpus/spancat/en-conll-test.spacy"
+      - "corpus/spancat/es-conll-train.spacy"
+      - "corpus/spancat/es-conll-dev.spacy"
+      - "corpus/spancat/es-conll-test.spacy"
+      - "corpus/spancat/nl-conll-train.spacy"
+      - "corpus/spancat/nl-conll-dev.spacy"
+      - "corpus/spancat/nl-conll-test.spacy"
+
+  - name: "convert-conll-ents"
+    help: "Convert CoNLL dataset (de, en, es, nl) into the spaCy format"
+    script:
+      # Convert de dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/de-conll-test.iob corpus/spancat/
+        --converter auto
+      # Convert en dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/en-conll-test.iob corpus/ner/
+        --use-ents
+      # Convert es dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-test.iob corpus/ner/
+        --use-ents
+      # Convert nl dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-test.iob corpus/ner/
+        --use-ents
+    deps:
+      - "assets/de-conll-train.iob"
+      - "assets/de-conll-dev.iob"
+      - "assets/de-conll-test.iob"
+      - "assets/en-conll-train.iob"
+      - "assets/en-conll-dev.iob"
+      - "assets/en-conll-test.iob"
+      - "assets/es-conll-train.iob"
+      - "assets/es-conll-dev.iob"
+      - "assets/es-conll-test.iob"
+      - "assets/nl-conll-train.iob"
+      - "assets/nl-conll-dev.iob"
+      - "assets/nl-conll-test.iob"
+    outputs:
+      - "corpus/ner/de-conll-train.spacy"
+      - "corpus/ner/de-conll-dev.spacy"
+      - "corpus/ner/de-conll-test.spacy"
+      - "corpus/ner/en-conll-train.spacy"
+      - "corpus/ner/en-conll-dev.spacy"
+      - "corpus/ner/en-conll-test.spacy"
+      - "corpus/ner/es-conll-train.spacy"
+      - "corpus/ner/es-conll-dev.spacy"
+      - "corpus/ner/es-conll-test.spacy"
+      - "corpus/ner/nl-conll-train.spacy"
+      - "corpus/ner/nl-conll-dev.spacy"
+      - "corpus/ner/nl-conll-test.spacy"
+  
+  - name: "inspect-conll"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/de-conll-train.spacy 
+        --paths.dev corpus/spancat/de-conll-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/en-conll-train.spacy 
+        --paths.dev corpus/spancat/en-conll-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/es-conll-train.spacy 
+        --paths.dev corpus/spancat/es-conll-dev.spacy
+      
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/nl-conll-train.spacy 
+        --paths.dev corpus/spancat/nl-conll-dev.spacy
+
+  - name: "convert-archaeo-spans"
+    help: "Convert Dutch Archaeology dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/archaeo.bio corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter iob
+      - >-
+        python -m scripts.split_docs
+        corpus/spancat/archaeo.spacy corpus/spancat
+        --seed 42
+        --shuffle
+    deps:
+      - "assets/archaeo.bio"
+    outputs:
+      - "corpus/spancat/archaeo-train.spacy"
+      - "corpus/spancat/archaeo-dev.spacy"
+      - "corpus/spancat/archaeo-test.spacy"
+
+  - name: "convert-archaeo-ents"
+    help: "Convert Dutch Archaeology dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/archaeo.bio corpus/ner/
+        --use-ents
+        --converter iob
+      - >-
+        python -m scripts.split_docs
+        corpus/ner/archaeo.spacy corpus/ner/
+        --seed 42
+        --shuffle
+    deps:
+      - "assets/archaeo.bio"
+    outputs:
+      - "corpus/ner/archaeo-train.spacy"
+      - "corpus/ner/archaeo-dev.spacy"
+      - "corpus/ner/archaeo-test.spacy"
+  
+  - name: "inspect-archaeo"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/archaeo-train.spacy 
+        --paths.dev corpus/spancat/archaeo-dev.spacy
+
+  - name: "convert-anem-spans"
+    help: "Convert AnEM dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/spancat/anem-train-dev.spacy corpus/spancat/anem-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - assets/anem-train.iob
+      - assets/anem-test.iob
+    outputs:
+      - corpus/spancat/anem-train.spacy
+      - corpus/spancat/anem-dev.spacy
+      - corpus/spancat/anem-test.spacy
+  
+
+  - name: "convert-anem-ents"
+    help: "Convert AnEM dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-train.iob corpus/ner/
+        --use-ents
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/ner/anem-train-dev.spacy corpus/ner/anem-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-test.iob corpus/ner/
+        --use-ents
+        --converter auto
+    deps:
+      - assets/anem-train.iob
+      - assets/anem-test.iob
+    outputs:
+      - corpus/ner/anem-train.spacy
+      - corpus/ner/anem-dev.spacy
+      - corpus/ner/anem-test.spacy
+  
+  - name: "inspect-anem"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/anem-train.spacy 
+        --paths.dev corpus/spancat/anem-dev.spacy
+
+  - name: "clean"
+    help: "Remove intermediary files"
+    script:
+      - "rm -rf assets/*"
+      - "rm -rf corpus/*"
