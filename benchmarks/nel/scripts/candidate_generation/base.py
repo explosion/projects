@@ -8,11 +8,7 @@ from spacy import Language
 from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
 
-# More elegant way to resolve import conflicts between training and evaluation calls?
-try:
-    from ..datasets.dataset import Dataset
-except ValueError:
-    from datasets.dataset import Dataset
+from datasets.dataset import Dataset
 
 
 class NearestNeighborCandidateSelector(abc.ABC):
