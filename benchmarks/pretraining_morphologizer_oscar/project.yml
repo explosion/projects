@@ -3,13 +3,14 @@ description: "This project runs various pretraining experiments with different l
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   # Change all three variables to change the language
-  spacy_lang: "de" # en, de, nl
-  spacy_model: "de_core_news_lg" # "en_core_web_lg", "de_core_news_lg", "nl_core_news_sm"
-  ud_treebank: "UD_German-HDT" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
+  spacy_lang: "nl" # en, de, nl
+  spacy_model: "nl_core_news_lg" # "en_core_web_lg", "de_core_news_lg", "nl_core_news_lg"
+  ud_treebank: "UD_Dutch-Alpino" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
 
   oscar_path: "data"
   max_pretraining_texts: 10000
-  pretraining_model: "model4.bin"
+  # This variable depends on the output of the pretrain commands
+  pretraining_model: "model2.bin"
   gpu: 0
 
 # These are the directories that the project needs. The project CLI will make
@@ -30,11 +31,23 @@ assets:
 workflows:
   data:
     - download_oscar
+    - download_model
     - extract_ud
     - convert_ud
+  training:
+    - train
+    - evaluate
   training_char:
     - pretrain_char
     - train_char
+    - evaluate_char
+  training_vector:
+    - pretrain_vector
+    - train_vector
+    - evaluate_vector
+  training_trf:
+    - train_trf
+    - evaluate_trf
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -102,7 +115,7 @@ commands:
   - name: pretrain_char
     help: "Pretrain a tok2vec component with the character objective"
     script:
-      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path} --nlp.lang ${vars.spacy_lang}"
+      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl --nlp.lang ${vars.spacy_lang}"
     deps:
       - "${vars.oscar_path}"
       - "configs/config_pretrain_char.cfg"
@@ -134,7 +147,7 @@ commands:
   - name: pretrain_vector
     help: "Pretrain a tok2vec component with the vector objective"
     script:
-      - "python -m spacy pretrain configs/config_pretrain_vector.cfg pretraining/${vars.spacy_lang}/vector_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path} --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang}"
+      - "python -m spacy pretrain configs/config_pretrain_vector.cfg pretraining/${vars.spacy_lang}/vector_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang}"
     deps:
       - "${vars.oscar_path}"
       - "configs/config_pretrain_vector.cfg"
