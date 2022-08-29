@@ -118,3 +118,5 @@ commands:
     help: "Remove cached files"
     script:
       - rm -rf training/
+      - rm -rf corpus/
+      - rm -rf metrics/
