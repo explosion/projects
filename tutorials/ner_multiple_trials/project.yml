@@ -11,8 +11,9 @@ description: |
 
   > **Note**
   > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
-  > and dev corpus to 500 for demonstration purposes. You can adjust this by overriding `vars.limit`, or setting it to `0`
-  > to train on the whole training corpus.
+  > and dev corpus to 500 for demonstration purposes. You can adjust this by
+  > overriding `vars.limit_samples`, or setting it to `0` to train on the whole
+  > training corpus.
 
   At evaluation, you can pass a directory containing all the models for each
   trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
@@ -31,7 +32,7 @@ vars:
   trials: 5
   config: "ner_efficiency.cfg"
   max_steps: 20000
-  limit: 500
+  limit_samples: 500
 
 workflows:
   all:
@@ -92,9 +93,9 @@ commands:
         --nlp.lang en
         --output training/
         --paths.train corpus/en-wikineural-train.spacy
-        --corpora.train.limit ${vars.limit}
+        --corpora.train.limit ${vars.limit_samples}
         --paths.dev corpus/en-wikineural-dev.spacy
-        --corpora.dev.limit ${vars.limit}
+        --corpora.dev.limit ${vars.limit_samples}
         --training.max_steps ${vars.max_steps}
         --gpu-id ${vars.gpu_id}
     deps:
