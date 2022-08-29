@@ -37,7 +37,7 @@ def train_cli(
 
     for trial, seed in enumerate(seeds):
         msg.divider(f"Performing trial {trial+1} of {num_trials} (seed={seed})")
-        overrides["system.seed"] = seed
+        overrides["training.seed"] = seed
         train(
             config_path,
             output_path / str(seed),
