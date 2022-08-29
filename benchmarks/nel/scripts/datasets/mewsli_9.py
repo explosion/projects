@@ -69,7 +69,7 @@ class Mewsli9Dataset(Dataset):
                         encoding="utf-8",
                     ) as text_file:
                         # Replace newlines with whitespace and \xa0 (non-breaking whitespace) appearing after titles
-                        # with a period.
+                        # with a period. This maintains the correct offsets in the dataset annotations.
                         doc_text = "".join([
                             line.replace("\n", " ").replace("\xa0", ".") for line in text_file.readlines()
                         ])
