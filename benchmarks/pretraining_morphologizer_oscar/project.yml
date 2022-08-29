@@ -2,14 +2,15 @@ title: 'Use Pretraining to improve training a morphologizer component'
 description: "This project runs various pretraining experiments with different languages to train a morphologizer"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
-  spacy_lang: "en" # en, de, nl
-  spacy_model: "en_core_web_lg" # "en_core_web_lg", "de_core_news_sm", "nl_core_news_sm"
-  gpu: 0
+  # Change all three variables to change the language
+  spacy_lang: "de" # en, de, nl
+  spacy_model: "de_core_news_lg" # "en_core_web_lg", "de_core_news_lg", "nl_core_news_sm"
+  ud_treebank: "UD_German-HDT" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
 
   oscar_path: "data"
   max_pretraining_texts: 10000
-  pretraining_model: "model34.bin"
-  ud_treebank: "UD_English-EWT" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
+  pretraining_model: "model4.bin"
+  gpu: 0
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -101,7 +102,7 @@ commands:
   - name: pretrain_char
     help: "Pretrain a tok2vec component with the character objective"
     script:
-      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path}"
+      - "python -m spacy pretrain configs/config_pretrain_char.cfg pretraining/${vars.spacy_lang}/character_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path} --nlp.lang ${vars.spacy_lang}"
     deps:
       - "${vars.oscar_path}"
       - "configs/config_pretrain_char.cfg"
@@ -111,7 +112,7 @@ commands:
   - name: train_char
     help: "Train a morphologizer component with pretrained weights (character_objective)"
     script:
-      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/character_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model}"
+      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/character_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model} --nlp.lang ${vars.spacy_lang}"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
@@ -133,7 +134,7 @@ commands:
   - name: pretrain_vector
     help: "Pretrain a tok2vec component with the vector objective"
     script:
-      - "python -m spacy pretrain configs/config_pretrain_vector.cfg pretraining/${vars.spacy_lang}/vector_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path} --paths.vectors ${vars.spacy_model}"
+      - "python -m spacy pretrain configs/config_pretrain_vector.cfg pretraining/${vars.spacy_lang}/vector_objective --gpu-id ${vars.gpu} --paths.raw_text ${vars.oscar_path} --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang}"
     deps:
       - "${vars.oscar_path}"
       - "configs/config_pretrain_vector.cfg"
@@ -143,7 +144,7 @@ commands:
   - name: train_vector
     help: "Train a morphologizer component with pretrained weights (vector_objective)"
     script:
-      - "python -m spacy train configs/config_pretrain_vector.cfg -o training/${vars.ud_treebank}/vector_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/vector_objective/${vars.pretraining_model} --paths.vectors ${vars.spacy_model}"
+      - "python -m spacy train configs/config_pretrain_vector.cfg -o training/${vars.ud_treebank}/vector_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/vector_objective/${vars.pretraining_model} --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang}"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
