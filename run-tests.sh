@@ -5,6 +5,7 @@
 # Fetch changed files.
 mapfile -t dirs < <( git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g')
 declare -a tested_dirs=()
+echo $dirs
 exit_code=0
 for dir in "${dirs[@]}"
 do
@@ -18,9 +19,12 @@ do
   if [ ! -z "$second_level_dir" -a "$second_level_dir" != " " ]; then
     if [[ ! " ${tested_dirs[*]} " =~ " ${full_second_level_dir} " ]]; then
       tested_dirs+=($full_second_level_dir)
-      if [ -e $full_second_level_dir/requirements.txt ]; then
-        python -m pip install -r $full_second_level_dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
-      fi
+      echo "--------"
+      echo $second_level_dir
+      echo $full_second_level_dir
+#      if [ -e $full_second_level_dir/requirements.txt ]; then
+#        python -m pip install -r $full_second_level_dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+#      fi
       python -m pytest -s $full_second_level_dir
       if [[ $? != @(0|5) ]]; then
         exit_code=1
