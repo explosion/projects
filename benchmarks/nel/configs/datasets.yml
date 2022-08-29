@@ -1,13 +1,3 @@
-reddit:
-  gold: True
-  silver: True
-  bronze: True
-  posts: True
-  comments: True
-  frac_train: .7
-  frac_dev: .15
-  frac_test: .15
-
 mewsli_9:
   frac_train: .6
   frac_dev: .2

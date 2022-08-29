@@ -4,23 +4,31 @@ vars:
   name: "nel_benchmark"
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
-  version: "0.0.2"
+  version: "0.0.3"
   dataset: "mewsli_9"
   gpu_id: ""
+  use_filtered_dumps: "--use_filtered_dumps"
+  training_max_steps: 1000
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
 
 assets:
-  - dest: 'assets/reddit.zip'
-    url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
-    checksum: 'eea345cc7574a5c9c376748d1871d557'
-    description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
     url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
     description: Wikidata entity dump. Download can take a long time!
+    extra: True
   - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
     url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
     description: Wikipedia dump. Download can take a long time!
+    extra: True
+  - dest: 'assets/wiki/wikidata_entity_dump_filtered.json.bz2'
+    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikidata_entity_dump_filtered.json.bz2'
+    description: Filtered Wikidata entity dump for demo purposes.
+    checksum: 'ba2d979105abf174208608b942242fcb'
+  - dest: 'assets/wiki/wikipedia_dump_filtered.xml.bz2'
+    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikipedia_dump_filtered.xml.bz2'
+    description: Filtered Wikipedia dump for demo purposes.
+    checksum: 'cb624eaa5887fe1ff47a9206c9bdcfd8'
 
 workflows:
   all:
@@ -49,14 +57,11 @@ commands:
   - name: preprocess
     help: Preprocess test datasets.
     script:
-      - "unzip -q -o -d assets/reddit assets/reddit.zip"
       - "python ./scripts/clean_data.py ${vars.dataset}"
     deps:
-      - "assets/reddit.zip"
-      - "assets/mewsli_9"
+      - "assets/${vars.dataset}"
     outputs:
-      - "assets/reddit"
-      - "assets/mewsli_9"
+      - "assets/${vars.dataset}"
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
@@ -66,8 +71,7 @@ commands:
   - name: parse_wiki_dumps
     help: "Parse Wikipedia dumps. This can take a long time!"
     script:
-      # todo download filtered dumps
-      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py --use_filtered_dumps"
+      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py ${vars.use_filtered_dumps}"
     outputs:
       - "assets/wiki/wiki.sqlite3"
 
@@ -105,7 +109,7 @@ commands:
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.gpu_id}"
+      - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
     deps:
       - "temp/${vars.dataset}/kb"
       - "temp/${vars.dataset}/nlp"
@@ -133,5 +137,4 @@ commands:
       - "rm -rf training/*"
       - "rm -rf corpora/*"
       - "rm -rf temp/*"
-      - "rm -rf assets/reddit"
       - "rm -rf assets/mewsli_9"

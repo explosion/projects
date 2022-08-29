@@ -145,7 +145,7 @@ class Dataset(abc.ABC):
         logger.info("Successfully constructed knowledge base.")
 
     def compile_corpora(self, filter_terms: Optional[Set[str]] = None) -> None:
-        """Creates train/dev/test corpora for Reddit entity linking dataset.
+        """Creates train/dev/test corpora for dataset.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """

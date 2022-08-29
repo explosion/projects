@@ -19,13 +19,13 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `download_mewsli-9` | Download Mewsli-9 dataset. |
-| `preprocess` | Preprocess test datasets |
-| `download_model` | Download a model with pretrained vectors and NER component |
-| `parse_wiki_dumps` | Parses Wikipedia dumps. This can take a long time! |
-| `create_kb` | Create the knowledge base and write it to file |
-| `compile_corpora` | Compile corpora, separated in in train/dev/test sets |
+| `preprocess` | Preprocess test datasets. |
+| `download_model` | Download a model with pretrained vectors and NER component. |
+| `parse_wiki_dumps` | Parse Wikipedia dumps. This can take a long time! |
+| `create_kb` | Create the knowledge base and write it to file. |
+| `compile_corpora` | Compile corpora, separated in in train/dev/test sets. |
 | `train` | Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time! |
-| `evaluate` | Evaluation on the test set |
+| `evaluate` | Evaluate on the test set. |
 | `delete_wiki_db` | Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump. |
 | `clean` | Remove intermediate files (excluding Wiki resources and database) |
 
@@ -49,10 +49,18 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/reddit.zip` | URL | Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228). |
 | `assets/wiki/wikidata_entity_dump.json.bz2` | URL | Wikidata entity dump. Download can take a long time! |
 | `assets/wiki/wikipedia_dump.xml.bz2` | URL | Wikipedia dump. Download can take a long time! |
+| `assets/wiki/wikidata_entity_dump_filtered.json.bz2` | URL | Filtered Wikidata entity dump for demo purposes. |
+| `assets/wiki/wikipedia_dump_filtered.xml.bz2` | URL | Filtered Wikipedia dump for demo purposes. |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
-Note: `svn` is required for downloading the Mewsli-9 dataset.
+Notes: 
+- `svn` is required for downloading the Mewsli-9 dataset.
+- The project configuration specifies a complete dump of the English Wikidata and Wikipedia as well as filtered versions. 
+  By default only the filtered versions - containing only articles and entities mentioning "New York" or "Boston" - are 
+  downloaded and processed.
+  If you'd like to work with the complete dumps, make sure to...
+  - ...fetch assets with `extra` (`spacy project assets --extra`).
+  - ...set `vars.use_filtered_dumps: ""` in `project.yml`.
