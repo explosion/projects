@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ -z "${4}" ]] && gpu_config="" || gpu_config="--gpu-id $3"
+[[ -z "${4}" ]] && gpu_config="" || gpu_config="--gpu-id $4"
 
 # Runs training. Expects as arguments: (1) dataset ID, (2) config file name, (3) max. steps.
 PYTHONPATH=scripts python -m spacy train configs/$2 \
