@@ -45,5 +45,6 @@ def train_cli(
             overrides=overrides,
         )
 
+
 if __name__ == "__main__":
     app()
