@@ -40,7 +40,7 @@ def train_cli(
         overrides["training.seed"] = seed
         train(
             config_path,
-            output_path / str(seed),
+            output_path / f"trial_{trial}",
             use_gpu=use_gpu,
             overrides=overrides,
         )

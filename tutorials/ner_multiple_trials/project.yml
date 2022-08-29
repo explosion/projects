@@ -7,7 +7,7 @@ description: |
 
   Under the hood, the training script in `scripts/train_with_trials.py`
   generates a random seed per trial, and runs the `train` command as usual.  You
-  can find the trained model per trial in `training/{seed}/`.
+  can find the trained model per trial in `training/trial_{n}/`.
 
   > **Note**
   > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
