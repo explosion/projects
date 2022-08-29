@@ -25,6 +25,8 @@ jobs:
           vmImage: $(imageName)
 
       steps:
+          - uses: Vampire/setup-wsl@v1
+            
           - task: UsePythonVersion@0
             inputs:
                 versionSpec: '$(python.version)'
