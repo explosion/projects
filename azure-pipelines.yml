@@ -36,6 +36,5 @@ jobs:
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - bash: run-tests.sh
-            workingDirectory: .
+          - bash: 'run-tests.sh'
             displayName: 'Run tests'
