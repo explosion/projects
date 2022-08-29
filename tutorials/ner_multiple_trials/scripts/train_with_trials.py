@@ -5,7 +5,7 @@ from typing import Optional
 
 import typer
 from spacy import util
-from spacy.cli._util import Arg, Opt, import_code, parse_config_overrides
+from spacy.cli._util import import_code, parse_config_overrides
 from spacy.cli.train import train
 from wasabi import msg
 
@@ -20,12 +20,12 @@ MAX_SEED = 2**32 - 1
 def train_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
-    config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    num_trials: int = Opt(5, "--n-trials", "-n", help="Number of trials to run"),
-    output_path: Optional[Path] = Opt(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
-    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
+    config_path: Path = typer.Argument(..., help="Path to config file", exists=True, allow_dash=True),
+    num_trials: int = typer.Option(5, "--n-trials", "-n", help="Number of trials to run"),
+    output_path: Optional[Path] = typer.Option(None, "--output", "--output-path", "-o", help="Output directory to store trained pipeline in"),
+    code_path: Optional[Path] = typer.Option(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    verbose: bool = typer.Option(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
+    use_gpu: int = typer.Option(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU")
     # fmt: on
 ):
     """spaCy train command with multiple trials"""
