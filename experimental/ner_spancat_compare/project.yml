@@ -147,7 +147,7 @@ commands:
   - name: "install"
     help: "Install dependencies"
     script:
-      - "pip install --user -r requirements.txt"
+      - "pip install -r requirements.txt"
       - "python -m spacy download en_core_web_lg"
   - name: "convert"
     help: "Convert IOB file into the spaCy format"
