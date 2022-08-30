@@ -1,0 +1,122 @@
+title: "Training a named-entity recognition (NER) with multiple trials"
+description: |
+  This project demonstrates how to train a spaCy pipeline with multiple trials.
+  It trains a named-entity recognition (NER) model on the WikiNEuRal English
+  dataset.  Having multiple trials is useful for experiments, especially if we
+  want to account for variance and *dependency* on a random seed. 
+
+  Under the hood, the training script in `scripts/train_with_trials.py`
+  generates a random seed per trial, and runs the `train` command as usual.  You
+  can find the trained model per trial in `training/trial_{n}/`.
+
+  > **Note**
+  > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
+  > and dev corpus to 500 for demonstration purposes. You can adjust this by
+  > overriding `vars.limit_samples`, or setting it to `0` to train on the whole
+  > training corpus.
+
+  At evaluation, you can pass a directory containing all the models for each
+  trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
+  This will then result to multiple `metrics/scores.json` files that you can
+  summarize.
+
+directories:
+  - assets
+  - configs
+  - corpus
+  - metrics
+  - training
+
+vars:
+  gpu_id: -1
+  trials: 5
+  config: "ner_efficiency.cfg"
+  max_steps: 20000
+  limit_samples: 500
+
+workflows:
+  all:
+    - preprocess
+    - convert
+    - train
+    - evaluate
+
+assets:
+  - dest: "assets/raw-en-wikineural-train.iob"
+    description: "WikiNEuRal (en) training dataset"
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/train.conllu
+  - dest: "assets/raw-en-wikineural-dev.iob"
+    description: "WikiNEuRal (en) dev dataset"
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/val.conllu
+  - dest: "assets/raw-en-wikineural-test.iob"
+    description: "WikiNEuRal (en) test dataset"
+    url: https://raw.githubusercontent.com/Babelscape/wikineural/master/data/wikineural/en/test.conllu
+
+commands:
+  - name: "preprocess"
+    help: "Preprocess the WikiNEuRal dataset to remove indices and update delimiters."
+    script:
+      - python -m scripts.preprocess assets/raw-en-wikineural-train.iob assets/en-wikineural-train.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-dev.iob assets/en-wikineural-dev.iob
+      - python -m scripts.preprocess assets/raw-en-wikineural-test.iob assets/en-wikineural-test.iob
+    deps:
+      - assets/raw-en-wikineural-train.iob
+      - assets/raw-en-wikineural-dev.iob
+      - assets/raw-en-wikineural-test.iob
+    outputs:
+      - assets/en-wikineural-train.iob
+      - assets/en-wikineural-dev.iob
+      - assets/en-wikineural-test.iob
+
+  - name: "convert"
+    help: "Convert IOB dataset into the spaCy format."
+    script:
+      - python -m spacy convert assets/en-wikineural-train.iob corpus/ -n 10
+      - python -m spacy convert assets/en-wikineural-dev.iob corpus/ -n 10
+      - python -m spacy convert assets/en-wikineural-test.iob corpus/ -n 10
+    deps:
+      - assets/en-wikineural-train.iob
+      - assets/en-wikineural-dev.iob
+      - assets/en-wikineural-test.iob
+    outputs:
+      - corpus/en-wikineural-train.spacy
+      - corpus/en-wikineural-dev.spacy
+      - corpus/en-wikineural-test.spacy
+
+  - name: "train"
+    help: "Train a named-entity recognition (NER) model for a multiple number of trials."
+    script:
+      - >-
+        python -m scripts.train_with_trials
+        configs/${vars.config}
+        --n-trials ${vars.trials}
+        --nlp.lang en
+        --output training/
+        --paths.train corpus/en-wikineural-train.spacy
+        --corpora.train.limit ${vars.limit_samples}
+        --paths.dev corpus/en-wikineural-dev.spacy
+        --corpora.dev.limit ${vars.limit_samples}
+        --training.max_steps ${vars.max_steps}
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - corpus/en-wikineural-train.spacy
+      - corpus/en-wikineural-dev.spacy
+    outputs:
+      - training
+
+  - name: "evaluate"
+    help: "Evaluate all models for each trial, then summarize the results."
+    script:
+      - >-
+        python -m scripts.evaluate_with_trials
+        training/
+        corpus/en-wikineural-test.spacy
+        --output-dir metrics/
+        --gpu-id ${vars.gpu_id}
+
+  - name: "clean"
+    help: "Remove cached files"
+    script:
+      - rm -rf training/
+      - rm -rf corpus/
+      - rm -rf metrics/
