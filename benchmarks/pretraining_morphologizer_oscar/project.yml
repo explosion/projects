@@ -1,16 +1,17 @@
-title: 'Use Pretraining to improve training a morphologizer component'
+title: "Use Pretraining to improve training a morphologizer component"
 description: "This project runs various pretraining experiments with different languages to train a morphologizer"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   # Change all three variables to change the language
-  spacy_lang: "nl" # en, de, nl
-  spacy_model: "nl_core_news_lg" # "en_core_web_lg", "de_core_news_lg", "nl_core_news_lg"
-  ud_treebank: "UD_Dutch-Alpino" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
+  spacy_lang: "en" # en, de, nl
+  spacy_model: "en_core_web_lg" # "en_core_web_lg", "de_core_news_lg", "nl_core_news_lg"
+  ud_treebank: "UD_English-EWT" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
 
   oscar_path: "data"
   max_pretraining_texts: 10000
   # This variable depends on the output of the pretrain commands
-  pretraining_model: "model2.bin"
+  pretraining_model: "model22.bin"
+  # Choose -1 for CPU
   gpu: 0
 
 # These are the directories that the project needs. The project CLI will make
@@ -60,7 +61,7 @@ commands:
       - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.spacy_lang} ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
     outputs:
       - "${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
-  
+
   - name: download_model
     help: "Download the specified spaCy model for vector-objective pretraining"
     script:
@@ -94,7 +95,7 @@ commands:
   - name: train
     help: "Train a morphologizer component without pretrained weights"
     script:
-      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/no_pretraining/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy"
+      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/no_pretraining/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.log_file metrics/${vars.ud_treebank}_no_pretraining.jsonl"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
@@ -125,7 +126,7 @@ commands:
   - name: train_char
     help: "Train a morphologizer component with pretrained weights (character_objective)"
     script:
-      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/character_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model} --nlp.lang ${vars.spacy_lang}"
+      - "python -m spacy train configs/config_pretrain_char.cfg -o training/${vars.ud_treebank}/character_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/character_objective/${vars.pretraining_model} --nlp.lang ${vars.spacy_lang} --paths.log_file metrics/${vars.ud_treebank}_character_objective.jsonl"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
@@ -157,7 +158,7 @@ commands:
   - name: train_vector
     help: "Train a morphologizer component with pretrained weights (vector_objective)"
     script:
-      - "python -m spacy train configs/config_pretrain_vector.cfg -o training/${vars.ud_treebank}/vector_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/vector_objective/${vars.pretraining_model} --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang}"
+      - "python -m spacy train configs/config_pretrain_vector.cfg -o training/${vars.ud_treebank}/vector_objective/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.init_tok2vec pretraining/${vars.spacy_lang}/vector_objective/${vars.pretraining_model} --paths.vectors ${vars.spacy_model} --nlp.lang ${vars.spacy_lang} --paths.log_file metrics/${vars.ud_treebank}_vector_objective.jsonl"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
@@ -179,7 +180,7 @@ commands:
   - name: train_trf
     help: "Train a morphologizer component without transformer embeddings"
     script:
-      - "python -m spacy train configs/config_trf.cfg -o training/${vars.ud_treebank}/transformer/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy"
+      - "python -m spacy train configs/config_trf.cfg -o training/${vars.ud_treebank}/transformer/ --gpu-id ${vars.gpu} --nlp.lang ${vars.spacy_lang} --paths.train data/${vars.ud_treebank}/train.spacy --paths.dev data/${vars.ud_treebank}/dev.spacy --paths.log_file metrics/${vars.ud_treebank}_transformer.jsonl"
     deps:
       - "data/${vars.ud_treebank}/train.spacy"
       - "data/${vars.ud_treebank}/dev.spacy"
@@ -197,6 +198,11 @@ commands:
     outputs:
       - "metrics/${vars.ud_treebank}/transformer/"
 
+  - name: evaluate_metrics
+    help: "Evaluate all experiments and create a summary json file"
+    script:
+      - "python scripts/evaluate_metrics.py ./metrics/"
+
   - name: "reset"
     help: "Reset the project to its original state and delete all training process"
     script:
@@ -205,3 +211,8 @@ commands:
       - "python scripts/reset.py assets"
       - "python scripts/reset.py data"
       - "python scripts/reset.py pretraining"
+
+  - name: "reset_metrics"
+    help: "Delete the metrics folder"
+    script:
+      - "python scripts/reset.py metrics"
