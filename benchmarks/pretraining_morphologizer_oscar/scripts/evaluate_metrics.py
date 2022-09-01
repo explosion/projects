@@ -1,4 +1,3 @@
-from cProfile import label
 import typer
 from pathlib import Path
 import srsly
@@ -17,14 +16,24 @@ def main(metric_folder: Path):
             "character_objective": {},
             "vector_objective": {},
             "transformer": {},
-        }
+        },
+        "UD_German-HDT": {
+            "no_pretraining": {},
+            "character_objective": {},
+            "vector_objective": {},
+            "transformer": {},
+        },
+        "UD_Dutch-Alpino": {
+            "no_pretraining": {},
+            "character_objective": {},
+            "vector_objective": {},
+            "transformer": {},
+        },
     }
 
     datasets_exist = set()
 
     # Import all metrics and assign them to a dict
-    files = []
-    training_epochs = []
     msg.info("Importing all metrics")
     for (dirpath, dirnames, filenames) in walk(metric_folder):
         for filename in filenames:
@@ -40,6 +49,13 @@ def main(metric_folder: Path):
                                 data = srsly.read_json(metric_folder / filename)
                                 datasets[dataset][key]["evaluation"] = data
     msg.good(f"Found metrics for {str(datasets_exist)}")
+
+    del_list = []
+    for dataset in datasets:
+        if dataset not in datasets_exist:
+            del_list.append(dataset)
+    for del_key in del_list:
+        del datasets[del_key]
 
     # Training eval
     msg.info("Starting training evaluation")
@@ -143,6 +159,7 @@ def main(metric_folder: Path):
             f.write(dataset_output)
 
         msg.good(f"Saved eval comparison for {dataset}")
+    msg.info(f"Done!")
 
 
 if __name__ == "__main__":
