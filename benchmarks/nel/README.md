@@ -18,7 +18,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `download_mewsli-9` | Download Mewsli-9 dataset. |
+| `download_mewsli9` | Download Mewsli-9 dataset. |
 | `preprocess` | Preprocess test datasets. |
 | `download_model` | Download a model with pretrained vectors and NER component. |
 | `parse_wiki_dumps` | Parse Wikipedia dumps. This can take a long time! |
@@ -38,7 +38,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `download_mewsli-9` &rarr; `preprocess` &rarr; `download_model` &rarr; `parse_wiki_dumps` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
+| `all` | `download_mewsli9` &rarr; `preprocess` &rarr; `download_model` &rarr; `parse_wiki_dumps` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
 | `training` | `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets

@@ -32,7 +32,7 @@ assets:
 
 workflows:
   all:
-    - download_mewsli-9
+    - download_mewsli9
     - preprocess
     - download_model
     - parse_wiki_dumps
@@ -47,7 +47,7 @@ workflows:
     - evaluate
 
 commands:
-  - name: download_mewsli-9
+  - name: download_mewsli9
     help: Download Mewsli-9 dataset.
     script:
       - bash scripts/datasets/download_mewsli-9.sh

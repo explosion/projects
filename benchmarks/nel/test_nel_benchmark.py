@@ -11,7 +11,7 @@ from spacy.cli.project.assets import project_assets
 def test_nel_benchmark():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "download_mewsli-9", capture=True)
+    project_run(root, "download_mewsli9", capture=True)
     project_run(root, "preprocess", capture=True)
     project_run(root, "download_model", capture=True)
     project_run(root, "parse_wiki_dumps", capture=True)
