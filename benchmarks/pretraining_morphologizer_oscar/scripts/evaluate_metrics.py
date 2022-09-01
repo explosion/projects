@@ -42,7 +42,7 @@ def main(metric_folder: Path):
     msg.good(f"Found metrics for {str(datasets_exist)}")
 
     # Training eval
-    msg.info("Starting evaluation")
+    msg.info("Starting training evaluation")
     for dataset in datasets:
         x_list = []
         y_list = []
@@ -74,6 +74,75 @@ def main(metric_folder: Path):
         plt.title(f"Training {dataset}", size=15)
         plt.savefig(metric_folder / f"{dataset}_training_graph.png", dpi=300)
         msg.good(f"Saved training plot for {dataset}")
+
+    # Evaluation comparison
+    msg.info("Starting evaluation comparison")
+
+    # Set metrics which we want to compare
+    compare_metrics = [
+        "pos_acc",
+        "morph_micro_p",
+        "morph_micro_f",
+        "morph_micro_r",
+        "morph_per_feat",
+        "speed",
+    ]
+
+    metric_types = [
+        "no_pretraining",
+        "character_objective",
+        "vector_objective",
+        "transformer",
+    ]
+    for dataset in datasets:
+        metric_table = {}
+        for metric in compare_metrics:
+            metric_table[metric] = {}
+            for metric_type in datasets[dataset]:
+                eval_data = datasets[dataset][metric_type]["evaluation"]
+
+                if type(eval_data[metric]) == dict:
+                    for label in eval_data[metric]:
+                        if label not in metric_table:
+                            metric_table[label] = {}
+                        metric_table[label][metric_type] = eval_data[metric][label]["f"]
+                else:
+                    metric_table[metric][metric_type] = eval_data[metric]
+
+        dataset_output = ""
+        header = "| Label |"
+        row_sep = "| :----: |"
+        for metric in metric_types:
+            header += f" {metric} |"
+            row_sep += " :----: |"
+        dataset_output += header + "\n"
+        dataset_output += row_sep + "\n"
+
+        for metric in metric_table:
+            row = f"| {metric} |"
+            if len(metric_table[metric]) > 0:
+                no_pretraining_value = 0
+                for metric_type in metric_types:
+                    difference = 0
+                    if metric_type == "no_pretraining":
+                        no_pretraining_value = metric_table[metric][metric_type]
+                    else:
+                        difference = (
+                            metric_table[metric][metric_type] - no_pretraining_value
+                        )
+
+                    value = "{:.2f}".format(metric_table[metric][metric_type])
+                    difference = "{:.2f}".format(difference)
+                    row += f" {value} ({difference}) |"
+
+                dataset_output += row + "\n"
+
+        with open(
+            metric_folder / f"{dataset}_evaluation_comparison.md", "w", encoding="utf-8"
+        ) as f:
+            f.write(dataset_output)
+
+        msg.good(f"Saved eval comparison for {dataset}")
 
 
 if __name__ == "__main__":
