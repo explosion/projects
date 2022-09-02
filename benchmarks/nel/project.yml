@@ -91,7 +91,7 @@ commands:
       - "temp/${vars.dataset}/nlp"
 
   - name: compile_corpora
-    help: "Compile corpora, separated in in train/dev/test sets."
+    help: "Compile corpora, separated in train/dev/test sets."
     script:
       - "python ./scripts/compile_corpora.py ${vars.dataset} True"
     deps:
