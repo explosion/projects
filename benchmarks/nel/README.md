@@ -57,6 +57,8 @@ in the project directory.
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 Notes: 
+> **Warning**: Parts of this project are currently not platform-agnostic and run only on Linux. Making the entire 
+> project work cross-platform is on our todo list. 
 - `svn` is required for downloading the Mewsli-9 dataset.
 - The project configuration specifies a complete dump of the English Wikidata and Wikipedia as well as filtered versions. 
   By default only the filtered versions - containing only articles and entities mentioning "New York" or "Boston" - are 
