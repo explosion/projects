@@ -41,8 +41,6 @@ workflows:
     - train
     - evaluate
   training:
-    - create_kb
-    - compile_corpora
     - train
     - evaluate
 
@@ -101,7 +99,7 @@ commands:
       - "temp/${vars.dataset}/kb"
       - "temp/${vars.dataset}/nlp"
       - "configs/datasets.yml"
-    outputs_no_cache:
+    outputs:
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
       - "corpora/${vars.dataset}/test.spacy"
@@ -110,6 +108,8 @@ commands:
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
       - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
+    outputs_no_cache:
+      - "training/${vars.dataset}"
     deps:
       - "temp/${vars.dataset}/kb"
       - "temp/${vars.dataset}/nlp"

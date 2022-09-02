@@ -253,6 +253,7 @@ class Dataset(abc.ABC):
         n_items: Optional[int] = None,
     ) -> None:
         """Evaluates trained pipeline on test set.
+        candidate_generation (bool): Whether to include candidate generation in evaluation.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
         spacyfishing (bool): Whether to include evaluation with spacyfishing.
@@ -299,9 +300,7 @@ class Dataset(abc.ABC):
         ):
             example: Example
             if len(example) > 0:
-                entity_linker: EntityLinker_v1 = self._nlp_best.components[  # type: ignore
-                    self._nlp_best.component_names.index("entity_linker")
-                ][1]
+                entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_
                     for ent in example.reference.ents
