@@ -67,7 +67,7 @@ commands:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: parse_wiki_dumps
-    help: "Parse Wikipedia dumps. This can take a long time!"
+    help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
       - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py ${vars.use_filtered_dumps}"
     outputs:
@@ -89,7 +89,7 @@ commands:
       - "temp/${vars.dataset}/nlp"
 
   - name: compile_corpora
-    help: "Compile corpora, separated in in train/dev/test sets."
+    help: "Compile corpora, separated in train/dev/test sets."
     script:
       - "python ./scripts/compile_corpora.py ${vars.dataset} True"
     deps:

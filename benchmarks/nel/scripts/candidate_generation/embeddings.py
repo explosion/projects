@@ -4,7 +4,7 @@ from typing import Iterable
 import numpy
 from sklearn.neighbors import NearestNeighbors
 
-from spacy.kb import KnowledgeBase, Candidate
+from spacy.kb import KnowledgeBase
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
 from rapidfuzz.string_metric import normalized_levenshtein
