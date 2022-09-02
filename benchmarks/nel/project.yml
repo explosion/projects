@@ -69,7 +69,7 @@ commands:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: parse_wiki_dumps
-    help: "Parse Wikipedia dumps. This can take a long time!"
+    help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
       - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py ${vars.use_filtered_dumps}"
     outputs:
