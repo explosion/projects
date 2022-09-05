@@ -3,7 +3,7 @@
 
 set -eou pipefail
 
-rm -f assets/*._gold_conll
+rm -f assets/*.gold.conll
 cat assets/conll-2012/v4/data/development/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/dev.gold.conll
 cat assets/conll-2012/v4/data/train/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/train.gold.conll
 cat assets/conll-2012/v4/data/test/data/english/annotations/*/*/*/*.v4_gold_conll >> assets/test.gold.conll
