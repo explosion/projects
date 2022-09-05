@@ -10,7 +10,7 @@ from .base import NearestNeighborCandidateSelector
 from rapidfuzz.string_metric import normalized_levenshtein
 
 
-class CandidateSelector(NearestNeighborCandidateSelector):
+class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
     """Callable object selecting candidates as nearest neighbours in embedding space."""
 
     def _init_lookup_structure(

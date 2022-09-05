@@ -7,7 +7,7 @@ from .base import NearestNeighborCandidateSelector
 from cfuzzyset import cFuzzySet as FuzzySet
 
 
-class CandidateSelector(NearestNeighborCandidateSelector):
+class LexicalCandidateSelector(NearestNeighborCandidateSelector):
     """Callable object selecting candidates as nearest neighbours in lexical space."""
 
     def _init_lookup_structure(

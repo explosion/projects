@@ -10,8 +10,8 @@ from spacy.tokens import Span
 from scripts.candidate_generation import embeddings
 from scripts.candidate_generation import lexical
 
-embedding_candidate_selector = embeddings.CandidateSelector()
-fuzzy_lexical_candidate_selector = lexical.CandidateSelector()
+embedding_candidate_selector = embeddings.EmbeddingCandidateSelector()
+fuzzy_lexical_candidate_selector = lexical.LexicalCandidateSelector()
 
 
 @spacy.registry.misc("EmbeddingGetCandidates.v1")
