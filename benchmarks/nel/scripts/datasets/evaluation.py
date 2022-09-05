@@ -108,8 +108,8 @@ class EvaluationResults(object):
         for label in labels:
             table.add_row(
                 [
-                    self.name.title(),
                     label,
+                    self.name.title(),
                     self.metrics_by_label[label].calculate_fscore(),
                     self.metrics_by_label[label].calculate_recall(),
                     self.metrics_by_label[label].calculate_precision(),
@@ -133,21 +133,23 @@ class EvaluationResults(object):
         overview_table = prettytable.PrettyTable(
             field_names=[
                 "Model",
-                "TPOS",
-                "FPOS",
-                "FNEG",
+                "TP",
+                "FP",
+                "FN",
                 "F-score",
                 "Recall",
                 "Precision",
             ]
         )
         label_table = prettytable.PrettyTable(
-            field_names=["Model", "Label", "F-score", "Recall", "Precision"]
+            field_names=["Label", "Model", "F-score", "Recall", "Precision"]
         )
 
         for eval_result in evaluation_results:
             eval_result._extend_report_overview_table(overview_table)
-            eval_result._extend_report_labels_table(label_table, tuple(labels))
+        for label in labels:
+            for eval_result in evaluation_results:
+                eval_result._extend_report_labels_table(label_table, (label,))
 
         logger.info("\n" + str(overview_table))
         logger.info("\n" + str(label_table))

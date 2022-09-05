@@ -16,5 +16,4 @@ def main(dataset_name: str):
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main("mewsli_9")
+    typer.run(main)
