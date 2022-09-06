@@ -50,16 +50,16 @@ commands:
     script:
       - bash scripts/datasets/download_mewsli-9.sh
     outputs:
-      - assets/mewsli_9
+      - assets/mewsli_9/
 
   - name: preprocess
     help: Preprocess test datasets.
     script:
       - "python ./scripts/clean_data.py ${vars.dataset}"
     deps:
-      - "assets/${vars.dataset}"
+      - "assets/${vars.dataset}/raw"
     outputs:
-      - "assets/${vars.dataset}"
+      - "assets/${vars.dataset}/clean"
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
@@ -78,7 +78,7 @@ commands:
     script:
       - "python ./scripts/create_kb.py ${vars.dataset} ${vars.vectors_model}"
     deps:
-      - "assets/${vars.dataset}"
+      - "assets/${vars.dataset}/clean"
       - "assets/wiki/wiki.sqlite3"
     outputs:
       - "assets/${vars.dataset}/entities.pkl"
@@ -137,4 +137,4 @@ commands:
       - "rm -rf training/*"
       - "rm -rf corpora/*"
       - "rm -rf temp/*"
-      - "rm -rf assets/mewsli_9"
+      - "rm -rf assets/${vars.dataset}"

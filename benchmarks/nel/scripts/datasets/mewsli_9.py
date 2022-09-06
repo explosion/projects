@@ -1,5 +1,6 @@
 """ Dataset class for Mewsli-9 dataset. """
 import csv
+import distutils.dir_util
 from typing import Tuple, Set, List, Dict, Optional
 
 import tqdm
@@ -24,7 +25,7 @@ class Mewsli9Dataset(Dataset):
         annotations: Dict[str, List[Annotation]] = {}
 
         with open(
-            self._paths["assets"] / "en" / "mentions.tsv", encoding="utf-8"
+            self._paths["assets"] / "clean" / "en" / "mentions.tsv", encoding="utf-8"
         ) as file_path:
             for i, row in enumerate(csv.DictReader(file_path, delimiter="\t")):
                 assert len(row) == 9
@@ -49,13 +50,14 @@ class Mewsli9Dataset(Dataset):
         return entities, failed_entity_lookups, annotations
 
     def clean_assets(self) -> None:
-        pass
+        # No cleaning necessary, just copy all data into /clean.
+        distutils.dir_util.copy_tree(str(self._paths["assets"] / "raw"), str(self._paths["assets"] / "clean"))
 
     def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         annotated_docs: List[Doc] = []
         texts: Dict[str, str]
         with open(
-            self._paths["assets"] / "en" / "docs.tsv", encoding="utf-8"
+            self._paths["assets"] / "clean" / "en" / "docs.tsv", encoding="utf-8"
         ) as title_file:
             row_count = sum(1 for _ in title_file)
             title_file.seek(0)
@@ -65,7 +67,7 @@ class Mewsli9Dataset(Dataset):
             ) as pbar:
                 for row in csv.DictReader(title_file, delimiter="\t"):
                     with open(
-                        self._paths["assets"] / "en" / "text" / row["docid"],
+                        self._paths["assets"] / "clean" / "en" / "text" / row["docid"],
                         encoding="utf-8",
                     ) as text_file:
                         # Replace newlines with whitespace and \xa0 (non-breaking whitespace) appearing after titles
