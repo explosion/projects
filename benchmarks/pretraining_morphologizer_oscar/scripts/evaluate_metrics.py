@@ -57,6 +57,14 @@ def main(metric_folder: Path):
     for del_key in del_list:
         del datasets[del_key]
 
+    del_list_experiment = []
+    for dataset in datasets:
+        for experiment in dataset:
+            if len(experiment) == 0:
+                del_list_experiment.append((dataset, experiment))
+    for del_experiment in del_list_experiment:
+        del datasets[del_experiment[0]][del_experiment[1]]
+
     # Training eval
     msg.info("Starting training evaluation")
     for dataset in datasets:

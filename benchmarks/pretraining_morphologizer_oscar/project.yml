@@ -8,7 +8,7 @@ vars:
   ud_treebank: "UD_English-EWT" # UD_English-EWT, UD_German-HDT, UD_Dutch-Alpino
 
   oscar_path: "data"
-  max_pretraining_texts: 10000
+  max_pretraining_texts: 1000000
   # This variable depends on the output of the pretrain commands
   pretraining_model: "model22.bin"
   # Choose -1 for CPU
