@@ -3,13 +3,38 @@ Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wi
 """
 
 import bz2
+import io
 import json
 import sqlite3
 from pathlib import Path
-from typing import Union, Optional, Dict, Tuple, Any, List, Set
+from typing import Union, Optional, Dict, Tuple, Any, List, Set, Iterator
+
 import tqdm
 
 from wiki.namespaces import WD_META_ITEMS
+
+
+def chunked_readlines(
+    f: bz2.BZ2File, chunk_size: int = 1024 * 1024 * 32
+) -> Iterator[bytes]:
+    """Reads lines from compressed BZ2 file in chunks. Source: https://stackoverflow.com/a/65765814.
+    chunk_size (int): Chunk size in bytes.
+    RETURNS (Iterator[bytes]): Read bytes.
+    """
+    s = io.BytesIO()
+    while True:
+        buf = f.read(chunk_size)
+        if not buf:
+            return s.getvalue()
+        s.write(buf)
+        s.seek(0)
+        l = s.readlines()
+        yield from l[:-1]
+        s = io.BytesIO()
+        # very important: the last line read in the 1 MB chunk might be
+        # incomplete, so we keep it to be processed in the next iteration
+        # check if this is ok if f.read() stopped in the middle of a \r\n?
+        s.write(l[-1])
 
 
 def read_entities(
@@ -17,7 +42,6 @@ def read_entities(
     db_conn: sqlite3.Connection,
     batch_size: int = 5000,
     limit: Optional[int] = None,
-    to_print: bool = False,
     lang: str = "en",
     parse_descr: bool = True,
     parse_properties: bool = True,
@@ -67,13 +91,18 @@ def read_entities(
 
     with bz2.open(wikidata_file, mode="rb") as file:
         pbar_params = {"total": limit} if limit else {}
-        with tqdm.tqdm(desc="Parsing entity data", leave=True, **pbar_params) as pbar:
+
+        with tqdm.tqdm(
+            desc="Parsing entity data", leave=True, miniters=1000, **pbar_params
+        ) as pbar:
             for cnt, line in enumerate(file):
                 if limit and cnt >= limit:
                     break
+
                 clean_line = line.strip()
                 if clean_line.endswith(b","):
                     clean_line = clean_line[:-1]
+
                 if len(clean_line) > 1:
                     obj = json.loads(clean_line)
                     entry_type = obj["type"]
@@ -109,10 +138,6 @@ def read_entities(
                             if parse_claims:
                                 id_to_attrs[unique_id]["claims"] = filtered_claims
 
-                            if to_print:
-                                print("ID:", unique_id)
-                                print("type:", entry_type)
-
                             # parsing all properties that refer to other entities
                             if parse_properties:
                                 id_to_attrs[unique_id]["properties"] = []
@@ -129,8 +154,6 @@ def read_entities(
                                         if cp_dict.get("id") is not None
                                     ]
                                     if cp_values:
-                                        if to_print:
-                                            print("prop:", prop, cp_values)
                                         id_to_attrs[unique_id]["properties"].append(
                                             (prop, cp_values)
                                         )
@@ -140,8 +163,6 @@ def read_entities(
                                 site_value = obj["sitelinks"].get(site_filter, None)
                                 if site_value:
                                     site = site_value["title"]
-                                    if to_print:
-                                        print(site_filter, ":", site)
                                     title_to_id[site] = unique_id
                                     found_link = True
                                     id_to_attrs[unique_id]["sitelinks"] = site_value
@@ -151,11 +172,6 @@ def read_entities(
                                 if labels:
                                     lang_label = labels.get(lang, None)
                                     if lang_label:
-                                        if to_print:
-                                            print(
-                                                "label (" + lang + "):",
-                                                lang_label["value"],
-                                            )
                                         id_to_attrs[unique_id]["labels"] = lang_label
 
                             if found_link and parse_descr:
@@ -163,11 +179,6 @@ def read_entities(
                                 if descriptions:
                                     lang_descr = descriptions.get(lang, None)
                                     if lang_descr:
-                                        if to_print:
-                                            print(
-                                                "description (" + lang + "):",
-                                                lang_descr["value"],
-                                            )
                                         id_to_attrs[unique_id][
                                             "description"
                                         ] = lang_descr["value"]
@@ -179,11 +190,6 @@ def read_entities(
                                     lang_aliases = aliases.get(lang, None)
                                     if lang_aliases:
                                         for item in lang_aliases:
-                                            if to_print:
-                                                print(
-                                                    "alias (" + lang + "):",
-                                                    item["value"],
-                                                )
                                             id_to_attrs[unique_id]["aliases"].append(
                                                 item["value"]
                                             )
@@ -213,6 +219,8 @@ def _write_to_db(
 
     entities: List[Tuple[Optional[str], ...]] = []
     props_in_ents: Set[Tuple[str, str, str]] = set()
+    aliases_for_entities: List[Tuple[str, str, int]] = []
+
     for title, qid in title_to_id.items():
         entities.append(
             (
@@ -220,21 +228,75 @@ def _write_to_db(
                 title,
                 id_to_attrs[qid].get("description", None),
                 id_to_attrs[qid].get("labels", {}).get("value", None),
-                json.dumps(id_to_attrs[qid]["aliases"]),
                 json.dumps(id_to_attrs[qid]["claims"]),
             )
         )
+        for alias in id_to_attrs[qid]["aliases"]:
+            aliases_for_entities.append((alias, qid, 1))
+
         for prop in id_to_attrs[qid]["properties"]:
             for second_qid in prop[1]:
                 props_in_ents.add((prop[0], qid, second_qid))
 
     cur = db_conn.cursor()
     cur.executemany(
-        "INSERT INTO entities (id, name, description, label, aliases, claims) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO entities (id, name, description, label, claims) VALUES (?, ?, ?, ?, ?)",
         entities,
     )
     cur.executemany(
-        "INSERT INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
+        "INSERT OR IGNORE INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
         props_in_ents,
     )
+    cur.executemany(
+        """
+        INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)
+        ON CONFLICT (alias, entity_id) DO UPDATE SET
+            count=count + excluded.count 
+        """,
+        aliases_for_entities,
+    )
     db_conn.commit()
+
+
+def extract_demo_dump(in_dump_path: Path, out_dump_path: Path, filter_terms: Set[str]) -> Tuple[Set[str], Set[str]]:
+    """Writes information on those entities having at least one of the filter_terms in their description to a new dump
+    at location filtered_dump_path.
+    in_dump_path (Path): Path to complete Wikidata dump.
+    out_dump_path (Path): Path to filtered Wikidata dump.
+    filter_terms (Set[str]): Terms having to appear in entity descriptions in order to be included in output dump.
+    RETURNS (Tuple[Set[str], Set[str]]): For retained entities: (1) set of QIDs, (2) set of labels (should match article
+        titles).
+    """
+
+    entity_ids: Set[str] = set()
+    entity_labels: Set[str] = set()
+    filter_terms = {ft.lower() for ft in filter_terms}
+
+    with bz2.open(in_dump_path, mode="rb") as in_file:
+        with bz2.open(out_dump_path, mode="wb") as out_file:
+            write_count = 0
+            with tqdm.tqdm(
+                desc="Filtering entity data", leave=True, miniters=100
+            ) as pbar:
+                for cnt, line in enumerate(in_file):
+                    keep = cnt == 0
+
+                    if not keep:
+                        clean_line = line.strip()
+                        if clean_line.endswith(b","):
+                            clean_line = clean_line[:-1]
+                        if len(clean_line) > 1:
+                            keep = any([ft in clean_line.decode("utf-8").lower() for ft in filter_terms])
+                            if keep:
+                                obj = json.loads(clean_line)
+                                label = obj["labels"].get("en", {}).get("value", "")
+                                entity_ids.add(obj["id"])
+                                entity_labels.add(label)
+
+                    if keep:
+                        out_file.write(line)
+                        write_count += 1
+
+                    pbar.update(1)
+
+    return entity_ids, entity_labels

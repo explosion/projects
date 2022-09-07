@@ -1,3 +1,7 @@
 pyyaml
 tqdm
 prettytable
+scikit-learn
+fuzzyset2
+spacyfishing
+virtualenv
