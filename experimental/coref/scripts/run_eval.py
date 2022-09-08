@@ -58,11 +58,11 @@ def main():
     parser.add_argument("--model", help="Path to the trained pipeline.")
     parser.add_argument("--test-data", help="Path to the test data.")
     parser.add_argument(
-        "--gpu", type=int, help="ID of GPU to run coreference pipeline on."
+        "--gpu", type=int, default=-1, help="ID of GPU to run coreference pipeline on."
     )
     args = parser.parse_args()
 
-    if args.gpu and args.gpu > -1:
+    if args.gpu > -1:
         spacy.require_gpu(args.gpu)
 
     model_name = args.model

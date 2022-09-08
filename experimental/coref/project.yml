@@ -66,6 +66,9 @@ vars:
   test_file: assets/litbank/95_the_prisoner_of_zenda_brat.conll
   # Changed in testing to use CPU configs
   config_dir: configs/
+  # Heads to use when prepping span data, can be "gold" or "silver".
+  # For OntoNotes, there isn't a significant difference with either.
+  heads: silver
 
   # conll training data split files
   train_conll: assets/train.gold.conll
@@ -179,8 +182,8 @@ commands:
   - name: "prep-span-data"
     help: "Prepare data for the span resolver component."
     script:
-      - python scripts/prep_span_data.py --use-gold-heads --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
-      - python scripts/prep_span_data.py --use-gold-heads --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/prep_span_data.py --heads ${vars.heads} --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/prep_span_data.py --heads ${vars.heads} --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
     deps:
       - scripts/prep_span_data.py
       - corpus/train.spacy

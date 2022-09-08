@@ -11,13 +11,13 @@ from spacy.training import Example
 from spacy.tokens import Doc, DocBin
 
 
-parser = argparse.ArgumentParser(description="Create data set for SpanPredictor.")
-parser.add_argument("--input-path", help="Path to the data set for the CorefScorer.")
+parser = argparse.ArgumentParser(description="Create data set for SpanResolver.")
+parser.add_argument("--input-path", help="Path to the data set for the CorefClusterer.")
 parser.add_argument(
-    "--output-path", help="Path to store the data set for the SpanPredictor."
+    "--output-path", help="Path to store the data set for the SpanResolver."
 )
 parser.add_argument(
-    "--model-path", help="Path to the trained pipeline with CorefScorer."
+    "--model-path", help="Path to the trained pipeline with CorefClusterer."
 )
 parser.add_argument(
     "--head-prefix", help="Prefix in the doc.spans used to store head-clusters."
@@ -25,18 +25,18 @@ parser.add_argument(
 parser.add_argument(
     "--span-prefix", help="Prefix in the doc.spans used to store span-clusters."
 )
-parser.add_argument("--limit", type=int, help="Number of documents to process..")
+parser.add_argument("--limit", type=int, help="Number of documents to process.")
 parser.add_argument(
-    "--use-gold-heads",
-    action="store_true",
-    help="Whether to use gold heads or heads predicted by the clustering component",
+    "--heads",
+    type=str,
+    default="silver",
+    help="Whether to use gold heads or silver heads predicted by the clustering component",
 )
-parser.add_argument("--gpu", type=int, help="ID of GPU to run coreference pipeline on.")
+parser.add_argument(
+    "--gpu", type=int, default=-1, help="ID of GPU to run coreference pipeline on."
+)
 
 args = parser.parse_args()
-if args.gpu and args.gpu > -1:
-    spacy.require_gpu(args.gpu)
-nlp = spacy.load(args.model_path)
 
 
 def find_target_span(head, ex):
@@ -76,6 +76,9 @@ def find_target_span(head, ex):
     return target_span
 
 
+if args.gpu > -1:
+    spacy.require_gpu(args.gpu)
+nlp = spacy.load(args.model_path)
 docbin = DocBin().from_disk(args.input_path)
 output_docbin = DocBin()
 docs = docbin.get_docs(nlp.vocab)
@@ -90,8 +93,15 @@ skipped_docs = 0
 
 # Gold heads can be used directly from the input data, or heads predicted by
 # the clustering component can be used. In tests with OntoNotes, accuracy and
-# processing time were similar for both options.
-use_gold_heads = args.use_gold_heads
+# processing time were similar for both options. However, silver heads avoid
+# tokenization mismatches, so they are chosen as the default.
+use_gold_heads = False
+if args.heads == "silver":
+    use_gold_heads = False
+elif args.heads == "gold":
+    use_gold_heads = True
+else:
+    raise ValueError(f"Expected 'gold' or 'silver' for heads but got: {args.heads}")
 
 
 for i, gold_doc in enumerate(tqdm.tqdm(docs)):
