@@ -41,6 +41,7 @@ workflows:
     - compile_corpora
     - train
     - evaluate
+    - compare_evaluations
   training:
     - train
     - evaluate
