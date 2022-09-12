@@ -9,8 +9,9 @@ vars:
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
   training_max_steps: 1000
+  run: ""
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
+directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
 
 assets:
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
@@ -108,7 +109,7 @@ commands:
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
       - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
-    outputs_no_cache:
+    outputs:
       - "training/${vars.dataset}"
     deps:
       - "temp/${vars.dataset}/kb"
@@ -119,10 +120,19 @@ commands:
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset}"
+      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}'"
     deps:
       - "training/${vars.dataset}/model-best"
       - "corpora/${vars.dataset}/dev.spacy"
+    outputs:
+      - "evaluation/${vars.dataset}"
+
+  - name: compare_evaluations
+    help: "Compare available set of evaluation runs."
+    script:
+      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset}"
+    deps:
+      - "evaluation/${vars.dataset}"
 
   - name: delete_wiki_db
     help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."

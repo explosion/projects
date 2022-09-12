@@ -1,7 +1,9 @@
 """ Dataset class. """
 import abc
+import csv
 import importlib
 import inspect
+import operator
 import os
 import pickle
 from collections import defaultdict
@@ -9,6 +11,7 @@ from pathlib import Path
 from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
 
 import numpy
+import prettytable
 import spacy
 import tqdm
 import yaml
@@ -246,6 +249,7 @@ class Dataset(abc.ABC):
 
     def evaluate(
         self,
+        run_name: str,
         candidate_generation: bool = True,
         baseline: bool = True,
         context: bool = True,
@@ -253,6 +257,7 @@ class Dataset(abc.ABC):
         n_items: Optional[int] = None,
     ) -> None:
         """Evaluates trained pipeline on test set.
+        run_name (str): Run name.
         candidate_generation (bool): Whether to include candidate generation in evaluation.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
@@ -393,10 +398,31 @@ class Dataset(abc.ABC):
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
-        evaluation.EvaluationResults.report(tuple(eval_results))
+        evaluation.EvaluationResults.report(tuple(eval_results), run_name=run_name, dataset_name=self.name)
 
         self._nlp_best.config["incl_context"] = False
         self._nlp_best.config["incl_prior"] = False
+
+    def compare_evaluations(self) -> None:
+        """Generate and display table for comparison of all available runs for this dataset."""
+        header: Optional[List[str, ...]] = None
+        lines: List[List[str, ...]] = []
+        dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / self.name
+
+        for path in [
+            dir_path / file_name for file_name in os.listdir(dir_path)
+            if os.path.isfile(dir_path / file_name) and file_name.endswith(".csv")
+        ]:
+            with open(path, "r") as csv_file:
+                csv_reader = csv.reader(csv_file)
+                if header is None:
+                    header = ["Run", *next(csv_reader)]
+                lines.extend([[path.name.split(".csv")[0], *line] for line in csv_reader])
+
+        table = prettytable.PrettyTable(field_names=header, sort_key=operator.itemgetter(0, 1), sortby="Run")
+        for line in lines:
+            table.add_row(line)
+        logger.info("\n" + str(table))
 
     @classmethod
     def generate_dataset_from_id(
