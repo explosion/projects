@@ -258,6 +258,7 @@ class Dataset(abc.ABC):
     ) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
+        highlight_criterion (str): Criterion to highlight in table. One of ("f1", "recall", "precision").
         candidate_generation (bool): Whether to include candidate generation in evaluation.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
@@ -403,10 +404,15 @@ class Dataset(abc.ABC):
         self._nlp_best.config["incl_context"] = False
         self._nlp_best.config["incl_prior"] = False
 
-    def compare_evaluations(self) -> None:
-        """Generate and display table for comparison of all available runs for this dataset."""
+    def compare_evaluations(self, highlight_criterion: str) -> None:
+        """Generate and display table for comparison of all available runs for this dataset.
+        highlight_criterion (str): Criterion to highlight in table. One of ("F-score", "Recall", "Precision").
+        """
+        assert highlight_criterion in ("F-score", "Recall", "Precision"), \
+            "Criterion must be one of ('F-score', 'Recall', 'Precision')"
+
         header: Optional[List[str, ...]] = None
-        lines: List[List[str, ...]] = []
+        rows: List[List[str, ...]] = []
         dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / self.name
 
         for path in dir_path.glob("*.csv"):
@@ -415,11 +421,26 @@ class Dataset(abc.ABC):
                 _header = next(csv_reader)
                 if header is None:
                     header = ["Run", *_header]
-                lines.extend([[path.stem, *line] for line in csv_reader])
+                rows.extend([[path.stem, *row] for row in csv_reader])
 
-        table = prettytable.PrettyTable(field_names=header, sort_key=operator.itemgetter(0, 1), sortby="Run")
-        for line in lines:
-            table.add_row(line)
+        table = prettytable.PrettyTable(field_names=header)
+        rows = sorted(rows, key=operator.itemgetter(0, 1))
+        highlight_crit_idx = header.index(highlight_criterion)
+        max_crit_non_cand_gen = .0
+        max_crit_cand_gen = .0
+        for row in rows:
+            if row[1] != "Candidate Gen.":
+                max_crit_non_cand_gen = max(max_crit_non_cand_gen, float(row[highlight_crit_idx]))
+            else:
+                max_crit_cand_gen = max(max_crit_cand_gen, float(row[highlight_crit_idx]))
+        for row in rows:
+            if (
+                row[1] != "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_non_cand_gen or
+                row[1] == "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_cand_gen
+            ):
+                for i in range(len(row)):
+                    row[i] = '\033[1m' + row[i] + '\033[0m'
+            table.add_row(row)
         logger.info("\n" + str(table))
 
     @classmethod
