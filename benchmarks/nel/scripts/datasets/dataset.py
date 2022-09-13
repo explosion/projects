@@ -409,10 +409,7 @@ class Dataset(abc.ABC):
         lines: List[List[str, ...]] = []
         dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / self.name
 
-        for path in [
-            dir_path / file_name for file_name in os.listdir(dir_path)
-            if os.path.isfile(dir_path / file_name) and file_name.endswith(".csv")
-        ]:
+        for path in dir_path.glob("*.csv"):
             with open(path, "r") as csv_file:
                 csv_reader = csv.reader(csv_file)
                 _header = next(csv_reader)
