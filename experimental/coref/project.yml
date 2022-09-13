@@ -79,7 +79,6 @@ directories: ["assets", "corpus", "scripts", "configs", "training"]
 
 assets:
   - dest: assets/
-    extra: True
     git:
       repo: "https://github.com/explosion/conll-2012"
       branch: "main"
