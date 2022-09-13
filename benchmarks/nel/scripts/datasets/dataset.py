@@ -415,7 +415,7 @@ class Dataset(abc.ABC):
                 _header = next(csv_reader)
                 if header is None:
                     header = ["Run", *_header]
-                lines.extend([[path.name.split(".csv")[0], *line] for line in csv_reader])
+                lines.extend([[path.stem, *line] for line in csv_reader])
 
         table = prettytable.PrettyTable(field_names=header, sort_key=operator.itemgetter(0, 1), sortby="Run")
         for line in lines:
