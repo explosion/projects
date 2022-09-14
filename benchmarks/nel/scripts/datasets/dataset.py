@@ -439,7 +439,7 @@ class Dataset(abc.ABC):
                 row[1] == "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_cand_gen
             ):
                 for i in range(len(row)):
-                    row[i] = '\033[1m' + row[i] + '\033[0m'
+                    row[i] = '\033[7m' + row[i] + '\033[0m'
             table.add_row(row)
         logger.info("\n" + str(table))
 
