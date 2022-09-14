@@ -1,7 +1,7 @@
 """
 Kinda slow process mainly bottleneck by the
 prediction speed of the pipeline with the
-CorefScorer.
+CorefClusterer.
 """
 
 import tqdm
@@ -95,13 +95,11 @@ skipped_docs = 0
 # the clustering component can be used. In tests with OntoNotes, accuracy and
 # processing time were similar for both options. However, silver heads avoid
 # tokenization mismatches, so they are chosen as the default.
-use_gold_heads = False
-if args.heads == "silver":
-    use_gold_heads = False
-elif args.heads == "gold":
-    use_gold_heads = True
-else:
+if args.heads not in ["silver", "gold"]:
     raise ValueError(f"Expected 'gold' or 'silver' for heads but got: {args.heads}")
+use_gold_heads = False
+if args.heads == "gold":
+    use_gold_heads = True
 
 
 for i, gold_doc in enumerate(tqdm.tqdm(docs)):
@@ -143,7 +141,7 @@ for i, gold_doc in enumerate(tqdm.tqdm(docs)):
         spans_name = f"{args.span_prefix}_{cluster_id}"
         for head in head_group:
             total_heads += 1
-            # Only one sample per head for the SpanPredictor
+            # Only one sample per head for the SpanResolver
             if (head.start, head.end) not in seen_heads:
                 seen_heads.add((head.start, head.end))
                 # Find the shortest enclosing span if exists
