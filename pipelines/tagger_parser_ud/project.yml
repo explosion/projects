@@ -27,6 +27,8 @@ vars:
 
 spacy_version: ">=3.3.0,<4.0.0"
 
+check_requirements: true
+
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "corpus", "training", "metrics", "configs", "packages"]
