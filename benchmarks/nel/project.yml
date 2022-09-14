@@ -10,7 +10,7 @@ vars:
   use_filtered_dumps: "--use_filtered_dumps"
   training_max_steps: 1000
   run: ""
-  eval_comp_highlight_metric: "F-score"  # one of ("F-score", "Recall", "Precision")
+  eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
 
@@ -132,7 +132,7 @@ commands:
   - name: compare_evaluations
     help: "Compare available set of evaluation runs."
     script:
-      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} --highlight-criterion ${vars.eval_comp_highlight_metric}"
+      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} --highlight-criterion ${vars.eval_highlight_metric}"
     deps:
       - "evaluation/${vars.dataset}"
 

@@ -258,7 +258,6 @@ class Dataset(abc.ABC):
     ) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
-        highlight_criterion (str): Criterion to highlight in table. One of ("f1", "recall", "precision").
         candidate_generation (bool): Whether to include candidate generation in evaluation.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
@@ -406,10 +405,9 @@ class Dataset(abc.ABC):
 
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.
-        highlight_criterion (str): Criterion to highlight in table. One of ("F-score", "Recall", "Precision").
+        highlight_criterion (str): Criterion to highlight in table. One of ("F", "r", "p").
         """
-        assert highlight_criterion in ("F-score", "Recall", "Precision"), \
-            "Criterion must be one of ('F-score', 'Recall', 'Precision')"
+        assert highlight_criterion in ("F", "r", "p"), "Criterion must be one of ('F', 'r', 'p')"
 
         header: Optional[List[str, ...]] = None
         rows: List[List[str, ...]] = []
@@ -425,7 +423,7 @@ class Dataset(abc.ABC):
 
         table = prettytable.PrettyTable(field_names=header)
         rows = sorted(rows, key=operator.itemgetter(0, 1))
-        highlight_crit_idx = header.index(highlight_criterion)
+        highlight_crit_idx = header.index({"F": "F-score", "r": "Recall", "p": "Precision"}[highlight_criterion])
         max_crit_non_cand_gen = .0
         max_crit_cand_gen = .0
         for row in rows:
@@ -439,7 +437,7 @@ class Dataset(abc.ABC):
                 row[1] == "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_cand_gen
             ):
                 for i in range(len(row)):
-                    row[i] = '\033[7m' + row[i] + '\033[0m'
+                    row[i] = '\033[4m' + row[i] + '\033[0m'
             table.add_row(row)
         logger.info("\n" + str(table))
 
