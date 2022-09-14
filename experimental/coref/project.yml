@@ -100,13 +100,6 @@ workflows:
     - prep-span-data
     - train-span-resolver
     - assemble
-  ci-test:
-    - prep-test-data
-    - train-cluster
-    - prep-span-data
-    - train-span-resolver
-    - assemble
-    - eval
 
   all:
     # prep
@@ -136,7 +129,7 @@ commands:
       - assets/dev.gold.conll
       - assets/test.gold.conll
 
-  - name: "prep-test-data"
+  - name: "prep-artificial-unit-test-data"
     # Note this writes to the same paths as real data in order to re-use the actions.
     help: "Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data!"
     deps:

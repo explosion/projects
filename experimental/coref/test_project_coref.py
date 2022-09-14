@@ -23,7 +23,8 @@ def test_experimental_coref():
     }
     try:
         project_assets(root, overrides=overrides, extra=True)
-        project_run(root, "ci-test", overrides=overrides)
+        for step in ("prep-artificial-unit-test-data", "train", "eval"):
+            project_run(root, step, overrides=overrides)
     except:
         raise
     finally:
