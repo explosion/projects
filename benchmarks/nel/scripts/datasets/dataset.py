@@ -1,6 +1,8 @@
 """ Dataset class. """
 import abc
+import copy
 import csv
+import datetime
 import importlib
 import inspect
 import operator
@@ -414,6 +416,8 @@ class Dataset(abc.ABC):
         dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / self.name
 
         for path in dir_path.glob("*.csv"):
+            if path.stem.startswith("comparison-"):
+                continue
             with open(path, "r") as csv_file:
                 csv_reader = csv.reader(csv_file)
                 _header = next(csv_reader)
@@ -422,7 +426,8 @@ class Dataset(abc.ABC):
                 rows.extend([[path.stem, *row] for row in csv_reader])
 
         table = prettytable.PrettyTable(field_names=header)
-        rows = sorted(rows, key=operator.itemgetter(0, 1))
+        rows_unformatted = sorted(rows, key=operator.itemgetter(0, 1))
+        rows = copy.deepcopy(rows_unformatted)
         highlight_crit_idx = header.index({"F": "F-score", "r": "Recall", "p": "Precision"}[highlight_criterion])
         max_crit_non_cand_gen = .0
         max_crit_cand_gen = .0
@@ -439,7 +444,13 @@ class Dataset(abc.ABC):
                 for i in range(len(row)):
                     row[i] = '\033[4m' + row[i] + '\033[0m'
             table.add_row(row)
+
         logger.info("\n" + str(table))
+        file_name = f"comparison-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+        table = prettytable.PrettyTable(field_names=header)
+        table.add_rows(rows_unformatted)
+        with open(dir_path / file_name, "w") as csv_file:
+            csv_file.write(table.get_csv_string())
 
     @classmethod
     def generate_dataset_from_id(
