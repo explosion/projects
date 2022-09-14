@@ -90,7 +90,7 @@ assets:
       repo: "https://github.com/dbamman/litbank"
       branch: "master"
       path: "coref/conll"
-    description: "LitBank dataset. Only used for building data for tests."
+    description: "LitBank dataset. Only used for building data for quick unit tests."
 
 workflows:
   prep:
