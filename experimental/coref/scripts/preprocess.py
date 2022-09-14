@@ -16,7 +16,6 @@ def read_file(fname, outname):
     with open(fname, encoding="utf-8") as infile:
         text = infile.read()
 
-    # TODO use larger model
     nlp = spacy.load(
         "en_core_web_lg", disable=["tagger", "ner", "attribute_ruler", "lemmatizer"]
     )
