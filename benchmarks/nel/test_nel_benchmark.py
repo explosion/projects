@@ -1,6 +1,4 @@
 """ Testing all project steps. """
-import datetime
-
 import pytest
 from pathlib import Path
 import sys

@@ -407,6 +407,11 @@ class Dataset(abc.ABC):
 
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.
+        Note that this both persists and logs a table that shows the F-score/recall/precision values for each run per:
+            - EL method (context and prior, context only, oracle, prior, ...)
+            - candidate generation
+        Hence the rows with "Candidate Gen." in the "Model" column can't be compared with the non-candidate generation
+        rows.
         highlight_criterion (str): Criterion to highlight in table. One of ("F", "r", "p").
         """
         assert highlight_criterion in ("F", "r", "p"), "Criterion must be one of ('F', 'r', 'p')"
@@ -424,10 +429,17 @@ class Dataset(abc.ABC):
                 if header is None:
                     header = ["Run", *_header]
                 rows.extend([[path.stem, *row] for row in csv_reader])
+        rows = sorted(rows, key=operator.itemgetter(0, 1))
 
+        # Persist combined table.
         table = prettytable.PrettyTable(field_names=header)
-        rows_unformatted = sorted(rows, key=operator.itemgetter(0, 1))
-        rows = copy.deepcopy(rows_unformatted)
+        file_name = f"comparison-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+        table.add_rows(rows)
+        with open(dir_path / file_name, "w") as csv_file:
+            csv_file.write(table.get_csv_string())
+
+        # Create table for console output with formatted rows.
+        table = prettytable.PrettyTable(field_names=header)
         highlight_crit_idx = header.index({"F": "F-score", "r": "Recall", "p": "Precision"}[highlight_criterion])
         max_crit_non_cand_gen = .0
         max_crit_cand_gen = .0
@@ -446,11 +458,6 @@ class Dataset(abc.ABC):
             table.add_row(row)
 
         logger.info("\n" + str(table))
-        file_name = f"comparison-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
-        table = prettytable.PrettyTable(field_names=header)
-        table.add_rows(rows_unformatted)
-        with open(dir_path / file_name, "w") as csv_file:
-            csv_file.write(table.get_csv_string())
 
     @classmethod
     def generate_dataset_from_id(
