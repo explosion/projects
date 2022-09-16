@@ -3,7 +3,7 @@ import os.path
 import pickle
 from pathlib import Path
 from typing import Dict, Optional, Any, Tuple, List, Set
-import sqlite3
+import pysqlite3 as sqlite3
 
 from schemas import Entity
 from wiki import wikidata, wikipedia
