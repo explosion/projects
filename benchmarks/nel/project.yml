@@ -8,6 +8,7 @@ vars:
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
+  use_filter_terms: "--use_filter_terms"
   training_max_steps: 1000
   run: ""
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
@@ -94,7 +95,7 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py ${vars.dataset} True"
+      - "python ./scripts/compile_corpora.py ${vars.dataset} ${vars.use_filter_terms}"
     deps:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookups.pkl"
