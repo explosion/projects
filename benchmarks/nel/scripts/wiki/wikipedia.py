@@ -4,7 +4,7 @@ Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wi
 
 import re
 import bz2
-import sqlite3
+import pysqlite3 as sqlite3
 
 from pathlib import Path
 from typing import Union, Optional, Tuple, List, Dict, Set, Any
