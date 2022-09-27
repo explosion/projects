@@ -1,5 +1,5 @@
-title: "Demo Spancat in a new pipeline (Span Categorization)"
-description: "A minimal demo Spancat project for spaCy v3"
+title: "Demo spancat in a new pipeline (Span Categorization)"
+description: "A minimal demo spancat project for spaCy v3"
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
