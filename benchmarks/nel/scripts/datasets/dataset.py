@@ -1,7 +1,11 @@
 """ Dataset class. """
 import abc
+import copy
+import csv
+import datetime
 import importlib
 import inspect
+import operator
 import os
 import pickle
 from collections import defaultdict
@@ -9,6 +13,7 @@ from pathlib import Path
 from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
 
 import numpy
+import prettytable
 import spacy
 import tqdm
 import yaml
@@ -246,6 +251,7 @@ class Dataset(abc.ABC):
 
     def evaluate(
         self,
+        run_name: str,
         candidate_generation: bool = True,
         baseline: bool = True,
         context: bool = True,
@@ -253,6 +259,7 @@ class Dataset(abc.ABC):
         n_items: Optional[int] = None,
     ) -> None:
         """Evaluates trained pipeline on test set.
+        run_name (str): Run name.
         candidate_generation (bool): Whether to include candidate generation in evaluation.
         baseline (bool): Whether to include baseline results in evaluation.
         context (bool): Whether to include the local context in the model.
@@ -393,10 +400,64 @@ class Dataset(abc.ABC):
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
-        evaluation.EvaluationResults.report(tuple(eval_results))
+        evaluation.EvaluationResults.report(tuple(eval_results), run_name=run_name, dataset_name=self.name)
 
         self._nlp_best.config["incl_context"] = False
         self._nlp_best.config["incl_prior"] = False
+
+    def compare_evaluations(self, highlight_criterion: str) -> None:
+        """Generate and display table for comparison of all available runs for this dataset.
+        Note that this both persists and logs a table that shows the F-score/recall/precision values for each run per:
+            - EL method (context and prior, context only, oracle, prior, ...)
+            - candidate generation
+        Hence the rows with "Candidate Gen." in the "Model" column can't be compared with the non-candidate generation
+        rows.
+        highlight_criterion (str): Criterion to highlight in table. One of ("F", "r", "p").
+        """
+        assert highlight_criterion in ("F", "r", "p"), "Criterion must be one of ('F', 'r', 'p')"
+
+        header: Optional[List[str, ...]] = None
+        rows: List[List[str, ...]] = []
+        dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / self.name
+
+        for path in dir_path.glob("*.csv"):
+            if path.stem.startswith("comparison-"):
+                continue
+            with open(path, "r") as csv_file:
+                csv_reader = csv.reader(csv_file)
+                _header = next(csv_reader)
+                if header is None:
+                    header = ["Run", *_header]
+                rows.extend([[path.stem, *row] for row in csv_reader])
+        rows = sorted(rows, key=operator.itemgetter(0, 1))
+
+        # Persist combined table.
+        table = prettytable.PrettyTable(field_names=header)
+        file_name = f"comparison-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+        table.add_rows(rows)
+        with open(dir_path / file_name, "w") as csv_file:
+            csv_file.write(table.get_csv_string())
+
+        # Create table for console output with formatted rows.
+        table = prettytable.PrettyTable(field_names=header)
+        highlight_crit_idx = header.index({"F": "F-score", "r": "Recall", "p": "Precision"}[highlight_criterion])
+        max_crit_non_cand_gen = .0
+        max_crit_cand_gen = .0
+        for row in rows:
+            if row[1] != "Candidate Gen.":
+                max_crit_non_cand_gen = max(max_crit_non_cand_gen, float(row[highlight_crit_idx]))
+            else:
+                max_crit_cand_gen = max(max_crit_cand_gen, float(row[highlight_crit_idx]))
+        for row in rows:
+            if (
+                row[1] != "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_non_cand_gen or
+                row[1] == "Candidate Gen." and float(row[highlight_crit_idx]) >= max_crit_cand_gen
+            ):
+                for i in range(len(row)):
+                    row[i] = '\033[4m' + row[i] + '\033[0m'
+            table.add_row(row)
+
+        logger.info("\n" + str(table))
 
     @classmethod
     def generate_dataset_from_id(

@@ -21,7 +21,7 @@ class Mewsli9Dataset(Dataset):
     def _parse_external_corpus(
         self, **kwargs
     ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
-        entity_names: Set[str] = set()
+        entity_qids: Set[str] = set()
         annotations: Dict[str, List[Annotation]] = {}
 
         with open(
@@ -29,14 +29,13 @@ class Mewsli9Dataset(Dataset):
         ) as file_path:
             for i, row in enumerate(csv.DictReader(file_path, delimiter="\t")):
                 assert len(row) == 9
-                name = row["url"].split("/")[-1]
-                entity_names.add(name)
 
+                entity_qids.add(row["qid"])
                 if row["docid"] not in annotations:
                     annotations[row["docid"]] = []
                 annotations[row["docid"]].append(
                     Annotation(
-                        entity_name=name.replace("_", " "),
+                        entity_name=row["url"].split("/")[-1].replace("_", " "),
                         entity_id=row["qid"],
                         start_pos=int(row["position"]),
                         end_pos=int(row["position"]) + int(row["length"]),
@@ -44,7 +43,7 @@ class Mewsli9Dataset(Dataset):
                 )
 
         entities, failed_entity_lookups, _ = fetch_entity_information(
-            "name", tuple(entity_names)
+            "id", tuple(entity_qids)
         )
 
         return entities, failed_entity_lookups, annotations
