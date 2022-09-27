@@ -11,7 +11,7 @@ from spacy.tokens import DocBin
 
 def convert(lang: str, input_path: Path, output_path: Path, spans_key: str = "sc"):
     nlp = spacy.blank(lang)
-    db = DocBin()
+    doc_bin = DocBin()
     for text, annot in srsly.read_json(input_path):
         doc = nlp.make_doc(text)
         spans = []
@@ -23,8 +23,8 @@ def convert(lang: str, input_path: Path, output_path: Path, spans_key: str = "sc
             else:
                 spans.append(span)
         doc.spans[spans_key] = spans
-        db.add(doc)
-    db.to_disk(output_path)
+        doc_bin.add(doc)
+    doc_bin.to_disk(output_path)
 
 
 if __name__ == "__main__":
