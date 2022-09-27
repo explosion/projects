@@ -34,6 +34,12 @@ workflows:
     - create-config
     - train
     - evaluate
+  all-vectors:
+    - download
+    - convert
+    - create-config
+    - train-with-vectors
+    - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -76,6 +82,17 @@ commands:
     outputs:
       - "training/model-best"
 
+  - name: "train-with-vectors"
+    help: "Train the spancat model with vectors"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience 50 --gpu-id ${vars.gpu_id} --initialize.vectors ${vars.vectors_model} --components.tok2vec.model.embed.include_static_vectors true"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
+
   - name: "evaluate"
     help: "Evaluate the model and export metrics"
     script:
@@ -94,3 +111,10 @@ commands:
       - "training/model-best"
     outputs_no_cache:
       - "packages/${vars.lang}_${vars.name}-${vars.version}/dist/${vars.lang}_${vars.name}-${vars.version}.tar.gz"
+
+  - name: clean
+    help: "Remove intermediary directories"
+    script:
+      - "rm -rf corpus/*"
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
