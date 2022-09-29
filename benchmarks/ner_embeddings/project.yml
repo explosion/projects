@@ -1,0 +1,163 @@
+title: "NER embedders"
+description: |
+  This project compares Bloom embeddings with standard embeddings
+  for Named Entity Recognition. In order to access
+  the datasets, you first need to clone the
+  [`spancat-datasets`](https://github.com/explosion/spancat-datasets) repository:
+
+  ```sh
+  # Clone the spancat-datasets repo to access the datasets
+  git clone git@github.com:explosion/spancat-datasets.git
+  ```
+
+  and run the necessary conversion scripts. In this case, let's perform the conversion
+  command for the [WikiNEuRal dataset](https://paperswithcode.com/paper/wikineural-combined-neural-and-knowledge):
+
+  ```sh
+  # While inside the spancat-datasets repository
+  spacy project run wikineural
+  ```
+
+  This will generate the spaCy files that you can use for training. Once done,
+  you **should copy these files to this project**. For example, you can perform
+  a directory copy in Linux via:
+
+  ```sh
+  cp -r spancat-datasets/corpus/ner/*. ner_embeddings/corpus/. 
+  ```
+
+  Once done, you can now supply the local path to the commands and workflows to
+  perform experiments in **this project:**
+
+  ```sh
+  # Perform experiments in the ner_embeddings project
+  spacy project run train a. --vars.dataset de-wikineural
+  ```
+
+vars:
+  ner_config: "ner_multiembed"
+  dataset: "anem"
+  language: "en"
+  vectors: "vectors/fasttext-en"
+  include_static_vectors: true
+  min_freq: 10
+  gpu_id: 0
+  seed: 42
+
+directories:
+  - "assets"
+  - "configs"
+  - "corpus"
+  - "scripts"
+  - "training"
+  - "metrics"
+  - "vectors"
+  - "tables"
+  - "debug"
+
+workflows:
+  setup:
+    - "download-models"
+    - "init-fasttext"
+    - "make-tables"
+
+assets:
+  - dest: "assets/fasttext.en.gz"
+    description: "English fastText vectors."
+    url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.vec.gz
+  - dest: "assets/fasttext.de.gz"
+    description: "German fastText vectors."
+    url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.de.300.vec.gz
+  - dest: "assets/fasttext.es.gz"
+    description: "Spanish fastText vectors."
+    url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.es.300.vec.gz
+  - dest: "assets/fasttext.nl.gz"
+    description: "Dutch fastText vectors."
+    url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.nl.300.vec.gz
+
+commands:
+  - name: "download-models"
+    help: "Download spaCy models for their word-embeddings."
+    script:
+      - "python -m spacy download en_core_web_lg"
+      - "python -m spacy download de_core_web_lg"
+      - "python -m spacy download es_core_web_lg"
+      - "python -m spacy download nl_core_web_lg"
+
+  - name: "init-fasttext"
+    help: "Initialize the FastText vectors."
+    script:
+      - "gzip -d assets/fasttext.en.gz"
+      - "gzip -d assets/fasttext.de.gz"
+      - "gzip -d assets/fasttext.es.gz"
+      - "gzip -d assets/fasttext.nl.gz"
+      - "python -m spacy init vectors en assets/fasttext.en vectors/fasttext-en"
+      - "python -m spacy init vectors es assets/fasttext.es vectors/fasttext-es"
+      - "python -m spacy init vectors de assets/fasttext.de vectors/fasttext-de"
+      - "python -m spacy init vectors nl assets/fasttext.nl vectors/fasttext-nl"
+
+  - name: "make-tables"
+    help: "Pre-compute token-to-id tables for MultiEmbed."
+    script:
+      - >-
+        python -m scripts.token_map
+        configs/${vars.ner_config}.cfg
+        tables/${vars.dataset}
+        --min-freq ${vars.min_freq}
+        --paths.train corpus/${vars.dataset}-train.spacy
+        --paths.dev corpus/${vars.dataset}-dev.spacy
+        --code scripts/custom_components.py
+        --paths.tables whatever
+
+  - name: "train"
+    help: "Train NER model."
+    script:
+      - >-
+        python -m spacy train
+        configs/${vars.ner_config}.cfg
+        --nlp.lang ${vars.language}
+        --output training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+        --paths.train corpus/${vars.dataset}-train.spacy
+        --paths.dev corpus/${vars.dataset}-dev.spacy
+        --paths.vectors ${vars.vectors}
+        --paths.tables tables/${vars.dataset}/${vars.dataset}-train.tables
+        --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
+        --system.seed ${vars.seed}
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - corpus/${vars.dataset}-train.spacy
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+
+
+  - name: "evaluate"
+    help: "Evaluate NER model."
+    script:
+      - mkdir -p metrics/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-dev.spacy
+        --output metrics/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - metrics/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+  
+  - name: "evaluate-unseen"
+    help: "Evaluate NER model on unseen entities."
+    script:
+      - echo "This command is not done yet"
+
+  - name: "collate-results"
+    help: "Collate results into the results directory"
+    script:
+      - "python -m scripts.collate_results metrics/ results/"
+    deps:
+      - "metrics/"
