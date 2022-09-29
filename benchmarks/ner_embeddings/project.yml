@@ -65,9 +65,6 @@ assets:
   - dest: "assets/fasttext.en.gz"
     description: "English fastText vectors."
     url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.vec.gz
-  - dest: "assets/fasttext.de.gz"
-    description: "German fastText vectors."
-    url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.de.300.vec.gz
   - dest: "assets/fasttext.es.gz"
     description: "Spanish fastText vectors."
     url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.es.300.vec.gz
@@ -80,7 +77,6 @@ commands:
     help: "Download spaCy models for their word-embeddings."
     script:
       - "python -m spacy download en_core_web_lg"
-      - "python -m spacy download de_core_web_lg"
       - "python -m spacy download es_core_web_lg"
       - "python -m spacy download nl_core_web_lg"
 
