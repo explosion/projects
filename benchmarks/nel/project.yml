@@ -8,9 +8,9 @@ vars:
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
-  training_max_steps: 1000
+  training_max_steps: 500
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
+directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
 
 assets:
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
