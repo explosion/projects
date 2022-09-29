@@ -4,65 +4,19 @@ import spacy
 from spacy.tokens import Doc
 from thinc.api import Model, chain, with_array
 from thinc.api import list2ragged, ragged2list, concatenate
-from thinc.types import Floats2d, DTypes, Ints2d, Array2d
-from typing import Optional, Callable, List, Dict, Any
-from typing import Union, Sequence, Tuple
+from thinc.types import Floats2d, Ints2d, Array2d
+from typing import Optional, List, Dict, Any
+from typing import Union, Sequence
 
 Embed = thinc.registry.layers.get("Embed.v1")
 Maxout = thinc.registry.layers.get("Maxout.v1")
 Dropout = thinc.registry.layers.get("Dropout.v1")
 Vectors = thinc.registry.layers.get("spacy.StaticVectors.v2")
 Extract = thinc.registry.layers.get("spacy.FeatureExtractor.v1")
-
+Remap = thinc.registry.layers.get("remap_ids.v2")
 
 InT = Union[Sequence[Any], Array2d]
 OutT = Ints2d
-
-
-@thinc.registry.layers("remap_ids.v2")
-def remap_ids(
-    table: Dict[Any, int] = {},
-    default: int = 0,
-    dtype: DTypes = "i",
-    column: Optional[int] = None
-) -> Model[InT, OutT]:
-    """
-    Customizes the remap_ids layer from thinc. This
-    code is here temporarily until
-    https://github.com/explosion/thinc/pull/726
-    gets merged.
-    """
-    return Model(
-        "remap_ids",
-        remap_forward,
-        attrs={
-            "table": table,
-            "dtype": dtype,
-            "default": default,
-            "column": column
-        },
-    )
-
-
-def remap_forward(
-    model: Model[InT, OutT], inputs: InT, is_train: bool
-) -> Tuple[OutT, Callable]:
-    table = model.attrs["table"]
-    default = model.attrs["default"]
-    dtype = model.attrs["dtype"]
-    column = model.attrs["column"]
-    if column is not None:
-        inputs = inputs[:, column]
-    # We wrap int around x, because in cupy each integer
-    # in the arrays is a cuda array with shape ()
-    values = [table.get(int(x), default) for x in inputs]
-    arr = model.ops.asarray2i(values, dtype=dtype)
-    output = model.ops.reshape2i(arr, -1, 1)
-
-    def backprop(dY: OutT) -> InT:
-        return model.ops.asarray([])
-
-    return output, backprop
 
 
 def _make_embed(
@@ -78,7 +32,7 @@ def _make_embed(
     """
     rows = len(table) + 1
     embedder = chain(
-        remap_ids(table, default=unk, column=column),
+        Remap(table, default=unk, column=column),
         Embed(nO=width, nV=rows, column=0, dropout=dropout)
     )
     return embedder
@@ -104,7 +58,7 @@ def MultiEmbed(
     }
     layers = []
     # Create dummy embedding layer to be materialized at init
-    embedders = [chain(remap_ids(), Embed(column=0)) for x in attrs]
+    embedders = [chain(Remap(), Embed(column=0)) for x in attrs]
     embedder_stack = chain(
         Extract(attrs),
         list2ragged(),
@@ -125,7 +79,11 @@ def MultiEmbed(
     max_out = chain(
         with_array(
             Maxout(
-                width, full_width, nP=maxout_pieces, dropout=dropout, normalize=True
+                width,
+                full_width,
+                nP=maxout_pieces,
+                dropout=dropout,
+                normalize=True
             )
         ),
         ragged2list()
