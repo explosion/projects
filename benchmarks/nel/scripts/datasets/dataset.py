@@ -179,7 +179,6 @@ class Dataset(abc.ABC):
 
     def _serialize_corpora(self) -> None:
         """Serializes corpora."""
-
         assert (
             self._options["frac_train"]
             + self._options["frac_dev"]
@@ -259,29 +258,28 @@ class Dataset(abc.ABC):
         spacyfishing (bool): Whether to include evaluation with spacyfishing.
         n_items (Optional[int]): How many items to consider in evaluation. If None, all items in test set are used.
         """
-
-        # Load resources.
         self._load_resource("nlp_best")
         self._load_resource("nlp_base")
         self._load_resource("kb")
+        spacy.prefer_gpu()
 
         # Compile test set.
+        print("Compiling test set.")
         test_set_path = self._paths["corpora"] / "test.spacy"
         with open(test_set_path, "rb"):
-            test_set: List[Example] = []
-            for doc in DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab):
-                predicted_doc = self._nlp_best(doc.text)
-                ents: List[Span] = []
-                for ent in predicted_doc.ents:
-                    # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-                    # leading "the " and adjust the entity positions accordingly.
-                    ents.append(
-                        doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                        if ent.text.lower().startswith("the ") else ent
-                    )
-                predicted_doc.ents = ents
-                test_set.append(Example(predicted_doc, doc))
-
+            docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
+            # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+            # leading "the " and adjust the entity positions accordingly.
+            for doc in docs:
+                doc.ents = [
+                    doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
+                    if ent.text.lower().startswith("the ") else ent
+                    for ent in doc.ents
+                ]
+            test_set = [
+                Example(predicted_doc, doc)
+                for predicted_doc, doc in zip(self._nlp_best.pipe(texts=docs, n_process=1), docs)
+            ]
         self._nlp_best.config["incl_prior"] = False
         if spacyfishing:
             self._nlp_base.add_pipe("entityfishing", last=True)
