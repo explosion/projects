@@ -66,6 +66,7 @@ class Dataset(abc.ABC):
             "entities": assets_path / "entities.pkl",
             "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl",
+            "predicted_test_docs": root_path / "evaluation" / dataset_name / "predicted_test_docs.spacy"
         }
 
     @property
@@ -243,6 +244,27 @@ class Dataset(abc.ABC):
             with open(self._paths["failed_entity_lookups"], "rb") as file:
                 self._failed_entity_lookups = pickle.load(file)
 
+    def infer_test_set(self):
+        """Infer entities for test set."""
+        print("Inferring entities for test set.")
+
+        self._load_resource("nlp_best")
+        spacy.prefer_gpu()
+        test_set_path = self._paths["corpora"] / "test.spacy"
+        with open(test_set_path, "rb"):
+            docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
+            # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+            # leading "the " and adjust the entity positions accordingly.
+            for doc in docs:
+                doc.ents = [
+                    doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
+                    if ent.text.lower().startswith("the ") else ent
+                    for ent in doc.ents
+                ]
+
+            pred_test_docs = self._nlp_best.pipe(texts=docs, n_process=1, batch_size=500)
+            DocBin(docs=pred_test_docs, store_user_data=True).to_disk(self._paths["predicted_test_docs"])
+
     def evaluate(
         self,
         candidate_generation: bool = True,
@@ -261,25 +283,16 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_best")
         self._load_resource("nlp_base")
         self._load_resource("kb")
-        spacy.prefer_gpu()
 
         # Compile test set.
-        print("Compiling test set.")
-        test_set_path = self._paths["corpora"] / "test.spacy"
-        with open(test_set_path, "rb"):
-            docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
-            # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-            # leading "the " and adjust the entity positions accordingly.
-            for doc in docs:
-                doc.ents = [
-                    doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                    if ent.text.lower().startswith("the ") else ent
-                    for ent in doc.ents
-                ]
-            test_set = [
-                Example(predicted_doc, doc)
-                for predicted_doc, doc in zip(self._nlp_best.pipe(texts=docs, n_process=1), docs)
-            ]
+        test_set = [
+            Example(predicted_doc, doc)
+            for predicted_doc, doc in zip(
+                DocBin().from_disk(self._paths["predicted_test_docs"]).get_docs(self._nlp_best.vocab),
+                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
+            )
+        ]
+
         self._nlp_best.config["incl_prior"] = False
         if spacyfishing:
             self._nlp_base.add_pipe("entityfishing", last=True)
@@ -294,7 +307,7 @@ class Dataset(abc.ABC):
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
         for example in tqdm.tqdm(
-            test_set, total=n_items, leave=False, desc="Processing test set"
+            test_set, total=n_items, leave=False, desc="Evaluating test set"
         ):
             example: Example
             if len(example) > 0:

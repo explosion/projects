@@ -39,9 +39,11 @@ workflows:
     - create_kb
     - compile_corpora
     - train
+    - infer
     - evaluate
   training:
     - train
+    - infer
     - evaluate
 
 commands:
@@ -116,13 +118,24 @@ commands:
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
 
+  - name: infer
+    help: "Infer entities for test set."
+    script:
+      - "env PYTHONPATH=. python ./scripts/infer.py ${vars.dataset}"
+    outputs:
+      - "evaluation/${vars.dataset}/predictions.spacy"
+    deps:
+      - "training/${vars.dataset}/model-best"
+      - "corpora/${vars.dataset}/dev.spacy"
+
   - name: evaluate
     help: "Evaluate on the test set."
     script:
       - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset}"
     deps:
       - "training/${vars.dataset}/model-best"
-      - "corpora/${vars.dataset}/dev.spacy"
+      - "temp/${vars.dataset}/nlp"
+      - "evaluation/${vars.dataset}/predicted_test_docs.spacy"
 
   - name: delete_wiki_db
     help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."
@@ -134,7 +147,8 @@ commands:
   - name: clean
     help: "Remove intermediate files (excluding Wiki resources and database)"
     script:
-      - "rm -rf training/*"
-      - "rm -rf corpora/*"
-      - "rm -rf temp/*"
+      - "rm -rf training/${vars.dataset}"
+      - "rm -rf corpora/${vars.dataset}"
+      - "rm -rf temp/${vars.dataset}"
       - "rm -rf assets/${vars.dataset}"
+      - "rm -rf evaluation/${vars.dataset}"
