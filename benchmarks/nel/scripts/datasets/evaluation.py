@@ -1,10 +1,12 @@
 """ Evaluation utilities.
 Adapted from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
 """
-
+import datetime
 import logging
+import os
 import random
 from collections import defaultdict
+from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
@@ -117,9 +119,11 @@ class EvaluationResults(object):
             )
 
     @staticmethod
-    def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
+    def report(evaluation_results: Tuple["EvaluationResults"], run_name: str, dataset_name: str) -> None:
         """Reports evaluation results.
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
+        run_name (str): Run name.
+        dataset_name (str): Dataset name.
         """
         labels = sorted(
             list(
@@ -153,6 +157,12 @@ class EvaluationResults(object):
 
         logger.info("\n" + str(overview_table))
         logger.info("\n" + str(label_table))
+
+        dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / dataset_name
+        dir_path.mkdir(parents=True, exist_ok=True)
+        run_name = run_name if run_name != "" else datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        with open(dir_path / f"{run_name}.csv", "w") as csv_file:
+            csv_file.write(overview_table.get_csv_string())
 
 
 class DisambiguationBaselineResults(object):

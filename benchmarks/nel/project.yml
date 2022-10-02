@@ -8,9 +8,12 @@ vars:
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
+  use_filter_terms: "--use_filter_terms"
   training_max_steps: 1000
+  run: ""
+  eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
+directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
 
 assets:
   - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
@@ -41,6 +44,7 @@ workflows:
     - train
     - infer
     - evaluate
+    - compare_evaluations
   training:
     - train
     - infer
@@ -93,7 +97,7 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py ${vars.dataset} True"
+      - "python ./scripts/compile_corpora.py ${vars.dataset} ${vars.use_filter_terms}"
     deps:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookups.pkl"
@@ -110,7 +114,7 @@ commands:
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
       - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
-    outputs_no_cache:
+    outputs:
       - "training/${vars.dataset}"
     deps:
       - "temp/${vars.dataset}/kb"
@@ -131,11 +135,20 @@ commands:
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset}"
+      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}'"
     deps:
       - "training/${vars.dataset}/model-best"
       - "temp/${vars.dataset}/nlp"
       - "evaluation/${vars.dataset}/predicted_test_docs.spacy"
+    outputs:
+      - "evaluation/${vars.dataset}"
+
+  - name: compare_evaluations
+    help: "Compare available set of evaluation runs."
+    script:
+      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} --highlight-criterion ${vars.eval_highlight_metric}"
+    deps:
+      - "evaluation/${vars.dataset}"
 
   - name: delete_wiki_db
     help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."

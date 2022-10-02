@@ -1,5 +1,4 @@
 """ Testing all project steps. """
-
 import pytest
 from pathlib import Path
 import sys
@@ -19,4 +18,4 @@ def test_nel_benchmark():
     project_run(root, "compile_corpora", capture=True)
     project_run(root, "train", capture=True, overrides={"vars.training_max_steps": 1})
     project_run(root, "evaluate", capture=True)
-
+    project_run(root, "compare_evaluations", capture=True)
