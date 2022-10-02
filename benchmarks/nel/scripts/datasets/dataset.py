@@ -253,7 +253,7 @@ class Dataset(abc.ABC):
         test_set_path = self._paths["corpora"] / "test.spacy"
         with open(test_set_path, "rb"):
             docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
-            # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+            # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
             # leading "the " and adjust the entity positions accordingly.
             for doc in docs:
                 doc.ents = [
@@ -262,7 +262,7 @@ class Dataset(abc.ABC):
                     for ent in doc.ents
                 ]
 
-            pred_test_docs = self._nlp_best.pipe(texts=docs, n_process=1, batch_size=500)
+            pred_test_docs = list(self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=1, batch_size=500))
             DocBin(docs=pred_test_docs, store_user_data=True).to_disk(self._paths["predicted_test_docs"])
 
     def evaluate(
@@ -284,7 +284,6 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_base")
         self._load_resource("kb")
 
-        # Compile test set.
         test_set = [
             Example(predicted_doc, doc)
             for predicted_doc, doc in zip(
@@ -306,26 +305,19 @@ class Dataset(abc.ABC):
         spacyfishing_results = evaluation.EvaluationResults("spacyfishing")
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
-        for example in tqdm.tqdm(
-            test_set, total=n_items, leave=False, desc="Evaluating test set"
-        ):
+        for example in tqdm.tqdm(test_set, total=n_items, leave=False, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
                 entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
-                    evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_
-                    for ent in example.reference.ents
+                    evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 if len(ent_gold_ids) == 0:
                     continue
-                ent_pred_labels = {
-                    (ent.start_char, ent.end_char): ent.label_
-                    for ent in example.predicted.ents
-                }
+                ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
                 ent_cand_ids = {
                     (ent.start_char, ent.end_char): {
-                        cand.entity_
-                        for cand in entity_linker.get_candidates(self._kb, ent)
+                        cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)
                     }
                     for ent in example.reference.ents
                 }
@@ -410,7 +402,7 @@ class Dataset(abc.ABC):
         self._nlp_best.config["incl_prior"] = False
 
     @classmethod
-    def generate_dataset_from_id(
+    def generate_from_id(
         cls: Type[DatasetType], dataset_name: str, **kwargs
     ) -> DatasetType:
         """Generates dataset instance from ID.

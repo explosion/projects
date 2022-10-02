@@ -9,7 +9,7 @@ def main(dataset_name: str):
     """Infer entities for test set.
     dataset_name (str): Name of dataset to evaluate on.
     """
-    Dataset.generate_dataset_from_id(dataset_name).infer_test_set()
+    Dataset.generate_from_id(dataset_name).infer_test_set()
 
 
 if __name__ == "__main__":
