@@ -30,13 +30,9 @@ class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
         if not isinstance(target_vec, numpy.ndarray):
             target_vec = target_vec.get()
 
-        nn_idx = self._lookup_struct.kneighbors(
-            target_vec.reshape((1, -1))
-        )[1][0]
+        nn_idx = self._lookup_struct.kneighbors(target_vec.reshape((1, -1)))[1][0]
         ent_ids = kb.get_entity_strings()
-        nn_entities = {
-            ent_ids[i]: self._entities[dataset_id][ent_ids[i]] for i in nn_idx
-        }
+        nn_entities = {ent_ids[i]: self._entities[dataset_id][ent_ids[i]] for i in nn_idx}
         candidate_entity_ids = {
             match[0]
             for match in [
