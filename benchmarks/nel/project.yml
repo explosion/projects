@@ -4,12 +4,12 @@ vars:
   name: "nel_benchmark"
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
-  version: "0.0.3"
+  version: "0.0.4"
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
   use_filter_terms: "--use_filter_terms"
-  training_max_steps: 1000
+  training_max_steps: 500
   run: ""
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
@@ -127,7 +127,7 @@ commands:
     script:
       - "env PYTHONPATH=. python ./scripts/infer.py ${vars.dataset}"
     outputs:
-      - "evaluation/${vars.dataset}/predictions.spacy"
+      - "evaluation/${vars.dataset}/predicted_test_docs.spacy"
     deps:
       - "training/${vars.dataset}/model-best"
       - "corpora/${vars.dataset}/dev.spacy"

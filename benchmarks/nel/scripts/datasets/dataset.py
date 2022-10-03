@@ -209,10 +209,8 @@ class Dataset(abc.ABC):
             )
         }
 
-        for key, value in indices.items():
-            corpus = DocBin(store_user_data=True)
-            for idx in value:
-                corpus.add(self._annotated_docs[idx])
+        for key, idx in indices.items():
+            corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
@@ -251,10 +249,9 @@ class Dataset(abc.ABC):
 
     def infer_test_set(self):
         """Infer entities for test set."""
-        print("Inferring entities for test set.")
-
         self._load_resource("nlp_best")
         spacy.prefer_gpu()
+
         test_set_path = self._paths["corpora"] / "test.spacy"
         docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
         # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
@@ -268,7 +265,13 @@ class Dataset(abc.ABC):
 
         # Make sure sub-directory for dataset evaluation exists, then infer docs and persist.
         Path(self._paths["root"] / "evaluation" / self.name).mkdir(parents=True, exist_ok=True)
-        pred_test_docs = list(self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=1, batch_size=500))
+        pred_test_docs = [
+            doc for doc in tqdm.tqdm(
+                self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=1, batch_size=500),
+                desc="Inferring entities for test set",
+                total=len(docs)
+            )
+        ]
         DocBin(docs=pred_test_docs, store_user_data=True).to_disk(self._paths["predicted_test_docs"])
 
     def evaluate(
@@ -292,14 +295,6 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_base")
         self._load_resource("kb")
 
-        test_set = [
-            Example(predicted_doc, doc)
-            for predicted_doc, doc in zip(
-                DocBin().from_disk(self._paths["predicted_test_docs"]).get_docs(self._nlp_best.vocab),
-                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
-            )
-        ]
-
         self._nlp_best.config["incl_prior"] = False
         if spacyfishing:
             self._nlp_base.add_pipe("entityfishing", last=True)
@@ -313,7 +308,14 @@ class Dataset(abc.ABC):
         spacyfishing_results = evaluation.EvaluationResults("spacyfishing")
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
-        for example in tqdm.tqdm(test_set, total=n_items, leave=False, desc="Evaluating test set"):
+        test_set = [
+            Example(predicted_doc, doc)
+            for predicted_doc, doc in zip(
+                DocBin().from_disk(self._paths["predicted_test_docs"]).get_docs(self._nlp_best.vocab),
+                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
+            )
+        ]
+        for example in tqdm.tqdm(test_set, total=n_items, leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
                 entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
@@ -337,9 +339,7 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        candidate_results.update_metrics(
-                            label, ent.kb_id_, ent_cand_ids.get(ent_offset, {})
-                        )
+                        candidate_results.update_metrics(label, ent.kb_id_, ent_cand_ids.get(ent_offset, {}))
 
                 # Update entity disambiguation stats.
                 if baseline:
