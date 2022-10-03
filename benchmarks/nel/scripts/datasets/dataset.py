@@ -256,19 +256,20 @@ class Dataset(abc.ABC):
         self._load_resource("nlp_best")
         spacy.prefer_gpu()
         test_set_path = self._paths["corpora"] / "test.spacy"
-        with open(test_set_path, "rb"):
-            docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
-            # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-            # leading "the " and adjust the entity positions accordingly.
-            for doc in docs:
-                doc.ents = [
-                    doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                    if ent.text.lower().startswith("the ") else ent
-                    for ent in doc.ents
-                ]
+        docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
+        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+        # leading "the " and adjust the entity positions accordingly.
+        for doc in docs:
+            doc.ents = [
+                doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
+                if ent.text.lower().startswith("the ") else ent
+                for ent in doc.ents
+            ]
 
-            pred_test_docs = list(self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=1, batch_size=500))
-            DocBin(docs=pred_test_docs, store_user_data=True).to_disk(self._paths["predicted_test_docs"])
+        # Make sure sub-directory for dataset evaluation exists, then infer docs and persist.
+        Path(self._paths["root"] / "evaluation" / self.name).mkdir(parents=True, exist_ok=True)
+        pred_test_docs = list(self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=1, batch_size=500))
+        DocBin(docs=pred_test_docs, store_user_data=True).to_disk(self._paths["predicted_test_docs"])
 
     def evaluate(
         self,
