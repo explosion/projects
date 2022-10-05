@@ -359,7 +359,7 @@ class Dataset(abc.ABC):
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.
         Note that this both persists and logs a table that shows the F-score/recall/precision values for each run per:
-            - EL method (incl_context and prior, incl_context only, oracle, prior, ...)
+            - EL method (context and prior, context only, oracle, prior, ...)
             - candidate generation
         Hence the rows with "Candidate Gen." in the "Model" column can't be compared with the non-candidate generation
         rows.
