@@ -20,12 +20,7 @@ OutT = Ints2d
 
 
 def _make_embed(
-    attr: str,
-    unk: int,
-    width: int,
-    column: int,
-    table: Dict[int, int],
-    dropout: float
+    attr: str, unk: int, width: int, column: int, table: Dict[int, int], dropout: float
 ) -> Model[List[Doc], Floats2d]:
     """
     Helper function to create an embedding layer.
@@ -33,7 +28,7 @@ def _make_embed(
     rows = len(table) + 1
     embedder = chain(
         Remap(table, default=unk, column=column),
-        Embed(nO=width, nV=rows, column=0, dropout=dropout)
+        Embed(nO=width, nV=rows, column=0, dropout=dropout),
     )
     return embedder
 
@@ -47,14 +42,14 @@ def MultiEmbed(
     tables: Optional[Dict[str, Dict[int, int]]] = None,
     include_static_vectors: Optional[bool] = False,
     dropout: Optional[float] = 0,
-    maxout_pieces: Optional[int] = 3
+    maxout_pieces: Optional[int] = 3,
 ) -> Model[List[Doc], Floats2d]:
     model_attrs = {
         "tables": tables,
         "unk": unk,
         "include_static_vectors": include_static_vectors,
         "attrs": attrs,
-        "dropout": dropout
+        "dropout": dropout,
     }
     layers = []
     # Create dummy embedding layer to be materialized at init
@@ -66,10 +61,7 @@ def MultiEmbed(
     )
     if include_static_vectors:
         embedding_layer = chain(
-            concatenate(
-                embedder_stack, Vectors(width)
-            ),
-            Dropout(rate=dropout)
+            concatenate(embedder_stack, Vectors(width)), Dropout(rate=dropout)
         )
     else:
         embedding_layer = embedder_stack
@@ -78,15 +70,9 @@ def MultiEmbed(
     full_width = (len(attrs) + include_static_vectors) * width
     max_out = chain(
         with_array(
-            Maxout(
-                width,
-                full_width,
-                nP=maxout_pieces,
-                dropout=dropout,
-                normalize=True
-            )
+            Maxout(width, full_width, nP=maxout_pieces, dropout=dropout, normalize=True)
         ),
-        ragged2list()
+        ragged2list(),
     )
     layers.append(max_out)
     model: Model = Model(
@@ -104,9 +90,7 @@ def MultiEmbed(
 
 
 def forward(
-        model: Model[List[Doc], List[Floats2d]],
-        X: List[Doc],
-        is_train=False
+    model: Model[List[Doc], List[Floats2d]], X: List[Doc], is_train=False
 ) -> Floats2d:
     embedding_layer = model.layers[0]
     output_layer = model.layers[1]
@@ -133,9 +117,7 @@ def init(
     width = model.get_dim("width")
     tables = model.attrs["tables"]
     if tables is None:
-        raise ValueError(
-            "tables have to be set before initialization"
-        )
+        raise ValueError("tables have to be set before initialization")
     unk = model.attrs["unk"]
     attrs = model.attrs["attrs"]
     dummy_embedder_stack = model.get_ref("embedder-stack")
@@ -150,9 +132,7 @@ def init(
     embedders = []
     for i, attr in enumerate(attrs):
         mapper = tables[attr]
-        embedding = _make_embed(
-            attr, unk, width, i, mapper, dropout
-        )
+        embedding = _make_embed(attr, unk, width, i, mapper, dropout)
         embedders.append(embedding)
     embedder_stack = chain(
         Extract(attrs),
