@@ -85,12 +85,10 @@ commands:
     help: "Initialize the FastText vectors."
     script:
       - "gzip -d assets/fasttext.en.gz"
-      - "gzip -d assets/fasttext.de.gz"
       - "gzip -d assets/fasttext.es.gz"
       - "gzip -d assets/fasttext.nl.gz"
       - "python -m spacy init vectors en assets/fasttext.en vectors/fasttext-en"
       - "python -m spacy init vectors es assets/fasttext.es vectors/fasttext-es"
-      - "python -m spacy init vectors de assets/fasttext.de vectors/fasttext-de"
       - "python -m spacy init vectors nl assets/fasttext.nl vectors/fasttext-nl"
 
   - name: "make-tables"
