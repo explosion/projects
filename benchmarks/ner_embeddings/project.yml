@@ -1,21 +1,22 @@
-title: "NER embedders"
+title: "Comparing embedding layers in spaCy"
 description: |
-  This project compares Bloom embeddings with standard embeddings
-  for Named Entity Recognition. In order to access
-  the datasets, you first need to clone the
-  [`spancat-datasets`](https://github.com/explosion/spancat-datasets) repository:
+  This project compares `MultiHashEmbed` with its standard embedding counterpart
+  `MultiEmbed` for Named Entity Recognition. In order to access the datasets,
+  you first need to clone the [`spancat-datasets`](https://github.com/explosion/spancat-datasets)
+  repository:
 
   ```sh
   # Clone the spancat-datasets repo to access the datasets
   git clone git@github.com:explosion/spancat-datasets.git
   ```
 
-  and run the necessary conversion scripts. In this case, let's perform the conversion
-  command for the [WikiNEuRal dataset](https://paperswithcode.com/paper/wikineural-combined-neural-and-knowledge):
+  and run the necessary conversion scripts. For example, let's perform the
+  conversion command for the [Anatomical Entity Mention (AnEM)](http://www.nactem.ac.uk/anatomy/)
+  corpus:
 
   ```sh
   # While inside the spancat-datasets repository
-  spacy project run wikineural
+  spacy project run anem
   ```
 
   This will generate the spaCy files that you can use for training. Once done,
@@ -26,12 +27,12 @@ description: |
   cp -r spancat-datasets/corpus/ner/*. ner_embeddings/corpus/. 
   ```
 
-  Once done, you can now supply the local path to the commands and workflows to
+  You can now supply the local path to the commands and workflows to
   perform experiments in **this project:**
 
   ```sh
   # Perform experiments in the ner_embeddings project
-  spacy project run train a. --vars.dataset de-wikineural
+  spacy project run train . --vars.dataset anem
   ```
 
 vars:
@@ -128,7 +129,6 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
-
   - name: "evaluate"
     help: "Evaluate NER model."
     script:
@@ -145,7 +145,7 @@ commands:
       - corpus/${vars.dataset}-dev.spacy
     outputs:
       - metrics/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
-  
+
   - name: "evaluate-unseen"
     help: "Evaluate NER model on unseen entities."
     script:
