@@ -102,7 +102,7 @@ commands:
         --paths.train corpus/${vars.dataset}-train.spacy
         --paths.dev corpus/${vars.dataset}-dev.spacy
         --code scripts/custom_components.py
-        --paths.tables whatever
+        --paths.tables tables
 
   - name: "train"
     help: "Train NER model."
