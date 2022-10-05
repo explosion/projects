@@ -148,10 +148,3 @@ commands:
     help: "Evaluate NER model on unseen entities."
     script:
       - echo "This command is not done yet"
-
-  - name: "collate-results"
-    help: "Collate results into the results directory"
-    script:
-      - "python -m scripts.collate_results metrics/ results/"
-    deps:
-      - "metrics/"
