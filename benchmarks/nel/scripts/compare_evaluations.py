@@ -10,7 +10,7 @@ def main(dataset_name: str, highlight_criterion: str = "F"):
     highlight_criterion (str): Criterion to highlight in table. One of ("F", "r", "p").
     """
 
-    Dataset.generate_dataset_from_id(dataset_name).compare_evaluations(highlight_criterion=highlight_criterion)
+    Dataset.generate_from_id(dataset_name).compare_evaluations(highlight_criterion=highlight_criterion)
 
 
 if __name__ == "__main__":

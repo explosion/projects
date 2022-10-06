@@ -2,15 +2,15 @@ title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
 vars:
   name: "nel_benchmark"
+  run: ""
   config: "nel.cfg"
   vectors_model: "en_core_web_md"
-  version: "0.0.3"
+  version: "0.0.4"
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
   use_filter_terms: "--use_filter_terms"
   training_max_steps: 1000
-  run: ""
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
@@ -126,6 +126,7 @@ commands:
       - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}'"
     deps:
       - "training/${vars.dataset}/model-best"
+      - "temp/${vars.dataset}/nlp"
       - "corpora/${vars.dataset}/dev.spacy"
     outputs:
       - "evaluation/${vars.dataset}"
@@ -147,7 +148,8 @@ commands:
   - name: clean
     help: "Remove intermediate files (excluding Wiki resources and database)"
     script:
-      - "rm -rf training/*"
-      - "rm -rf corpora/*"
-      - "rm -rf temp/*"
+      - "rm -rf training/${vars.dataset}"
+      - "rm -rf corpora/${vars.dataset}"
+      - "rm -rf temp/${vars.dataset}"
       - "rm -rf assets/${vars.dataset}"
+      - "rm -rf evaluation/${vars.dataset}"

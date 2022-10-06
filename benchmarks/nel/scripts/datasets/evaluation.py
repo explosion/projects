@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
-from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.tokens import Doc
 from utils import get_logger
@@ -192,7 +191,6 @@ def add_disambiguation_eval_result(
     results: EvaluationResults,
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    el_nlp: Language,
     ent_cand_ids: Dict[Tuple[int, int], Set[str]],
 ) -> None:
     """
@@ -201,7 +199,6 @@ def add_disambiguation_eval_result(
     results (EvaluationResults): Container for evaluation results.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
-    el_nlp (Language): Pipeline.
     ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
     """
     try:

@@ -63,6 +63,7 @@ class Dataset(abc.ABC):
 
         return {
             "root": root_path,
+            "evaluation": root_path / "configs" / "evaluation.yml",
             "assets": assets_path,
             "nlp_base": root_path / "temp" / dataset_name / "nlp",
             "nlp_best": root_path / "training" / dataset_name / "model-best",
@@ -71,6 +72,7 @@ class Dataset(abc.ABC):
             "entities": assets_path / "entities.pkl",
             "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl",
+            "predicted_test_docs": root_path / "evaluation" / dataset_name / "predicted_test_docs.spacy"
         }
 
     @property
@@ -184,7 +186,6 @@ class Dataset(abc.ABC):
 
     def _serialize_corpora(self) -> None:
         """Serializes corpora."""
-
         assert (
             self._options["frac_train"]
             + self._options["frac_dev"]
@@ -209,10 +210,8 @@ class Dataset(abc.ABC):
             )
         }
 
-        for key, value in indices.items():
-            corpus = DocBin(store_user_data=True)
-            for idx in value:
-                corpus.add(self._annotated_docs[idx])
+        for key, idx in indices.items():
+            corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx][:50])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
@@ -249,129 +248,94 @@ class Dataset(abc.ABC):
             with open(self._paths["failed_entity_lookups"], "rb") as file:
                 self._failed_entity_lookups = pickle.load(file)
 
-    def evaluate(
-        self,
-        run_name: str,
-        candidate_generation: bool = True,
-        baseline: bool = True,
-        context: bool = True,
-        spacyfishing: bool = True,
-        n_items: Optional[int] = None,
-    ) -> None:
+    def evaluate(self, run_name: str) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
-        candidate_generation (bool): Whether to include candidate generation in evaluation.
-        baseline (bool): Whether to include baseline results in evaluation.
-        context (bool): Whether to include the local context in the model.
-        spacyfishing (bool): Whether to include evaluation with spacyfishing.
-        n_items (Optional[int]): How many items to consider in evaluation. If None, all items in test set are used.
         """
-
-        # Load resources.
         self._load_resource("nlp_best")
         self._load_resource("nlp_base")
         self._load_resource("kb")
 
-        # Compile test set.
-        test_set_path = self._paths["corpora"] / "test.spacy"
-        with open(test_set_path, "rb"):
-            test_set: List[Example] = []
-            for doc in DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab):
-                predicted_doc = self._nlp_best(doc.text)
-                ents: List[Span] = []
-                for ent in predicted_doc.ents:
-                    # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-                    # leading "the " and adjust the entity positions accordingly.
-                    ents.append(
-                        doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                        if ent.text.lower().startswith("the ") else ent
-                    )
-                predicted_doc.ents = ents
-                test_set.append(Example(predicted_doc, doc))
+        with open(self._paths["evaluation"], "r") as config_file:
+            eval_config = yaml.safe_load(config_file)
 
-        self._nlp_best.config["incl_prior"] = False
-        if spacyfishing:
+        if eval_config["external"]["spacyfishing"]:
             self._nlp_base.add_pipe("entityfishing", last=True)
+
+        # Apply config overrides, if defined.
+        if "config_overrides" in eval_config and eval_config["config_overrides"]:
+            for setting, value in eval_config["config_overrides"].items():
+                self._nlp_best.config[setting] = value
+
+        # Infer test set.
+        test_set_path = self._paths["corpora"] / "test.spacy"
+        docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
+        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
+        # leading "the " and adjust the entity positions accordingly.
+        for doc in docs:
+            doc.ents = [
+                doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
+                if ent.text.lower().startswith("the ") else ent
+                for ent in doc.ents
+            ]
+        test_set = [
+            Example(predicted_doc, doc)
+            for predicted_doc, doc in zip(
+                [
+                    doc for doc in tqdm.tqdm(
+                        self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
+                        desc="Inferring entities for test set",
+                        total=len(docs)
+                    )
+                ],
+                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
+            )
+        ]
 
         # Evaluation loop.
         label_counts = dict()
         cand_gen_label_counts = defaultdict(int)
-        baseline_results = evaluation.DisambiguationBaselineResults()
-        context_results = evaluation.EvaluationResults("Context only")
-        combo_results = evaluation.EvaluationResults("Context and Prior")
+        results = evaluation.DisambiguationBaselineResults()
         spacyfishing_results = evaluation.EvaluationResults("spacyfishing")
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
-        for example in tqdm.tqdm(
-            test_set, total=n_items, leave=False, desc="Processing test set"
-        ):
+        for example in tqdm.tqdm(test_set, total=len(test_set), leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
                 entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
-                    evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_
-                    for ent in example.reference.ents
+                    evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 if len(ent_gold_ids) == 0:
                     continue
-                ent_pred_labels = {
-                    (ent.start_char, ent.end_char): ent.label_
-                    for ent in example.predicted.ents
-                }
+                ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
                 ent_cand_ids = {
                     (ent.start_char, ent.end_char): {
-                        cand.entity_
-                        for cand in entity_linker.get_candidates(self._kb, ent)
+                        cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)
                     }
                     for ent in example.reference.ents
                 }
 
                 # Update candidate generation stats.
-                if candidate_generation:
+                if eval_config["candidate_generation"]:
                     for ent in example.reference.ents:
                         ent_offset = (ent.start_char, ent.end_char)
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        candidate_results.update_metrics(
-                            label, ent.kb_id_, ent_cand_ids.get(ent_offset, {})
-                        )
+                        candidate_results.update_metrics(label, ent.kb_id_, ent_cand_ids.get(ent_offset, {}))
 
                 # Update entity disambiguation stats.
-                if baseline:
-                    evaluation.add_disambiguation_baseline(
-                        baseline_results,
-                        label_counts,
-                        example.predicted,
-                        ent_gold_ids,
-                        self._kb,
-                        ent_cand_ids,
-                    )
+                evaluation.add_disambiguation_baseline(
+                    results,
+                    label_counts,
+                    example.predicted,
+                    ent_gold_ids,
+                    self._kb,
+                    ent_cand_ids,
+                )
 
-                if context:
-                    # Using only context.
-                    self._nlp_best.config["incl_context"] = True
-                    self._nlp_best.config["incl_prior"] = False
-                    evaluation.add_disambiguation_eval_result(
-                        context_results,
-                        example.predicted,
-                        ent_gold_ids,
-                        self._nlp_best,
-                        ent_cand_ids,
-                    )
-
-                    # measuring combined accuracy (prior + context)
-                    self._nlp_best.config["incl_context"] = True
-                    self._nlp_best.config["incl_prior"] = True
-                    evaluation.add_disambiguation_eval_result(
-                        combo_results,
-                        example.predicted,
-                        ent_gold_ids,
-                        self._nlp_best,
-                        ent_cand_ids,
-                    )
-
-                if spacyfishing:
+                if eval_config["external"]["spacyfishing"]:
                     try:
                         doc = self._nlp_base(example.reference.text)
                     except TypeError:
@@ -383,27 +347,14 @@ class Dataset(abc.ABC):
                     )
 
         # Print result table.
-        eval_results: List[evaluation.EvaluationResults] = []
-        if candidate_generation:
+        eval_results: List[evaluation.EvaluationResults] = [results.random, results.prior, results.oracle]
+        if eval_config["candidate_generation"]:
             eval_results.append(candidate_results)
-        if baseline:
-            eval_results.extend(
-                [
-                    baseline_results.random,
-                    baseline_results.prior,
-                    baseline_results.oracle,
-                ]
-            )
-        if context:
-            eval_results.extend([context_results, combo_results])
-        if spacyfishing:
+        if eval_config["external"]["spacyfishing"]:
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
         evaluation.EvaluationResults.report(tuple(eval_results), run_name=run_name, dataset_name=self.name)
-
-        self._nlp_best.config["incl_context"] = False
-        self._nlp_best.config["incl_prior"] = False
 
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.
@@ -460,7 +411,7 @@ class Dataset(abc.ABC):
         logger.info("\n" + str(table))
 
     @classmethod
-    def generate_dataset_from_id(
+    def generate_from_id(
         cls: Type[DatasetType], dataset_name: str, **kwargs
     ) -> DatasetType:
         """Generates dataset instance from ID.
