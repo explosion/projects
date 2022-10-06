@@ -4,7 +4,7 @@ Modified from https://github.com/explosion/projects/blob/master/nel-wikipedia/wi
 
 import re
 import bz2
-import pysqlite3 as sqlite3
+import sqlite3
 
 from pathlib import Path
 from typing import Union, Optional, Tuple, List, Dict, Set, Any
@@ -86,11 +86,7 @@ def read_prior_probs(
         __aliases_for_entities (): alias-entity-frequency triples.
         """
         db_conn.cursor().executemany(
-            """
-            INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)
-            ON CONFLICT (alias, entity_id) DO UPDATE SET
-                count=count + excluded.count
-            """,
+            "INSERT INTO aliases_for_entities (alias, entity_id, count) VALUES (?, ?, ?)",
             _aliases_for_entities,
         )
         db_conn.commit()
@@ -132,8 +128,9 @@ def read_prior_probs(
                 pbar.update(1)
 
     # write all aliases and their entities and count occurrences to file
+    # len(map_alias_to_link) == 1323974520
     with tqdm.tqdm(
-        desc="Persisting alias-entity prior probabilities", total=len(map_alias_to_link)
+        desc="Persisting prior probabilities", total=len(map_alias_to_link)
     ) as pbar:
         aliases_for_entities: List[Tuple[str, str, int]] = []
         for alias, alias_dict in map_alias_to_link.items():
@@ -255,25 +252,20 @@ def read_texts(
         row["name"]: row["id"]
         for row in db_conn.execute("SELECT name, id FROM entities")
     }
-    records: List[Tuple[str, str, str, str]] = []
-    # Fetch IDs of entities whose articles are already in the DB.
-    article_ids_in_db: Set[str] = {
-        rec["id"] for rec in db_conn.cursor().execute("SELECT id FROM articles")
-    }
+    records: List[Tuple[str, str, str]] = []
 
-    def write_to_db(_records: List[Tuple[str, str, str, str]]) -> None:
+    def write_to_db(_records: List[Tuple[str, str, str]]) -> None:
         """Writes records to list.
         _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
         """
         db_conn.cursor().executemany(
-            "INSERT OR IGNORE INTO articles (entity_id, id, title, text) VALUES (?, ?, ?, ?)",
-            records,
+            "INSERT INTO articles (entity_id, title, text) VALUES (?, ?, ?)", records
         )
         db_conn.commit()
 
     with bz2.open(wikipedia_input_path, mode="rb") as file:
         pbar_params = {"total": limit} if limit else {}
-        with tqdm.tqdm(desc="Parsing article texts", miniters=1000, **pbar_params) as pbar:
+        with tqdm.tqdm(desc="Parsing article texts", **pbar_params) as pbar:
             article_text = ""
             article_title: Optional[str] = None
             article_id: Optional[str] = None
@@ -299,7 +291,7 @@ def read_texts(
 
                 # finished reading this page
                 elif clean_line == "</page>":
-                    if article_id and article_id not in article_ids_in_db:
+                    if article_id:
                         clean_text, entities = _process_wp_text(
                             article_title, article_text, entity_title_to_id
                         )
@@ -308,7 +300,6 @@ def read_texts(
                                 records.append(
                                     (
                                         entity_title_to_id[article_title],
-                                        article_id,
                                         article_title,
                                         " ".join(
                                             clean_text[:n_char_limit].split(" ")[:-1]
@@ -356,55 +347,6 @@ def read_texts(
 
     if pbar.n % batch_size != 0:
         write_to_db(records)
-
-
-def extract_demo_dump(
-    in_dump_path: Path, out_dump_path: Path, entity_titles: Set[str]
-) -> None:
-    """Writes information on those entities having at least one of the filter_terms in their description to a new dump
-    at location filtered_dump_path.
-    in_dump_path (Path): Path to complete Wikidata dump.
-    out_dump_path (Path): Path to filtered Wikidata dump.
-    entity_titles (Set[str]): Entity titles to include.
-    """
-
-    with bz2.open(in_dump_path, mode="rb") as in_file:
-        with bz2.open(out_dump_path, mode="wb") as out_file:
-            with tqdm.tqdm(desc="Filtering article texts", miniters=1, total=len(entity_titles)) as pbar:
-                reading_revision = False
-                line_cache: List[bytes] = []
-
-                for line in in_file:
-                    clean_line = line.strip().decode("utf-8")
-
-                    if clean_line == "<revision>":
-                        reading_revision = True
-                    elif clean_line == "</revision>":
-                        reading_revision = False
-
-                    # Start reading new page
-                    if clean_line == "<page>":
-                        line_cache = [line]
-                        article_title = None
-
-                    else:
-                        line_cache.append(line)
-                        # finished reading this page
-                        if clean_line == "</page>":
-                            line_cache.append(line)
-                            if article_title and article_title in entity_titles:
-                                out_file.writelines(line_cache)
-                                line_cache = []
-                                pbar.update(1)
-
-                            article_title = None
-                            reading_revision = False
-
-                    # read the title of this article (outside the revision portion of the document)
-                    if not reading_revision:
-                        titles = title_regex.search(clean_line)
-                        if titles:
-                            article_title = titles[0].strip()
 
 
 def _process_wp_text(

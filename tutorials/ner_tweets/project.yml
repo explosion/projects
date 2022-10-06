@@ -60,6 +60,7 @@ description: |
   | List of personalities from Wikipedia | Gazetteer      | Ideally, we want to include all person entities from a bigger database. However, it detects "you" as a `PERSON`, which affected our Precision. |
   | Name suffix annotator                | Heuristic      | I wanted to capture names with "iii", "IV", etc., but it gives lower precision due to it detecting roman numerals that aren't part of names.   |
 
+spacy_version: ">=3.3.0,<4.0.0"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
@@ -124,9 +125,8 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "install"
-    help: "Install dependencies"
-    script: 
-      - "pip3 install --user -r requirements.txt"
+    help: "Install models"
+    script:
       - "python -m spacy download en_core_web_lg"
   - name: "preprocess"
     help: "Convert raw inputs into spaCy's binary format"

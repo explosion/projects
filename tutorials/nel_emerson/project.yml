@@ -36,7 +36,6 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
-    - setup
     - download
     - kb
     - corpus
@@ -97,16 +96,9 @@ commands:
       - "training/model-best"
       - "corpus/${vars.dev}.spacy"
 
-  # These are additional custom commands that are not run as part of the main
+  # This is an additional custom command that is not run as part of the main
   # "run" list. They can depend on third-party libraries etc. Here are just
-  # some examples of what's possible.
-  - name: setup
-    help: Install dependencies
-    script:
-      - "python -m pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
+  # one example for what's possible.
   - name: clean
     help: "Remove intermediate files"
     script:
