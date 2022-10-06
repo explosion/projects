@@ -1,31 +1,53 @@
-""" Candidate generation. """
-from pathlib import Path
-from typing import Iterator, Dict
+""" Candidate generation via distance in embedding space. """
+import time
+from typing import Iterable, List, Set
 
-from spacy import Language
-from spacy.kb import KnowledgeBase, Candidate
+import numpy
+from sklearn.neighbors import NearestNeighbors
+
+from spacy.kb import KnowledgeBase
 from spacy.tokens import Span
+from .base import NearestNeighborCandidateSelector
+from rapidfuzz.string_metric import normalized_levenshtein
 
 
-_pipelines: Dict[Path, Language] = {}
+class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
+    """Callable object selecting candidates as nearest neighbours in embedding space."""
 
+    _entity_ids: List[str] = []
 
-def create_candidates(
-    dataset_name: str, kb: KnowledgeBase, span: Span
-) -> Iterator[Candidate]:
-    """Identifies entity candidates via their embeddings.
-    kb (KnowledgeBase): KnowledgeBase containing all possible entity candidates.
-    span (Span): Span to match potential entity candidates with.
-    """
+    def _init_lookup_structure(self, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> NearestNeighbors:
+        container = NearestNeighbors(n_neighbors=max_n_candidates, metric="cosine", n_jobs=-1)
+        container.fit(numpy.asarray([kb.get_vector(ent_id) for ent_id in kb.get_entity_strings()]))
+        self._entity_ids = kb.get_entity_strings()
 
-    # todo @RM
-    #  - add temp getters to KB class to access all information necessary to create candidate objects
-    #  - infer vector for span.text
-    #  - compute distances between KB entity vectors and span.text vector
-    #  - define offcut/top-n in config, return relevant candidates
-    #  - evaluate results, compare with get_candidates()
-    # nlp_path = Dataset.assemble_paths(dataset_id)["nlp_base"]
-    # if nlp_path not in _pipelines:
-    #     _pipelines[nlp_path] = spacy.load(nlp_path)
+        return container
 
-    return kb.get_alias_candidates(span.text)
+    def _fetch_candidates(
+        self,
+        dataset_id: str,
+        span: Span,
+        kb: KnowledgeBase,
+        max_n_candidates: int,
+        lexical_similarity_cutoff: float = 0.5,
+    ) -> Iterable[int]:
+        target_vec = self._pipeline(span.text, disable=["parser", "senter", "ner"]).vector
+        if not isinstance(target_vec, numpy.ndarray):
+            target_vec = target_vec.get()
+
+        nn_idx = self._lookup_struct.kneighbors(target_vec.reshape((1, -1)))[1][0]
+        nn_entities = {self._entity_ids[i]: self._entities[dataset_id][self._entity_ids[i]] for i in nn_idx}
+        candidate_entity_ids: Set[str] = set()
+        for nne in nn_entities:
+            for name in nn_entities[nne].aliases:
+                if normalized_levenshtein(name.lower(), span.text.lower()) / 100 >= lexical_similarity_cutoff:
+                    candidate_entity_ids.add(nne)
+                    break
+
+        return {
+            cand
+            for cands_for_alias in [
+                kb.get_alias_candidates("_" + cei + "_") for cei in candidate_entity_ids
+            ]
+            for cand in cands_for_alias
+        }
