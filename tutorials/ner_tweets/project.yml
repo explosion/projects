@@ -102,7 +102,7 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
-    - install
+    - download
     - preprocess
     - decompress
     - augment
@@ -110,7 +110,7 @@ workflows:
     - train-with-augmenter
     - evaluate
   setup:
-    - install
+    - download
     - preprocess
     - decompress
   finetune:
@@ -124,8 +124,8 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install models"
+  - name: "download"
+    help: "Download models"
     script:
       - "python -m spacy download en_core_web_lg"
   - name: "preprocess"

@@ -96,9 +96,6 @@ commands:
       - "training/model-best"
       - "corpus/${vars.dev}.spacy"
 
-  # This is an additional custom command that is not run as part of the main
-  # "run" list. They can depend on third-party libraries etc. Here are just
-  # one example for what's possible.
   - name: clean
     help: "Remove intermediate files"
     script:
