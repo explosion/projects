@@ -71,7 +71,7 @@ def _make_eval_command(
 def _make_hash_command(
     config: str,
     dataset: str,
-    min_freq: int,
+    min_freq: int = 10,
     tables_path: str = "tables",
 ):
     """Construct the hash command based from a template"""
@@ -97,6 +97,15 @@ def run_main_results(
     msg.info("Running experiment that compares MultiEmbed and MultiHashEmbed")
     for dataset, vectors in DATASET_VECTORS.items():
         msg.divider(dataset, char="X")
+        commands = []
+
+        # Create hash tables
+        if config == "ner_multiembed":
+            hash_command = _make_hash_command(
+                config=config,
+                dataset=dataset,
+            )
+            commands.append(hash_command)
 
         # Train command
         train_command = _make_train_command(
@@ -108,6 +117,7 @@ def run_main_results(
             seed=seed,
             include_static_vectors=bool(static_vectors),
         )
+        commands.append(train_command)
 
         # Evaluate command
         eval_command = _make_eval_command(
@@ -117,9 +127,10 @@ def run_main_results(
             vectors=vectors.get(static_vectors, "null"),
             seed=seed,
         )
+        commands.append(eval_command)
 
         # Run commands
-        _run_commands(cmds=[train_command, eval_command], dry_run=dry_run)
+        _run_commands(cmds=commands, dry_run=dry_run)
 
 
 def run_multiembed_min_freq_experiment(
@@ -142,6 +153,7 @@ def run_multiembed_min_freq_experiment(
 
         for dataset, vectors in DATASET_VECTORS.items():
             msg.divider(dataset, char="x")
+            commands = []
 
             # Create hash tables
             hash_command = _make_hash_command(
@@ -150,6 +162,7 @@ def run_multiembed_min_freq_experiment(
                 min_freq=min_freq,
                 tables_path=str(table_path),
             )
+            commands.append(hash_command)
 
             # Train command
             train_command = _make_train_command(
@@ -162,6 +175,7 @@ def run_multiembed_min_freq_experiment(
                 include_static_vectors=bool(static_vectors),
                 tables_path=str(table_path),
             )
+            commands.append(train_command)
 
             # Evaluate command
             eval_command = _make_eval_command(
@@ -171,9 +185,10 @@ def run_multiembed_min_freq_experiment(
                 vectors=vectors.get(static_vectors, "null"),
                 seed=seed,
             )
+            commands.append(eval_command)
 
             _run_commands(
-                cmds=[hash_command, train_command, eval_command],
+                cmds=commands,
                 dry_run=dry_run,
             )
 
