@@ -213,7 +213,7 @@ def run_multiembed_min_freq_experiment(
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors, "null"),
                 seed=seed,
-                metrics_dir=f"metrics-{EXPERIMENT_ID}",
+                metrics_dir=f"metrics-{EXPERIMENT_ID}-{min_freq}",
             )
             commands.append(eval_command)
 
@@ -273,7 +273,7 @@ def run_multiembed_features_ablation(
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors, "null"),
                 seed=seed,
-                metrics_dir=f"metrics-{EXPERIMENT_ID}",
+                metrics_dir=f"metrics-{EXPERIMENT_ID}-{'-'.join(attrs)}",
             )
             commands.append(eval_command)
 
