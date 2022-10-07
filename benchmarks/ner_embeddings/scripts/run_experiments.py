@@ -1,6 +1,7 @@
 import shlex
 import subprocess
 from typing import Literal, Optional, List
+import srsly
 
 import typer
 from wasabi import msg
@@ -33,12 +34,19 @@ def _make_train_command(
     gpu_id: int,
     seed: int,
     include_static_vectors: bool,
+    adjust_rows: bool = False,
     tables_path: str = "tables",
 ) -> str:
     """Construct train command based from a template"""
-    cmd_vectors = (
-        "--vars.include_static_vectors false" if not include_static_vectors else ""
-    )
+    cmd_vectors = ""
+    cmd_rows = ""
+
+    if not include_static_vectors:
+        cmd_vectors = "--vars.include_static_vectors false"
+    if adjust_rows:
+        new_rows = _get_computed_rows(tables_path, dataset)
+        cmd_rows = f"--vars.rows '{new_rows}'"
+
     command = f"""
     spacy project run train-ner . 
     --vars.dataset {dataset}
@@ -49,8 +57,17 @@ def _make_train_command(
     --vars.seed {seed}
     --vars.tables_path {tables_path}
     {cmd_vectors}
+    {cmd_rows}
     """
     return command
+
+
+def _get_computed_rows(tables_path: str, dataset: str) -> List:
+    attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
+    table_filepath = f"{tables_path}/{dataset}.table"
+    table = srsly.read_msgpack(table_filepath)
+    attr_sizes = {attr: len(table[attr]) for attr in attrs}
+    return list(attr_sizes.values())
 
 
 def _make_eval_command(
@@ -88,7 +105,7 @@ def _make_hash_command(
 def run_main_results(
     config: str = "ner_multihashembed",
     static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
-    adjust_rows: bool = False,  # TODO
+    adjust_rows: bool = False,
     gpu_id: int = 0,
     dry_run: bool = False,
     seed: int = 0,
@@ -115,6 +132,7 @@ def run_main_results(
             vectors=vectors.get(static_vectors, "null"),
             gpu_id=gpu_id,
             seed=seed,
+            adjust_rows=adjust_rows
             include_static_vectors=bool(static_vectors),
         )
         commands.append(train_command)
