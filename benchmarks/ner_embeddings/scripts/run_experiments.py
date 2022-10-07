@@ -36,6 +36,7 @@ def _make_train_command(
     include_static_vectors: bool,
     adjust_rows: bool = False,
     tables_path: str = "tables",
+    attrs: List[str] = ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
 ) -> str:
     """Construct train command based from a template"""
     cmd_vectors = ""
@@ -43,7 +44,7 @@ def _make_train_command(
 
     if not include_static_vectors:
         cmd_vectors = "--vars.include_static_vectors false"
-    if adjust_rows:
+    if adjust_rows and config != "ner_multiembed":
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
 
@@ -56,6 +57,7 @@ def _make_train_command(
     --vars.gpu-id {gpu_id}
     --vars.seed {seed}
     --vars.tables_path {tables_path}
+    --vars.attrs '{attrs}'
     {cmd_vectors}
     {cmd_rows}
     """
@@ -71,7 +73,12 @@ def _get_computed_rows(tables_path: str, dataset: str) -> List:
 
 
 def _make_eval_command(
-    dataset: str, config: str, gpu_id: int, vectors: str, seed: int
+    dataset: str,
+    config: str,
+    gpu_id: int,
+    vectors: str,
+    seed: int,
+    metrics_dir: str,
 ) -> str:
     """Construct eval command based from a template"""
     command = f"""
@@ -81,6 +88,7 @@ def _make_eval_command(
     --vars.gpu-id {gpu_id}
     --vars.vectors {vectors}
     --vars.seed {seed}
+    --vars.metrics_dir {metrics_dir}
     """
     return command
 
@@ -111,6 +119,7 @@ def run_main_results(
     seed: int = 0,
 ):
     """Run experiment that compares MultiEmbed and MultiHashEmbed (default rows)"""
+    EXPERIMENT_ID = "main_results"
     msg.info("Running experiment that compares MultiEmbed and MultiHashEmbed")
     for dataset, vectors in DATASET_VECTORS.items():
         msg.divider(dataset, char="X")
@@ -132,7 +141,7 @@ def run_main_results(
             vectors=vectors.get(static_vectors, "null"),
             gpu_id=gpu_id,
             seed=seed,
-            adjust_rows=adjust_rows
+            adjust_rows=adjust_rows,
             include_static_vectors=bool(static_vectors),
         )
         commands.append(train_command)
@@ -144,6 +153,7 @@ def run_main_results(
             gpu_id=gpu_id,
             vectors=vectors.get(static_vectors, "null"),
             seed=seed,
+            metrics_dir=f"metrics-{EXPERIMENT_ID}",
         )
         commands.append(eval_command)
 
@@ -153,13 +163,14 @@ def run_main_results(
 
 def run_multiembed_min_freq_experiment(
     config: str = "ner_multiembed",
-    min_freqs: List[int] = [5, 10, 30],
+    min_freqs: List[int] = [1, 5, 10],
     static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
     gpu_id: int = 0,
     dry_run: bool = False,
     seed: int = 0,
 ):
     """Run experiment that compares different MultiEmbed min_freq values"""
+    EXPERIMENT_ID = "multiembed_min_freq"
     msg.info("Running experiment for MultiEmbed with different min_freq")
     config_path = Path("configs") / config
 
@@ -202,6 +213,7 @@ def run_multiembed_min_freq_experiment(
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors, "null"),
                 seed=seed,
+                metrics_dir=f"metrics-{EXPERIMENT_ID}",
             )
             commands.append(eval_command)
 
@@ -211,9 +223,62 @@ def run_multiembed_min_freq_experiment(
             )
 
 
-def run_multiembed_features_ablation():
+def run_multiembed_features_ablation(
+    config: str = "ner_multiembed",
+    static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
+    gpu_id: int = 0,
+    dry_run: bool = False,
+    seed: int = 0,
+):
     """Run ablation experiment for MultiEmbed features"""
-    pass
+    EXPERIMENT_ID = "multiembed_ablation"
+    attr_combinations = [
+        ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+        ["NORM", "PREFIX", "SUFFIX"],
+        ["NORM", "PREFIX"],
+        ["NORM"],
+        ["ORTH"],
+    ]
+
+    for attrs in attr_combinations:
+        for dataset, vectors in DATASET_VECTORS.items():
+            msg.divider(dataset, char="X")
+            commands = []
+
+            # Create hash tables
+            if config == "ner_multiembed":
+                hash_command = _make_hash_command(
+                    config=config,
+                    dataset=dataset,
+                )
+                commands.append(hash_command)
+
+            # Train command
+            train_command = _make_train_command(
+                dataset,
+                config,
+                lang=vectors.get("lang"),
+                vectors=vectors.get(static_vectors, "null"),
+                gpu_id=gpu_id,
+                seed=seed,
+                attrs=attrs,
+                include_static_vectors=bool(static_vectors),
+            )
+            commands.append(train_command)
+
+            # Evaluate command
+            eval_command = _make_eval_command(
+                dataset=dataset,
+                config=config,
+                gpu_id=gpu_id,
+                vectors=vectors.get(static_vectors, "null"),
+                seed=seed,
+                metrics_dir=f"metrics-{EXPERIMENT_ID}",
+            )
+            commands.append(eval_command)
+
+            # Run commands
+            _run_commands(cmds=commands, dry_run=dry_run)
 
 
 if __name__ == "__main__":
