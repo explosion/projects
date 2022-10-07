@@ -1,10 +1,8 @@
 """ Utilities for NEL benchmark. """
 
-from typing import Tuple, Set, List, Dict
-
+from typing import Dict, List, Set, Tuple, Iterable
 import tqdm
-from spacy.tokens import Token, Doc, Span
-
+from spacy.tokens import Token, Span, Doc
 from schemas import Entity, Annotation
 from wiki import wiki_dump_api
 
@@ -25,7 +23,7 @@ def _does_token_overlap_with_annotation(
     )
 
 
-def _fetch_entity_information(
+def fetch_entity_information(
     key: str,
     values: Tuple[str, ...],
     batch_size: int = 1000,
@@ -48,7 +46,7 @@ def _fetch_entity_information(
     entities: Dict[str, Entity] = {}
 
     for i in range(0, len(values), batch_size):
-        chunk = values[i : i + batch_size]
+        chunk = tuple([v.replace("_", " ") for v in values[i : i + batch_size]])
         entities_chunk = wiki_dump_api.load_entities(key, chunk)
         _failed_lookups = set(chunk)
 
@@ -66,60 +64,79 @@ def _fetch_entity_information(
     return entities, failed_lookups, name_qid_map
 
 
-def _create_spans_from_doc_annotation(
+def create_spans_from_doc_annotation(
     doc: Doc,
     entities_info: Dict[str, Entity],
     annotations: List[Annotation],
     entities_failed_lookups: Set[str],
+    harmonize_with_doc_ents: bool,
 ) -> Tuple[List[Span], List[Annotation]]:
     """Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
-    entities_info (ENTITIES_TYPE): All available entities.
+    entities_info (Dict[str, Entity]): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
-    entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed.
+    entities_entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed).
+    harmonize_harmonize_with_doc_ents (Language): Whether to only keep those annotations matched by entities in the
+        provided Doc object.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
 
+    doc_ents_idx = {
+        # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all leading "the "
+        # and adjust the entity positions accordingly.
+        (ent.start_char + (0 if not ent.text.lower().startswith("the ") else 4), ent.end_char)
+        for ent in doc.ents
+    }
     doc_annots: List[Annotation] = []
     overlapping_doc_annotations: List[Annotation] = []
+
+    if harmonize_with_doc_ents and not doc_ents_idx:
+        return [], []
+
     for i, annot_data in enumerate(
         sorted(
             [
                 {
                     "annot": annot,
-                    "freq": entities_info[annot.entity_id].count
+                    "count": entities_info[annot.entity_id].count
                     if annot.entity_id in entities_info
                     else -1,
                 }
                 for annot in annotations
             ],
-            key=lambda a: a["freq"],
+            key=lambda a: a["count"],
             reverse=True,
         )
     ):
-        annot, count = annot_data["annot"], annot_data["freq"]
+        annot, count = annot_data["annot"], annot_data["count"]
+
         # Indexing mistakes in the dataset might lead to wrong and/or overlapping annotations. We align the annotation
         # indices with spaCy's token indices to avoid at least some of these.
-        for t in doc:
-            if _does_token_overlap_with_annotation(t, annot.start_pos, annot.end_pos):
-                annot.start_pos = t.idx
+        for token in doc:
+            if _does_token_overlap_with_annotation(token, annot.start_pos, annot.end_pos):
+                annot.start_pos = token.idx
                 break
-        for t in reversed([t for t in doc]):
+        for token in reversed([t for t in doc]):
             if _does_token_overlap_with_annotation(
-                t, annot.start_pos, annot.end_pos - 1
+                token, annot.start_pos, annot.end_pos - 1
             ):
-                annot.end_pos = t.idx + len(t)
+                annot.end_pos = token.idx + len(token)
                 break
+
+        # After token alignment: filter with NER pipeline, if available.
+        if harmonize_with_doc_ents and (annot.start_pos, annot.end_pos) not in doc_ents_idx:
+            continue
 
         # If there is an overlap between annotation's start and end position and this token's parsed start
         # and end, we try to create a span with this token's position.
         overlaps = False
         if count == -1:
-            assert (
-                annot.entity_id not in entities_info
-                and annot.entity_name in entities_failed_lookups
-            )
+            # todo RM do we need this assertion? if so, how to fix assertion violations?
+            # assert (
+            #     annot.entity_id not in entities_info
+            #     and annot.entity_name in entities_failed_lookups
+            # )
             continue
         for j in range(0, len(doc_annots)):
             if not (

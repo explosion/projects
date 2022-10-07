@@ -1,8 +1,9 @@
 """ Wiki dataset for unified access to information from Wikipedia and Wikidata dumps. """
 import os.path
+import pickle
 from pathlib import Path
-from typing import Dict, Optional, Any, Tuple
-import sqlite3
+from typing import Dict, Optional, Any, Tuple, List, Set
+import pysqlite3 as sqlite3
 
 from schemas import Entity
 from wiki import wikidata, wikipedia
@@ -12,6 +13,9 @@ _paths = {
     "db": _assets_dir / "wiki.sqlite3",
     "wikidata_dump": _assets_dir / "wikidata_entity_dump.json.bz2",
     "wikipedia_dump": _assets_dir / "wikipedia_dump.xml.bz2",
+    "filtered_wikidata_dump": _assets_dir / "wikidata_entity_dump_filtered.json.bz2",
+    "filtered_wikipedia_dump": _assets_dir / "wikipedia_dump_filtered.xml.bz2",
+    "filtered_entity_entity_info": _assets_dir / "wiki_entity_info_filtered.pkl"
 }
 
 
@@ -24,17 +28,36 @@ def establish_db_connection() -> sqlite3.Connection:
     return db_conn
 
 
+def extract_demo_dump(filter_terms: Set[str]) -> None:
+    """Extracts small demo dump by parsing the Wiki dumps and keeping only those entities (and their articles)
+    containing any of the specified filter_terms. The retained entities and articles are written into
+    filter_terms (Set[str]): Terms having to appear in entity descriptions in order to be wrr
+    """
+
+    entity_ids, entity_labels = wikidata.extract_demo_dump(
+        _paths["wikidata_dump"], _paths["filtered_wikidata_dump"], filter_terms
+    )
+    with open(_paths["filtered_entity_entity_info"], "wb") as file:
+        pickle.dump((entity_ids, entity_labels), file)
+
+    with open(_paths["filtered_entity_entity_info"], "rb") as file:
+        _, entity_labels = pickle.load(file)
+    wikipedia.extract_demo_dump(_paths["wikipedia_dump"], _paths["filtered_wikipedia_dump"], entity_labels)
+
+
 def parse(
     db_conn: Optional[sqlite3.Connection] = None,
     entity_config: Optional[Dict[str, Any]] = None,
     article_text_config: Optional[Dict[str, Any]] = None,
     alias_prior_prob_config: Optional[Dict[str, Any]] = None,
+    use_filtered_dumps: bool = False
 ) -> None:
     """Parses Wikipedia and Wikidata dumps. Writes parsing results to a database. Note that this takes hours.
     db_conn (Optional[sqlite3.Connection]): Database connection.
     entity_config (Dict[str, Any]): Arguments to be passed on to wikidata.read_entities().
     article_text_config (Dict[str, Any]): Arguments to be passed on to wikipedia.read_text().
     alias_prior_prob_config (Dict[str, Any]): Arguments to be passed on to wikipedia.read_prior_probs().
+    use_filtered_dumps (bool): Whether to use small, filtered Wiki dumps.
     """
 
     msg = "Database exists already. Execute `spacy project run delete_wiki_db` to remove it."
@@ -45,19 +68,19 @@ def parse(
         db_conn.cursor().executescript(ddl_sql.read())
 
     wikidata.read_entities(
-        _paths["wikidata_dump"],
+        _paths["wikidata_dump"] if not use_filtered_dumps else _paths["filtered_wikidata_dump"],
         db_conn,
         **(entity_config if entity_config else {}),
     )
 
     wikipedia.read_prior_probs(
-        _paths["wikipedia_dump"],
+        _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
         db_conn,
         **(alias_prior_prob_config if alias_prior_prob_config else {}),
     )
 
     wikipedia.read_texts(
-        _paths["wikipedia_dump"],
+        _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
         db_conn,
         **(article_text_config if article_text_config else {}),
     )
@@ -127,3 +150,49 @@ def load_entities(
             tuple(set(values)),
         )
     }
+
+
+def load_alias_entity_prior_probabilities(
+    entity_ids: Set[str], db_conn: Optional[sqlite3.Connection] = None
+) -> Dict[str, List[Tuple[str, float]]]:
+    """Loads alias-entity counts from database and transforms them into prior probabilities per alias.
+    entity_ids (Set[str]): Set of entity IDs to allow.
+    RETURN (Dict[str, Tuple[Tuple[str, ...], Tuple[float, ...]]]): Mapping of alias to tuples of entities and the
+        corresponding prior probabilities.
+    """
+
+    db_conn = db_conn if db_conn else establish_db_connection()
+
+    alias_entity_prior_probs = {
+        rec["alias"]: [
+            (entity_id, int(count))
+            for entity_id, count in zip(
+                rec["entity_ids"].split(","), rec["counts"].split(",")
+            )
+        ]
+        for rec in db_conn.cursor().execute(
+            """
+                SELECT 
+                    alias,
+                    GROUP_CONCAT(entity_id) as entity_ids,
+                    GROUP_CONCAT(count) as counts
+                FROM 
+                    aliases_for_entities                                   
+                WHERE 
+                    entity_id IN (%s)
+                GROUP BY
+                    alias
+            """
+            % ",".join("?" * len(entity_ids)),
+            tuple(entity_ids),
+        )
+    }
+
+    for alias, entity_counts in alias_entity_prior_probs.items():
+        total_count = sum([ec[1] for ec in entity_counts])
+        alias_entity_prior_probs[alias] = [
+            (ec[0], ec[1] / max(total_count, 1)) for ec in entity_counts
+        ]
+
+    return alias_entity_prior_probs
+
