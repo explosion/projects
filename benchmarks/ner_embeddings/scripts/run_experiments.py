@@ -28,6 +28,7 @@ def _run_commands(cmds: List[str], dry_run: bool = False):
 def run_main_results(
     config: str = "ner_multihashembed",
     static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
+    adjust_rows: bool = False,  # TODO
     gpu_id: int = 0,
     dry_run: bool = False,
     seed: int = 0,
