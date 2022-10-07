@@ -75,7 +75,7 @@ def run_multiembed_min_freq_experiment(
 ):
     """Run experiment that compares different MultiEmbed min_freq values"""
     msg.info("Running experiment for MultiEmbed with different min_freq")
-    config_path = Path("configs" / config)
+    config_path = Path("configs") / config
 
     # Create hash table in another directory
     for min_freq in min_freqs:
@@ -103,7 +103,7 @@ def run_multiembed_min_freq_experiment(
             _param_sv = "null" if not static_vectors else vectors.get(static_vectors)
             train_command = f"""
             spacy project run train-ner . 
-            --paths.tables {str(table_path) / dataset}.table
+            --paths.tables {dataset_table}
             --vars.dataset {dataset}
             --vars.ner_config {config} 
             --vars.language {vectors.get("lang")}
@@ -142,4 +142,6 @@ def run_multiembed_features_ablation():
 # nl-conll --vars.gpu-id 0 --vars.vectors null --vars.seed {seed}
 
 if __name__ == "__main__":
-    run_main_results(static_vectors="spacy", dry_run=True)
+    pass
+    # run_main_results(static_vectors="spacy", dry_run=True)
+    # run_multiembed_min_freq_experiment(static_vectors="spacy", dry_run=True)
