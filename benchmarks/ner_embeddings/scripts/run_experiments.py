@@ -25,6 +25,66 @@ def _run_commands(cmds: List[str], dry_run: bool = False):
             subprocess.run(_cmd)
 
 
+def _make_train_command(
+    dataset: str,
+    config: str,
+    lang: str,
+    vectors: str,
+    gpu_id: int,
+    seed: int,
+    include_static_vectors: bool,
+    tables_path: str = "tables",
+) -> str:
+    """Construct train command based from a template"""
+    cmd_vectors = (
+        "--vars.include_static_vectors false" if not include_static_vectors else ""
+    )
+    command = f"""
+    spacy project run train-ner . 
+    --vars.dataset {dataset}
+    --vars.ner_config {config} 
+    --vars.language {lang}
+    --vars.vectors {vectors}
+    --vars.gpu-id {gpu_id}
+    --vars.seed {seed}
+    --vars.tables_path {tables_path}
+    {cmd_vectors}
+    """
+    return command
+
+
+def _make_eval_command(
+    dataset: str, config: str, gpu_id: int, vectors: str, seed: int
+) -> str:
+    """Construct eval command based from a template"""
+    command = f"""
+    spacy project run evaluate-ner .
+    --vars.ner_config {config}
+    --vars.dataset {dataset}
+    --vars.gpu-id {gpu_id}
+    --vars.vectors {vectors}
+    --vars.seed {seed}
+    """
+    return command
+
+
+def _make_hash_command(
+    config: str,
+    dataset: str,
+    min_freq: int,
+    tables_path: str = "tables",
+):
+    """Construct the hash command based from a template"""
+    command = f"""
+    spacy project run make-tables .
+    --vars.ner_config {config}
+    --vars.min-freq {min_freq}
+    --vars.dataset {dataset}
+    --vars.tables_path {tables_path}
+    """
+    return command
+
+
 def run_main_results(
     config: str = "ner_multihashembed",
     static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
@@ -39,28 +99,24 @@ def run_main_results(
         msg.divider(dataset, char="X")
 
         # Train command
-        _cmd_sv = "--vars.include_static_vectors false" if not static_vectors else ""
-        _param_sv = "null" if not static_vectors else vectors.get(static_vectors)
-        train_command = f"""
-        spacy project run train-ner . 
-        --vars.dataset {dataset}
-        --vars.ner_config {config} 
-        --vars.language {vectors.get("lang")}
-        --vars.vectors {_param_sv}
-        --vars.gpu-id {gpu_id}
-        --vars.seed {seed}
-        {_cmd_sv}
-        """
+        train_command = _make_train_command(
+            dataset,
+            config,
+            lang=vectors.get("lang"),
+            vectors=vectors.get(static_vectors, "null"),
+            gpu_id=gpu_id,
+            seed=seed,
+            include_static_vectors=bool(static_vectors),
+        )
 
         # Evaluate command
-        eval_command = f"""
-        spacy project run evaluate-ner .
-        --vars.ner_config {config}
-        --vars.dataset {dataset}
-        --vars.gpu-id {gpu_id}
-        --vars.vectors {_param_sv}
-        --vars.seed {seed}
-        """
+        eval_command = _make_eval_command(
+            dataset=dataset,
+            config=config,
+            gpu_id=gpu_id,
+            vectors=vectors.get(static_vectors, "null"),
+            seed=seed,
+        )
 
         # Run commands
         _run_commands(cmds=[train_command, eval_command], dry_run=dry_run)
@@ -88,44 +144,36 @@ def run_multiembed_min_freq_experiment(
             msg.divider(dataset, char="x")
 
             # Create hash tables
-            dataset_table = f"{str(table_path / dataset)}.table"
-            token_map_command = f"""
-            python scripts/token_map.py {str(config_path)} {dataset_table} 
-            --min-freq {min_freq}
-            --nlp.lang {vectors.get("lang")}
-            --system.seed {seed}
-            --training.train_corpus corpus/{dataset}
-            """
+            hash_command = _make_hash_command(
+                config=config,
+                dataset=dataset,
+                min_freq=min_freq,
+                tables_path=str(table_path),
+            )
 
             # Train command
-            # fmt: off
-            _cmd_sv = "--vars.include_static_vectors false" if not static_vectors else ""
-            # fmt: on
-            _param_sv = "null" if not static_vectors else vectors.get(static_vectors)
-            train_command = f"""
-            spacy project run train-ner . 
-            --paths.tables {dataset_table}
-            --vars.dataset {dataset}
-            --vars.ner_config {config} 
-            --vars.language {vectors.get("lang")}
-            --vars.vectors {_param_sv}
-            --vars.gpu-id {gpu_id}
-            --vars.seed {seed}
-            {_cmd_sv}
-            """
+            train_command = _make_train_command(
+                dataset,
+                config,
+                lang=vectors.get("lang"),
+                vectors=vectors.get(static_vectors, "null"),
+                gpu_id=gpu_id,
+                seed=seed,
+                include_static_vectors=bool(static_vectors),
+                tables_path=str(table_path),
+            )
 
             # Evaluate command
-            eval_command = f"""
-            spacy project run evaluate-ner .
-            --vars.ner_config {config}
-            --vars.dataset {dataset}
-            --vars.gpu-id {gpu_id}
-            --vars.vectors {_param_sv}
-            --vars.seed {seed}
-            """
+            eval_command = _make_eval_command(
+                dataset=dataset,
+                config=config,
+                gpu_id=gpu_id,
+                vectors=vectors.get(static_vectors, "null"),
+                seed=seed,
+            )
 
             _run_commands(
-                cmds=[token_map_command, train_command, eval_command],
+                cmds=[hash_command, train_command, eval_command],
                 dry_run=dry_run,
             )
 
@@ -135,14 +183,7 @@ def run_multiembed_features_ablation():
     pass
 
 
-# spacy project run train-ner . --vars.ner_config ner_multihashembed --vars.language nl
-# --vars.dataset nl-conll --vars.vectors null --vars.gpu-id 0 --vars.seed {seed}
-# --vars.include_static_vectors false
-
-# spacy project run evaluate-ner . --vars.ner_config ner_multihashembed  --vars.dataset
-# nl-conll --vars.gpu-id 0 --vars.vectors null --vars.seed {seed}
-
 if __name__ == "__main__":
-    pass
+    # run_main_results(dry_run=True)
     # run_main_results(static_vectors="spacy", dry_run=True)
-    # run_multiembed_min_freq_experiment(static_vectors="spacy", dry_run=True)
+    run_multiembed_min_freq_experiment(static_vectors="spacy", dry_run=True)

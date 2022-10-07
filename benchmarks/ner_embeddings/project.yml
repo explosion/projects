@@ -40,6 +40,7 @@ vars:
   dataset: "anem"
   language: "en"
   vectors: "vectors/fasttext-en"
+  tables_path: "tables"
   include_static_vectors: true
   min_freq: 10
   gpu_id: 0
@@ -97,12 +98,12 @@ commands:
       - >-
         python -m scripts.token_map
         configs/${vars.ner_config}.cfg
-        tables/${vars.dataset}
+        ${vars.tables_path}/${vars.dataset}
         --min-freq ${vars.min_freq}
         --paths.train corpus/${vars.dataset}-train.spacy
         --paths.dev corpus/${vars.dataset}-dev.spacy
         --code scripts/custom_components.py
-        --paths.tables tables
+        --paths.tables ${vars.tables_path}
 
   - name: "train"
     help: "Train NER model."
@@ -115,7 +116,7 @@ commands:
         --paths.train corpus/${vars.dataset}-train.spacy
         --paths.dev corpus/${vars.dataset}-dev.spacy
         --paths.vectors ${vars.vectors}
-        --paths.tables tables/${vars.dataset}/${vars.dataset}-train.tables
+        --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}
