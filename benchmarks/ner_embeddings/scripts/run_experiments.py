@@ -69,7 +69,7 @@ def _make_train_command(
     --vars.gpu-id {gpu_id}
     --vars.seed {seed}
     --vars.tables_path {tables_path}
-    --vars.attrs '{attrs}'
+    --vars.attrs "{str(attrs)[1:-1]}"
     {cmd_vectors}
     {cmd_rows}
     """
