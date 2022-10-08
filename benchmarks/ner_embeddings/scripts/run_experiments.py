@@ -1,11 +1,11 @@
 import shlex
 import subprocess
-from typing import Literal, Optional, List
-import srsly
+from pathlib import Path
+from typing import List, Literal, Optional
 
+import srsly
 import typer
 from wasabi import msg
-from pathlib import Path
 
 # A mapping of datasets and their vectors
 DATASET_VECTORS = {
