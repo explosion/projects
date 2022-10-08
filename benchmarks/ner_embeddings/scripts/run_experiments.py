@@ -1,11 +1,17 @@
 import shlex
 import subprocess
+from enum import Enum
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import List, Tuple
 
 import srsly
 import typer
 from wasabi import msg
+
+Arg = typer.Argument
+Opt = typer.Option
+
+app = typer.Typer()
 
 # A mapping of datasets and their vectors
 DATASET_VECTORS = {
@@ -14,6 +20,12 @@ DATASET_VECTORS = {
     "conll-es": {"spacy": "es_core_news_lg", "fasttext": "fasttext-es", "lang": "es"},
     "conll-nl": {"spacy": "nl_core_news_lg", "fasttext": "fasttext-nl", "lang": "nl"},
 }
+
+
+class StaticVectors(str, Enum):
+    spacy = "spacy"
+    fasttext = "fasttext"
+    null = "null"
 
 
 def _run_commands(cmds: List[str], dry_run: bool = False):
@@ -49,7 +61,7 @@ def _make_train_command(
         cmd_rows = f"--vars.rows '{new_rows}'"
 
     command = f"""
-    spacy project run train-ner . 
+    spacy project run train . 
     --vars.dataset {dataset}
     --vars.ner_config {config} 
     --vars.language {lang}
@@ -82,7 +94,7 @@ def _make_eval_command(
 ) -> str:
     """Construct eval command based from a template"""
     command = f"""
-    spacy project run evaluate-ner .
+    spacy project run evaluate .
     --vars.ner_config {config}
     --vars.dataset {dataset}
     --vars.gpu-id {gpu_id}
@@ -110,13 +122,16 @@ def _make_hash_command(
     return command
 
 
+@app.command(name="main-results")
 def run_main_results(
-    config: str = "ner_multihashembed",
-    static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
-    adjust_rows: bool = False,
-    gpu_id: int = 0,
-    dry_run: bool = False,
-    seed: int = 0,
+    # fmt: off
+    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
+    adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables"),
+    gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
+    dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    seed: int = Opt(0, help="Set the random seed", show_default=True),
+    # fmt: on
 ):
     """Run experiment that compares MultiEmbed and MultiHashEmbed (default rows)"""
     EXPERIMENT_ID = "main_results"
@@ -138,11 +153,11 @@ def run_main_results(
             dataset,
             config,
             lang=vectors.get("lang"),
-            vectors=vectors.get(static_vectors, "null"),
+            vectors=vectors.get(static_vectors.value, StaticVectors.null),
             gpu_id=gpu_id,
             seed=seed,
             adjust_rows=adjust_rows,
-            include_static_vectors=bool(static_vectors),
+            include_static_vectors=static_vectors.value != StaticVectors.null,
         )
         commands.append(train_command)
 
@@ -151,7 +166,7 @@ def run_main_results(
             dataset=dataset,
             config=config,
             gpu_id=gpu_id,
-            vectors=vectors.get(static_vectors, "null"),
+            vectors=vectors.get(static_vectors.value, StaticVectors.null),
             seed=seed,
             metrics_dir=f"metrics-{EXPERIMENT_ID}",
         )
@@ -161,13 +176,16 @@ def run_main_results(
         _run_commands(cmds=commands, dry_run=dry_run)
 
 
+@app.command(name="characterize-min-freq")
 def run_multiembed_min_freq_experiment(
-    config: str = "ner_multiembed",
-    min_freqs: List[int] = [1, 5, 10],
-    static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
-    gpu_id: int = 0,
-    dry_run: bool = False,
-    seed: int = 0,
+    # fmt: off
+    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
+    min_freqs: Tuple[int, int , int] = Opt((1, 5, 10), help="Values to check min_freq for.", show_default=True),
+    gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
+    dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    seed: int = Opt(0, help="Set the random seed", show_default=True),
+    # fmt: on
 ):
     """Run experiment that compares different MultiEmbed min_freq values"""
     EXPERIMENT_ID = "multiembed_min_freq"
@@ -198,10 +216,10 @@ def run_multiembed_min_freq_experiment(
                 dataset,
                 config,
                 lang=vectors.get("lang"),
-                vectors=vectors.get(static_vectors, "null"),
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
                 seed=seed,
-                include_static_vectors=bool(static_vectors),
+                include_static_vectors=static_vectors.value != StaticVectors.null,
                 tables_path=str(table_path),
             )
             commands.append(train_command)
@@ -211,7 +229,7 @@ def run_multiembed_min_freq_experiment(
                 dataset=dataset,
                 config=config,
                 gpu_id=gpu_id,
-                vectors=vectors.get(static_vectors, "null"),
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 seed=seed,
                 metrics_dir=f"metrics-{EXPERIMENT_ID}-{min_freq}",
             )
@@ -223,12 +241,15 @@ def run_multiembed_min_freq_experiment(
             )
 
 
+@app.command(name="feature-ablation")
 def run_multiembed_features_ablation(
-    config: str = "ner_multiembed",
-    static_vectors: Optional[Literal["spacy", "fasttext"]] = None,
-    gpu_id: int = 0,
-    dry_run: bool = False,
-    seed: int = 0,
+    # fmt: off
+    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
+    gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
+    dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    seed: int = Opt(0, help="Set the random seed", show_default=True),
+    # fmt: on
 ):
     """Run ablation experiment for MultiEmbed features"""
     EXPERIMENT_ID = "multiembed_ablation"
@@ -258,11 +279,11 @@ def run_multiembed_features_ablation(
                 dataset,
                 config,
                 lang=vectors.get("lang"),
-                vectors=vectors.get(static_vectors, "null"),
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
                 seed=seed,
                 attrs=attrs,
-                include_static_vectors=bool(static_vectors),
+                include_static_vectors=static_vectors.value != StaticVectors.null,
             )
             commands.append(train_command)
 
@@ -271,7 +292,7 @@ def run_multiembed_features_ablation(
                 dataset=dataset,
                 config=config,
                 gpu_id=gpu_id,
-                vectors=vectors.get(static_vectors, "null"),
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 seed=seed,
                 metrics_dir=f"metrics-{EXPERIMENT_ID}-{'-'.join(attrs)}",
             )
@@ -282,6 +303,4 @@ def run_multiembed_features_ablation(
 
 
 if __name__ == "__main__":
-    # run_main_results(dry_run=True)
-    # run_main_results(static_vectors="spacy", dry_run=True)
-    run_multiembed_min_freq_experiment(static_vectors="spacy", dry_run=True)
+    app()
