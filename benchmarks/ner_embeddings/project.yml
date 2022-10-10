@@ -133,7 +133,7 @@ commands:
   - name: "evaluate"
     help: "Evaluate NER model."
     script:
-      - mkdir -p metrics/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - mkdir -p ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
