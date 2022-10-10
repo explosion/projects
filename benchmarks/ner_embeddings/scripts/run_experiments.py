@@ -60,20 +60,28 @@ def _make_train_command(
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
 
-    command = f"""
-    spacy project run train . 
-    --vars.dataset {dataset}
-    --vars.ner_config {config} 
-    --vars.language {lang}
-    --vars.vectors {vectors}
-    --vars.gpu-id {gpu_id}
-    --vars.seed {seed}
-    --vars.tables_path {tables_path}
-    --vars.attrs "{str(attrs)[1:-1]}"
-    {cmd_vectors}
-    {cmd_rows}
-    """
+    command = (
+        f"spacy project run train .  "
+        f"--vars.dataset {dataset} "
+        f"--vars.ner_config {config} "
+        f"--vars.language {lang} "
+        f"--vars.vectors {vectors} "
+        f"--vars.gpu-id {gpu_id} "
+        f"--vars.seed {seed} "
+        f"--vars.tables_path {tables_path} "
+        f"{_cmd_attrs(attrs)} {cmd_vectors} {cmd_rows}"
+    )
     return command
+
+
+def _cmd_attrs(attrs: List[str]) -> str:
+    s = ""
+    for idx, attr in enumerate(attrs):
+        s += f'"{attr}"'
+        if idx != len(attrs) - 1:
+            s += ", "
+    cmd_attrs = f"--vars.attrs '[{s}]'"
+    return cmd_attrs
 
 
 def _get_computed_rows(tables_path: str, dataset: str) -> List:
