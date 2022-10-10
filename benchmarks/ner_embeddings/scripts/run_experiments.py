@@ -187,7 +187,7 @@ def run_main_results(
 @app.command(name="characterize-min-freq")
 def run_multiembed_min_freq_experiment(
     # fmt: off
-    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    config: str = Opt("ner_multiembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     min_freqs: Tuple[int, int , int] = Opt((1, 5, 10), help="Values to check min_freq for.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
