@@ -5,4 +5,4 @@ scikit-learn
 fuzzyset2
 spacyfishing
 virtualenv
-pysqlite3
+pysqlite3-binary
