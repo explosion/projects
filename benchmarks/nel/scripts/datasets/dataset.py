@@ -1,6 +1,5 @@
 """ Dataset class. """
 import abc
-import copy
 import csv
 import datetime
 import importlib
@@ -19,10 +18,10 @@ import tqdm
 import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
-from spacy.pipeline.legacy import EntityLinker_v1
-
-from spacy.tokens import Doc, DocBin, Span
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
+from spacy.pipeline import EntityLinker
+
 from schemas import Annotation, Entity
 from wiki import wiki_dump_api
 from . import evaluation
@@ -303,7 +302,7 @@ class Dataset(abc.ABC):
         for example in tqdm.tqdm(test_set, total=len(test_set), leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
-                entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
+                entity_linker: EntityLinker = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
