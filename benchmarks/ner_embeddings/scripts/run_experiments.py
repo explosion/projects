@@ -101,6 +101,7 @@ def _make_eval_command(
     metrics_dir: str,
 ) -> str:
     """Construct eval command based from a template"""
+    Path(metrics_dir).mkdir(parents=True, exist_ok=True)
     command = f"""
     spacy project run evaluate .
     --vars.ner_config {config}
