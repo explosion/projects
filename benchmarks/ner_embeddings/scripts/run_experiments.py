@@ -17,8 +17,8 @@ app = typer.Typer()
 DATASET_VECTORS = {
     "archaeo": {"spacy": "nl_core_news_lg", "fasttext": "fasttext-nl", "lang": "nl"},
     "anem": {"spacy": "en_core_web_lg", "fasttext": "fasttext-en", "lang": "en"},
-    "conll-es": {"spacy": "es_core_news_lg", "fasttext": "fasttext-es", "lang": "es"},
-    "conll-nl": {"spacy": "nl_core_news_lg", "fasttext": "fasttext-nl", "lang": "nl"},
+    "es-conll": {"spacy": "es_core_news_lg", "fasttext": "fasttext-es", "lang": "es"},
+    "nl-conll": {"spacy": "nl_core_news_lg", "fasttext": "fasttext-nl", "lang": "nl"},
 }
 
 
@@ -101,7 +101,6 @@ def _make_eval_command(
     metrics_dir: str,
 ) -> str:
     """Construct eval command based from a template"""
-    Path(metrics_dir).mkdir(parents=True, exist_ok=True)
     command = f"""
     spacy project run evaluate .
     --vars.ner_config {config}
