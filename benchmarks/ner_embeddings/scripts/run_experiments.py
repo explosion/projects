@@ -123,7 +123,7 @@ def _make_hash_command(
     command = f"""
     spacy project run make-tables .
     --vars.ner_config {config}
-    --vars.min-freq {min_freq}
+    --vars.min_freq {min_freq}
     --vars.dataset {dataset}
     --vars.tables_path {tables_path}
     """
