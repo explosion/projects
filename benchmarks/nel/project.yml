@@ -1,10 +1,9 @@
 title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
 vars:
-  name: "nel_benchmark"
-  run: ""
+  run: "cg-default"
   config: "nel.cfg"
-  vectors_model: "en_core_web_md"
+  vectors_model: "en_core_web_lg"
   version: "0.0.4"
   dataset: "mewsli_9"
   gpu_id: ""
@@ -111,9 +110,9 @@ commands:
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
+      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
     outputs:
-      - "training/${vars.dataset}"
+      - "training/${vars.dataset}/${vars.run}"
     deps:
       - "temp/${vars.dataset}/kb"
       - "temp/${vars.dataset}/nlp"
@@ -125,7 +124,7 @@ commands:
     script:
       - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}'"
     deps:
-      - "training/${vars.dataset}/model-best"
+      - "training/${vars.dataset}/${vars.run}/model-best"
       - "temp/${vars.dataset}/nlp"
       - "corpora/${vars.dataset}/dev.spacy"
     outputs:
@@ -146,7 +145,7 @@ commands:
       - "assets/wiki/wiki.sqlite3"
 
   - name: clean
-    help: "Remove intermediate files (excluding Wiki resources and database)"
+    help: "Remove intermediate files for specified dataset (excluding Wiki resources and database)"
     script:
       - "rm -rf training/${vars.dataset}"
       - "rm -rf corpora/${vars.dataset}"
