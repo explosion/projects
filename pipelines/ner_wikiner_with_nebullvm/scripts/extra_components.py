@@ -1,11 +1,15 @@
 import copy
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, List, Union, Dict
+from typing import Callable, List, Union, Dict, Any
 
+import numpy as np
 import torch.cuda
 from nebullvm.api.functions import optimize_model
-from nebullvm.inference_learners.base import LearnerMetadata
+from nebullvm.inference_learners.base import LearnerMetadata, \
+    BaseInferenceLearner
+from nebullvm.transformations.base import BaseTransformation, \
+    MultiStageTransformation
 from spacy.tokens import Doc
 from spacy_transformers import TransformerModel
 from spacy_transformers.align import get_alignment
@@ -18,8 +22,71 @@ from thinc.api import Model
 from thinc.model import OutT, InT
 
 
+class LongPrecisionTransformation(BaseTransformation):
+    @staticmethod
+    def _transform_numpy(_input: np.ndarray) -> np.ndarray:
+        return _input.astype(dtype=np.int64)
+
+    @staticmethod
+    def _transform_torch(_input: torch.Tensor) -> torch.Tensor:
+        return _input.long()
+
+    def _transform(self, _input: Any, **kwargs) -> Any:
+        if isinstance(_input, np.ndarray):
+            return (
+                self._transform_numpy(_input)
+                if _input.dtype != np.int64
+                else _input
+            )
+        elif isinstance(_input, torch.Tensor):
+            return (
+                self._transform_torch(_input)
+                if _input.dtype != torch.int64
+                else _input
+            )
+        else:
+            raise TypeError(
+                f"The given input type is not currently supported. "
+                f"Got {type(_input)}, expected one between (np.ndarray, "
+                f"torch.Tensor, tf.Tensor)"
+            )
+
+
+class _ModelWrapper:
+    def __init__(self, model: BaseInferenceLearner):
+        self.model = model
+
+    def train(self):
+        return
+
+    def eval(self):
+        return
+
+    @property
+    def device(self):
+        return self.model.device
+
+    def __call__(self, *args, **kwargs):
+        if self.model.input_tfms is not None:
+            args = (self.model.input_tfms(_input) for _input in args)
+            kwargs = {_key: self.model.input_tfms(_input) for _key, _input in
+                      kwargs.items()}
+        out = self.model.run(*args, **kwargs)
+        for key, value in out.items():
+            setattr(out, key, value.float())
+        return out
+
+
+def _force_recast_to_long(learner: BaseInferenceLearner):
+    if learner.input_tfms is None:
+        learner.input_tfms = MultiStageTransformation([LongPrecisionTransformation()])
+
+
 def _patch_nebullvm_model(model):
     model.device = "cuda" if torch.cuda.is_available() else "cpu"
+    if "onnx" in model.core_inference_learner.__class__.__name__.lower():
+        _force_recast_to_long(model)
+    return _ModelWrapper(model)
 
 
 class NebullvmTransformerModel(TransformerModel):
@@ -28,11 +95,12 @@ class NebullvmTransformerModel(TransformerModel):
     def optimize(self, input_data, **kwargs):
         tokenizer = self.layers[0].shims[0]._hfmodel.tokenizer
         base_kwargs = dict(
-            metric="precision",
+            metric="numeric_precision",
             metric_drop_ths=0.1,
             optimization_time="constrained",
             tokenizer=tokenizer,
             store_latencies=True,
+            ignore_compilers=["tensor RT"],
             tokenizer_args=dict(
                 add_special_tokens=True,
                 return_attention_mask=True,
@@ -100,13 +168,14 @@ class NebullvmTransformerModel(TransformerModel):
                     with open(file_path, "wb") as f:
                         f.write(bytefile)
                 optimized_model = LearnerMetadata.read(tmp_dir).load_model(tmp_dir)
-                _patch_nebullvm_model(optimized_model)
+                wrapped_model = _patch_nebullvm_model(optimized_model)
                 # warmup
                 # _ = optimized_model.predict(*optimized_model.get_inputs_example())
         super().from_dict(msg)
         if optimized_model is not None:
             self._nebullvm_layer = copy.deepcopy(self.layers[0])
             self._nebullvm_layer.shims[0]._hfmodel.transformer = optimized_model
+            self._nebullvm_layer.shims[0]._model = wrapped_model
         return self
 
     # def from_disk(self, path: Union[Path, str]) -> "Model":
