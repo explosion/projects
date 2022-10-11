@@ -159,7 +159,6 @@ class EvaluationResults(object):
 
         dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / dataset_name
         dir_path.mkdir(parents=True, exist_ok=True)
-        run_name = run_name if run_name != "" else datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         with open(dir_path / f"{run_name}.csv", "w") as csv_file:
             csv_file.write(overview_table.get_csv_string())
 
