@@ -100,10 +100,12 @@ def _make_eval_command(
     vectors: str,
     seed: int,
     metrics_dir: str,
+    eval_unseen: bool = False,
 ) -> str:
     """Construct eval command based from a template"""
+    unseen_param = "-unseen" if eval_unseen else ""
     command = f"""
-    spacy project run evaluate .
+    spacy project run evaluate{unseen_param} .
     --vars.ner_config {config}
     --vars.dataset {dataset}
     --vars.gpu-id {gpu_id}
@@ -139,6 +141,7 @@ def run_main_results(
     adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables"),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
     # fmt: on
 ):
@@ -178,6 +181,7 @@ def run_main_results(
             vectors=vectors.get(static_vectors.value, StaticVectors.null),
             seed=seed,
             metrics_dir=f"metrics-{EXPERIMENT_ID}",
+            eval_unseen=eval_unseen,
         )
         commands.append(eval_command)
 
