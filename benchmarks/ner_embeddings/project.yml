@@ -150,4 +150,16 @@ commands:
   - name: "evaluate-unseen"
     help: "Evaluate NER model on unseen entities."
     script:
-      - echo "This command is not done yet"
+      - mkdir -p ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-dev-unseen.spacy
+        --output ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+      - corpus/${vars.dataset}-dev-unseen.spacy
+    outputs:
+      - ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
