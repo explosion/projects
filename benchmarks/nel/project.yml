@@ -110,7 +110,7 @@ commands:
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.config} ${vars.training_max_steps} ${vars.gpu_id} "
+      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
     outputs:
       - "training/${vars.dataset}/${vars.run}"
     deps:
