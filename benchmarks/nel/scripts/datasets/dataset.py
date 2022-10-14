@@ -35,7 +35,7 @@ DatasetType = TypeVar("DatasetType", bound="Dataset")
 class Dataset(abc.ABC):
     """Base class for all datasets used in this benchmark."""
 
-    def __init__(self, run_name: str):
+    def __init__(self, run_name: str = ""):
         """Initializes new Dataset.
         run_name (str): Run name.
         """

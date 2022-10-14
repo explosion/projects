@@ -13,7 +13,7 @@ def main(dataset_name: str, use_filter_terms: bool = typer.Option(False, "--use_
         included.
     """
     # Run name isn't relevant for corpora compilation.
-    Dataset.generate_from_id(dataset_name, "").compile_corpora(read_filter_terms() if use_filter_terms else None)
+    Dataset.generate_from_id(dataset_name).compile_corpora(read_filter_terms() if use_filter_terms else None)
 
 
 if __name__ == "__main__":
