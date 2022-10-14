@@ -17,4 +17,4 @@ PYTHONPATH=scripts python -m spacy train configs/$3 \
           --paths.base_nlp temp/$1/nlp \
           --training.max_steps $4 \
           -c scripts/custom_functions.py \
-          ${gpu_config}
+          --gpu-id $gpu_id
