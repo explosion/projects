@@ -47,15 +47,17 @@ def _make_train_command(
     """Construct train command based from a template"""
     cmd_vectors = ""
     cmd_rows = ""
+    modifier = ""
 
     if not include_static_vectors:
         cmd_vectors = "--vars.include_static_vectors false"
     if adjust_rows and config != "ner_multiembed":
+        modifier = "-custom-rows"
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
 
     command = (
-        f"spacy project run train .  "
+        f"spacy project run train{modifier} .  "
         f"--vars.dataset {dataset} "
         f"--vars.ner_config {config} "
         f"--vars.language {lang} "
