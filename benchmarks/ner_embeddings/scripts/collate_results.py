@@ -48,6 +48,9 @@ def main(
         # Here, I select the columns that have float values
         top_level = df.select_dtypes(include=["float64"])
         top_level_df = _create_df(top_level)
+        # Replace NaN with 0. This usually happens when you only have a
+        # single trial and you're computing for stdev
+        top_level_df = top_level_df.fillna(0)
 
         if verbose:
             # We're using print instead of msg because print()
