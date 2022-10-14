@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ -z "${5}" ]] && gpu_config="" || gpu_config="--gpu-id $5"
+gpu_id="${5:--1}"
 
 # Runs training. Expects as arguments:
 #   (1) dataset ID,
