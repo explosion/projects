@@ -95,7 +95,7 @@ class EvaluationResults(object):
                 str(self.metrics.false_neg),
                 round(self.metrics.calculate_fscore(), 3),
                 round(self.metrics.calculate_recall(), 3),
-                round(self.metrics.calculate_precision(), 3)",
+                round(self.metrics.calculate_precision(), 3),
             ]
         )
 
