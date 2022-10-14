@@ -5,7 +5,10 @@ set -euo pipefail
 # Downloads and sets up Mewsli-9 dataset.
 cd assets
 SUBDIR=dense_representations_for_entity_retrieval
-svn export https://github.com/google-research/google-research/trunk/$SUBDIR
+# Sparse clone & checkout of subdirectory we're interested in.
+# Revision 27313 is equivalent to this commit, which is the last before changes to the env setup in
+# dense_representations_for_entity_retrieval migrating from venv to Conda.
+svn export -r 27313 https://github.com/google-research/google-research/trunk/$SUBDIR
 # Fix outdated requirement.
 sed -i -e 's/absl_py>=0.8.1/absl-py/g' $SUBDIR/requirements.txt
 # Only download and process English data.
