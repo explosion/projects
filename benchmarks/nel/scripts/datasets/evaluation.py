@@ -93,9 +93,9 @@ class EvaluationResults(object):
                 str(self.metrics.true_pos),
                 str(self.metrics.false_pos),
                 str(self.metrics.false_neg),
-                f"{round(self.metrics.calculate_fscore(), 3)}",
-                f"{round(self.metrics.calculate_recall(), 3)}",
-                f"{round(self.metrics.calculate_precision(), 3)}",
+                round(self.metrics.calculate_fscore(), 3),
+                round(self.metrics.calculate_recall(), 3),
+                round(self.metrics.calculate_precision(), 3)",
             ]
         )
 
@@ -113,9 +113,9 @@ class EvaluationResults(object):
                 [
                     label,
                     self.name.title(),
-                    f"{round(self.metrics_by_label[label].calculate_fscore(), 3)}",
-                    f"{round(self.metrics_by_label[label].calculate_recall(), 3)}",
-                    f"{round(self.metrics_by_label[label].calculate_precision(), 3)}"
+                    round(self.metrics_by_label[label].calculate_fscore(), 3),
+                    round(self.metrics_by_label[label].calculate_recall(), 3),
+                    round(self.metrics_by_label[label].calculate_precision(), 3)
                 ]
             )
 
