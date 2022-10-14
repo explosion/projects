@@ -80,7 +80,7 @@ def _cmd_attrs(attrs: List[str]) -> str:
 
 def _get_computed_rows(tables_path: str, dataset: str) -> List:
     attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
-    table_filepath = f"{tables_path}/{dataset}.table"
+    table_filepath = f"{tables_path}/{dataset}-train.tables"
     table = srsly.read_msgpack(table_filepath)
     attr_sizes = {attr: len(table[attr]) for attr in attrs}
     return list(attr_sizes.values())
