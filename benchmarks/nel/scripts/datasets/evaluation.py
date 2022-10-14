@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
-from spacy.kb import KnowledgeBase
+from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Doc
 from utils import get_logger
 
@@ -38,9 +38,11 @@ class Metrics(object):
         # Therefore, if candidate_is_correct then we have a true positive and never a true negative.
         self.true_pos += candidate_is_correct
         self.false_neg += not candidate_is_correct
-        if candidates and candidates not in ({""}, {"NIL"}):
-            # A wrong prediction (e.g. Q42 != Q3) counts both as a FP as well as a FN.
-            self.false_pos += not candidate_is_correct
+        if candidates and len(candidates) and candidates not in ({""}, {"NIL"}):
+            # A wrong prediction (e.g. Q42 != Q3) counts both as a FP as well as a FN. When update_results() is used for
+            # candidate generation, multiple candidates are passed - all suggestions except the correct one are counted
+            # as FP. Only one candidate is ever passed during the evaluation of disambiguation results.
+            self.false_pos += len(candidates) - int(candidate_is_correct)
 
     def calculate_precision(self):
         if self.true_pos == 0:
@@ -91,9 +93,9 @@ class EvaluationResults(object):
                 str(self.metrics.true_pos),
                 str(self.metrics.false_pos),
                 str(self.metrics.false_neg),
-                f"{round(self.metrics.calculate_fscore(), 3)}",
-                f"{round(self.metrics.calculate_recall(), 3)}",
-                f"{round(self.metrics.calculate_precision(), 3)}",
+                round(self.metrics.calculate_fscore(), 3),
+                round(self.metrics.calculate_recall(), 3),
+                round(self.metrics.calculate_precision(), 3),
             ]
         )
 
@@ -111,9 +113,9 @@ class EvaluationResults(object):
                 [
                     label,
                     self.name.title(),
-                    self.metrics_by_label[label].calculate_fscore(),
-                    self.metrics_by_label[label].calculate_recall(),
-                    self.metrics_by_label[label].calculate_precision(),
+                    round(self.metrics_by_label[label].calculate_fscore(), 3),
+                    round(self.metrics_by_label[label].calculate_recall(), 3),
+                    round(self.metrics_by_label[label].calculate_precision(), 3)
                 ]
             )
 
@@ -190,7 +192,7 @@ def add_disambiguation_eval_result(
     results: EvaluationResults,
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    ent_cand_ids: Dict[Tuple[int, int], Set[str]],
+    ent_cands: Dict[Tuple[int, int], Dict[str, Candidate]],
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -198,14 +200,14 @@ def add_disambiguation_eval_result(
     results (EvaluationResults): Container for evaluation results.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
-    ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
+    ent_cands (Dict[Tuple[int, int], Dict[str, Candidate]]): Candidates per recognized entities' offsets and entity ID.
     """
     try:
         for ent in pred_doc.ents:
             idx = (ent.start_char, ent.end_char)
             gold_entity = correct_ents.get(offset(*idx), None)
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
-            if gold_entity in ent_cand_ids.get(idx, {}):
+            if gold_entity in ent_cands.get(idx, {}):
                 results.update_metrics(ent.label_, gold_entity, {ent.kb_id_})
 
     except Exception as e:
@@ -241,8 +243,7 @@ def add_disambiguation_baseline(
     counts: Dict[str, int],
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    kb: KnowledgeBase,
-    ent_cand_ids: Dict[str, Set[str]],
+    ent_cands: Dict[Tuple[int, int], Dict[str, Candidate]],
 ) -> None:
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
@@ -251,8 +252,7 @@ def add_disambiguation_baseline(
     counts (Dict[str, int]): Counts per label.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Offsets in the shape of {f"{start_char}_{end_char}": QID}.
-    kb (KnowledgeBase): Knowledge base.
-        ent_cand_ids (Dict[str, Set[str]]): Candidates per recognized entities' offsets.
+    ent_cands (Dict[Tuple[int, int], Dict[str, Candidate]]): Candidates per recognized entities' offsets and entity ID.
     """
     for ent in pred_doc.ents:
         ent_label = ent.label_
@@ -260,8 +260,8 @@ def add_disambiguation_baseline(
         gold_entity = correct_ents.get(offset(*idx), None)
 
         # The gold annotations are not necessarily complete so we can't evaluate missing annotations as wrong.
-        if gold_entity in ent_cand_ids.get(idx, {}):
-            candidates = kb.get_alias_candidates(ent.text)
+        if gold_entity in ent_cands.get(idx, set()):
+            candidates = list(ent_cands[idx].values())
             oracle_candidate = ""
             prior_candidate = ""
             random_candidate = ""

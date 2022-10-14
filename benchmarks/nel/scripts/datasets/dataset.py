@@ -1,6 +1,5 @@
 """ Dataset class. """
 import abc
-import copy
 import csv
 import datetime
 import importlib
@@ -10,7 +9,7 @@ import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
-from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
+from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict, Union
 
 import numpy
 import prettytable
@@ -20,9 +19,10 @@ import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
-
-from spacy.tokens import Doc, DocBin, Span
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
+from spacy.pipeline import EntityLinker
+
 from schemas import Annotation, Entity
 from wiki import wiki_dump_api
 from . import evaluation
@@ -297,23 +297,25 @@ class Dataset(abc.ABC):
         # Evaluation loop.
         label_counts = dict()
         cand_gen_label_counts = defaultdict(int)
-        results = evaluation.DisambiguationBaselineResults()
+        baseline_results = evaluation.DisambiguationBaselineResults()
         spacyfishing_results = evaluation.EvaluationResults("spacyfishing")
+        trained_results = evaluation.EvaluationResults("Trained")
         candidate_results = evaluation.EvaluationResults("Candidate gen.")
 
         for example in tqdm.tqdm(test_set, total=len(test_set), leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
-                entity_linker: EntityLinker_v1 = self._nlp_best.get_pipe("entity_linker")  # type: ignore
+                entity_linker: Union[EntityLinker, EntityLinker_v1] = \
+                    self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 if len(ent_gold_ids) == 0:
                     continue
                 ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
-                ent_cand_ids = {
+                ent_cands = {
                     (ent.start_char, ent.end_char): {
-                        cand.entity_ for cand in entity_linker.get_candidates(self._kb, ent)
+                        cand.entity_: cand for cand in entity_linker.get_candidates(self._kb, ent)
                     }
                     for ent in example.reference.ents
                 }
@@ -325,34 +327,37 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        candidate_results.update_metrics(label, ent.kb_id_, ent_cand_ids.get(ent_offset, {}))
+                        candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
 
-                # Update entity disambiguation stats.
+                # Update entity disambiguation stats for baselines.
                 evaluation.add_disambiguation_baseline(
-                    results,
+                    baseline_results,
                     label_counts,
                     example.predicted,
                     ent_gold_ids,
-                    self._kb,
-                    ent_cand_ids,
+                    ent_cands,
                 )
+
+                # Update entity disambiguation stats for trained model.
+                evaluation.add_disambiguation_eval_result(trained_results, example.predicted, ent_gold_ids, ent_cands)
 
                 if eval_config["external"]["spacyfishing"]:
                     try:
                         doc = self._nlp_base(example.reference.text)
                     except TypeError:
                         doc = None
-                    evaluation.add_disambiguation_spacyfishing_eval_result(
-                        spacyfishing_results,
-                        doc,
-                        ent_gold_ids,
-                    )
+                    evaluation.add_disambiguation_spacyfishing_eval_result(spacyfishing_results, doc, ent_gold_ids)
 
         # Print result table.
-        eval_results: List[evaluation.EvaluationResults] = [results.random, results.prior, results.oracle]
-        if eval_config["candidate_generation"]:
+        eval_results: List[evaluation.EvaluationResults] = [
+            baseline_results.random,
+            baseline_results.prior,
+            baseline_results.oracle,
+            trained_results
+        ]
+        if eval_config.get("candidate_generation", False):
             eval_results.append(candidate_results)
-        if eval_config["external"]["spacyfishing"]:
+        if eval_config.get("spacyfishing", False):
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
