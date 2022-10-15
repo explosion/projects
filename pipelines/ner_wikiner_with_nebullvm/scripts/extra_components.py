@@ -67,10 +67,11 @@ class _ModelWrapper:
         return self.model.device
 
     def __call__(self, *args, **kwargs):
-        if self.model.input_tfms is not None:
-            args = (self.model.input_tfms(_input) for _input in args)
-            kwargs = {_key: self.model.input_tfms(_input) for _key, _input in
-                      kwargs.items()}
+        # if self.model.input_tfms is not None:
+        #     args = (self.model.input_tfms(_input) for _input in args)
+        #     kwargs = {_key: self.model.input_tfms(_input) for _key, _input in
+        #               kwargs.items()}
+        # print(kwargs["input_ids"].shape, kwargs["input_ids"].dtype)
         out = self.model.run(*args, **kwargs)
         for key, value in out.items():
             setattr(out, key, value.float())
@@ -84,7 +85,11 @@ def _force_recast_to_long(learner: BaseInferenceLearner):
 
 def _patch_nebullvm_model(model):
     model.device = "cuda" if torch.cuda.is_available() else "cpu"
-    if "onnx" in model.core_inference_learner.__class__.__name__.lower():
+    if (
+        "onnx" in model.core_inference_learner.__class__.__name__.lower()
+        or
+        "openvino" in model.core_inference_learner.__class__.__name__.lower()
+    ):
         _force_recast_to_long(model)
     return _ModelWrapper(model)
 
@@ -115,6 +120,9 @@ class NebullvmTransformerModel(TransformerModel):
             )
         )
         base_kwargs.update(kwargs)
+        for data in input_data:
+            sample = tokenizer(data, **base_kwargs["tokenizer_args"])
+            print(sample["input_ids"].shape, sample["input_ids"].dtype)
         optimized_model = optimize_model(
             model=self.transformer,
             input_data=input_data,
@@ -176,6 +184,7 @@ class NebullvmTransformerModel(TransformerModel):
             self._nebullvm_layer = copy.deepcopy(self.layers[0])
             self._nebullvm_layer.shims[0]._hfmodel.transformer = optimized_model
             self._nebullvm_layer.shims[0]._model = wrapped_model
+            self._nebullvm_layer.shims[0]._mixed_precision = False
         return self
 
     # def from_disk(self, path: Union[Path, str]) -> "Model":
