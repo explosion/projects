@@ -12,7 +12,6 @@ def main(dataset_name: str, vectors_model: str):
     dataset_name (str): Dataset name.
     vectors_model (str): Name of model with word vectors to use.
     """
-
     Dataset.generate_from_id(dataset_name).create_knowledge_base(vectors_model)
 
 

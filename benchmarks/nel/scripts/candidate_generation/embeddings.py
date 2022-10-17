@@ -17,7 +17,7 @@ class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
     _entity_ids: List[str] = []
 
     def _init_lookup_structure(self, kb: KnowledgeBase, max_n_candidates: int, **kwargs) -> NearestNeighbors:
-        container = NearestNeighbors(n_neighbors=max_n_candidates, metric="cosine", n_jobs=-1)
+        container = NearestNeighbors(n_neighbors=max_n_candidates, metric="cosine", n_jobs=1)
         container.fit(numpy.asarray([kb.get_vector(ent_id) for ent_id in kb.get_entity_strings()]))
         self._entity_ids = kb.get_entity_strings()
 

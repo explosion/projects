@@ -35,10 +35,13 @@ DatasetType = TypeVar("DatasetType", bound="Dataset")
 class Dataset(abc.ABC):
     """Base class for all datasets used in this benchmark."""
 
-    def __init__(self):
-        """Initializes new Dataset."""
+    def __init__(self, run_name: str):
+        """Initializes new Dataset.
+        run_name (str): Run name.
+        """
 
-        self._paths = self.assemble_paths(self.name)
+        self._run_name = run_name
+        self._paths = self.assemble_paths(self.name, self._run_name)
 
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
@@ -52,9 +55,10 @@ class Dataset(abc.ABC):
         self._annotated_docs: Optional[List[Doc]] = None
 
     @staticmethod
-    def assemble_paths(dataset_name: str) -> Dict[str, Path]:
+    def assemble_paths(dataset_name: str, run_name: str) -> Dict[str, Path]:
         """Assemble paths w.r.t. dataset ID.
         dataset_name (str): Dataset name.
+        run_name (str): Run name.
         RETURNS (Dict[str, Path]): Dictionary with internal resource name to path.
         """
 
@@ -66,13 +70,12 @@ class Dataset(abc.ABC):
             "evaluation": root_path / "configs" / "evaluation.yml",
             "assets": assets_path,
             "nlp_base": root_path / "temp" / dataset_name / "nlp",
-            "nlp_best": root_path / "training" / dataset_name / "model-best",
             "kb": root_path / "temp" / dataset_name / "kb",
-            "corpora": root_path / "corpora" / dataset_name,
             "entities": assets_path / "entities.pkl",
             "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl",
-            "predicted_test_docs": root_path / "evaluation" / dataset_name / "predicted_test_docs.spacy"
+            "nlp_best": root_path / "training" / dataset_name / run_name / "model-best",
+            "corpora": root_path / "corpora" / dataset_name
         }
 
     @property
@@ -161,7 +164,6 @@ class Dataset(abc.ABC):
         self._load_resource("failed_entity_lookups")
         self._load_resource("annotations")
         self._load_resource("nlp_base")
-
         Doc.set_extension("overlapping_annotations", default=None)
         self._annotated_docs = self._create_annotated_docs(filter_terms)
         self._serialize_corpora()
@@ -211,7 +213,7 @@ class Dataset(abc.ABC):
         }
 
         for key, idx in indices.items():
-            corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx][:50])
+            corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx])
             if not self._paths["corpora"].exists():
                 self._paths["corpora"].mkdir()
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
@@ -417,10 +419,11 @@ class Dataset(abc.ABC):
 
     @classmethod
     def generate_from_id(
-        cls: Type[DatasetType], dataset_name: str, **kwargs
+        cls: Type[DatasetType], dataset_name: str, run_name: str = "", **kwargs
     ) -> DatasetType:
         """Generates dataset instance from ID.
         dataset_name (str): Dataset name.
+        run_name (str): Run name.
         RETURNS (DatasetType): Instance of dataset with type determined by dataset ID.
         """
 
@@ -437,7 +440,7 @@ class Dataset(abc.ABC):
             len(classes) == 1
         ), f"Module {module_name} should contain exactly one Dataset class definition."
 
-        return classes[0][1](**kwargs)
+        return classes[0][1](run_name=run_name, **kwargs)
 
     def clean_assets(self) -> None:
         """Cleans assets, i.e. removes/changes errors in the external datasets that cannot easily be cleaned

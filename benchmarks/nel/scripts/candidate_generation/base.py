@@ -30,8 +30,10 @@ class NearestNeighborCandidateSelector(abc.ABC):
         """
 
         if self._pipeline is None:
-            self._pipeline = spacy.load(Dataset.assemble_paths(dataset_id)["nlp_base"])
-            with open(Dataset.assemble_paths(dataset_id)["entities"], "rb") as file:
+            # Load pipeline and pickled entities. Run name doesn't matter for either of those.
+            paths = Dataset.assemble_paths(dataset_id, "")
+            self._pipeline = spacy.load(paths["nlp_base"])
+            with open(paths["entities"], "rb") as file:
                 self._entities[dataset_id] = pickle.load(file)
         if self._lookup_struct is None:
             self._lookup_struct = self._init_lookup_structure(kb, max_n_candidates, **kwargs)

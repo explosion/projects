@@ -9,7 +9,7 @@ def main(dataset_name: str, run_name: str):
     dataset_name (str): Name of dataset to evaluate on.
     run_name (str): Run name.
     """
-    Dataset.generate_from_id(dataset_name).evaluate(run_name=run_name)
+    Dataset.generate_from_id(dataset_name, run_name).evaluate(run_name=run_name)
 
 
 if __name__ == "__main__":

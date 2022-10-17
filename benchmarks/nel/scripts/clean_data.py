@@ -12,7 +12,6 @@ def main(dataset_name: str):
     Removes/fixes error in downloaded datasets.
     dataset_name (str): Dataset name.
     """
-
     Dataset.generate_from_id(dataset_name).clean_assets()
 
 
