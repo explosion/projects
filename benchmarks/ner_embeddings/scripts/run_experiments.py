@@ -2,7 +2,7 @@ import shlex
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import srsly
 import typer
@@ -42,11 +42,12 @@ def _make_train_command(
     include_static_vectors: bool,
     adjust_rows: bool = False,
     tables_path: str = "tables",
-    attrs: List[str] = ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+    custom_attrs: Optional[List[str]] = None,
 ) -> str:
     """Construct train command based from a template"""
     cmd_vectors = ""
     cmd_rows = ""
+    cmd_attrs = ""
     modifier = ""
 
     if not include_static_vectors:
@@ -55,6 +56,9 @@ def _make_train_command(
         modifier = "-custom-rows"
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
+    if custom_attrs and config == "ner_multiembed":
+        modifier = "-custom-attrs"
+        cmd_attrs = f"--vars.attrs '{_format_attrs(custom_attrs)}'"
 
     command = (
         f"spacy project run train{modifier} .  "
@@ -65,18 +69,18 @@ def _make_train_command(
         f"--vars.gpu-id {gpu_id} "
         f"--vars.seed {seed} "
         f"--vars.tables_path {tables_path} "
-        f"{_cmd_attrs(attrs)} {cmd_vectors} {cmd_rows}"
+        f"{cmd_attrs} {cmd_vectors} {cmd_rows}"
     )
     return command
 
 
-def _cmd_attrs(attrs: List[str]) -> str:
+def _format_attrs(attrs: List[str]) -> str:
     s = ""
     for idx, attr in enumerate(attrs):
         s += f'"{attr}"'
         if idx != len(attrs) - 1:
             s += ", "
-    cmd_attrs = f"--vars.attrs '[{s}]'"
+    cmd_attrs = f"[{s}]"
     return cmd_attrs
 
 
@@ -252,7 +256,7 @@ def run_multiembed_min_freq_experiment(
 @app.command(name="feature-ablation")
 def run_multiembed_features_ablation(
     # fmt: off
-    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    config: str = Opt("ner_multiembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
@@ -290,7 +294,7 @@ def run_multiembed_features_ablation(
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
                 seed=seed,
-                attrs=attrs,
+                custom_attrs=attrs,
                 include_static_vectors=static_vectors.value != StaticVectors.null,
             )
             commands.append(train_command)
