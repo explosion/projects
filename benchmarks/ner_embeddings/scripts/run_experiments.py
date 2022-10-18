@@ -47,7 +47,6 @@ def _make_train_command(
     """Construct train command based from a template"""
     cmd_vectors = ""
     cmd_rows = ""
-    cmd_attrs = ""
     modifier = ""
 
     if not include_static_vectors:
@@ -56,9 +55,6 @@ def _make_train_command(
         modifier = "-custom-rows"
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
-    if custom_attrs and config == "ner_multiembed":
-        modifier = "-custom-attrs"
-        cmd_attrs = f"--vars.attrs '{_format_attrs(custom_attrs)}'"
 
     command = (
         f"spacy project run train{modifier} .  "
@@ -69,7 +65,7 @@ def _make_train_command(
         f"--vars.gpu-id {gpu_id} "
         f"--vars.seed {seed} "
         f"--vars.tables_path {tables_path} "
-        f"{cmd_attrs} {cmd_vectors} {cmd_rows}"
+        f"{cmd_vectors} {cmd_rows}"
     )
     return command
 
@@ -80,7 +76,7 @@ def _format_attrs(attrs: List[str]) -> str:
         s += f'"{attr}"'
         if idx != len(attrs) - 1:
             s += ", "
-    cmd_attrs = f"[{s}]"
+    cmd_attrs = f"{s}"
     return cmd_attrs
 
 
@@ -256,7 +252,6 @@ def run_multiembed_min_freq_experiment(
 @app.command(name="feature-ablation")
 def run_multiembed_features_ablation(
     # fmt: off
-    config: str = Opt("ner_multiembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
@@ -265,21 +260,23 @@ def run_multiembed_features_ablation(
 ):
     """Run ablation experiment for MultiEmbed features"""
     EXPERIMENT_ID = "multiembed_ablation"
-    attr_combinations = [
-        ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
-        ["NORM", "PREFIX", "SUFFIX"],
-        ["NORM", "PREFIX"],
-        ["NORM"],
-        ["ORTH"],
-    ]
+    attr_combinations = {
+        # fmt: off
+        "ablation/ner_multiembed_o": ["ORTH"],
+        "ablation/ner_multiembed_n": ["NORM"],
+        "ablation/ner_multiembed_np": ["NORM", "PREFIX"],
+        "ablation/ner_multiembed_nps": ["NORM", "PREFIX", "SUFFIX"],
+        "ablation/ner_multiembed_npss": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+        # fmt: on
+    }
 
-    for attrs in attr_combinations:
+    for config, attrs in attr_combinations.items():
         for dataset, vectors in DATASET_VECTORS.items():
             msg.divider(dataset, char="X")
             commands = []
 
             # Create hash tables
-            if config == "ner_multiembed":
+            if "multiembed" in config:
                 hash_command = _make_hash_command(
                     config=config,
                     dataset=dataset,

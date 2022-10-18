@@ -42,7 +42,7 @@ vars:
   vectors: "vectors/fasttext-en"
   tables_path: "tables"
   metrics_dir: "metrics"
-  attrs: "'NORM', 'PREFIX', 'SUFFIX', 'SHAPE'"
+  attrs: null
   rows: "[5000, 2500, 2500, 2500]"
   include_static_vectors: true
   min_freq: 10
@@ -145,30 +145,6 @@ commands:
         --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
         --components.tok2vec.model.embed.rows ${vars.rows}
-        --system.seed ${vars.seed}
-        --gpu-id ${vars.gpu_id}
-        --code scripts/custom_components.py
-    deps:
-      - corpus/${vars.dataset}-train.spacy
-      - corpus/${vars.dataset}-dev.spacy
-    outputs:
-      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
-      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
-
-  - name: "train-custom-attrs"
-    help: "Train NER model custom attrs."
-    script:
-      - >-
-        python -m spacy train
-        configs/${vars.ner_config}.cfg
-        --nlp.lang ${vars.language}
-        --output training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
-        --paths.train corpus/${vars.dataset}-train.spacy
-        --paths.dev corpus/${vars.dataset}-dev.spacy
-        --paths.vectors ${vars.vectors}
-        --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
-        --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
-        --components.tok2vec.model.embed.attrs ${vars.attrs}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
