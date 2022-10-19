@@ -262,11 +262,11 @@ def run_multiembed_features_ablation(
     EXPERIMENT_ID = "multiembed_ablation"
     attr_combinations = {
         # fmt: off
-        "ablation/ner_multiembed_o": ["ORTH"],
-        "ablation/ner_multiembed_n": ["NORM"],
-        "ablation/ner_multiembed_np": ["NORM", "PREFIX"],
-        "ablation/ner_multiembed_nps": ["NORM", "PREFIX", "SUFFIX"],
-        "ablation/ner_multiembed_npss": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+        "ablation/ner_multihashembed_o": ["ORTH"],
+        "ablation/ner_multihashembed_n": ["NORM"],
+        "ablation/ner_multihashembed_np": ["NORM", "PREFIX"],
+        "ablation/ner_multihashembed_nps": ["NORM", "PREFIX", "SUFFIX"],
+        "ablation/ner_multihashembed_npss": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         # fmt: on
     }
 
