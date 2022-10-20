@@ -255,6 +255,7 @@ def run_multiembed_features_ablation(
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
     # fmt: on
 ):
@@ -304,6 +305,7 @@ def run_multiembed_features_ablation(
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 seed=seed,
                 metrics_dir=f"metrics-{EXPERIMENT_ID}-{'-'.join(attrs)}",
+                eval_unseen=eval_unseen,
             )
             commands.append(eval_command)
 
