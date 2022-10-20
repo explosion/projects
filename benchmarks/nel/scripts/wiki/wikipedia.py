@@ -255,36 +255,60 @@ def read_texts(
         row["name"]: row["id"]
         for row in db_conn.execute("SELECT name, id FROM entities")
     }
-    records: List[Tuple[str, str, str, str]] = []
+    # records: List[Tuple[str, str, str, str]] = []
+    article_records: List[Tuple[str, str]] = []
+    article_texts_records: List[Tuple[str, str, str]] = []
     # Fetch IDs of entities whose articles are already in the DB.
     article_ids_in_db: Set[str] = {
         rec["id"] for rec in db_conn.cursor().execute("SELECT id FROM articles")
     }
 
-    def write_to_db(_records: List[Tuple[str, str, str, str]]) -> None:
+    def write_to_db(_article_records: List[Tuple[str, str]], _article_text_records: List[Tuple[str, str, str]]) -> None:
         """Writes records to list.
-        _records (List[Tuple[str, str, str]]): Article triples with entity ID, title and text.
+        _article_records (List[Tuple[str, str]]): `articles`entries with entity ID, ID.
+        _article_texts_records (List[Tuple[str, str, str]]): `articles_texts` entries with entity ID, title, content.
         """
         db_conn.cursor().executemany(
-            "INSERT OR IGNORE INTO articles (entity_id, id, title, text) VALUES (?, ?, ?, ?)",
-            records,
+            "INSERT OR IGNORE INTO articles (entity_id, id) VALUES (?, ?)",
+            _article_records,
+        )
+        db_conn.cursor().executemany(
+            "INSERT OR IGNORE INTO articles_texts (entity_id, title, content) VALUES (?, ?, ?)",
+            _article_text_records
         )
         db_conn.commit()
 
     with bz2.open(wikipedia_input_path, mode="rb") as file:
         pbar_params = {"total": limit} if limit else {}
         with tqdm.tqdm(desc="Parsing article texts", miniters=1000, **pbar_params) as pbar:
+            n_articles = 0
+            n_viable_articles = 0
             article_text = ""
             article_title: Optional[str] = None
             article_id: Optional[str] = None
             reading_text = False
             reading_revision = False
+            # Terms in article indicating it should be skipped (for redirects and disambiguation pages).
+            # Note: checks for redirection/disambiguation articles are not language-agnostic. Porting this to the
+            # generalized extraction needs to consider that.
+            skip_terms = ("#redirect", "#redirection", "{{disambiguation}}")
+            skip_article = False
 
             for line in file:
                 if limit and pbar.n >= limit:
                     break
 
                 clean_line = line.strip().decode("utf-8")
+
+                # Check if article is to be skipped.
+                cl_lower = clean_line.lower()
+                for skip_term in skip_terms:
+                    if skip_term in cl_lower:
+                        skip_article = True
+                        break
+                # Skip to next line if article is to be skipped.
+                if skip_article and clean_line != "</page>":
+                    continue
 
                 if clean_line == "<revision>":
                     reading_revision = True
@@ -293,6 +317,7 @@ def read_texts(
 
                 # Start reading new page
                 if clean_line == "<page>":
+                    n_articles += 1
                     article_text = ""
                     article_title = None
                     article_id = None
@@ -303,29 +328,42 @@ def read_texts(
                         clean_text, entities = _process_wp_text(
                             article_title, article_text, entity_title_to_id
                         )
-                        if clean_text is not None and entities is not None:
+                        if clean_text is not None:
+                            n_viable_articles += 1
                             if article_title in entity_title_to_id:
-                                records.append(
+                                text_to_append = clean_text[:n_char_limit]
+                                for (to_replace, replacement) in (
+                                        ("(;", " "),
+                                        ("(,", " "),
+                                        (" ; ", " "),
+                                        (" , ", ""),
+                                        ("()", ""),
+                                ):
+                                    text_to_append = text_to_append.replace(
+                                        to_replace, replacement
+                                    )
+
+                                article_records.append((entity_title_to_id[article_title], article_id))
+                                article_texts_records.append(
                                     (
                                         entity_title_to_id[article_title],
-                                        article_id,
                                         article_title,
-                                        " ".join(
-                                            clean_text[:n_char_limit].split(" ")[:-1]
-                                        ),
+                                        " ".join(text_to_append.split(" ")[:-1]),
                                     )
                                 )
                             pbar.update(1)
 
                             if pbar.n % batch_size == 0:
-                                write_to_db(records)
-                                records = []
+                                write_to_db(article_records, article_texts_records)
+                                article_records = []
+                                article_texts_records = []
 
                     article_text = ""
                     article_title = None
                     article_id = None
                     reading_text = False
                     reading_revision = False
+                    skip_article = False
 
                 # start reading text within a page
                 if "<text" in clean_line:
@@ -355,7 +393,14 @@ def read_texts(
                         article_title = titles[0].strip()
 
     if pbar.n % batch_size != 0:
-        write_to_db(records)
+        write_to_db(article_records, article_texts_records)
+
+    print(
+        f"Processed {n_articles} articles.\n  "
+        f"Of which viable (with article ID and text): {n_viable_articles} ({n_viable_articles / n_articles * 100:.2f}%)"
+        f"\n    "
+        f"Of which processed (title in entity table): {pbar.n} ({pbar.n / n_viable_articles * 100:.2f}%)"
+    )
 
 
 def extract_demo_dump(

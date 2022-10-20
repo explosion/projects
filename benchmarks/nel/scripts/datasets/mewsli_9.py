@@ -42,9 +42,7 @@ class Mewsli9Dataset(Dataset):
                     )
                 )
 
-        entities, failed_entity_lookups, _ = fetch_entity_information(
-            "id", tuple(entity_qids)
-        )
+        entities, failed_entity_lookups, _ = fetch_entity_information(tuple(entity_qids))
 
         return entities, failed_entity_lookups, annotations
 

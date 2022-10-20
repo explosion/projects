@@ -61,7 +61,7 @@ def parse(
     """
 
     msg = "Database exists already. Execute `spacy project run delete_wiki_db` to remove it."
-    assert not os.path.exists(_paths["db"]), msg
+    # assert not os.path.exists(_paths["db"]), msg
 
     db_conn = db_conn if db_conn else establish_db_connection()
     with open(Path(os.path.abspath(__file__)).parent / "ddl.sql", "r") as ddl_sql:
@@ -73,31 +73,28 @@ def parse(
         **(entity_config if entity_config else {}),
     )
 
-    wikipedia.read_prior_probs(
-        _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
-        db_conn,
-        **(alias_prior_prob_config if alias_prior_prob_config else {}),
-    )
-
-    wikipedia.read_texts(
-        _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
-        db_conn,
-        **(article_text_config if article_text_config else {}),
-    )
+    # wikipedia.read_prior_probs(
+    #     _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
+    #     db_conn,
+    #     **(alias_prior_prob_config if alias_prior_prob_config else {}),
+    # )
+    #
+    # wikipedia.read_texts(
+    #     _paths["wikipedia_dump"] if not use_filtered_dumps else _paths["filtered_wikipedia_dump"],
+    #     db_conn,
+    #     **(article_text_config if article_text_config else {}),
+    # )
 
 
 def load_entities(
-    key: str, values: Tuple[str, ...], db_conn: Optional[sqlite3.Connection] = None
+    values: Tuple[str, ...], db_conn: Optional[sqlite3.Connection] = None
 ) -> Dict[str, Entity]:
     """Loads information for entity or entities by querying information from DB.
     Note that this doesn't return all available information, only the part used in the current benchmark solution.
-    key (str): Attribute to match values to. Must be one of ("id", "name").
     values (Tuple[str]): Values for key to look up.
     db_conn (Optional[sqlite3.Connection]): Database connection.
     RETURNS (Dict[str, Entity]): Information on requested entities.
     """
-
-    assert key in ("id", "name")
     db_conn = db_conn if db_conn else establish_db_connection()
 
     return {
@@ -123,28 +120,32 @@ def load_entities(
             f"""
                 SELECT 
                     e.id,
-                    e.name as entity_title,
-                    e.description,
-                    e.label,
-                    a.title as article_title,
-                    a.text,
+                    et.name as entity_title,
+                    et.description,
+                    et.label,
+                    at.title as article_title,
+                    at.content,
                     GROUP_CONCAT(afe.alias) as aliases,
                     SUM(afe.count) as count
                 FROM 
                     entities e
+                LEFT JOIN entities_texts et on
+                    et.ROWID = e.ROWID
                 LEFT JOIN articles a on
                     a.entity_id = e.id
+                LEFT JOIN articles_texts at on
+                    at.ROWID = a.ROWID
                 LEFT JOIN aliases_for_entities afe on
                     afe.entity_id = e.id                                         
                 WHERE 
-                    e.{key} IN (%s)
+                    e.id IN (%s)
                 GROUP BY
                     e.id,
-                    e.name,
-                    e.description,
-                    e.label,
-                    a.title,
-                    a.text
+                    et.name,
+                    et.description,
+                    et.label,
+                    at.title,
+                    at.content
             """
             % ",".join("?" * len(values)),
             tuple(set(values)),

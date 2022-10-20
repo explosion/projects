@@ -86,6 +86,9 @@ def read_entities(
         "P279": exclude_list,  # subclass
     }
 
+    entity_ids_in_db: Set[str] = {
+        rec["id"] for rec in db_conn.cursor().execute("SELECT id FROM entities")
+    }
     title_to_id: Dict[str, str] = {}
     id_to_attrs: Dict[str, Dict[str, Any]] = {}
 
@@ -96,6 +99,7 @@ def read_entities(
             desc="Parsing entity data", leave=True, miniters=1000, **pbar_params
         ) as pbar:
             for cnt, line in enumerate(file):
+                pbar.update(1)
                 if limit and cnt >= limit:
                     break
 
@@ -105,6 +109,8 @@ def read_entities(
 
                 if len(clean_line) > 1:
                     obj = json.loads(clean_line)
+                    if obj.get("id") in entity_ids_in_db:
+                        continue
                     entry_type = obj["type"]
 
                     if entry_type == "item":
@@ -218,17 +224,18 @@ def _write_to_db(
     """
 
     entities: List[Tuple[Optional[str], ...]] = []
+    entities_texts: List[Tuple[Optional[str], ...]] = []
     props_in_ents: Set[Tuple[str, str, str]] = set()
     aliases_for_entities: List[Tuple[str, str, int]] = []
 
     for title, qid in title_to_id.items():
-        entities.append(
+        entities.append((qid, json.dumps(id_to_attrs[qid]["claims"])))
+        entities_texts.append(
             (
                 qid,
                 title,
                 id_to_attrs[qid].get("description", None),
                 id_to_attrs[qid].get("labels", {}).get("value", None),
-                json.dumps(id_to_attrs[qid]["claims"]),
             )
         )
         for alias in id_to_attrs[qid]["aliases"]:
@@ -240,11 +247,15 @@ def _write_to_db(
 
     cur = db_conn.cursor()
     cur.executemany(
-        "INSERT OR IGNORE INTO entities (id, name, description, label, claims) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO entities (id, claims) VALUES (?, ?)",
         entities,
     )
     cur.executemany(
-        "INSERT OR IGNORE INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
+        "INSERT INTO entities_texts (entity_id, name, description, label) VALUES (?, ?, ?, ?)",
+        entities_texts,
+    )
+    cur.executemany(
+        "INSERT INTO properties_in_entities (property_id, from_entity_id, to_entity_id) VALUES (?, ?, ?)",
         props_in_ents,
     )
     cur.executemany(

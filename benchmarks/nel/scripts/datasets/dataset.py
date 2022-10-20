@@ -109,12 +109,28 @@ class Dataset(abc.ABC):
         entity_list: List[str] = []
         count_list: List[int] = []
         vector_list: List[numpy.ndarray] = []  # type: ignore
-        for qid, info in self._entities.items():
+        qids = list(self._entities.keys())
+        desc_vectors = [
+            doc.vector for doc in
+            tqdm.tqdm(
+                self._nlp_base.pipe(
+                    texts=[
+                        self._entities[qid].description if self._entities[qid].description
+                        else (
+                            self._entities[qid].article_text[:500] if self._entities[qid].article_text
+                            else self._entities[qid].name
+                        )
+                        for qid in qids
+                    ],
+                    n_process=-1
+                ),
+                total=len(self._entities),
+                desc="Inferring entity embeddings"
+            )
+        ]
+        for qid, desc_vector in zip(qids, desc_vectors):
             entity_list.append(qid)
-            count_list.append(info.count)
-            desc_vector = self._nlp_base(
-                info.description if info.description else info.name
-            ).vector
+            count_list.append(self._entities[qid].count)
             vector_list.append(
                 desc_vector
                 if isinstance(desc_vector, numpy.ndarray)
@@ -280,12 +296,22 @@ class Dataset(abc.ABC):
                 if ent.text.lower().startswith("the ") else ent
                 for ent in doc.ents
             ]
+        tmp_docs_path = "/tmp/docs.spacy"
+        if not os.path.exists(tmp_docs_path):
+            docs = tqdm.tqdm(
+                self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
+                desc="Inferring entities for test set",
+                total=len(docs)
+            )
+            DocBin(docs=docs).to_disk(tmp_docs_path)
+        else:
+            docs = list(DocBin().from_disk(tmp_docs_path).get_docs(self._nlp_best.vocab))
         test_set = [
             Example(predicted_doc, doc)
             for predicted_doc, doc in zip(
                 [
                     doc for doc in tqdm.tqdm(
-                        self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
+                        docs,  # self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
                         desc="Inferring entities for test set",
                         total=len(docs)
                     )
@@ -326,8 +352,16 @@ class Dataset(abc.ABC):
                         ent_offset = (ent.start_char, ent.end_char)
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
+                        a_cands = ent_cands.get(ent_offset, {})
+                        a_cands_aliases = {v.alias_ for c, v in ent_cands.get(ent_offset, {}).items()}
+                        a_cands_kb_ids = {v.entity_ for c, v in ent_cands.get(ent_offset, {}).items()}
+                        a_kb_id = ent.kb_id_
+                        a_ent = ent
+                        a_mention = example.reference.text[ent.start_char:ent.end_char]
                         cand_gen_label_counts[label] += 1
                         candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
+                        if len(a_cands_kb_ids) > 0 and ent.kb_id_ not in a_cands_kb_ids:
+                            x = 3
 
                 # Update entity disambiguation stats for baselines.
                 evaluation.add_disambiguation_baseline(

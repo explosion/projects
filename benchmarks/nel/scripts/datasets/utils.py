@@ -24,13 +24,11 @@ def _does_token_overlap_with_annotation(
 
 
 def fetch_entity_information(
-    key: str,
     values: Tuple[str, ...],
     batch_size: int = 1000,
 ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, str]]:
     """
     Fetches information on entities from database.
-    key (str): Attribute to match values to. Must be one of ("id", "name").
     values (Tuple[str]): Values for key to look up.
     db_conn (sqlite3.Connection): Database connection.
     batch_size (int): Number of entity titles to resolve in the same API request. Between 1 and 50.
@@ -47,14 +45,14 @@ def fetch_entity_information(
 
     for i in range(0, len(values), batch_size):
         chunk = tuple([v.replace("_", " ") for v in values[i : i + batch_size]])
-        entities_chunk = wiki_dump_api.load_entities(key, chunk)
+        entities_chunk = wiki_dump_api.load_entities(chunk)
         _failed_lookups = set(chunk)
 
         # Replace entity titles keys in dict with Wikidata QIDs. Add entity description.
         for entity in entities_chunk.values():
             entities[entity.qid] = entity
             name_qid_map[entity.name] = entity.qid
-            _failed_lookups.remove(entity.qid if key == "id" else entity.name)
+            _failed_lookups.remove(entity.qid)
 
         failed_lookups |= _failed_lookups
         pbar.update(len(chunk))

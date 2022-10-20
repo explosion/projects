@@ -26,4 +26,10 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    # typer.run(main)
+    wiki_dump_api.parse(
+        entity_config={"limit": None},
+        article_text_config={"limit": None},
+        alias_prior_prob_config={"limit": None},
+        use_filtered_dumps=False
+    )

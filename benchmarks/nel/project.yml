@@ -4,7 +4,7 @@ vars:
   run: "cg-default"
   config: "nel.cfg"
   vectors_model: "en_core_web_lg"
-  version: "0.0.4"
+  version: "0.0.5"
   dataset: "mewsli_9"
   gpu_id: ""
   use_filtered_dumps: "--use_filtered_dumps"
