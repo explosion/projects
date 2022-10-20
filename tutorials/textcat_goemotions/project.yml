@@ -106,3 +106,10 @@ commands:
     deps:
       - "scripts/visualize_model.py"
       - "training/${vars.config}/model-best"
+
+  - name: assemble
+    help: Combine the model with a pretrained pipeline.
+    script:
+      - "python -m spacy assemble configs/cnn_with_pretrained.cfg cnn_with_pretrained"
+    deps:
+      - "training/cnn/model-best"

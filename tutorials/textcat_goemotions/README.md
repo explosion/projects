@@ -106,8 +106,11 @@ assemble`](https://spacy.io/api/cli#assemble) - you'll just need to prepare a
 config describing your final pipeline.
 
 A sample config for doing this is included in
-`configs/cnn_with_pretrained.cfg`. The basic way to build a config for `spacy
-assemble` is to:
+`configs/cnn_with_pretrained.cfg`. After training the model in this project,
+you can combine it with a pretrained pipeline by running `spacy project run
+assemble`, which will save the new pipeline to `cnn_with_pretrained/`. 
+
+To make your own config to combine pipelines, the basic steps are:
 
 1. Include all the components you want in `nlp.pipeline`
 2. Add a section for each component, specifying the pipeline to source it from.
@@ -120,10 +123,11 @@ a training loop with `spacy assemble`, default values are fine.
 Let's go over the last two steps in a little more detail.
 
 By default, components have a simple default name in the pipeline, like "ner"
-or "textcat". However if you have two copies of a component they need to have
-different names. If you need to change the name of a component you can do that
-by giving it a different name in `nlp.pipeline`, and specifying the name in the
-original pipeline using the `name` value in the section for the component.
+or "textcat". However, if you have two copies of a component, then they need to
+have different names. If you need to change the name of a component you can do
+that by giving it a different name in `nlp.pipeline`, and specifying the name
+in the original pipeline using the `name` value in the section for the
+component.
 
 It depends on the pipeline, but often components use a Listener to just look
 for a tok2vec (or transformer) to get features from. If the tok2vec in your
