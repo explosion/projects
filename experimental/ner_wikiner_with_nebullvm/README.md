@@ -1,14 +1,31 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Named Entity Recognition (WikiNER)
+# 🪐 spaCy Project: Named Entity Recognition (WikiNER) accelerated using nebullvm
 
-Simple example of downloading and converting source data and training a named entity recognition model. The example uses the WikiNER corpus, which was constructed semi-automatically. The main advantage of this corpus is that it's freely available, so the data can be downloaded as a project asset. The WikiNER corpus is distributed in IOB format, a fairly common text encoding for sequence data. The `corpus` subcommand splits the corpus into training, development and testing partitions, and uses `spacy convert` to convert them into spaCy's binary format. You can then edit the config to try out different settings, and trigger training with the `train` subcommand.
+Modification of the WikiNER pipeline, using a transformer as Tok2Vec component and accelerating it with nebullvm library.
+
+Nebullvm is an open-source project
+
+Further info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner).
+
+## 🚀 install nebullvm
+
+Before running the pipeline it is necessary to install nebullvm. Nebullvm can be easily installed using `pip`:
+```bash
+pip install nebullvm
+```
+Extra components needed for inference optimization are installed the first time nebullvm is imported in a new environment. We suggest to directly do it running
+
+```bash
+python -c "import nebullvm"
+```
 
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
+[spaCy projects documentation](https://spacy.io/usage/projects). Modules needed for 
+integrating nebullvm with Thinc and Spacy are defined in `scripts/extra_components.py`. 
 
 ### ⏯ Commands
 
@@ -19,7 +36,7 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `corpus` | Convert the data to spaCy's format |
-| `train` | Train the full pipeline |
+| `train` | Train the full pipeline and optimize the transformer model for inference |
 | `evaluate` | Evaluate on the test data and save the metrics |
 | `clean` | Remove intermediate files |
 
