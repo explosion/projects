@@ -1,5 +1,5 @@
-title: "Named Entity Recognition (WikiNER)"
-description: "Simple example of downloading and converting source data and training a named entity recognition model. The example uses the WikiNER corpus, which was constructed semi-automatically. The main advantage of this corpus is that it's freely available, so the data can be downloaded as a project asset. The WikiNER corpus is distributed in IOB format, a fairly common text encoding for sequence data. The `corpus` subcommand splits the corpus into training, development and testing partitions, and uses `spacy convert` to convert them into spaCy's binary format. You can then edit the config to try out different settings, and trigger training with the `train` subcommand."
+title: "Named Entity Recognition (WikiNER) accelerated using nebullvm"
+description: "Modification of the WikiNER pipeline, using a transformer as Tok2Vec component and accelerating it with nebullvm library.\n\nNebullvm is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -40,7 +40,7 @@ commands:
       - "corpus/test.spacy"
 
   - name: train
-    help: "Train the full pipeline"
+    help: "Train the full pipeline and optimize the transformer model for inference"
     script:
       - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code scripts/extra_components.py"
       - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/tok2vec/model -ot unconstrained -at 10."
