@@ -43,7 +43,7 @@ commands:
     help: "Train the full pipeline and optimize the transformer model for inference"
     script:
       - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code scripts/extra_components.py"
-      - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/tok2vec/model -ot unconstrained -at 10."
+      - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/tok2vec/model -ot unconstrained -at 0.1"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
