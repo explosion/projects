@@ -4,7 +4,7 @@
 
 Modification of the WikiNER pipeline, using a transformer as Tok2Vec component and accelerating it with nebullvm library.
 
-Nebullvm is an open-source project
+Nebullvm is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.
 
 Further info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner).
 
