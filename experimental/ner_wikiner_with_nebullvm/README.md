@@ -8,24 +8,11 @@ Nebullvm is an open-source tool designed to accelerate AI inference of deep lear
 
 Further info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner).
 
-## 🚀 install nebullvm
-
-Before running the pipeline it is necessary to install nebullvm. Nebullvm can be easily installed using `pip`:
-```bash
-pip install nebullvm
-```
-Extra components needed for inference optimization are installed the first time nebullvm is imported in a new environment. We suggest to directly do it running
-
-```bash
-python -c "import nebullvm"
-```
-
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects). Modules needed for 
-integrating nebullvm with Thinc and Spacy are defined in `scripts/extra_components.py`. 
+[spaCy projects documentation](https://spacy.io/usage/projects).
 
 ### ⏯ Commands
 
@@ -62,3 +49,15 @@ in the project directory.
 | `assets/aij-wikiner-en-wp2.bz2` | URL |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
+## 🚀 install nebullvm
+
+Before running the pipeline it is necessary to install nebullvm. Nebullvm can be easily installed using `pip`:
+```bash
+pip install nebullvm
+```
+Extra components needed for inference optimization are installed the first time nebullvm is imported in a new environment. We suggest to directly do it running
+
+```bash
+python -c "import nebullvm"
+```
