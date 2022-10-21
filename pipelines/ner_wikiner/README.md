@@ -47,4 +47,4 @@ in the project directory.
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 ## 🚀 Accelerate
-If you are interested in accelerating this pipeline when using Transformer architectures, give a look to the [nebullvm optimization](https://github.com/explosion/projects/tree/v3/experimental/ner_wikiner_with_nebullvm).
+If you are interested in accelerating this pipeline, give a look at [ner_wikiner_with_nebullvm](https://github.com/explosion/projects/tree/v3/experimental/ner_wikiner_with_nebullvm) accelerated pipeline.

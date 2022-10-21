@@ -2,9 +2,9 @@
 
 # 🪐 spaCy Project: Named Entity Recognition (WikiNER) accelerated using nebullvm
 
-Modification of the WikiNER pipeline, using a transformer as Tok2Vec component and accelerating it with nebullvm library.
+This project shows how nebullvm can accelerate spaCy's WikiNER pipeline.
 
-Nebullvm is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.
+[Nebullvm](https://github.com/nebuly-ai/nebullvm) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.
 
 Further info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner).
 
@@ -52,12 +52,26 @@ in the project directory.
 
 ## 🚀 install nebullvm
 
-Before running the pipeline it is necessary to install nebullvm. Nebullvm can be easily installed using `pip`:
+Before running the WikiNER pipeline, nebullvm must be installed. Nebullvm can be easily installed using `pip`:
 ```bash
 pip install nebullvm
 ```
-Extra components needed for inference optimization are installed the first time nebullvm is imported in a new environment. We suggest to directly do it running
+Some of the nebullvm components required for inference optimization are installed when nebullvm is imported into a new environment during the first run of the WikiNER pipeline.
 
+Alternatively, these components can be installed beforehand by running
 ```bash
 python -c "import nebullvm"
 ```
+
+## ⚡ Acceleration 
+
+When tested, [nebullvm](https://github.com/nebuly-ai/nebullvm) accelerated the WikiNER pipeline between **20%** and **80%** with **no impact on model performance**. The library could further accelerate deep learning model inference by applying more aggressive optimization techniques, which may result in a slight change in model performance. For more information, refer to the [nebullvm documentation](https://github.com/nebuly-ai/nebullvm).
+
+Below are the response times of the WikiNER pipeline in milliseconds (ms).
+
+| Hardware | Original latency [ms] | Nebullvm optimized latency [ms] | Nebullvm speed-up |
+| --- | --- | --- | --- |
+| **Intel** | 139 | 114 | 1.2x |
+| **AMD** | 293 | 162 | 1.8x |
+| **Nvidia RTX 3090Ti** | 24.1 | 14.1 | 1.7x |
+| **M1 Pro** | 143 | 121 | 1.2x |

@@ -1,5 +1,5 @@
 title: "Named Entity Recognition (WikiNER) accelerated using nebullvm"
-description: "Modification of the WikiNER pipeline, using a transformer as Tok2Vec component and accelerating it with nebullvm library.\n\nNebullvm is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
+description: "This project shows how nebullvm can accelerate spaCy's WikiNER pipeline.\n\n[Nebullvm](https://github.com/nebuly-ai/nebullvm) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
