@@ -71,8 +71,11 @@ class NebullvmTransformerModel(TransformerModel):
             )
         )
         base_kwargs.update(kwargs)
+        model = self.transformer
+        if torch.cuda.is_available():
+            model.cuda()
         optimized_model = optimize_model(
-            model=self.transformer,
+            model=model,
             input_data=input_data,
             **base_kwargs,
         )
