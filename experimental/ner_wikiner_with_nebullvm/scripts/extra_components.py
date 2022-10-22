@@ -34,7 +34,23 @@ class _ModelWrapper:
         return self.model.device
 
     def __call__(self, *args, **kwargs):
-        out = self.model(*args, **kwargs)
+        if "input_ids" in kwargs and kwargs["input_ids"].shape[0] != 1:
+            out = {}
+            out_type = None
+            for i in range(len(kwargs["input_ids"])):
+                temp_kwargs = {key: value[i].unsqueeze(0).long() for key, value in kwargs.items()}
+                temp_out = self.model(**temp_kwargs)
+                if out_type is None:
+                    out_type = type(temp_out)
+                for key, arg in temp_out.items():
+                    if key in out:
+                        out[key] = torch.cat([out[key], temp_out[key]])
+                    else:
+                        out[key] = temp_out[key]
+            out = out_type(**out)
+        else:
+            kwargs = {key: value.long() for key, value in kwargs.items()}
+            out = self.model(*args, **kwargs)
         for key, value in out.items():
             setattr(out, key, value.float())
         return out
