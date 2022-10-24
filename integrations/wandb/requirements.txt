@@ -1,2 +1,2 @@
-ml_datasets>=0.2.0
+ml_datasets==0.2.0
 wandb>=0.12.4,<0.20.0
