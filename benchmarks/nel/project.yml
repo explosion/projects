@@ -4,33 +4,15 @@ vars:
   run: "cg-default"
   config: "nel.cfg"
   vectors_model: "en_core_web_lg"
-  version: "0.0.5"
+  version: "0.0.6"
   dataset: "mewsli_9"
   gpu_id: ""
-  use_filtered_dumps: "--use_filtered_dumps"
-  use_filter_terms: "--use_filter_terms"
+  download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
+  filter: "--filter"  # Whether to only use parts of Wiki data and corpus containing filter terms.
   training_max_steps: 1000
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
-
-assets:
-  - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
-    url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-    description: Wikidata entity dump. Download can take a long time!
-    extra: True
-  - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
-    url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
-    description: Wikipedia dump. Download can take a long time!
-    extra: True
-  - dest: 'assets/wiki/wikidata_entity_dump_filtered.json.bz2'
-    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikidata_entity_dump_filtered.json.bz2'
-    description: Filtered Wikidata entity dump for demo purposes.
-    checksum: 'ba2d979105abf174208608b942242fcb'
-  - dest: 'assets/wiki/wikipedia_dump_filtered.xml.bz2'
-    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikipedia_dump_filtered.xml.bz2'
-    description: Filtered Wikipedia dump for demo purposes.
-    checksum: 'cb624eaa5887fe1ff47a9206c9bdcfd8'
 
 workflows:
   all:
@@ -69,10 +51,24 @@ commands:
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
-  - name: parse_wiki_dumps
+  - name: wiki_clone_wikid
+    help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
+    script:
+      # To be updated after merge.
+      - git clone https://github.com/rmitsch/wikid.git && cd wikid && git checkout feature/wiki-parsing && cd ..
+      - pip install -r wikid/requirements.txt
+
+  - name: wiki_download_assets
+    help: "Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
+    script:
+      - "spacy project assets wikid ${vars.download_all_wiki_assets}"
+    outputs:
+      - "wikid/assets/"
+
+  - name: wiki_parse
     help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
-      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py ${vars.use_filtered_dumps}"
+      - "spacy project run parse wikid --vars.use_filtered_dumps ${vars.filter}"
     outputs:
       - "assets/wiki/wiki.sqlite3"
 
@@ -94,7 +90,7 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py ${vars.dataset} ${vars.use_filter_terms}"
+      - "python ./scripts/compile_corpora.py ${vars.dataset} ${vars.filter}"
     deps:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookups.pkl"

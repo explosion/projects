@@ -5,7 +5,7 @@ from datasets.dataset import Dataset
 from utils import read_filter_terms
 
 
-def main(dataset_name: str, use_filter_terms: bool = typer.Option(False, "--use_filter_terms")):
+def main(dataset_name: str, use_filter_terms: bool = typer.Option(False, "--filter")):
     """Create corpora in spaCy format.
     dataset_name (str): Dataset name.
     use_filter_terms (bool): Whether to use the filter terms defined in the dataset config. If True, only documents
