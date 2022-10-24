@@ -7,7 +7,6 @@ from spacy.pipeline import TrainablePipe
 from typing import Optional, Callable
 
 
-
 @spacy.registry.callbacks("set_attr")
 def create_callback(
     path: Path,
@@ -29,9 +28,7 @@ def create_callback(
 
     def set_attr(nlp: Language) -> Language:
         if not nlp.has_pipe(component):
-            raise ValueError(
-                "Trying to set attribute for non-existing component"
-            )
+            raise ValueError("Trying to set attribute for non-existing component")
         pipe: TrainablePipe = nlp.get_pipe(component)
         model = None
         if pipe.model.has_ref(layer):
@@ -40,15 +37,12 @@ def create_callback(
             for lay in list(pipe.model.walk()):
                 if lay.name == layer:
                     if model is not None:
-                        raise ValueError(
-                            f"Found multiple layers named {layer}"
-                        )
+                        raise ValueError(f"Found multiple layers named {layer}")
                     else:
                         model = lay
         if model is None:
-            raise ValueError(
-                f"Haven't found {layer} in component {component}."
-            )
+            raise ValueError(f"Haven't found {layer} in component {component}.")
         model.attrs[attr] = attr_value
         return nlp
+
     return set_attr

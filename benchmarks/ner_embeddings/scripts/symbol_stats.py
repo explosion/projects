@@ -24,14 +24,14 @@ def _attr_counts(df: pd.DataFrame) -> Dict[str, int]:
     """
     How many unique symbols are in the df per attribute.
     """
-    return dict(df['attr'].value_counts())
+    return dict(df["attr"].value_counts())
 
 
 def _unused(df: pd.DataFrame, attr: str) -> int:
     """
     Return the number of unused buckets.
     """
-    n = df.attrs['n_rows'][attr]
+    n = df.attrs["n_rows"][attr]
     df = df.loc[df["attr"] == attr]
     hashrows = df.to_numpy()[:, [1, 2, 3, 4]]
     hashrows = hashrows.astype(int)
@@ -68,7 +68,7 @@ def make_symbol_stats(
     attrs: List[str] = typer.Option(["PREFIX", "SUFFIX", "SHAPE", "NORM"]),
     rows: List[int] = typer.Option([2500, 2500, 2500, 5000]),
     seed: int = typer.Option(42),
-    k: int = typer.Option(100)
+    k: int = typer.Option(100),
 ):
     """
     Go through all documents in a .spacy file and store two
@@ -79,15 +79,12 @@ def make_symbol_stats(
     """
     if len(attrs) != len(rows):
         raise ValueError(
-            "Number of attributes has to be the same "
-            "as the number of rows."
+            "Number of attributes has to be the same " "as the number of rows."
         )
     data_path = ensure_path(data_path)
     output_path = ensure_path(output_path)
     if not output_path.is_dir():
-        raise ValueError(
-            "Output path must be a directory."
-        )
+        raise ValueError("Output path must be a directory.")
     nlp = spacy.blank(lang)
     docs = DocBin().from_disk(data_path).get_docs(nlp.vocab)
     docs = list(docs)
@@ -115,8 +112,8 @@ def make_symbol_stats(
             assert datakey not in data
             data[datakey] = [count, *hashes[symbol], attr]
     df = pd.DataFrame.from_dict(data, orient="index")
-    df.columns = ['count', 'hash1', 'hash2', 'hash3', 'hash4', 'attr']
-    df.attrs['n_rows'] = {attr: n_rows for attr, n_rows in zip(attrs, rows)}
+    df.columns = ["count", "hash1", "hash2", "hash3", "hash4", "attr"]
+    df.attrs["n_rows"] = {attr: n_rows for attr, n_rows in zip(attrs, rows)}
     results = {}
     results["counts"] = _attr_counts(df)
     for attr in attrs:
@@ -126,9 +123,7 @@ def make_symbol_stats(
         results[attr]["collisions"] = dict(enumerate(list(collisions.mean(0))))
         del results[attr]["collisions"][0]
     df.to_csv(output_path / f"{data_path.name}.csv")
-    srsly.write_msgpack(
-        output_path / f"{data_path.name}.msg", results
-    )
+    srsly.write_msgpack(output_path / f"{data_path.name}.msg", results)
 
 
 if __name__ == "__main__":

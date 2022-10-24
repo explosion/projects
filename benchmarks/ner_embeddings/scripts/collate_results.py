@@ -1,9 +1,12 @@
-import typer
 from pathlib import Path
-from typing import Optional
-from wasabi import msg
-import srsly
+from typing import List, Optional
+
 import pandas as pd
+import srsly
+import typer
+from wasabi import msg
+
+from .constants import CONFIGS, DATASET_VECTORS
 
 
 def _create_df(input_df: pd.DataFrame) -> pd.DataFrame:
@@ -17,26 +20,52 @@ def _create_df(input_df: pd.DataFrame) -> pd.DataFrame:
 
 def main(
     # fmt: off
-    input_dir: Path = typer.Argument(..., help="Path to the metrics directory", dir_okay=True, exists=True),
-    output_path: Optional[Path] = typer.Option(None, "--output", "--output-path", "-o", help="Filepath to save the collated results."),
+    input_dir: Path = typer.Argument(..., help="Path to the parent metrics directory", dir_okay=True, exists=True),
+    output_dir: Optional[Path] = typer.Option(None, "--output", "--output-dir", "-o", help="Output directory to save the collated results."),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Print the results during the run.")
     # fmt: on
 ):
     """Collate results from multiple trials"""
-    trial_dirs = list(input_dir.iterdir())
-    msg.info(f"Found {len(trial_dirs)} trials for {input_dir}")
-    scores = [srsly.read_json(list(t.glob("*.json"))[0]) for t in trial_dirs]
-    df = pd.DataFrame.from_dict(scores).dropna(axis=1)
 
-    # Compute top-level metrics
-    # Here, I select the columns that have float values
-    top_level = df.select_dtypes(include=["float64"])
-    top_level_df = _create_df(top_level)
+    dataset_dirs: List[Path] = []
+    for dataset, meta in DATASET_VECTORS.items():
+        for config in CONFIGS:
+            for vectors in ("null", meta.get("spacy")):
+                dataset_dir = Path(input_dir) / dataset / vectors / config
+                if dataset_dir.is_dir():
+                    dataset_dirs.append(dataset_dir)
 
-    print(top_level_df)
-    if output_path:
-        data = top_level_df.to_dict()
-        srsly.write_json(output_path, data)
-        msg.info(f"Saved to {output_path}")
+    msg.info(f"Found {len(dataset_dirs)} experiment/s in {input_dir}")
+    msg.text([str(d) for d in dataset_dirs], show=verbose)
+
+    for dataset_dir in dataset_dirs:
+        trial_dirs = list(dataset_dir.iterdir())
+        msg.info(f"Found {len(trial_dirs)} trials for {dataset_dir}", show=verbose)
+        scores = [srsly.read_json(list(t.glob("*.json"))[0]) for t in trial_dirs]
+        df = pd.DataFrame.from_dict(scores).dropna(axis=1)
+
+        # Compute top-level metrics
+        # Here, I select the columns that have float values
+        top_level = df.select_dtypes(include=["float64"])
+        top_level_df = _create_df(top_level)
+        # Replace NaN with 0. This usually happens when you only have a
+        # single trial and you're computing for stdev
+        top_level_df = top_level_df.fillna(0)
+
+        if verbose:
+            # We're using print instead of msg because print()
+            # renders a table-like appearance.
+            # TODO: Convert this to msg.table
+            print(top_level_df)
+
+        # Save results
+        if output_dir:
+            data = top_level_df.to_dict()
+            _output_dir = output_dir / dataset_dir.relative_to(input_dir)
+            _output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = _output_dir / "metrics_summary.json"
+            srsly.write_json(output_path, data)
+            msg.info(f"Saved to {output_path}")
 
 
 if __name__ == "__main__":
