@@ -4,7 +4,7 @@ from typing import Dict, List, Set, Tuple, Iterable
 import tqdm
 from spacy.tokens import Token, Span, Doc
 from schemas import Entity, Annotation
-from wiki import wiki_dump_api
+from wikid import wiki_dump_api
 
 
 def _does_token_overlap_with_annotation(

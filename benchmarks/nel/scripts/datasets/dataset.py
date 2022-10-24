@@ -24,7 +24,7 @@ from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
 from schemas import Annotation, Entity
-from wiki import wiki_dump_api
+from wikid import wiki_dump_api
 from . import evaluation
 from utils import get_logger
 
