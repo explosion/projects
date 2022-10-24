@@ -11,9 +11,9 @@ def test_nel_benchmark():
     root = Path(__file__).parent
     project_assets(root)
     project_run(root, "download_mewsli9", capture=True)
-    project_run(root, "preprocess", capture=True)
     project_run(root, "download_model", capture=True)
     project_run(root, "wiki_clone_wikid", capture=True)
+    project_run(root, "preprocess", capture=True)
     project_run(root, "wiki_download_assets", capture=True)
     project_run(root, "wiki_parse", capture=True)
     project_run(root, "create_kb", capture=True)

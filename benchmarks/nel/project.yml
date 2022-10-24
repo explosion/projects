@@ -17,9 +17,9 @@ directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "ev
 workflows:
   all:
     - download_mewsli9
-    - preprocess
     - download_model
     - wiki_clone_wikid
+    - preprocess
     - wiki_download_assets
     - wiki_parse
     - create_kb
@@ -39,15 +39,6 @@ commands:
     outputs:
       - assets/mewsli_9/
 
-  - name: preprocess
-    help: Preprocess test datasets.
-    script:
-      - "python ./scripts/clean_data.py ${vars.dataset}"
-    deps:
-      - "assets/${vars.dataset}/raw"
-    outputs:
-      - "assets/${vars.dataset}/clean"
-
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
     script:
@@ -60,6 +51,15 @@ commands:
       - git clone https://github.com/rmitsch/wikid.git --branch feature/wiki-parsing
       - pip install -r wikid/requirements.txt
       - pip install -e wikid
+
+  - name: preprocess
+    help: Preprocess test datasets.
+    script:
+      - "python ./scripts/clean_data.py ${vars.dataset}"
+    deps:
+      - "assets/${vars.dataset}/raw"
+    outputs:
+      - "assets/${vars.dataset}/clean"
 
   - name: wiki_download_assets
     help: "Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
