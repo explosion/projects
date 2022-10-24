@@ -19,6 +19,9 @@ workflows:
     - download_mewsli9
     - preprocess
     - download_model
+    - wiki_clone_wikid
+    - wiki_download_assets
+    - wiki_parse
     - parse_wiki_dumps
     - create_kb
     - compile_corpora
