@@ -1,6 +1,7 @@
 import srsly
 import typer
 from wasabi import msg
+from tqdm import tqdm
 
 from typing import Optional, List, Dict
 from collections import Counter
@@ -82,7 +83,7 @@ def init_tables_cli(
     train_docs = []
     if limit == 0:
         limit = float("inf")
-    for i, doc in enumerate(train_corpus(nlp)):
+    for i, doc in tqdm(enumerate(train_corpus(nlp))):
         if i < limit:
             train_docs.append(doc.predicted)
     msg.good(f"Loaded {len(train_docs)} documents.")
@@ -107,7 +108,7 @@ def _init_tables(
     for attr in attrs:
         attr_id = intify_attr(attr)
         counts = Counter()
-        for doc in train_docs:
+        for doc in tqdm(train_docs):
             counts.update(doc.count_by(attr_id))
         attrs_counts[attr] = counts
     # Create mappers
