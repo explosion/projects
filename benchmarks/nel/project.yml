@@ -22,7 +22,6 @@ workflows:
     - wiki_clone_wikid
     - wiki_download_assets
     - wiki_parse
-    - parse_wiki_dumps
     - create_kb
     - compile_corpora
     - train
@@ -137,7 +136,7 @@ commands:
       - "evaluation/${vars.dataset}"
 
   - name: delete_wiki_db
-    help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."
+    help: "Deletes SQLite database generated in step wiki_parse with data parsed from Wikidata and Wikipedia dump."
     script:
       - "rm -f assets/wiki/wiki.sqlite3"
     deps:
