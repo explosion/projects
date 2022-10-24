@@ -1,2 +1,2 @@
-from scripts.multiembed import *
-from scripts.set_attr import *
+from scripts import multiembed
+from scripts import set_attr
