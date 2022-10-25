@@ -37,5 +37,5 @@ jobs:
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - script: bash run-tests.sh python all  # 'all' is temporary, will be removed
+          - script: bash run-tests.sh python
             displayName: 'Run tests'
