@@ -4,7 +4,6 @@ from spacy.cli.project.assets import project_assets
 from pathlib import Path
 
 
-@pytest.mark.skip(reason="TODO: numpy error on Windows")
 def test_wikiner_project():
     root = Path(__file__).parent
     project_assets(root)
