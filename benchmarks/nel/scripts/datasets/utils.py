@@ -1,10 +1,9 @@
 """ Utilities for NEL benchmark. """
 
-from typing import Dict, List, Set, Tuple, Iterable
+from typing import Dict, List, Set, Tuple
 import tqdm
 from spacy.tokens import Token, Span, Doc
-from schemas import Entity, Annotation
-from wikid import wiki_dump_api
+from wikid import schemas, load_entities
 
 
 def _does_token_overlap_with_annotation(
@@ -25,11 +24,13 @@ def _does_token_overlap_with_annotation(
 
 def fetch_entity_information(
     values: Tuple[str, ...],
-    batch_size: int = 1000,
-) -> Tuple[Dict[str, Entity], Set[str], Dict[str, str]]:
+    language: str,
+    batch_size: int = 5000,
+) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, str]]:
     """
     Fetches information on entities from database.
     values (Tuple[str]): Values for key to look up.
+    language (str): Language.
     db_conn (sqlite3.Connection): Database connection.
     batch_size (int): Number of entity titles to resolve in the same API request. Between 1 and 50.
     RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, str]]): Updated entities, failed lookups, mappings of titles
@@ -41,11 +42,11 @@ def fetch_entity_information(
     pbar = tqdm.tqdm(total=len(values))
     failed_lookups: Set[str] = set()
     name_qid_map: Dict[str, str] = {}
-    entities: Dict[str, Entity] = {}
+    entities: Dict[str, schemas.Entity] = {}
 
     for i in range(0, len(values), batch_size):
         chunk = tuple([v.replace("_", " ") for v in values[i : i + batch_size]])
-        entities_chunk = wiki_dump_api.load_entities(chunk)
+        entities_chunk = load_entities(language, chunk)
         _failed_lookups = set(chunk)
 
         # Replace entity titles keys in dict with Wikidata QIDs. Add entity description.
@@ -64,10 +65,10 @@ def fetch_entity_information(
 
 def create_spans_from_doc_annotation(
     doc: Doc,
-    entities_info: Dict[str, Entity],
-    annotations: List[Annotation],
+    entities_info: Dict[str, schemas.Entity],
+    annotations: List[schemas.Annotation],
     harmonize_with_doc_ents: bool,
-) -> Tuple[List[Span], List[Annotation]]:
+) -> Tuple[List[Span], List[schemas.Annotation]]:
     """Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
     entities_info (Dict[str, Entity]): All available entities.
@@ -83,8 +84,8 @@ def create_spans_from_doc_annotation(
         (ent.start_char + (0 if not ent.text.lower().startswith("the ") else 4), ent.end_char)
         for ent in doc.ents
     }
-    doc_annots: List[Annotation] = []
-    overlapping_doc_annotations: List[Annotation] = []
+    doc_annots: List[schemas.Annotation] = []
+    overlapping_doc_annotations: List[schemas.Annotation] = []
 
     if harmonize_with_doc_ents and len(doc_ents_idx) == 0:
         return [], []
