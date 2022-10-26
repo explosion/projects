@@ -108,6 +108,20 @@ commands:
         --code scripts/custom_components.py
         --paths.tables ${vars.tables_path}
 
+  - name: "init-labels"
+    help: "Initialize labels first before training"
+    script: 
+      - >- 
+        python -m spacy init labels
+        configs/${vars.ner_config}.cfg
+        corpus/labels/${vars.dataset}.labels
+        --verbose 
+        --paths.train corpus/${vars.dataset}-train.spacy
+        --paths.dev corpus/${vars.dataset}-dev.spacy
+        --paths.tables tables/${vars.dataset}/${vars.dataset}-train.tables
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+
   - name: "train"
     help: "Train NER model."
     script:
