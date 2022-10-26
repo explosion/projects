@@ -98,7 +98,7 @@ def _make_eval_command(
     eval_unseen: bool = False,
 ) -> str:
     """Construct eval command based from a template"""
-    unseen_param = "-unseen" if eval_unseen else ""
+    unseen_param = "-seen-unseen" if eval_unseen else ""
     command = f"""
     spacy project run evaluate{unseen_param} .
     --vars.ner_config {config}
