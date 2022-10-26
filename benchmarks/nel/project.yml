@@ -54,7 +54,7 @@ commands:
       - pip install -r wikid/requirements.txt
 
   - name: preprocess
-    help: Preprocess test datasets.
+    help: Preprocess and clean corpus data.
     script:
       - "env PYTHONPATH=. python ./scripts/clean_data.py ${vars.dataset} ${vars.language}"
     deps:
