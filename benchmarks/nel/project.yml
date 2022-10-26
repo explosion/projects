@@ -24,6 +24,7 @@ workflows:
     - wikid_download_assets
     - wikid_parse
     - wikid_create_kb
+    - parse_corpus
     - compile_corpora
     - train
     - evaluate
@@ -85,12 +86,10 @@ commands:
       - "wikid/output/${vars.language}/kb"
       - "wikid/output/${vars.language}/nlp"
 
-    # todo generate annotations - this was done in create_kb in the past. would make sense in compile_corpora?
-
   - name: parse_corpus
     help: "Parse corpus to generate entity and annotation lookups used for corpora compilation."
     script:
-      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language} ${vars.vectors_model}"
+      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/clean"
       - "wikid/output/${vars.language}/wiki.sqlite3"

@@ -21,8 +21,6 @@ class LexicalCandidateSelector(NearestNeighborCandidateSelector):
         max_n_candidates: int,
         similarity_cutoff: float = 0.5,
     ) -> Iterable[int]:
-        # todo 1. replace all wiki parsing stuff with wikid
-        # todo 2. review generation of KB, move to wikid
         # todo 3. get rid of entity pickle files (move loading, stats to compile_corpora)
         # todo 4. re-evaluate efficacy of fuzzy string lookup (memory? access time?)
         # todo also: push forward spacy NEL changes - add mechanism for pushing back entity sets instead of single
