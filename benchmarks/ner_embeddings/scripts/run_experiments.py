@@ -260,7 +260,7 @@ def run_multiembed_features_ablation(
     # fmt: on
 ):
     """Run ablation experiment for MultiEmbed features"""
-    EXPERIMENT_ID = "multiembed_ablation"
+    EXPERIMENT_ID = "feature_ablation"
     attr_combinations = {
         # fmt: off
         "ablation/ner_multihashembed_o": ["ORTH"],
