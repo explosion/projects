@@ -49,8 +49,7 @@ commands:
   - name: wikid_clone
     help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
     script:
-      # To be updated after merge.
-      - git clone https://github.com/rmitsch/wikid.git --branch feature/wiki-parsing
+      - git clone https://github.com/explosion/wikid.git --branch main
       - pip install -r wikid/requirements.txt
 
   - name: preprocess
