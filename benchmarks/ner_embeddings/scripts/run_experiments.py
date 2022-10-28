@@ -149,10 +149,10 @@ def run_main_results(
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
+    experiment_id: str = Opt("main_results", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
     # fmt: on
 ):
     """Run experiment that compares MultiEmbed and MultiHashEmbed (default rows)"""
-    EXPERIMENT_ID = "main_results"
     msg.info("Running experiment that compares MultiEmbed and MultiHashEmbed")
     dataset_vectors = _get_datasets(datasets)
     for dataset, vectors in dataset_vectors.items():
@@ -187,7 +187,7 @@ def run_main_results(
             gpu_id=gpu_id,
             vectors=vectors.get(static_vectors.value, StaticVectors.null),
             seed=seed,
-            metrics_dir=f"metrics-{EXPERIMENT_ID}",
+            metrics_dir=f"metrics-{experiment_id}",
             eval_unseen=eval_unseen,
         )
         commands.append(eval_command)
@@ -206,10 +206,10 @@ def run_multiembed_min_freq_experiment(
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
+    experiment_id: str = Opt("multiembed_min_freq", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
     # fmt: on
 ):
     """Run experiment that compares different MultiEmbed min_freq values"""
-    EXPERIMENT_ID = "multiembed_min_freq"
     msg.info("Running experiment for MultiEmbed with different min_freq")
     config_path = Path("configs") / config
     dataset_vectors = _get_datasets(datasets)
@@ -252,7 +252,7 @@ def run_multiembed_min_freq_experiment(
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 seed=seed,
-                metrics_dir=f"metrics-{EXPERIMENT_ID}-{min_freq}",
+                metrics_dir=f"metrics-{experiment_id}-{min_freq}",
             )
             commands.append(eval_command)
 
@@ -271,10 +271,10 @@ def run_multiembed_features_ablation(
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
+    experiment_id: str = Opt("feature_ablation", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
     # fmt: on
 ):
     """Run ablation experiment for MultiEmbed features"""
-    EXPERIMENT_ID = "feature_ablation"
     dataset_vectors = _get_datasets(datasets)
     attr_combinations = {
         # fmt: off
@@ -319,7 +319,7 @@ def run_multiembed_features_ablation(
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 seed=seed,
-                metrics_dir=f"metrics-{EXPERIMENT_ID}-{'-'.join(attrs)}",
+                metrics_dir=f"metrics-{experiment_id}-{'-'.join(attrs)}",
                 eval_unseen=eval_unseen,
             )
             commands.append(eval_command)
