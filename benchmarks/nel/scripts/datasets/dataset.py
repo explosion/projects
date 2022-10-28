@@ -282,16 +282,8 @@ class Dataset(abc.ABC):
                         ent_offset = (ent.start_char, ent.end_char)
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
-                        a_cands = ent_cands.get(ent_offset, {})
-                        a_cands_aliases = {v.alias_ for c, v in ent_cands.get(ent_offset, {}).items()}
-                        a_cands_kb_ids = {v.entity_ for c, v in ent_cands.get(ent_offset, {}).items()}
-                        a_kb_id = ent.kb_id_
-                        a_ent = ent
-                        a_mention = example.reference.text[ent.start_char:ent.end_char]
                         cand_gen_label_counts[label] += 1
                         candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
-                        if len(a_cands_kb_ids) > 0 and ent.kb_id_ not in a_cands_kb_ids:
-                            x = 3
 
                 # Update entity disambiguation stats for baselines.
                 evaluation.add_disambiguation_baseline(
