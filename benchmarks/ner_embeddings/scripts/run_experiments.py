@@ -2,7 +2,7 @@ import shlex
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import srsly
 import typer
@@ -128,9 +128,20 @@ def _make_hash_command(
     return command
 
 
+def _get_datasets(datasets: Optional[List[str]]) -> Dict:
+    if datasets:
+        dataset_vectors = {k: v for k, v in DATASET_VECTORS.items() if k in datasets}
+    else:
+        dataset_vectors = DATASET_VECTORS
+
+    msg.info(f"Retrieving datasets: {', '.join(dataset_vectors.keys())}")
+    return dataset_vectors
+
+
 @app.command(name="main-results")
 def run_main_results(
     # fmt: off
+    datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
     config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables"),
@@ -143,7 +154,8 @@ def run_main_results(
     """Run experiment that compares MultiEmbed and MultiHashEmbed (default rows)"""
     EXPERIMENT_ID = "main_results"
     msg.info("Running experiment that compares MultiEmbed and MultiHashEmbed")
-    for dataset, vectors in DATASET_VECTORS.items():
+    dataset_vectors = _get_datasets(datasets)
+    for dataset, vectors in dataset_vectors.items():
         msg.divider(dataset, char="X")
         commands = []
 
@@ -187,6 +199,7 @@ def run_main_results(
 @app.command(name="characterize-min-freq")
 def run_multiembed_min_freq_experiment(
     # fmt: off
+    datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
     config: str = Opt("ner_multiembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     min_freqs: Tuple[int, int , int] = Opt((1, 5, 10), help="Values to check min_freq for.", show_default=True),
@@ -199,14 +212,14 @@ def run_multiembed_min_freq_experiment(
     EXPERIMENT_ID = "multiembed_min_freq"
     msg.info("Running experiment for MultiEmbed with different min_freq")
     config_path = Path("configs") / config
-
+    dataset_vectors = _get_datasets(datasets)
     # Create hash table in another directory
     for min_freq in min_freqs:
         msg.divider(f"min_freq={min_freq}", char="X")
         table_path = Path(f"tables_{min_freq}")
         table_path.mkdir(parents=True, exist_ok=True)
 
-        for dataset, vectors in DATASET_VECTORS.items():
+        for dataset, vectors in dataset_vectors.items():
             msg.divider(dataset, char="x")
             commands = []
 
@@ -252,6 +265,7 @@ def run_multiembed_min_freq_experiment(
 @app.command(name="feature-ablation")
 def run_multiembed_features_ablation(
     # fmt: off
+    datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
@@ -261,6 +275,7 @@ def run_multiembed_features_ablation(
 ):
     """Run ablation experiment for MultiEmbed features"""
     EXPERIMENT_ID = "feature_ablation"
+    dataset_vectors = _get_datasets(datasets)
     attr_combinations = {
         # fmt: off
         "ablation/ner_multihashembed_o": ["ORTH"],
@@ -272,7 +287,7 @@ def run_multiembed_features_ablation(
     }
 
     for config, attrs in attr_combinations.items():
-        for dataset, vectors in DATASET_VECTORS.items():
+        for dataset, vectors in dataset_vectors.items():
             msg.divider(dataset, char="X")
             commands = []
 
