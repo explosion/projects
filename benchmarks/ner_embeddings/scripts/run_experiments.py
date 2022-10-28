@@ -42,6 +42,7 @@ def _make_train_command(
     include_static_vectors: bool,
     adjust_rows: bool = False,
     tables_path: str = "tables",
+    batch_size: int = 1000,
     custom_attrs: Optional[List[str]] = None,
 ) -> str:
     """Construct train command based from a template"""
@@ -65,6 +66,7 @@ def _make_train_command(
         f"--vars.gpu-id {gpu_id} "
         f"--vars.seed {seed} "
         f"--vars.tables_path {tables_path} "
+        f"--vars.batch_size {batch_size} "
         f"{cmd_vectors} {cmd_rows}"
     )
     return command
@@ -144,12 +146,13 @@ def run_main_results(
     datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
     config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
-    adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables"),
+    adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables."),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
+    batch_size: int = Opt(1000, "--batch-size", "-S", "--sz", help="Set the batch size.", show_default=True),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
-    experiment_id: str = Opt("main_results", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
+    experiment_id: str = Opt("main_results", "--experiment-id", "--id", help="Experiment ID for saving the metrics.", show_default=True),
     # fmt: on
 ):
     """Run experiment that compares MultiEmbed and MultiHashEmbed (default rows)"""
@@ -176,6 +179,7 @@ def run_main_results(
             gpu_id=gpu_id,
             seed=seed,
             adjust_rows=adjust_rows,
+            batch_size=batch_size,
             include_static_vectors=static_vectors.value != StaticVectors.null,
         )
         commands.append(train_command)
@@ -205,6 +209,7 @@ def run_multiembed_min_freq_experiment(
     min_freqs: Tuple[int, int , int] = Opt((1, 5, 10), help="Values to check min_freq for.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    batch_size: int = Opt(1000, "--batch-size", "-S", "--sz", help="Set the batch size.", show_default=True),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
     experiment_id: str = Opt("multiembed_min_freq", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
     # fmt: on
@@ -240,6 +245,7 @@ def run_multiembed_min_freq_experiment(
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
                 seed=seed,
+                batch_size=batch_size,
                 include_static_vectors=static_vectors.value != StaticVectors.null,
                 tables_path=str(table_path),
             )
@@ -271,6 +277,7 @@ def run_multiembed_features_ablation(
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
     seed: int = Opt(0, help="Set the random seed", show_default=True),
+    batch_size: int = Opt(1000, "--batch-size", "-S", "--sz", help="Set the batch size.", show_default=True),
     experiment_id: str = Opt("feature_ablation", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
     # fmt: on
 ):
@@ -307,6 +314,7 @@ def run_multiembed_features_ablation(
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
                 seed=seed,
+                batch_size=batch_size,
                 custom_attrs=attrs,
                 include_static_vectors=static_vectors.value != StaticVectors.null,
             )
