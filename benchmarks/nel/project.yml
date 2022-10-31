@@ -38,7 +38,7 @@ commands:
     help: Download Mewsli-9 dataset.
     script:
       - bash scripts/datasets/download_mewsli-9.sh
-    output:
+    outputs:
       - assets/mewsli_9/raw
 
   - name: download_model
@@ -51,7 +51,7 @@ commands:
     script:
       - git clone https://github.com/explosion/wikid.git --branch main
       - pip install -r wikid/requirements.txt
-    output:
+    outputs:
       - wikid
 
   - name: preprocess
