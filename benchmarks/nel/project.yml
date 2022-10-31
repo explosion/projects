@@ -5,7 +5,7 @@ vars:
   language: "en"
   config: "nel.cfg"
   vectors_model: "en_core_web_lg"
-  version: "0.0.6"
+  version: "0.0.5"
   dataset: "mewsli_9"
   gpu_id: ""
   download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
@@ -39,7 +39,7 @@ commands:
     script:
       - bash scripts/datasets/download_mewsli-9.sh
     outputs:
-      - assets/mewsli_9/
+      - assets/mewsli_9/raw
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
@@ -51,6 +51,8 @@ commands:
     script:
       - git clone https://github.com/explosion/wikid.git --branch main
       - pip install -r wikid/requirements.txt
+    output:
+      - wikid
 
   - name: preprocess
     help: Preprocess and clean corpus data.
