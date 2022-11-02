@@ -31,7 +31,7 @@ class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
         max_n_candidates: int,
         lexical_similarity_cutoff: float = 0.5,
     ) -> Iterable[int]:
-        target_vec = self._pipeline(span.text, disable=["parser", "senter", "ner"]).vector
+        target_vec = span.vector
         if not isinstance(target_vec, numpy.ndarray):
             target_vec = target_vec.get()
 

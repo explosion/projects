@@ -23,8 +23,7 @@ from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
-from schemas import Annotation, Entity
-from wiki import wiki_dump_api
+from wikid import schemas
 from . import evaluation
 from utils import get_logger
 
@@ -35,42 +34,46 @@ DatasetType = TypeVar("DatasetType", bound="Dataset")
 class Dataset(abc.ABC):
     """Base class for all datasets used in this benchmark."""
 
-    def __init__(self, run_name: str):
+    def __init__(self, run_name: str, language: str):
         """Initializes new Dataset.
         run_name (str): Run name.
+        language (str): Language.
         """
 
         self._run_name = run_name
-        self._paths = self.assemble_paths(self.name, self._run_name)
+        self._language = language
+        self._paths = self.assemble_paths(self.name, self._run_name, self._language)
 
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
 
-        self._entities: Optional[Dict[str, Entity]] = None
+        self._entities: Optional[Dict[str, schemas.Entity]] = None
         self._failed_entity_lookups: Optional[Set[str]] = None
-        self._annotations: Optional[Dict[str, List[Annotation]]] = None
+        self._annotations: Optional[Dict[str, List[schemas.Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
         self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
         self._annotated_docs: Optional[List[Doc]] = None
 
     @staticmethod
-    def assemble_paths(dataset_name: str, run_name: str) -> Dict[str, Path]:
+    def assemble_paths(dataset_name: str, run_name: str, language: str) -> Dict[str, Path]:
         """Assemble paths w.r.t. dataset ID.
         dataset_name (str): Dataset name.
         run_name (str): Run name.
+        language (str): Language.
         RETURNS (Dict[str, Path]): Dictionary with internal resource name to path.
         """
 
         root_path = Path(os.path.abspath(__file__)).parent.parent.parent
+        wikid_path = root_path / "wikid" / "output"
         assets_path = root_path / "assets" / dataset_name
 
         return {
             "root": root_path,
             "evaluation": root_path / "configs" / "evaluation.yml",
             "assets": assets_path,
-            "nlp_base": root_path / "temp" / dataset_name / "nlp",
-            "kb": root_path / "temp" / dataset_name / "kb",
+            "nlp_base": wikid_path / language / "nlp",
+            "kb": wikid_path / language / "kb",
             "entities": assets_path / "entities.pkl",
             "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl",
@@ -83,83 +86,11 @@ class Dataset(abc.ABC):
         """Returns dataset name."""
         raise NotImplementedError
 
-    def create_knowledge_base(self, model_name: str, **kwargs) -> None:
-        """Creates and serializes knowledge base.
-        vectors_model (str): Name of model with word vectors to use.
-        """
-
-        self._nlp_base = spacy.load(
-            model_name, exclude=["tagger", "lemmatizer", "attribute_ruler"]
-        )
-        logger.info("Parsing external corpus")
-        (
-            self._entities,
-            self._failed_entity_lookups,
-            self._annotations,
-        ) = self._parse_external_corpus(**kwargs)
-
-        logger.info(
-            f"Constructing knowledge base with {len(self._entities)} entries and "
-            f"{len(self._failed_entity_lookups)} failed lookups."
-        )
-        self._kb = KnowledgeBase(
-            vocab=self._nlp_base.vocab,
-            entity_vector_length=self._nlp_base.vocab.vectors_length,
-        )
-        entity_list: List[str] = []
-        count_list: List[int] = []
-        vector_list: List[numpy.ndarray] = []  # type: ignore
-        for qid, info in self._entities.items():
-            entity_list.append(qid)
-            count_list.append(info.count)
-            desc_vector = self._nlp_base(
-                info.description if info.description else info.name
-            ).vector
-            vector_list.append(
-                desc_vector
-                if isinstance(desc_vector, numpy.ndarray)
-                else desc_vector.get()
-            )
-        self._kb.set_entities(
-            entity_list=entity_list, vector_list=vector_list, freq_list=count_list
-        )
-
-        # Add aliases with normalized priors to KB.
-        alias_entity_prior_probs = wiki_dump_api.load_alias_entity_prior_probabilities(
-            set(self._entities.keys())
-        )
-        for alias, entity_prior_probs in alias_entity_prior_probs.items():
-            self._kb.add_alias(
-                alias=alias,
-                entities=[epp[0] for epp in entity_prior_probs],
-                probabilities=[epp[1] for epp in entity_prior_probs],
-            )
-        # Add pseudo aliases for easier lookup with new candidate generators.
-        for entity_id in entity_list:
-            self._kb.add_alias(
-                alias="_" + entity_id + "_", entities=[entity_id], probabilities=[1]
-            )
-
-        # Serialize knowledge base & entity information.
-        for to_serialize in (
-            (self._paths["entities"], self._entities),
-            (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
-            (self._paths["annotations"], self._annotations),
-        ):
-            with open(to_serialize[0], "wb") as fp:
-                pickle.dump(to_serialize[1], fp)
-        self._kb.to_disk(self._paths["kb"])
-        if not os.path.exists(self._paths["nlp_base"]):
-            os.mkdir(self._paths["nlp_base"])
-        self._nlp_base.to_disk(self._paths["nlp_base"])
-        logger.info("Successfully constructed knowledge base.")
-
     def compile_corpora(self, filter_terms: Optional[Set[str]] = None) -> None:
         """Creates train/dev/test corpora for dataset.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """
-
         self._load_resource("entities")
         self._load_resource("failed_entity_lookups")
         self._load_resource("annotations")
@@ -176,10 +107,34 @@ class Dataset(abc.ABC):
         """
         raise NotImplementedError
 
-    def _parse_external_corpus(
-        self, **kwargs
-    ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
-        """Parses external corpus. Loads data on entities and mentions.
+    def parse_corpus(self, **kwargs) -> None:
+        """Parses corpus. Loads data on entities and mentions.
+        Populates self._entities, self._failed_entity_lookups, self._annotations.
+        RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
+            lookups, annotations.
+        """
+        self._load_resource("nlp_base")
+        logger.info("Parsing external corpus")
+        (
+            self._entities,
+            self._failed_entity_lookups,
+            self._annotations,
+        ) = self._parse_corpus(**kwargs)
+
+        # Serialize entity information.
+        for to_serialize in (
+            (self._paths["entities"], self._entities),
+            (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
+            (self._paths["annotations"], self._annotations),
+        ):
+            with open(to_serialize[0], "wb") as fp:
+                pickle.dump(to_serialize[1], fp)
+        logger.info("Successfully parsed corpus.")
+
+    def _parse_corpus(
+            self, **kwargs
+    ) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, List[schemas.Annotation]]]:
+        """Parses corpus. Loads data on entities and mentions.
         Populates self._entities, self._failed_entity_lookups, self._annotations.
         RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
             lookups, annotations.
@@ -280,6 +235,7 @@ class Dataset(abc.ABC):
                 if ent.text.lower().startswith("the ") else ent
                 for ent in doc.ents
             ]
+
         test_set = [
             Example(predicted_doc, doc)
             for predicted_doc, doc in zip(
@@ -419,11 +375,12 @@ class Dataset(abc.ABC):
 
     @classmethod
     def generate_from_id(
-        cls: Type[DatasetType], dataset_name: str, run_name: str = "", **kwargs
+        cls: Type[DatasetType], dataset_name: str, language: str, run_name: str = "", **kwargs
     ) -> DatasetType:
         """Generates dataset instance from ID.
         dataset_name (str): Dataset name.
         run_name (str): Run name.
+        language (str): Language.
         RETURNS (DatasetType): Instance of dataset with type determined by dataset ID.
         """
 
@@ -440,7 +397,7 @@ class Dataset(abc.ABC):
             len(classes) == 1
         ), f"Module {module_name} should contain exactly one Dataset class definition."
 
-        return classes[0][1](run_name=run_name, **kwargs)
+        return classes[0][1](run_name=run_name, language=language, **kwargs)
 
     def clean_assets(self) -> None:
         """Cleans assets, i.e. removes/changes errors in the external datasets that cannot easily be cleaned
