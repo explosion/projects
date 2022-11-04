@@ -85,6 +85,7 @@ commands:
       - "python -m spacy download en_core_web_lg"
       - "python -m spacy download es_core_news_lg"
       - "python -m spacy download nl_core_news_lg"
+      - "python -m spacy download fi_core_news_lg"
 
   - name: "init-fasttext"
     help: "Initialize the FastText vectors."
