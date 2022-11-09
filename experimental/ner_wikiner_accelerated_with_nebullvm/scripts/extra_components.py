@@ -145,22 +145,6 @@ class NebullvmTransformerModel(TransformerModel):
             self._nebullvm_layer.shims[0]._mixed_precision = False
         return self
 
-    # def from_disk(self, path: Union[Path, str]) -> "Model":
-    #     print(f"Loading from disk with path: {path}")
-    #     path = Path(path) if isinstance(path, str) else path
-    #     with path.open("rb") as file_:
-    #         bytes_data = file_.read()
-    #     self.from_bytes(bytes_data)
-    #     nebullvm_path = Path(path).parent / "nebullvm"
-    #     if nebullvm_path.exists():
-    #         print("Nebullvm loaded")
-    #         optimized_model = LearnerMetadata.read(path).load_model(path)
-    #         # warmup
-    #         _ = optimized_model(*optimized_model.get_inputs_example())
-    #         self._nebullvm_layer = copy.deepcopy(self.layers[0])
-    #         self._nebullvm_layer.shims[0]._hfmodel.transformer = optimized_model
-    #     return self
-
     def copy(self):
         """
         Create a copy of the model, its attributes, and its parameters. Any child
