@@ -42,10 +42,11 @@ def plot_main_results(
     # fmt: off
     metrics_spacy_path: Path = Arg(..., help="Path to metrics file for spacy vectors"),
     metrics_null_path: Path = Arg(..., help="Path to metrics file for null vectors"),
+    metrics_spacy_path_adjusted: Optional[Path] = Opt(None, "--adjusted-spacy", help="Path to metrics file for null vectors (adjusted rows)"),
+    metrics_null_path_adjusted: Optional[Path] = Opt(None, "--adjusted-null", help="Path to metrics file for null vectors (adjusted rows)"),
     output_path: Optional[Path] = Arg(None, help="Path to save the file (include extension)"),
     show: bool = Opt(False, "--show", "-S", help="Call plt.show()"),
     use_tex: bool = Opt(False, "--latex", "--tex", "--use-tex", "-t", help="Update plt.rcParams with LaTeX"),
-    subtitle: str = Opt("with static vectors", "--subtitle", "-s", help="Chart sub-title"),
     verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity"),
     # fmt: on
 ):
@@ -55,15 +56,33 @@ def plot_main_results(
     metrics_null = srsly.read_json(metrics_null_path)
     dataset_names = metrics_spacy.keys()
 
-    width = 0.30
+    metrics_null_adjusted = (
+        srsly.read_json(metrics_null_path_adjusted)
+        if metrics_null_path_adjusted
+        else None
+    )
+    metrics_spacy_adjusted = (
+        srsly.read_json(metrics_spacy_path_adjusted)
+        if metrics_spacy_path_adjusted
+        else None
+    )
+
+    width = 0.20
     ind = np.arange(len(dataset_names))
 
-    def _prepare_data(metrics: Dict) -> Dict[str, Iterable[float]]:
+    def _prepare_data(
+        metrics: Dict, adjusted_scores: Optional[Dict] = None
+    ) -> Dict[str, Iterable[float]]:
         data = {
+            # MultihashEmbed scores
             "mhe_avgs": [],
             "mhe_stds": [],
+            # Multiembed scores
             "me_avgs": [],
             "me_stds": [],
+            # Multihashembed (adjusted scores)
+            "mhe_adj_avgs": [],
+            "mhe_adj_stds": [],
         }
         for dataset, scores in metrics.items():
             mhe_avg, mhe_std = scores["multihashembed"].get("f")  # get f-score
@@ -72,9 +91,22 @@ def plot_main_results(
             me_avg, me_std = scores["multiembed"].get("f")  # get f-score
             data["me_avgs"].append(round(me_avg, 2))
             data["me_stds"].append(round(me_std, 2))
+
+            adjusted_report = ""
+            if adjusted_scores:
+                mhe_adj_avg, mhe_adj_std = adjusted_scores[dataset][
+                    "multihashembed"
+                ].get("f")
+                data["mhe_adj_avgs"].append(round(mhe_adj_avg, 2))
+                data["mhe_adj_stds"].append(round(mhe_adj_std, 2))
+                adjusted_report = (
+                    f"MultiHashEmbed [adjusted] {mhe_adj_avg} ({mhe_adj_std})"
+                )
+
             msg.text(
                 f"Dataset `{dataset}`: "
                 f"MultiHashEmbed {mhe_avg} ({mhe_std}) "
+                f"{adjusted_report} "
                 f"MultiEmbed {me_avg} ({me_std})",
                 show=verbose,
             )
@@ -94,20 +126,40 @@ def plot_main_results(
         legend_loc: Tuple[float, float] = (0.5, 0.5),
     ):
         rects1 = ax.bar(
-            ind - width / 2,
+            ind - width,
             data.get("mhe_avgs"),
             width,
             yerr=data.get("mhe_stds"),
             label="MultiHashEmbed",
             color=COLORS.get("spanish_viridian"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("spanish_viridian"),
+            hatch="/",
         )
         rects2 = ax.bar(
-            ind + width / 2,
+            ind,
+            data.get("mhe_adj_avgs"),
+            width,
+            yerr=data.get("mhe_adj_stds"),
+            label="MultiHashEmbed (adjusted)",
+            color=COLORS.get("opal"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("opal"),
+            hatch="//",
+        )
+        rects3 = ax.bar(
+            ind + width,
             data.get("me_avgs"),
             width,
             yerr=data.get("me_stds"),
             label="MultiEmbed",
             color=COLORS.get("rich_electric_blue"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("rich_electric_blue"),
+            hatch="x",
         )
 
         # Setup ticklabels and legend
@@ -120,7 +172,7 @@ def plot_main_results(
         ax.set_xticklabels(dataset_names)
         ax.set_ylim(top=1.0)
         if show_legend:
-            ax.legend(loc="lower center", ncol=2, bbox_to_anchor=legend_loc)
+            ax.legend(loc="lower center", ncol=3, bbox_to_anchor=legend_loc)
 
         # Hide the right and top splines
         ax.spines.right.set_visible(False)
@@ -128,19 +180,20 @@ def plot_main_results(
 
         # Add labels for each rectangle
         _autolabel(ax, rects=rects1, xpos="left")
-        _autolabel(ax, rects=rects2, xpos="right")
+        _autolabel(ax, rects=rects2, xpos="center")
+        _autolabel(ax, rects=rects3, xpos="right")
 
     # Plot
     _plot(
         ax1,
-        _prepare_data(metrics_spacy),
+        _prepare_data(metrics_spacy, metrics_spacy_adjusted),
         title="with static vectors",
         show_xlabel=False,
         show_legend=False,
     )
     _plot(
         ax2,
-        _prepare_data(metrics_null),
+        _prepare_data(metrics_null, metrics_null_adjusted),
         title="without static vectors",
         show_legend=True,
         legend_loc=(0.5, -0.7),
