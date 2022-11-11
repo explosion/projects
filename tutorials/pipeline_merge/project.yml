@@ -1,0 +1,27 @@
+title: "Merging Pipelines"
+description: "This project automatically combines components from two pipelines into a new one."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  version: "0.0.0"
+  # change these to paths to your pipelines, or override on the CLI
+  pipeline_a: "pipeline_a"
+  pipeline_b: "pipeline_b"
+  # name of the output pipeline
+  name: "merged_pipeline"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["dist"]
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "merge"
+    help: "Merge the two pipelines into one pipeline."
+    script:
+      - "python scripts/merge.py ${vars.pipeline_a} ${vars.pipeline_b} dist/${vars.name}"
+    # input pipelines are not deps because they might be module names
+    outputs:
+      - "dist/${vars.name}"
