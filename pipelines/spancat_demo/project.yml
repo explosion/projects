@@ -23,7 +23,7 @@ directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
 # them with the project, so they won't have to be downloaded.
 assets:
   - dest: "assets/train.json"
-    description: "Demo training data"
+    description: "Demo training data adapted from the `ner_demo` project"
   - dest: "assets/dev.json"
     description: "Demo development data"
 

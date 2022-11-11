@@ -22,8 +22,10 @@ Commands are only re-run if their inputs have changed.
 | `convert` | Convert the data to spaCy's binary format |
 | `create-config` | Create a new config with a spancat pipeline component |
 | `train` | Train the spancat model |
+| `train-with-vectors` | Train the spancat model with vectors |
 | `evaluate` | Evaluate the model and export metrics |
 | `package` | Package the trained model as a pip package |
+| `clean` | Remove intermediary directories |
 
 ### ⏭ Workflows
 
@@ -35,6 +37,7 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `all` | `convert` &rarr; `create-config` &rarr; `train` &rarr; `evaluate` |
+| `all-vectors` | `download` &rarr; `convert` &rarr; `create-config` &rarr; `train-with-vectors` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
@@ -44,7 +47,7 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| [`assets/train.json`](assets/train.json) | Local | Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json("train.json", TRAIN_DATA)` |
+| [`assets/train.json`](assets/train.json) | Local | Demo training data adapted from the `ner_demo` project |
 | [`assets/dev.json`](assets/dev.json) | Local | Demo development data |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
