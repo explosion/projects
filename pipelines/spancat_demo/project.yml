@@ -80,7 +80,7 @@ commands:
         python -m spacy train configs/config.cfg --output training/ 
         --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy 
         --training.eval_frequency 10 
-        --training.patience 500 
+        --training.patience 100 
         --gpu-id ${vars.gpu_id}
         --system.seed ${vars.seed}
     deps:
@@ -97,7 +97,7 @@ commands:
         python -m spacy train configs/config.cfg --output training/ 
         --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy 
         --training.eval_frequency 10 
-        --training.patience 1500 
+        --training.patience 100 
         --gpu-id ${vars.gpu_id} 
         --initialize.vectors ${vars.vectors_model} 
         --system.seed ${vars.seed}
