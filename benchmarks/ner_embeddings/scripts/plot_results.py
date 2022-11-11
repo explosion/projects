@@ -224,6 +224,7 @@ def plot_min_freq(
     title: Optional[str] = Opt(None, help="Set figure title")
     # fmt: on
 ):
+    """Plot minimum frequency characterization"""
     msg.info("Plotting MultiEmbed min_freq value")
     metrics_spacy = srsly.read_json(metrics_spacy_path)
     metrics_null = srsly.read_json(metrics_null_path)
@@ -353,6 +354,102 @@ def plot_min_freq(
             y=1.05,
             x=0.52,
         )
+
+    # Prepare output
+    if show:
+        plt.show()
+    if output_path:
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        msg.good(f"Saved to {output_path}")
+
+
+@app.command("spacy-v-fasttext")
+def plot_spacy_v_fasttext(
+    # fmt: off
+    metrics_path: Path = Arg(..., help="Path to metrics file for spacy vectors"),
+    output_path: Optional[Path] = Arg(None, help="Path to save the file (include extension)"),
+    use_tex: bool = Opt(False, "--latex", "--tex", "--use-tex", "-t", help="Update plt.rcParams with LaTeX"),
+    verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity."),
+    show: bool = Opt(False, "--show", "-S", help="Call plt.show()"),
+    title: Optional[str] = Opt(None, help="Set figure title")
+    # fmt: on
+):
+    """Plot comparison between spaCy and fastText"""
+    metrics = srsly.read_json(metrics_path)
+    dataset_names = metrics.keys()
+
+    width = 0.20
+    ind = np.arange(len(dataset_names))
+
+    vectors = ["spacy", "fasttext"]
+    data = {
+        "spacy_avgs": [],
+        "fasttext_avgs": [],
+        "spacy_stds": [],
+        "fasttext_stds": [],
+    }
+    for dataset, scores in metrics.items():
+        data["spacy_avgs"].append(round(scores.get("spacy").get("f")[0], 2))
+        data["spacy_stds"].append(round(scores.get("spacy").get("f")[1], 2))
+        data["fasttext_avgs"].append(round(scores.get("fasttext").get("f")[0], 2))
+        data["fasttext_stds"].append(round(scores.get("fasttext").get("f")[1], 2))
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    if use_tex:
+        msg.info("Rendering using LaTeX")
+        _use_tex(plt)
+
+    # Figure configuration
+    fig.tight_layout()
+    if title:
+        fig.suptitle(
+            title,
+            fontsize="xx-large",
+            y=1.05,
+            x=0.52,
+        )
+
+    rects1 = ax.bar(
+        ind - width / 2,
+        data.get("spacy_avgs"),
+        width,
+        yerr=data.get("spacy_stds"),
+        label="spaCy (large)",
+        linewidth=1,
+        color="gray",
+        edgecolor="k",
+    )
+    rects2 = ax.bar(
+        ind + width / 2,
+        data.get("fasttext_avgs"),
+        width,
+        yerr=data.get("fasttext_stds"),
+        label="fastText",
+        linewidth=1,
+        color="None",
+        edgecolor="k",
+    )
+
+    # Setup ticklabels and legend
+    ax.set_ylabel("F1-score", usetex=True)
+    ax.set_xlabel("Dataset", usetex=True)
+    ax.set_xticks(ind)
+    ax.set_xticklabels(dataset_names)
+    ax.set_ylim(top=1.0)
+    ax.legend(
+        loc="lower center",
+        ncol=2,
+        bbox_to_anchor=(0.5, -0.5),
+        title_fontsize="x-large",
+    )
+
+    # Hide the right and top splines
+    ax.spines.right.set_visible(False)
+    ax.spines.top.set_visible(False)
+
+    # Add labels for each rectangle
+    _autolabel(ax, rects=rects1, xpos="left")
+    _autolabel(ax, rects=rects2, xpos="right")
 
     # Prepare output
     if show:
