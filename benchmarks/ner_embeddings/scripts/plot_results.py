@@ -24,18 +24,6 @@ GLOBAL_PARAMS = {
 
 pylab.rcParams.update(GLOBAL_PARAMS)
 
-COLORS = {
-    "spanish_viridian": "#047c5c",
-    "wintergreen_dream": "#50957b",
-    "morning_blue": "#81ad9b",
-    "opal": "#afc5bc",
-    "gainsboro": "#dedede",
-    "beau_blue": "#bacfdd",
-    "dark_sky_blue": "#94c1db",
-    "iceberg": "#66b2d9",
-    "rich_electric_blue": "#09a4d7",
-}
-
 
 @app.command(name="main-results")
 def plot_main_results(
@@ -135,10 +123,9 @@ def plot_main_results(
             width,
             yerr=data.get("mhe_stds"),
             label="MultiHashEmbed",
-            color=COLORS.get("spanish_viridian"),
-            alpha=0.70,
+            color="None",
+            edgecolor="k",
             linewidth=1,
-            edgecolor=COLORS.get("spanish_viridian"),
             hatch="/",
         )
         if unseen:
@@ -148,10 +135,9 @@ def plot_main_results(
                 width,
                 yerr=data.get("mhe_adj_stds"),
                 label="MultiHashEmbed (adjusted)",
-                color=COLORS.get("opal"),
-                alpha=0.70,
+                color="None",
+                edgecolor="k",
                 linewidth=1,
-                edgecolor=COLORS.get("opal"),
                 hatch="//",
             )
         rects3 = ax.bar(
@@ -160,11 +146,10 @@ def plot_main_results(
             width,
             yerr=data.get("me_stds"),
             label="MultiEmbed",
-            color=COLORS.get("rich_electric_blue"),
-            alpha=0.70,
+            color="gray",
+            edgecolor="k",
+            # alpha=0.70,
             linewidth=1,
-            edgecolor=COLORS.get("rich_electric_blue"),
-            hatch="x",
         )
 
         # Setup ticklabels and legend
@@ -261,6 +246,7 @@ def plot_min_freq(
     def _plot(
         ax,
         data: Dict[str, Iterable[float]],
+        mhe_data: Iterable[float],
         title: Optional[str] = None,
         show_xlabel: bool = True,
         show_legend: bool = True,
@@ -268,36 +254,43 @@ def plot_min_freq(
         offset: int = 1,
     ):
         rects1 = ax.bar(
-            ind - width / offset,
+            ind - width / 0.66667,
+            mhe_data,
+            width,
+            label="MultiHashEmbed",
+            linewidth=1,
+            color="gray",
+            edgecolor="k",
+        )
+        rects2 = ax.bar(
+            ind - width / 2,
             data.get("10"),
             width,
             label="10",
-            color=COLORS.get("spanish_viridian"),
-            alpha=0.70,
             linewidth=1,
-            edgecolor=COLORS.get("spanish_viridian"),
+            color="None",
+            edgecolor="k",
             hatch="/",
         )
-        rects2 = ax.bar(
-            ind,
+        rects3 = ax.bar(
+            ind + width / 2,
             data.get("5"),
             width,
             label="5",
-            color=COLORS.get("opal"),
-            alpha=0.70,
             linewidth=1,
-            edgecolor=COLORS.get("opal"),
+            color="None",
+            edgecolor="k",
             hatch="//",
         )
-        rects3 = ax.bar(
-            ind + width / offset,
+        rects4 = ax.bar(
+            ind + width / 0.66667,
             data.get("1"),
             width,
             label="1",
-            color=COLORS.get("rich_electric_blue"),
             alpha=0.70,
             linewidth=1,
-            edgecolor=COLORS.get("rich_electric_blue"),
+            color="None",
+            edgecolor="k",
             hatch="x",
         )
 
@@ -313,9 +306,8 @@ def plot_min_freq(
         if show_legend:
             ax.legend(
                 loc="lower center",
-                ncol=3,
+                ncol=4,
                 bbox_to_anchor=legend_loc,
-                title="Minimum frequency",
                 title_fontsize="x-large",
             )
 
@@ -324,9 +316,10 @@ def plot_min_freq(
         ax.spines.top.set_visible(False)
 
         # Add labels for each rectangle
-        _autolabel(ax, rects=rects1, xpos="left")
+        _autolabel(ax, rects=rects1, xpos="center")
         _autolabel(ax, rects=rects2, xpos="center")
-        _autolabel(ax, rects=rects3, xpos="right")
+        _autolabel(ax, rects=rects3, xpos="center")
+        _autolabel(ax, rects=rects4, xpos="center")
 
     fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6), sharex=True)
     if use_tex:
@@ -337,6 +330,7 @@ def plot_min_freq(
     _plot(
         ax1,
         _prepare_data(metrics_spacy),
+        [0.81, 0.82, 0.47, 0.85, 0.81],  # MultiHashembed results
         title="with static vectors",
         show_xlabel=False,
         show_legend=False,
@@ -344,6 +338,7 @@ def plot_min_freq(
     _plot(
         ax2,
         _prepare_data(metrics_null),
+        [0.74, 0.69, 0.27, 0.83, 0.78],  # Multihashembed results
         title="without static vectors",
         show_legend=True,
         legend_loc=(0.5, -0.7),
