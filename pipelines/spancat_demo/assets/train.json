@@ -27,5 +27,17 @@
         ]
       ]
     }
+  ],
+  [
+    "Have you been to London?",
+    {
+      "entities":[
+        [
+          17,
+          23,
+          "LOC"
+        ]
+      ]
+    }
   ]
 ]
