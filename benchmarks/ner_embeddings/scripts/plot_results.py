@@ -227,6 +227,146 @@ def plot_main_results(
         msg.good(f"Saved to {output_path}")
 
 
+@app.command("min-freq")
+def plot_min_freq(
+    # fmt: off
+    metrics_spacy_path: Path = Arg(..., help="Path to metrics file for spacy vectors"),
+    metrics_null_path: Path = Arg(..., help="Path to metrics file for null vectors"),
+    output_path: Optional[Path] = Arg(None, help="Path to save the file (include extension)"),
+    use_tex: bool = Opt(False, "--latex", "--tex", "--use-tex", "-t", help="Update plt.rcParams with LaTeX"),
+    verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity."),
+    show: bool = Opt(False, "--show", "-S", help="Call plt.show()"),
+    title: Optional[str] = Opt(None, help="Set figure title")
+    # fmt: on
+):
+    msg.info("Plotting MultiEmbed min_freq value")
+    metrics_spacy = srsly.read_json(metrics_spacy_path)
+    metrics_null = srsly.read_json(metrics_null_path)
+    dataset_names = metrics_spacy.keys()
+
+    width = 0.20
+    ind = np.arange(len(dataset_names))
+
+    def _prepare_data(metrics: Dict) -> Dict[str, Iterable[float]]:
+        data = {
+            "10": [],
+            "5": [],
+            "1": [],
+        }
+        for dataset, scores in metrics.items():
+            for min_freq in data.keys():
+                data[min_freq].append(round(scores.get(min_freq), 2))
+        return data
+
+    def _plot(
+        ax,
+        data: Dict[str, Iterable[float]],
+        title: Optional[str] = None,
+        show_xlabel: bool = True,
+        show_legend: bool = True,
+        legend_loc: Tuple[float, float] = (0.5, 0.5),
+        offset: int = 1,
+    ):
+        rects1 = ax.bar(
+            ind - width / offset,
+            data.get("10"),
+            width,
+            label="10",
+            color=COLORS.get("spanish_viridian"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("spanish_viridian"),
+            hatch="/",
+        )
+        rects2 = ax.bar(
+            ind,
+            data.get("5"),
+            width,
+            label="5",
+            color=COLORS.get("opal"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("opal"),
+            hatch="//",
+        )
+        rects3 = ax.bar(
+            ind + width / offset,
+            data.get("1"),
+            width,
+            label="1",
+            color=COLORS.get("rich_electric_blue"),
+            alpha=0.70,
+            linewidth=1,
+            edgecolor=COLORS.get("rich_electric_blue"),
+            hatch="x",
+        )
+
+        # Setup ticklabels and legend
+        ax.set_ylabel("F1-score", usetex=True)
+        if show_xlabel:
+            ax.set_xlabel("Dataset", usetex=True)
+        if title:
+            ax.set_title(title, usetex=True)
+        ax.set_xticks(ind)
+        ax.set_xticklabels(dataset_names)
+        ax.set_ylim(top=1.0)
+        if show_legend:
+            ax.legend(
+                loc="lower center",
+                ncol=3,
+                bbox_to_anchor=legend_loc,
+                title="Minimum frequency",
+                title_fontsize="x-large",
+            )
+
+        # Hide the right and top splines
+        ax.spines.right.set_visible(False)
+        ax.spines.top.set_visible(False)
+
+        # Add labels for each rectangle
+        _autolabel(ax, rects=rects1, xpos="left")
+        _autolabel(ax, rects=rects2, xpos="center")
+        _autolabel(ax, rects=rects3, xpos="right")
+
+    fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6), sharex=True)
+    if use_tex:
+        msg.info("Rendering using LaTeX")
+        _use_tex(plt)
+
+    # Plot
+    _plot(
+        ax1,
+        _prepare_data(metrics_spacy),
+        title="with static vectors",
+        show_xlabel=False,
+        show_legend=False,
+    )
+    _plot(
+        ax2,
+        _prepare_data(metrics_null),
+        title="without static vectors",
+        show_legend=True,
+        legend_loc=(0.5, -0.7),
+    )
+
+    # Figure configuration
+    fig.tight_layout()
+    if title:
+        fig.suptitle(
+            title,
+            fontsize="xx-large",
+            y=1.05,
+            x=0.52,
+        )
+
+    # Prepare output
+    if show:
+        plt.show()
+    if output_path:
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        msg.good(f"Saved to {output_path}")
+
+
 def _autolabel(ax, rects, xpos: str = "center"):
     """Attach a text label above each bar in rects, displaying its height.
 
@@ -257,11 +397,6 @@ def _use_tex(plt):
             "font.family": "serif",
         }
     )
-
-
-@app.command()
-def hi():
-    pass
 
 
 if __name__ == "__main__":
