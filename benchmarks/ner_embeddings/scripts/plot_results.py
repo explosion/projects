@@ -47,7 +47,9 @@ def plot_main_results(
     output_path: Optional[Path] = Arg(None, help="Path to save the file (include extension)"),
     show: bool = Opt(False, "--show", "-S", help="Call plt.show()"),
     use_tex: bool = Opt(False, "--latex", "--tex", "--use-tex", "-t", help="Update plt.rcParams with LaTeX"),
-    verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity"),
+    verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity."),
+    offset: int = Opt(1, "--offset", help="Set offset for the bar chart rects."),
+    title: Optional[str] = Opt(None, help="Set figure title")
     # fmt: on
 ):
     """Plot results between MultiHashEmbed vs. MultiEmbed"""
@@ -124,9 +126,11 @@ def plot_main_results(
         show_xlabel: bool = True,
         show_legend: bool = True,
         legend_loc: Tuple[float, float] = (0.5, 0.5),
+        unseen: bool = False,
+        offset: int = 1,
     ):
         rects1 = ax.bar(
-            ind - width,
+            ind - width / offset,
             data.get("mhe_avgs"),
             width,
             yerr=data.get("mhe_stds"),
@@ -137,20 +141,21 @@ def plot_main_results(
             edgecolor=COLORS.get("spanish_viridian"),
             hatch="/",
         )
-        rects2 = ax.bar(
-            ind,
-            data.get("mhe_adj_avgs"),
-            width,
-            yerr=data.get("mhe_adj_stds"),
-            label="MultiHashEmbed (adjusted)",
-            color=COLORS.get("opal"),
-            alpha=0.70,
-            linewidth=1,
-            edgecolor=COLORS.get("opal"),
-            hatch="//",
-        )
+        if unseen:
+            rects2 = ax.bar(
+                ind,
+                data.get("mhe_adj_avgs"),
+                width,
+                yerr=data.get("mhe_adj_stds"),
+                label="MultiHashEmbed (adjusted)",
+                color=COLORS.get("opal"),
+                alpha=0.70,
+                linewidth=1,
+                edgecolor=COLORS.get("opal"),
+                hatch="//",
+            )
         rects3 = ax.bar(
-            ind + width,
+            ind + width / offset,
             data.get("me_avgs"),
             width,
             yerr=data.get("me_stds"),
@@ -180,7 +185,8 @@ def plot_main_results(
 
         # Add labels for each rectangle
         _autolabel(ax, rects=rects1, xpos="left")
-        _autolabel(ax, rects=rects2, xpos="center")
+        if unseen:
+            _autolabel(ax, rects=rects2, xpos="center")
         _autolabel(ax, rects=rects3, xpos="right")
 
     # Plot
@@ -190,6 +196,8 @@ def plot_main_results(
         title="with static vectors",
         show_xlabel=False,
         show_legend=False,
+        unseen=metrics_spacy_adjusted,
+        offset=offset,
     )
     _plot(
         ax2,
@@ -197,16 +205,19 @@ def plot_main_results(
         title="without static vectors",
         show_legend=True,
         legend_loc=(0.5, -0.7),
+        unseen=metrics_null_adjusted,
+        offset=offset,
     )
 
     # Figure configuration
     fig.tight_layout()
-    fig.suptitle(
-        "MultiHashEmbed vs. MultiEmbed",
-        fontsize="xx-large",
-        y=1.05,
-        x=0.52,
-    )
+    if title:
+        fig.suptitle(
+            title,
+            fontsize="xx-large",
+            y=1.05,
+            x=0.52,
+        )
 
     # Prepare output
     if show:
