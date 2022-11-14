@@ -71,7 +71,7 @@ def _make_train_command(
         f"--vars.seed {seed} "
         f"--vars.tables_path {tables_path} "
         f"--vars.batch_size {batch_size} "
-        f"{cmd_vectors} {cmd_rows}"
+        f"{cmd_vectors} {cmd_rows} {cmd_hash}"
     )
     return command
 
