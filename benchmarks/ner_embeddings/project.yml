@@ -49,6 +49,7 @@ vars:
   gpu_id: 0
   seed: 42
   batch_size: 1000
+  num_hashes: 4
 
 directories:
   - "assets"
@@ -162,6 +163,31 @@ commands:
         --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
         --components.tok2vec.model.embed.rows ${vars.rows}
+        --nlp.batch_size ${vars.batch_size}
+        --system.seed ${vars.seed}
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - corpus/${vars.dataset}-train.spacy
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+
+  - name: "train-hash"
+    help: "Train NER model with different hashes."
+    script:
+      - >-
+        python -m spacy train
+        configs/${vars.ner_config}.cfg
+        --nlp.lang ${vars.language}
+        --output training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+        --paths.train corpus/${vars.dataset}-train.spacy
+        --paths.dev corpus/${vars.dataset}-dev.spacy
+        --paths.vectors ${vars.vectors}
+        --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
+        --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
+        --components.tok2vec.model.embed.num_hashes ${vars.num_hashes}
         --nlp.batch_size ${vars.batch_size}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}

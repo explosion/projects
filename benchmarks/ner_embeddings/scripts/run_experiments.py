@@ -43,11 +43,12 @@ def _make_train_command(
     adjust_rows: bool = False,
     tables_path: str = "tables",
     batch_size: int = 1000,
-    custom_attrs: Optional[List[str]] = None,
+    num_hash: Optional[int] = None,
 ) -> str:
     """Construct train command based from a template"""
     cmd_vectors = ""
     cmd_rows = ""
+    cmd_hash = ""
     modifier = ""
 
     if not include_static_vectors:
@@ -56,6 +57,9 @@ def _make_train_command(
         modifier = "-custom-rows"
         new_rows = _get_computed_rows(tables_path, dataset)
         cmd_rows = f"--vars.rows '{new_rows}'"
+    if num_hash:
+        modifier = "-hash"
+        cmd_hash = f"--vars.num_hashes {num_hash}"
 
     command = (
         f"spacy project run train{modifier} .  "
@@ -329,6 +333,57 @@ def run_multiembed_features_ablation(
                 seed=seed,
                 metrics_dir=f"metrics-{experiment_id}-{'-'.join(attrs)}",
                 eval_unseen=eval_unseen,
+            )
+            commands.append(eval_command)
+
+            # Run commands
+            _run_commands(cmds=commands, dry_run=dry_run)
+
+
+@app.command(name="characterize-hash")
+def run_characterize_hash(
+    # fmt: off
+    datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
+    config: str = Arg("ner_multifewerhashembed", help="Name of the MultiHashFewerEmbed config", show_default=True),
+    static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
+    gpu_id: int = Opt(0, help="Set the GPU ID.", show_default=True),
+    dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
+    seed: int = Opt(0, help="Set the random seed", show_default=True),
+    batch_size: int = Opt(1000, "--batch-size", "-S", "--sz", help="Set the batch size.", show_default=True),
+    experiment_id: str = Opt("characterize_hash", "--experiment-id", "--id", help="Experiment ID for saving the metrics", show_default=True),
+    # fmt: on
+):
+    dataset_vectors = _get_datasets(datasets)
+    num_hashes = [1, 2, 3, 4]
+
+    for num_hash in num_hashes:
+        for dataset, vectors in dataset_vectors.items():
+            msg.divider(dataset, char="X")
+            commands = []
+
+            # Train command
+            train_command = _make_train_command(
+                dataset,
+                config,
+                lang=vectors.get("lang"),
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
+                gpu_id=gpu_id,
+                seed=seed,
+                batch_size=batch_size,
+                include_static_vectors=static_vectors.value != StaticVectors.null,
+                num_hash=num_hash,
+            )
+            commands.append(train_command)
+
+            # Evaluate command
+            eval_command = _make_eval_command(
+                dataset=dataset,
+                config=config,
+                gpu_id=gpu_id,
+                vectors=vectors.get(static_vectors.value, StaticVectors.null),
+                seed=seed,
+                metrics_dir=f"metrics-{experiment_id}-{num_hash}",
+                eval_unseen=False,
             )
             commands.append(eval_command)
 
