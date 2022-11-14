@@ -123,10 +123,10 @@ def plot_main_results(
             width,
             yerr=data.get("mhe_stds"),
             label="MultiHashEmbed",
-            color="None",
+            color="gray",
             edgecolor="k",
             linewidth=1,
-            hatch="/",
+            # hatch="/",
         )
         if unseen:
             rects2 = ax.bar(
@@ -135,7 +135,7 @@ def plot_main_results(
                 width,
                 yerr=data.get("mhe_adj_stds"),
                 label="MultiHashEmbed (adjusted)",
-                color="None",
+                color="gray",
                 edgecolor="k",
                 linewidth=1,
                 hatch="//",
@@ -146,10 +146,11 @@ def plot_main_results(
             width,
             yerr=data.get("me_stds"),
             label="MultiEmbed",
-            color="gray",
+            color="None",
             edgecolor="k",
             # alpha=0.70,
             linewidth=1,
+            hatch="x",
         )
 
         # Setup ticklabels and legend
