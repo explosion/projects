@@ -344,7 +344,7 @@ def run_multiembed_features_ablation(
 def run_characterize_hash(
     # fmt: off
     datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
-    config: str = Arg("ner_multifewerhashembed", help="Name of the MultiHashFewerEmbed config", show_default=True),
+    config: str = Opt("ner_multifewerhashembed", help="Name of the MultiHashFewerEmbed config", show_default=True),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the GPU ID.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
