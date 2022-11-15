@@ -460,6 +460,124 @@ def plot_spacy_v_fasttext(
         msg.good(f"Saved to {output_path}")
 
 
+@app.command("num-seeds")
+def plot_num_seeds(
+    # fmt: off
+    metrics_path: Path = Arg(..., help="Path to metrics file for spacy vectors"),
+    output_path: Optional[Path] = Arg(None, help="Path to save the file (include extension)"),
+    use_tex: bool = Opt(False, "--latex", "--tex", "--use-tex", "-t", help="Update plt.rcParams with LaTeX"),
+    verbose: bool = Opt(False, "--verbose", "-v", help="Set verbosity."),
+    show: bool = Opt(False, "--show", "-S", help="Call plt.show()"),
+    title: Optional[str] = Opt(None, help="Set figure title")
+    # fmt: on
+):
+    """Plot comparison between spaCy and fastText"""
+    metrics = srsly.read_json(metrics_path)
+    dataset_names = metrics.keys()
+
+    width = 0.20
+    ind = np.arange(len(dataset_names))
+
+    vectors = ["spacy", "fasttext"]
+    data = {
+        "1": [],
+        "2": [],
+        "3": [],
+        "4": [],
+    }
+    for dataset, scores in metrics.items():
+        data["1"].append(round(scores.get("1"), 2))
+        data["2"].append(round(scores.get("2"), 2))
+        data["3"].append(round(scores.get("3"), 2))
+        data["4"].append(round(scores.get("4"), 2))
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    if use_tex:
+        msg.info("Rendering using LaTeX")
+        _use_tex(plt)
+
+    # Figure configuration
+    fig.tight_layout()
+    if title:
+        fig.suptitle(
+            title,
+            fontsize="xx-large",
+            y=1.05,
+            x=0.52,
+        )
+
+    rects1 = ax.bar(
+        ind - width / 0.66667,
+        data.get("1"),
+        width,
+        label="1",
+        linewidth=1,
+        color="None",
+        edgecolor="k",
+        hatch="/",
+    )
+    rects2 = ax.bar(
+        ind - width / 2,
+        data.get("2"),
+        width,
+        label="2",
+        linewidth=1,
+        color="None",
+        edgecolor="k",
+        hatch="//",
+    )
+    rects3 = ax.bar(
+        ind + width / 2,
+        data.get("3"),
+        width,
+        label="3",
+        linewidth=1,
+        color="None",
+        edgecolor="k",
+        hatch="x",
+    )
+    rects4 = ax.bar(
+        ind + width / 0.66667,
+        data.get("4"),
+        width,
+        label="4",
+        alpha=0.70,
+        linewidth=1,
+        color="gray",
+        edgecolor="k",
+    )
+
+    # Setup ticklabels and legend
+    ax.set_ylabel("F1-score", usetex=True)
+    ax.set_xlabel("Dataset", usetex=True)
+    ax.set_xticks(ind)
+    ax.set_xticklabels(dataset_names)
+    ax.set_ylim(top=1.0)
+    ax.legend(
+        loc="lower center",
+        ncol=4,
+        bbox_to_anchor=(0.5, -0.5),
+        title_fontsize="x-large",
+    )
+
+    # Hide the right and top splines
+    ax.spines.right.set_visible(False)
+    ax.spines.top.set_visible(False)
+
+    # Add labels for each rectangle
+    _autolabel(ax, rects=rects1, xpos="center")
+    _autolabel(ax, rects=rects2, xpos="center")
+    _autolabel(ax, rects=rects3, xpos="center")
+    _autolabel(ax, rects=rects4, xpos="center")
+
+    # Prepare output
+    if show:
+        plt.show()
+    if output_path:
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        msg.good(f"Saved to {output_path}")
+
+
 def _autolabel(ax, rects, xpos: str = "center"):
     """Attach a text label above each bar in rects, displaying its height.
 
