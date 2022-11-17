@@ -206,7 +206,7 @@ commands:
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
-        corpus/${vars.dataset}-dev.spacy
+        corpus/${vars.dataset}-test.spacy
         --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
