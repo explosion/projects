@@ -480,16 +480,25 @@ def plot_num_seeds(
 
     vectors = ["spacy", "fasttext"]
     data = {
-        "1": [],
-        "2": [],
-        "3": [],
-        "4": [],
+        "1_avg": [],
+        "2_avg": [],
+        "3_avg": [],
+        "4_avg": [],
+        "1_std": [],
+        "2_std": [],
+        "3_std": [],
+        "4_std": [],
     }
     for dataset, scores in metrics.items():
-        data["1"].append(round(scores.get("1"), 2))
-        data["2"].append(round(scores.get("2"), 2))
-        data["3"].append(round(scores.get("3"), 2))
-        data["4"].append(round(scores.get("4"), 2))
+        data["1_avg"].append(round(scores.get("1")[0], 2))
+        data["2_avg"].append(round(scores.get("2")[0], 2))
+        data["3_avg"].append(round(scores.get("3")[0], 2))
+        data["4_avg"].append(round(scores.get("4")[0], 2))
+
+        data["1_std"].append(round(scores.get("1")[1], 2))
+        data["2_std"].append(round(scores.get("2")[1], 2))
+        data["3_std"].append(round(scores.get("3")[1], 2))
+        data["4_std"].append(round(scores.get("4")[1], 2))
 
     fig, ax = plt.subplots(figsize=(10, 3))
     if use_tex:
@@ -508,8 +517,9 @@ def plot_num_seeds(
 
     rects1 = ax.bar(
         ind - width / 0.66667,
-        data.get("1"),
+        data.get("1_avg"),
         width,
+        yerr=data.get("1_std"),
         label="1",
         linewidth=1,
         color="None",
@@ -518,8 +528,9 @@ def plot_num_seeds(
     )
     rects2 = ax.bar(
         ind - width / 2,
-        data.get("2"),
+        data.get("2_avg"),
         width,
+        yerr=data.get("2_std"),
         label="2",
         linewidth=1,
         color="None",
@@ -528,8 +539,9 @@ def plot_num_seeds(
     )
     rects3 = ax.bar(
         ind + width / 2,
-        data.get("3"),
+        data.get("3_avg"),
         width,
+        yerr=data.get("3_std"),
         label="3",
         linewidth=1,
         color="None",
@@ -538,9 +550,10 @@ def plot_num_seeds(
     )
     rects4 = ax.bar(
         ind + width / 0.66667,
-        data.get("4"),
+        data.get("4_avg"),
         width,
-        label="4",
+        yerr=data.get("4_std"),
+        label="4 (default)",
         alpha=0.70,
         linewidth=1,
         color="gray",
