@@ -4,10 +4,12 @@ description: "This project shows how nebullvm can accelerate spaCy's WikiNER pip
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "default"
+  optimize_opts: "-ot unconstrained -at 0.1"
   gpu: -1
-
-remotes:
-  default: gs://galaxy-state/spacy-v3-benchmarks
+  # limit the number of train/dev docs used during initial NER model training,
+  # -1 for no limit (limit mainly for testing purposes)
+  corpora_train_limit: -1
+  corpora_dev_limit: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -42,8 +44,8 @@ commands:
   - name: train
     help: "Train the full pipeline and optimize the transformer model for inference"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code scripts/extra_components.py"
-      - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/transformer/model -ot unconstrained -at 0.1"
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code scripts/extra_components.py --corpora.dev.limit ${vars.corpora_dev_limit} --corpora.train.limit ${vars.corpora_train_limit}"
+      - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/transformer/model ${vars.optimize_opts}"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
