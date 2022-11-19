@@ -207,14 +207,22 @@ commands:
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
         corpus/${vars.dataset}-test.spacy
-        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-test.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-dev.spacy
+        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
     deps:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
       - corpus/${vars.dataset}-dev.spacy
     outputs:
-      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-test.json
+      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
 
   - name: "evaluate-seen-unseen"
     help: "Evaluate NER model on seen and unseen entities."
