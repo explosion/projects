@@ -319,7 +319,6 @@ def run_multiembed_features_ablation(
                 gpu_id=gpu_id,
                 seed=seed,
                 batch_size=batch_size,
-                custom_attrs=attrs,
                 include_static_vectors=static_vectors.value != StaticVectors.null,
             )
             commands.append(train_command)
