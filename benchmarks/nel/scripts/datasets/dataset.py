@@ -47,8 +47,6 @@ class Dataset(abc.ABC):
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
 
-        self._entities: Optional[Dict[str, schemas.Entity]] = None
-        self._failed_entity_lookups: Optional[Set[str]] = None
         self._annotations: Optional[Dict[str, List[schemas.Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
         self._nlp_base: Optional[Language] = None
@@ -74,8 +72,6 @@ class Dataset(abc.ABC):
             "assets": assets_path,
             "nlp_base": wikid_path / language / "nlp",
             "kb": wikid_path / language / "kb",
-            "entities": assets_path / "entities.pkl",
-            "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
             "annotations": assets_path / "annotations.pkl",
             "nlp_best": root_path / "training" / dataset_name / run_name / "model-best",
             "corpora": root_path / "corpora" / dataset_name
@@ -91,12 +87,10 @@ class Dataset(abc.ABC):
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """
-        self._load_resource("entities")
-        self._load_resource("failed_entity_lookups")
         self._load_resource("annotations")
         self._load_resource("nlp_base")
         Doc.set_extension("overlapping_annotations", default=None)
-        self._annotated_docs = self._create_annotated_docs(filter_terms)
+        self._annotated_docs = self._create_annotated_docs(filter_terms)[:500]
         self._serialize_corpora()
 
     def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
@@ -107,31 +101,19 @@ class Dataset(abc.ABC):
         """
         raise NotImplementedError
 
-    def parse_corpus(self, **kwargs) -> None:
-        """Parses corpus. Loads data on entities and mentions.
-        Populates self._entities, self._failed_entity_lookups, self._annotations.
-        RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
-            lookups, annotations.
+    def extract_annotations(self, **kwargs) -> None:
+        """Parses corpus and extracts annotations. Loads data on entities and mentions.
+        Populates self._annotations.
         """
         self._load_resource("nlp_base")
-        logger.info("Parsing external corpus")
-        (
-            self._entities,
-            self._failed_entity_lookups,
-            self._annotations,
-        ) = self._parse_corpus(**kwargs)
+        logger.info("Extracting annotations from corpus")
+        self._annotations = self._extract_annotations_from_corpus(**kwargs)
+        with open(self._paths["annotations"], "wb") as fp:
+            pickle.dump(self._annotations, fp)
 
-        # Serialize entity information.
-        for to_serialize in (
-            (self._paths["entities"], self._entities),
-            (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
-            (self._paths["annotations"], self._annotations),
-        ):
-            with open(to_serialize[0], "wb") as fp:
-                pickle.dump(to_serialize[1], fp)
-        logger.info("Successfully parsed corpus.")
+        logger.info("Successfully extracted annotations from corpus.")
 
-    def _parse_corpus(
+    def _extract_annotations_from_corpus(
             self, **kwargs
     ) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, List[schemas.Annotation]]]:
         """Parses corpus. Loads data on entities and mentions.
@@ -196,14 +178,6 @@ class Dataset(abc.ABC):
         elif key == "annotations" and (force or not self._annotations):
             with open(path, "rb") as file:
                 self._annotations = pickle.load(file)
-        elif key == "entities" and (force or not self._entities):
-            with open(path, "rb") as file:
-                self._entities = pickle.load(file)
-        elif key == "failed_entity_lookups" and (
-            force or not self._failed_entity_lookups
-        ):
-            with open(self._paths["failed_entity_lookups"], "rb") as file:
-                self._failed_entity_lookups = pickle.load(file)
 
     def evaluate(self, run_name: str) -> None:
         """Evaluates trained pipeline on test set.
@@ -235,6 +209,9 @@ class Dataset(abc.ABC):
                 if ent.text.lower().startswith("the ") else ent
                 for ent in doc.ents
             ]
+
+        for doc in docs:
+            pred_doc = self._nlp_best(doc)
 
         test_set = [
             Example(predicted_doc, doc)

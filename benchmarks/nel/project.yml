@@ -15,6 +15,8 @@ vars:
 
 directories: ["assets", "training", "configs", "scripts", "corpora", "evaluation"]
 
+check_requirements: True
+
 workflows:
   all:
     - download_mewsli9
@@ -24,7 +26,7 @@ workflows:
     - wikid_download_assets
     - wikid_parse
     - wikid_create_kb
-    - parse_corpus
+    - extract_annotations
     - compile_corpora
     - train
     - evaluate
@@ -47,15 +49,15 @@ commands:
       - "python -m spacy download ${vars.vectors_model}"
 
   - name: wikid_clone
-    help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
+    help: "Clone `wikid` to prepare Wiki database and `KnowledgeBase`."
     script:
-      - git clone https://github.com/explosion/wikid.git --branch main
-      - pip install -r wikid/requirements.txt
+      - "git clone https://github.com/rmitsch/wikid.git --branch feature/kb
+      - "pip install -r wikid/requirements.txt"
 
   - name: preprocess
     help: Preprocess and clean corpus data.
     script:
-      - "env PYTHONPATH=. python ./scripts/clean_data.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./scripts/cli_clean_data.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/raw"
     outputs:
@@ -71,39 +73,35 @@ commands:
   - name: wikid_parse
     help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
-      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter True"
+      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter ${vars.filter}"
     outputs:
       - "wikid/output/${vars.language}/wiki.sqlite3"
 
   - name: wikid_create_kb
     help: "Create the knowledge base and write it to file."
     script:
-      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model}"
+      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model} --force"
     deps:
       - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs_no_cache:
       - "wikid/output/${vars.language}/kb"
       - "wikid/output/${vars.language}/nlp"
 
-  - name: parse_corpus
-    help: "Parse corpus to generate entity and annotation lookups used for corpora compilation."
+  - name: extract_annotations
+    help: "Extract annotations from corpus."
     script:
-      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./scripts/cli_extract_annotations.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/clean"
       - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs:
-      - "assets/${vars.dataset}/entities.pkl"
-      - "assets/${vars.dataset}/entities_failed_lookup.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
 
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "env PYTHONPATH=. python ./scripts/compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
+      - "env PYTHONPATH=. python ./scripts/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
     deps:
-      - "assets/${vars.dataset}/entities.pkl"
-      - "assets/${vars.dataset}/entities_failed_lookups.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
       - "wikid/output/${vars.language}/kb"
       - "wikid/output/${vars.language}/nlp"
@@ -128,7 +126,7 @@ commands:
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
+      - "env PYTHONPATH=. python ./scripts/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
       - "wikid/output/${vars.language}/nlp"
@@ -139,7 +137,7 @@ commands:
   - name: compare_evaluations
     help: "Compare available set of evaluation runs."
     script:
-      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
+      - "env PYTHONPATH=. python ./scripts/cli_compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
     deps:
       - "evaluation/${vars.dataset}"
 

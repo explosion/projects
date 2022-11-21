@@ -1,6 +1,7 @@
 """ Dataset class for Mewsli-9 dataset. """
 import csv
 import distutils.dir_util
+import time
 from typing import Tuple, Set, List, Dict, Optional
 
 import tqdm
@@ -8,7 +9,7 @@ from spacy.tokens import Doc
 
 from datasets.dataset import Dataset
 from datasets.utils import fetch_entity_information, create_spans_from_doc_annotation
-from wikid import schemas
+from wikid import schemas, load_entities
 
 
 class Mewsli9Dataset(Dataset):
@@ -18,10 +19,9 @@ class Mewsli9Dataset(Dataset):
     def name(self) -> str:
         return "mewsli_9"
 
-    def _parse_corpus(
+    def _extract_annotations_from_corpus(
         self, **kwargs
-    ) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, List[schemas.Annotation]]]:
-        entity_qids: Set[str] = set()
+    ) -> Dict[str, List[schemas.Annotation]]:
         annotations: Dict[str, List[schemas.Annotation]] = {}
 
         with open(
@@ -30,7 +30,6 @@ class Mewsli9Dataset(Dataset):
             for i, row in enumerate(csv.DictReader(file_path, delimiter="\t")):
                 assert len(row) == 9
 
-                entity_qids.add(row["qid"])
                 if row["docid"] not in annotations:
                     annotations[row["docid"]] = []
                 annotations[row["docid"]].append(
@@ -42,9 +41,7 @@ class Mewsli9Dataset(Dataset):
                     )
                 )
 
-        entities, failed_entity_lookups, _ = fetch_entity_information(tuple(entity_qids), self._language)
-
-        return entities, failed_entity_lookups, annotations
+        return annotations
 
     def clean_assets(self) -> None:
         # No cleaning necessary, just copy all data into /clean.
@@ -60,6 +57,10 @@ class Mewsli9Dataset(Dataset):
             title_file.seek(0)
             n_annots_available = 0
             n_annots_assigned = 0
+            entities = load_entities(
+                qids=tuple({annot.entity_id for annots in self._annotations.values() for annot in annots}),
+                language=self._language
+            )
 
             with tqdm.tqdm(
                 desc="Creating doc objects", total=row_count, leave=False
@@ -83,7 +84,7 @@ class Mewsli9Dataset(Dataset):
                         doc_annots = self._annotations.get(row["docid"], [])
                         doc.ents, _ = create_spans_from_doc_annotation(
                             doc=doc,
-                            entities_info=self._entities,
+                            entities_info=entities,
                             annotations=doc_annots,
                             harmonize_with_doc_ents=True,
                         )
