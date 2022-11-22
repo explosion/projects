@@ -1,27 +1,47 @@
-title: "Merging Pipelines"
-description: "This project automatically combines components from two pipelines into a new one."
-# Variables can be referenced across the project.yml using ${vars.var_name}
+title: "Customizing Pipelines"
+description: >
+  This project includes a script to help customize your pipelines. It allow you
+  to swap a tok2vec for a transformer component, do the opposite, or merge two
+  pipelines.
+
 vars:
   version: "0.0.0"
   # change these to paths to your pipelines, or override on the CLI
-  pipeline_a: "pipeline_a"
-  pipeline_b: "pipeline_b"
-  # name of the output pipeline
-  name: "merged_pipeline"
+  base_pipeline: pipeline_a
+  # this one is just for merging
+  added_pipeline: pipeline_b
+  # name of the output pipeline, for merging
+  output_pipeline: merged_pipeline
+  # name of the base transformer
+  base_transformer: roberta-base
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["dist"]
+directories: [dist, configs]
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "merge"
-    help: "Merge the two pipelines into one pipeline."
+  - name: merge
+    help: Merge the two pipelines into one pipeline.
     script:
-      - "python scripts/merge.py ${vars.pipeline_a} ${vars.pipeline_b} dist/${vars.name}"
+      - "python scripts/customize.py merge ${vars.base_pipeline} ${vars.added_pipeline} dist/${vars.output_pipeline}"
     # input pipelines are not deps because they might be module names
     outputs:
       - "dist/${vars.name}"
+
+  - name: use-transformer
+    help: Use a transformer feature source in a pipeline, keeping listeners updated. Output config.
+    script:
+      - "python scripts/customize.py use-transformer ${vars.base_pipeline} configs/transformer.cfg"
+    outputs:
+      - "configs/transformer.cfg"
+  
+  - name: use-tok2vec
+    help: Use a CNN tok2vec feature source in a pipeline, keeping listeners updated. Output config.
+    script:
+      - "python scripts/customize.py use-tok2vec ${vars.base_pipeline} configs/cnn.cfg"
+    outputs:
+      - "configs/cnn.cfg"
