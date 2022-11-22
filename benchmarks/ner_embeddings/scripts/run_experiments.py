@@ -367,7 +367,7 @@ def run_characterize_hash(
                 lang=vectors.get("lang"),
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
                 gpu_id=gpu_id,
-                seed=seed,
+                seed=num_hash,
                 batch_size=batch_size,
                 include_static_vectors=static_vectors.value != StaticVectors.null,
                 num_hash=num_hash,
@@ -380,7 +380,7 @@ def run_characterize_hash(
                 config=config,
                 gpu_id=gpu_id,
                 vectors=vectors.get(static_vectors.value, StaticVectors.null),
-                seed=seed,
+                seed=num_hash,
                 metrics_dir=f"metrics-{experiment_id}-{num_hash}",
                 eval_unseen=False,
             )
