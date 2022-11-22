@@ -213,7 +213,7 @@ def merge_pipelines(base_model: str, added_model: str, output_path: Path):
 def use_transformer(
     base_model: str, output_path: Path, transformer_name: str = "roberta-base"
 ):
-    """Use a transformer component in your pipeline and update listeners."""
+    """Replace pipeline tok2vec with transformer, update listeners, output config."""
     # 1. identify tok2vec
     # 2. replace tok2vec
     # 3. replace listeners
@@ -250,7 +250,7 @@ def use_transformer(
 
 
 def use_tok2vec(base_model: str, output_path: Path):
-    """Use a CNN tok2vec component in your pipeline and update listeners."""
+    """Replace pipeline tok2vec with CNN tok2vec, update listeners, output config."""
     nlp = spacy.load(base_model)
     check_tok2vecs(base_model, nlp.config)
 
