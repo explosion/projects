@@ -12,7 +12,7 @@ def load_kb(kb_path: Path) -> Callable[[Vocab], WikiKB]:
     kb_path (Path): Path to WikiKB file.
     RETURNS (Callable[[Vocab], WikiKB]): Callable generating WikiKB from disk.
     """
-    def kb_from_file(_: Vocab):
+    def kb_from_file(_: Vocab) -> WikiKB:
         return WikiKB.generate_from_disk(path=kb_path)
 
     return kb_from_file
