@@ -49,7 +49,6 @@ class Dataset(abc.ABC):
 
         self._annotations: Optional[Dict[str, List[schemas.Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
-        self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
         self._annotated_docs: Optional[List[Doc]] = None
 
@@ -63,16 +62,16 @@ class Dataset(abc.ABC):
         """
 
         root_path = Path(os.path.abspath(__file__)).parent.parent.parent
-        wikid_path = root_path / "wikid" / "output"
+        wikid_output_path = root_path / "wikid" / "output"
         assets_path = root_path / "assets" / dataset_name
 
         return {
             "root": root_path,
             "evaluation": root_path / "configs" / "evaluation.yml",
             "assets": assets_path,
-            "nlp_base": wikid_path / language / "nlp",
-            "kb": wikid_path / language / "kb",
+            "kb": wikid_output_path / language / "kb",
             "annotations": assets_path / "annotations.pkl",
+            "nlp_base": root_path / "training" / "base-nlp" / language,
             "nlp_best": root_path / "training" / dataset_name / run_name / "model-best",
             "corpora": root_path / "corpora" / dataset_name
         }
@@ -82,19 +81,31 @@ class Dataset(abc.ABC):
         """Returns dataset name."""
         raise NotImplementedError
 
-    def compile_corpora(self, filter_terms: Optional[Set[str]] = None) -> None:
+    def compile_corpora(self, model: str, filter_terms: Optional[Set[str]] = None) -> None:
         """Creates train/dev/test corpora for dataset.
+        model (str): Name or path of model with tokenizer, tok2vec, parser, tagger, parser.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """
         self._load_resource("annotations")
-        self._load_resource("nlp_base")
         Doc.set_extension("overlapping_annotations", default=None)
-        self._annotated_docs = self._create_annotated_docs(filter_terms)[:500]
+        nlp_components = ["tok2vec", "parser", "tagger", "senter", "attribute_ruler"]
+        nlp = spacy.load(model, enable=nlp_components, disable=[])
+
+        # Incorporate annotations from corpus into documents.
+        self._annotated_docs = self._create_annotated_docs(nlp, filter_terms)
+
+        # Serialize pipeline and corpora.
+        self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
+        nlp.to_disk(
+            self._paths["nlp_base"],
+            exclude=[comp for comp in nlp.component_names if comp not in nlp_components]
+        )
         self._serialize_corpora()
 
-    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
+    def _create_annotated_docs(self, nlp: Language, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         """Creates docs annotated with entities.
+        nlp (Language): Model with tokenizer, tok2vec and parser.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         RETURN (List[Doc]): List of docs reflecting all entity annotations.
@@ -105,7 +116,6 @@ class Dataset(abc.ABC):
         """Parses corpus and extracts annotations. Loads data on entities and mentions.
         Populates self._annotations.
         """
-        self._load_resource("nlp_base")
         logger.info("Extracting annotations from corpus")
         self._annotations = self._extract_annotations_from_corpus(**kwargs)
         with open(self._paths["annotations"], "wb") as fp:

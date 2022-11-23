@@ -4,7 +4,7 @@ vars:
   run: "cg-default"
   language: "en"
   config: "nel.cfg"
-  vectors_model: "en_core_web_lg"
+  base_model: "en_core_web_lg"
   version: "0.0.6"
   dataset: "mewsli_9"
   gpu_id: ""
@@ -46,12 +46,12 @@ commands:
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
     script:
-      - "python -m spacy download ${vars.vectors_model}"
+      - "python -m spacy download ${vars.base_model}"
 
   - name: wikid_clone
     help: "Clone `wikid` to prepare Wiki database and `KnowledgeBase`."
     script:
-      - "git clone https://github.com/rmitsch/wikid.git --branch feature/kb
+      - "git clone https://github.com/rmitsch/wikid.git --branch fix/reestablish-db-connection-after-load"
       - "pip install -r wikid/requirements.txt"
 
   - name: preprocess
@@ -80,12 +80,12 @@ commands:
   - name: wikid_create_kb
     help: "Create the knowledge base and write it to file."
     script:
-      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model} --force"
+      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.base_model} --force"
     deps:
       - "wikid/output/${vars.language}/wiki.sqlite3"
-    outputs_no_cache:
+    outputs:
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
+      - "wikid/output/${vars.language}/wiki.annoy"
 
   - name: extract_annotations
     help: "Extract annotations from corpus."
@@ -100,11 +100,10 @@ commands:
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
+      - "env PYTHONPATH=. python ./scripts/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.base_model} ${vars.filter}"
     deps:
       - "assets/${vars.dataset}/annotations.pkl"
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
       - "configs/datasets.yml"
     outputs:
       - "corpora/${vars.dataset}/train.spacy"
@@ -119,7 +118,8 @@ commands:
       - "training/${vars.dataset}/${vars.run}"
     deps:
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "training/base-nlp/${vars.language}"
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
 
@@ -129,7 +129,9 @@ commands:
       - "env PYTHONPATH=. python ./scripts/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
-      - "wikid/output/${vars.language}/nlp"
+      - "training/base-nlp/${vars.language}"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "training/base-nlp/${vars.language}"
       - "corpora/${vars.dataset}/dev.spacy"
     outputs:
       - "evaluation/${vars.dataset}"

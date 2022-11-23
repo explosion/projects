@@ -4,7 +4,9 @@ import distutils.dir_util
 import time
 from typing import Tuple, Set, List, Dict, Optional
 
+import spacy
 import tqdm
+from spacy import Language
 from spacy.tokens import Doc
 
 from datasets.dataset import Dataset
@@ -47,20 +49,33 @@ class Mewsli9Dataset(Dataset):
         # No cleaning necessary, just copy all data into /clean.
         distutils.dir_util.copy_tree(str(self._paths["assets"] / "raw"), str(self._paths["assets"] / "clean"))
 
-    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
+    def _create_annotated_docs(self, nlp: Language, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
         annotated_docs: List[Doc] = []
 
         with open(
             self._paths["assets"] / "clean" / "en" / "docs.tsv", encoding="utf-8"
         ) as title_file:
+            # todo
+            #   - update nel.cfg with correct file path
+            #   - add KB loader - code and to config
+            #   - ensure training runs and uses WikiKB
             row_count = sum(1 for _ in title_file)
             title_file.seek(0)
             n_annots_available = 0
             n_annots_assigned = 0
-            entities = load_entities(
-                qids=tuple({annot.entity_id for annots in self._annotations.values() for annot in annots}),
-                language=self._language
-            )
+
+            # Load entities batched to avoid hitting max. number of parameters supported by SQLite.
+            batch_size = 2**14
+            qids = tuple({annot.entity_id for annots in self._annotations.values() for annot in annots})
+            entities = {
+                qid: entity_info
+                for entity_batch in
+                [
+                    load_entities(qids=qids[i:i + batch_size], language=self._language)
+                    for i in range(0, len(qids), batch_size)
+                ]
+                for qid, entity_info in entity_batch.items()
+            }
 
             with tqdm.tqdm(
                 desc="Creating doc objects", total=row_count, leave=False
@@ -80,13 +95,10 @@ class Mewsli9Dataset(Dataset):
                             pbar.update(1)
                             continue
 
-                        doc = self._nlp_base(doc_text)
+                        doc = nlp(doc_text)
                         doc_annots = self._annotations.get(row["docid"], [])
                         doc.ents, _ = create_spans_from_doc_annotation(
-                            doc=doc,
-                            entities_info=entities,
-                            annotations=doc_annots,
-                            harmonize_with_doc_ents=True,
+                            doc=doc, entities_info=entities, annotations=doc_annots,
                         )
                         annotated_docs.append(doc)
                         n_annots_available += len(doc_annots)

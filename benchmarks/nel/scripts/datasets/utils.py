@@ -67,28 +67,16 @@ def create_spans_from_doc_annotation(
     doc: Doc,
     entities_info: Dict[str, schemas.Entity],
     annotations: List[schemas.Annotation],
-    harmonize_with_doc_ents: bool,
 ) -> Tuple[List[Span], List[schemas.Annotation]]:
     """Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
     entities_info (Dict[str, Entity]): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
-    harmonize_harmonize_with_doc_ents (Language): Whether to only keep those annotations matched by entities in the
-        provided Doc object.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
-    doc_ents_idx = {
-        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all leading
-        # "the " and adjust the entity positions accordingly.
-        (ent.start_char + (0 if not ent.text.lower().startswith("the ") else 4), ent.end_char)
-        for ent in doc.ents
-    }
     doc_annots: List[schemas.Annotation] = []
     overlapping_doc_annotations: List[schemas.Annotation] = []
-
-    if harmonize_with_doc_ents and len(doc_ents_idx) == 0:
-        return [], []
 
     for i, annot_data in enumerate(
         sorted(
@@ -119,10 +107,6 @@ def create_spans_from_doc_annotation(
             ):
                 annot.end_pos = token.idx + len(token)
                 break
-
-        # After token alignment: filter with NER pipeline, if available.
-        if harmonize_with_doc_ents and (annot.start_pos, annot.end_pos) not in doc_ents_idx:
-            continue
 
         # If there is an overlap between annotation's start and end position and this token's parsed start
         # and end, we try to create a span with this token's position.
