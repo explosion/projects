@@ -89,11 +89,12 @@ class Dataset(abc.ABC):
         """
         self._load_resource("annotations")
         Doc.set_extension("overlapping_annotations", default=None)
-        nlp_components = ["tok2vec", "parser", "tagger", "senter", "attribute_ruler"]
-        nlp = spacy.load(model, enable=nlp_components, disable=[])
+        nlp_components = ["tok2vec", "parser", "tagger", "attribute_ruler"]
+        nlp = spacy.load(model, enable=nlp_components)
 
-        # Incorporate annotations from corpus into documents.
-        self._annotated_docs = self._create_annotated_docs(nlp, filter_terms)
+        # Incorporate annotations from corpus into documents. Only keep docs with entities (relevant mostly when working
+        # with filtered data).
+        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)]
 
         # Serialize pipeline and corpora.
         self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
@@ -104,7 +105,7 @@ class Dataset(abc.ABC):
         self._serialize_corpora()
 
     def _create_annotated_docs(self, nlp: Language, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
-        """Creates docs annotated with entities.
+        """Creates docs annotated with entities. This should set documents `ents` attribute.
         nlp (Language): Model with tokenizer, tok2vec and parser.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
@@ -161,8 +162,7 @@ class Dataset(abc.ABC):
 
         for key, idx in indices.items():
             corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx])
-            if not self._paths["corpora"].exists():
-                self._paths["corpora"].mkdir()
+            self._paths["corpora"].mkdir(parents=True, exist_ok=True)
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
         logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
@@ -174,14 +174,14 @@ class Dataset(abc.ABC):
 
         path = self._paths[key]
 
-        if key == "nlp_base" and (force or not self._nlp_base):
-            self._nlp_base = spacy.load(path)
-        elif key == "nlp_best" and (force or not self._nlp_best):
+        if key == "nlp_best" and (force or not self._nlp_best):
             self._nlp_best = spacy.load(path)
         elif key == "kb" and (force or not self._kb):
-            self._load_resource("nlp_base")
+            nlp = spacy.load(self._paths["nlp_base"])
+            # todo how to load knowledgebase if not all arguments are known?
+            #   mandate factory method?
             self._kb = KnowledgeBase(
-                vocab=self._nlp_base.vocab,
+                vocab=nlp.vocab,
                 entity_vector_length=self._nlp_base.vocab.vectors_length,
             )
             self._kb.from_disk(path)
@@ -193,9 +193,10 @@ class Dataset(abc.ABC):
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
         """
-        self._load_resource("nlp_best")
-        self._load_resource("nlp_base")
+        # todo load KB with entity_linker.kb_loader (or retrieve directly from nlp?)
+        nlp = spacy.load(self._paths["nlp_best"])
         self._load_resource("kb")
+        self._load_resource("nlp_best")
 
         with open(self._paths["evaluation"], "r") as config_file:
             eval_config = yaml.safe_load(config_file)
