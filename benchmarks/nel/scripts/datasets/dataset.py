@@ -178,7 +178,6 @@ class Dataset(abc.ABC):
 
         with open(self._paths["evaluation"], "r") as config_file:
             eval_config = yaml.safe_load(config_file)
-
         if eval_config["external"]["spacyfishing"]:
             nlp_base.add_pipe("entityfishing", last=True)
 
@@ -223,12 +222,12 @@ class Dataset(abc.ABC):
                 if len(ent_gold_ids) == 0:
                     continue
                 ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
-                # todo switch to get_candidates_all() here?
-                ent_cands = {
-                    (ent.start_char, ent.end_char): {
-                        cand.entity_: cand for cand in entity_linker.get_candidates(self._kb, ent)
-                    }
-                    for ent in example.reference.ents
+                ent_cands_by_offset = {
+                    (ent.start_char, ent.end_char): {cand.entity_: cand for cand in ent_cands}
+                    for ent, ent_cands in zip(
+                        example.reference.ents,
+                        next(entity_linker.get_candidates_all(self._kb, (ents for ents in [example.reference.ents])))
+                    )
                 }
 
                 # Update candidate generation stats.
@@ -238,9 +237,9 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        if ent.kb_id_ not in set(ent_cands.get(ent_offset, {})):
-                            print(ent.kb_id_, set(ent_cands.get(ent_offset, {})))
-                        candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
+                        candidate_results.update_metrics(
+                            label, ent.kb_id_, set(ent_cands_by_offset.get(ent_offset, {}).keys())
+                        )
 
                 # Update entity disambiguation stats for baselines.
                 evaluation.add_disambiguation_baseline(
@@ -248,15 +247,15 @@ class Dataset(abc.ABC):
                     label_counts,
                     example.predicted,
                     ent_gold_ids,
-                    ent_cands,
+                    ent_cands_by_offset,
                 )
 
                 # Update entity disambiguation stats for trained model.
-                evaluation.add_disambiguation_eval_result(trained_results, example.predicted, ent_gold_ids, ent_cands)
+                evaluation.add_disambiguation_eval_result(trained_results, example.predicted, ent_gold_ids, ent_cands_by_offset)
 
-                if eval_config["external"]["spacyfishing"]:
+                if eval_config["external"].get("spacyfishing", False):
                     try:
-                        doc = self._nlp_base(example.reference.text)
+                        doc = nlp_base(example.reference.text)
                     except TypeError:
                         doc = None
                     evaluation.add_disambiguation_spacyfishing_eval_result(spacyfishing_results, doc, ent_gold_ids)
