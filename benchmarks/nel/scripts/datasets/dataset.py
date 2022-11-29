@@ -24,6 +24,7 @@ from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
 from wikid import schemas
+from wikid.scripts.kb import WikiKB
 from . import evaluation
 from utils import get_logger
 
@@ -87,7 +88,8 @@ class Dataset(abc.ABC):
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """
-        self._load_resource("annotations")
+        with open(self._paths["annotations"], "rb") as file:
+            self._annotations = pickle.load(file)
         Doc.set_extension("overlapping_annotations", default=None)
         nlp_components = ["tok2vec", "parser", "tagger", "attribute_ruler"]
         nlp = spacy.load(model, enable=nlp_components)
@@ -166,43 +168,19 @@ class Dataset(abc.ABC):
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
         logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
-    def _load_resource(self, key: str, force: bool = False) -> None:
-        """Loads serialized resource.
-        key (str): Resource key. Must be in self._paths.
-        force (bool): Load from disk even if already not None.
-        """
-
-        path = self._paths[key]
-
-        if key == "nlp_best" and (force or not self._nlp_best):
-            self._nlp_best = spacy.load(path)
-        elif key == "kb" and (force or not self._kb):
-            nlp = spacy.load(self._paths["nlp_base"])
-            # todo how to load knowledgebase if not all arguments are known?
-            #   mandate factory method?
-            self._kb = KnowledgeBase(
-                vocab=nlp.vocab,
-                entity_vector_length=self._nlp_base.vocab.vectors_length,
-            )
-            self._kb.from_disk(path)
-        elif key == "annotations" and (force or not self._annotations):
-            with open(path, "rb") as file:
-                self._annotations = pickle.load(file)
-
     def evaluate(self, run_name: str) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
         """
-        # todo load KB with entity_linker.kb_loader (or retrieve directly from nlp?)
-        nlp = spacy.load(self._paths["nlp_best"])
-        self._load_resource("kb")
-        self._load_resource("nlp_best")
+        nlp_base = spacy.load(self._paths["nlp_base"])
+        self._nlp_best = spacy.load(self._paths["nlp_best"])
+        self._kb = WikiKB.generate_from_disk(self._paths["kb"])
 
         with open(self._paths["evaluation"], "r") as config_file:
             eval_config = yaml.safe_load(config_file)
 
         if eval_config["external"]["spacyfishing"]:
-            self._nlp_base.add_pipe("entityfishing", last=True)
+            nlp_base.add_pipe("entityfishing", last=True)
 
         # Apply config overrides, if defined.
         if "config_overrides" in eval_config and eval_config["config_overrides"]:
@@ -212,29 +190,18 @@ class Dataset(abc.ABC):
         # Infer test set.
         test_set_path = self._paths["corpora"] / "test.spacy"
         docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
-        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-        # leading "the " and adjust the entity positions accordingly.
-        for doc in docs:
-            doc.ents = [
-                doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                if ent.text.lower().startswith("the ") else ent
-                for ent in doc.ents
-            ]
-
-        for doc in docs:
-            pred_doc = self._nlp_best(doc)
 
         test_set = [
             Example(predicted_doc, doc)
             for predicted_doc, doc in zip(
                 [
                     doc for doc in tqdm.tqdm(
-                        self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
+                        self._nlp_best.pipe(texts=docs, n_process=-1, batch_size=500),
                         desc="Inferring entities for test set",
                         total=len(docs)
                     )
                 ],
-                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
+                docs
             )
         ]
 
@@ -249,14 +216,14 @@ class Dataset(abc.ABC):
         for example in tqdm.tqdm(test_set, total=len(test_set), leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
-                entity_linker: Union[EntityLinker, EntityLinker_v1] = \
-                    self._nlp_best.get_pipe("entity_linker")  # type: ignore
+                entity_linker: EntityLinker = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 if len(ent_gold_ids) == 0:
                     continue
                 ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
+                # todo switch to get_candidates_all() here?
                 ent_cands = {
                     (ent.start_char, ent.end_char): {
                         cand.entity_: cand for cand in entity_linker.get_candidates(self._kb, ent)
@@ -271,6 +238,8 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
+                        if ent.kb_id_ not in set(ent_cands.get(ent_offset, {})):
+                            print(ent.kb_id_, set(ent_cands.get(ent_offset, {})))
                         candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
 
                 # Update entity disambiguation stats for baselines.

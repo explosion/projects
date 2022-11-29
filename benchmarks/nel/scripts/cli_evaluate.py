@@ -1,5 +1,6 @@
 """ Evaluation on test data. """
 from datasets.dataset import Dataset
+import custom_functions
 import typer
 
 
@@ -9,9 +10,6 @@ def main(dataset_name: str, run_name: str, language: str):
     run_name (str): Run name.
     language (str): Language.
     """
-    # todo
-    #   - add custom loader making sure that, for training, entities are in documents loaded from docbin
-    #   - figure out spacy.load() issue (issue with to_disk() in combination with wikikb?)
     Dataset.generate_from_id(dataset_name, language, run_name).evaluate(run_name=run_name)
 
 

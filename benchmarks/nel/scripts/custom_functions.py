@@ -1,4 +1,3 @@
-import functools
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -6,39 +5,36 @@ import spacy
 from spacy import registry, Vocab, Language
 from spacy.tokens import DocBin
 from spacy.training import Example
+from spacy.pipeline import EntityLinker
 
 from wikid.scripts.kb import WikiKB
 
 
 @spacy.registry.readers("EntityEnrichedCorpusReader.v1")
-def create_docbin_reader(path: Path, dataset_name: str) -> Callable[[Language], Iterable[Example]]:
+def create_docbin_reader(path: Path) -> Callable[[Language], Iterable[Example]]:
     """Returns Callable generating a corpus reader function that enriches read documents with the correct entities as
     specified in the corpus annotations.
     path (Path): Path to DocBin file with documents to prepare.
-    dataset_name (str): Dataset name/ID.
     """
-    # todo read_files as local function?
-    return functools.partial(read_files, path)
+    def read_docbin(nlp: Language) -> Iterable[Example]:
+        """Read DocBin for training. Set all entities as they appear in the annotated corpus, but set entity type to
+        NIL.
+        nlp (Language): Pipeline to use for creating document used in EL from reference document.
+        """
+        nlp.disable_pipe("entity_linker")
 
+        with nlp.select_pipes(disable="entity_linker"):
+            for doc in DocBin().from_disk(path).get_docs(nlp.vocab):
+                pred_doc = nlp(doc.text)
+                pred_doc.ents = [
+                    doc.char_span(ent.start_char, ent.end_char, label=EntityLinker.NIL, kb_id=EntityLinker.NIL)
+                    for ent in doc.ents
+                ]
+                yield Example(pred_doc, doc)
 
-def read_files(path: Path, nlp: Language) -> Iterable[Example]:
-    # todo docstring
-    # we run the full pipeline and not just nlp.make_doc to ensure we have entities and sentences
-    # which are needed during training of the entity linker.
-    with nlp.select_pipes(disable="entity_linker"):
-        doc_bin = DocBin().from_disk(path)
-        docs = list(doc_bin.get_docs(nlp.vocab))
-        print(len(docs))
-        for doc in docs:
-            print("***", doc.ents, len(doc.ents))
-            doc = nlp(doc.text)
-            # todo set entities in predicted doc (with entity_id == NIL).
-            if len(doc.ents):
-                print(doc)
-                for ent in doc.ents:
-                    print("  ", ent.ent_id_, ent.start_char, ent.end_char)
-                print("------")
-            yield Example(nlp(doc.text), doc)
+        nlp.enable_pipe("entity_linker")
+
+    return read_docbin
 
 
 @registry.misc("spacy.WikiKBFromFile.v1")
@@ -51,3 +47,28 @@ def load_kb(kb_path: Path) -> Callable[[Vocab], WikiKB]:
         return WikiKB.generate_from_disk(path=kb_path)
 
     return kb_from_file
+
+
+@registry.misc("spacy.EmptyWikiKB.v1")
+def empty_wiki_kb() -> Callable[[Vocab, int], WikiKB]:
+    """Generates empty WikiKB instance.
+    RETURNS (Callable[[Vocab, int], WikiKB]): Callable generating WikiKB from disk.
+    """
+    def empty_kb_factory(vocab: Vocab, entity_vector_length: int):
+        """Generates new WikiKB instance.
+        Since WikiKB relies on an external DB file that we have no information on at this point, this instance will not
+        have initialized its DB connection. Also, its parameters specified at init are arbitrarily chosen. This only
+        serves to return a placeholder WikiKB instance to be overwritten using .from_bytes() or .from_disk().
+        vocab (Vocab): Vocab instance.
+        entity_vector_length (int): Entity vector length.
+        """
+        return WikiKB(
+            vocab=vocab,
+            entity_vector_length=entity_vector_length,
+            db_path=Path("."),
+            annoy_path=Path(".annoy"),
+            language=".",
+            establish_db_connection_at_init=False
+        )
+
+    return empty_kb_factory
