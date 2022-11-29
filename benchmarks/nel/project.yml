@@ -1,7 +1,7 @@
 title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
 vars:
-  run: "cg-default"
+  run: "default"
   language: "en"
   config: "nel.cfg"
   base_model: "en_core_web_lg"

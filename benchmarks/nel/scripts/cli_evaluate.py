@@ -14,5 +14,4 @@ def main(dataset_name: str, run_name: str, language: str):
 
 
 if __name__ == "__main__":
-    main("mewsli_9", "cg-default", "en")
-    # typer.run(main)
+    typer.run(main)
