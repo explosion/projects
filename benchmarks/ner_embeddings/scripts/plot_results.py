@@ -150,7 +150,7 @@ def plot_main_results(
             edgecolor="k",
             # alpha=0.70,
             linewidth=1,
-            hatch="x",
+            # hatch="x",
         )
 
         # Setup ticklabels and legend
@@ -272,7 +272,7 @@ def plot_min_freq(
             linewidth=1,
             color="None",
             edgecolor="k",
-            hatch="/",
+            # hatch="/",
         )
         rects3 = ax.bar(
             ind + width / 2,
@@ -282,14 +282,14 @@ def plot_min_freq(
             linewidth=1,
             color="None",
             edgecolor="k",
-            hatch="//",
+            hatch="/",
         )
         rects4 = ax.bar(
             ind + width / 0.66667,
             data.get("1"),
             width,
             label="1",
-            alpha=0.70,
+            # alpha=0.70,
             linewidth=1,
             color="None",
             edgecolor="k",
@@ -332,7 +332,7 @@ def plot_min_freq(
     _plot(
         ax1,
         _prepare_data(metrics_spacy),
-        [0.81, 0.82, 0.47, 0.85, 0.81],  # MultiHashembed results
+        [0.81, 0.82, 0.47, 0.85, 0.81, 0.86],  # MultiHashembed results
         title="with static vectors",
         show_xlabel=False,
         show_legend=False,
@@ -340,7 +340,7 @@ def plot_min_freq(
     _plot(
         ax2,
         _prepare_data(metrics_null),
-        [0.74, 0.69, 0.27, 0.83, 0.78],  # Multihashembed results
+        [0.74, 0.69, 0.27, 0.83, 0.78, 0.82],  # Multihashembed results
         title="without static vectors",
         show_legend=True,
         legend_loc=(0.5, -0.7),
@@ -524,7 +524,7 @@ def plot_num_seeds(
         linewidth=1,
         color="None",
         edgecolor="k",
-        hatch="/",
+        # hatch="/",
     )
     rects2 = ax.bar(
         ind - width / 2,
@@ -535,7 +535,7 @@ def plot_num_seeds(
         linewidth=1,
         color="None",
         edgecolor="k",
-        hatch="//",
+        hatch="/",
     )
     rects3 = ax.bar(
         ind + width / 2,
