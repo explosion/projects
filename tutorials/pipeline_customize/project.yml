@@ -27,7 +27,7 @@ commands:
   - name: merge
     help: Merge the two pipelines into one pipeline.
     script:
-      - "python scripts/customize.py merge ${vars.base_pipeline} ${vars.added_pipeline} dist/${vars.output_pipeline}"
+      - "python -m scripts.merge ${vars.base_pipeline} ${vars.added_pipeline} dist/${vars.output_pipeline}"
     # input pipelines are not deps because they might be module names
     outputs:
       - "dist/${vars.output_pipeline}"
@@ -35,13 +35,13 @@ commands:
   - name: use-transformer
     help: Use a transformer feature source in a pipeline, keeping listeners updated. Output config.
     script:
-      - "python scripts/customize.py use-transformer --transformer-name ${vars.base_transformer} ${vars.base_pipeline} configs/transformer.cfg"
+      - "python -m scripts.configure_tok2vec use-transformer --transformer-name ${vars.base_transformer} ${vars.base_pipeline} configs/transformer.cfg"
     outputs:
       - "configs/transformer.cfg"
   
   - name: use-tok2vec
     help: Use a CNN tok2vec feature source in a pipeline, keeping listeners updated. Output config.
     script:
-      - "python scripts/customize.py use-tok2vec ${vars.base_pipeline} configs/cnn.cfg"
+      - "python -m scripts.configure_tok2vec use-tok2vec ${vars.base_pipeline} configs/cnn.cfg"
     outputs:
       - "configs/cnn.cfg"
