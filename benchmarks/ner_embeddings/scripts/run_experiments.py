@@ -41,6 +41,7 @@ def _make_train_command(
     seed: int,
     include_static_vectors: bool,
     adjust_rows: bool = False,
+    adjust_value: int = 1,
     tables_path: str = "tables",
     batch_size: int = 1000,
     num_hash: Optional[int] = None,
@@ -55,7 +56,7 @@ def _make_train_command(
         cmd_vectors = "--vars.include_static_vectors false"
     if adjust_rows and config != "ner_multiembed":
         modifier = "-custom-rows"
-        new_rows = _get_computed_rows(tables_path, dataset)
+        new_rows = _get_computed_rows(tables_path, dataset, adjust_value)
         cmd_rows = f"--vars.rows '{new_rows}'"
     if num_hash:
         modifier = "-hash"
@@ -86,11 +87,12 @@ def _format_attrs(attrs: List[str]) -> str:
     return cmd_attrs
 
 
-def _get_computed_rows(tables_path: str, dataset: str) -> List:
+def _get_computed_rows(tables_path: str, dataset: str, adjust_value: int) -> List:
     attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
     table_filepath = f"{tables_path}/{dataset}/{dataset}-train.tables"
     table = srsly.read_msgpack(table_filepath)
-    attr_sizes = {attr: len(table[attr]) for attr in attrs}
+    attr_sizes = {attr: int(len(table[attr]) / adjust_value) for attr in attrs}
+    msg.text(f"Adjusted to {attr_sizes}")
     return list(attr_sizes.values())
 
 
@@ -151,6 +153,7 @@ def run_main_results(
     config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables."),
+    adjust_value: int = Opt(1, "--adjust-value", help="Setup how much should the rows be adjusted"),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),
     eval_unseen: bool = Opt(False, "--eval-unseen", help="Evaluate on unseen entities."),
@@ -183,6 +186,7 @@ def run_main_results(
             gpu_id=gpu_id,
             seed=seed,
             adjust_rows=adjust_rows,
+            adjust_value=adjust_value,
             batch_size=batch_size,
             include_static_vectors=static_vectors.value != StaticVectors.null,
         )
