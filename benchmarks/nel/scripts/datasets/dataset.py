@@ -91,8 +91,9 @@ class Dataset(abc.ABC):
         with open(self._paths["annotations"], "rb") as file:
             self._annotations = pickle.load(file)
         Doc.set_extension("overlapping_annotations", default=None)
-        nlp_components = ["tok2vec", "parser", "tagger", "attribute_ruler"]
+        nlp_components = ["tok2vec", "tagger", "attribute_ruler"]
         nlp = spacy.load(model, enable=nlp_components)
+        nlp.add_pipe("sentencizer")
 
         # Incorporate annotations from corpus into documents. Only keep docs with entities (relevant mostly when working
         # with filtered data).
@@ -102,7 +103,7 @@ class Dataset(abc.ABC):
         self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
         nlp.to_disk(
             self._paths["nlp_base"],
-            exclude=[comp for comp in nlp.component_names if comp not in nlp_components]
+            exclude=[comp for comp in nlp.component_names if comp not in [*nlp_components, "sentencizer"]]
         )
         self._serialize_corpora()
 
@@ -168,10 +169,14 @@ class Dataset(abc.ABC):
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
         logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
-    def evaluate(self, run_name: str) -> None:
+    def evaluate(self, gpu_id: Optional[int] = None) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
+        gpu_id (Optional[int]): ID of GPU to utilize.
         """
+        if gpu_id is not None:
+            spacy.require_gpu(gpu_id)
+
         nlp_base = spacy.load(self._paths["nlp_base"])
         self._nlp_best = spacy.load(self._paths["nlp_best"])
         self._kb = WikiKB.generate_from_disk(self._paths["kb"])
@@ -195,7 +200,7 @@ class Dataset(abc.ABC):
             for predicted_doc, doc in zip(
                 [
                     doc for doc in tqdm.tqdm(
-                        self._nlp_best.pipe(texts=docs, n_process=-1, batch_size=500),
+                        self._nlp_best.pipe(texts=docs, n_process=1 if gpu_id else -1, batch_size=500),
                         desc="Inferring entities for test set",
                         total=len(docs)
                     )
@@ -273,7 +278,7 @@ class Dataset(abc.ABC):
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
-        evaluation.EvaluationResults.report(tuple(eval_results), run_name=run_name, dataset_name=self.name)
+        evaluation.EvaluationResults.report(tuple(eval_results), run_name=self._run_name, dataset_name=self.name)
 
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.

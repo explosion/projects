@@ -3,6 +3,7 @@
 from typing import Dict, List, Set, Tuple
 import tqdm
 from spacy.tokens import Token, Span, Doc
+from spacy.pipeline import EntityLinker
 from wikid import schemas, load_entities
 
 
@@ -127,7 +128,7 @@ def create_spans_from_doc_annotation(
     doc_spans = [
         # No label/entity type information available.
         doc.char_span(
-            annot.start_pos, annot.end_pos, label="NIL", kb_id=annot.entity_id
+            annot.start_pos, annot.end_pos, label=EntityLinker.NIL, kb_id=annot.entity_id
         )
         for annot in doc_annots
     ]

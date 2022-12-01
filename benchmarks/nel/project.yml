@@ -126,7 +126,7 @@ commands:
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
+      - "env PYTHONPATH=. python ./scripts/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language} ${vars.gpu_id}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
       - "training/base-nlp/${vars.language}"

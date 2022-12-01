@@ -55,10 +55,6 @@ class Mewsli9Dataset(Dataset):
         with open(
             self._paths["assets"] / "clean" / "en" / "docs.tsv", encoding="utf-8"
         ) as title_file:
-            # todo
-            #   - update nel.cfg with correct file path
-            #   - add KB loader - code and to config
-            #   - ensure training runs and uses WikiKB
             row_count = sum(1 for _ in title_file)
             title_file.seek(0)
             n_annots_available = 0

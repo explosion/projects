@@ -11,28 +11,67 @@ from wikid.scripts.kb import WikiKB
 
 
 @spacy.registry.readers("EntityEnrichedCorpusReader.v1")
-def create_docbin_reader(path: Path) -> Callable[[Language], Iterable[Example]]:
+def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language], Iterable[Example]]:
     """Returns Callable generating a corpus reader function that enriches read documents with the correct entities as
     specified in the corpus annotations.
     path (Path): Path to DocBin file with documents to prepare.
+    path_nlp_base (Path): Path to pipeline for tokenization/sentence.
     """
-    def read_docbin(nlp: Language) -> Iterable[Example]:
+    def read_docbin(_: Language) -> Iterable[Example]:
         """Read DocBin for training. Set all entities as they appear in the annotated corpus, but set entity type to
         NIL.
         nlp (Language): Pipeline to use for creating document used in EL from reference document.
         """
-        nlp.disable_pipe("entity_linker")
+        nlp = spacy.load(path_nlp_base, enable=["senter"])
 
-        with nlp.select_pipes(disable="entity_linker"):
-            for doc in DocBin().from_disk(path).get_docs(nlp.vocab):
-                pred_doc = nlp(doc.text)
-                pred_doc.ents = [
-                    doc.char_span(ent.start_char, ent.end_char, label=EntityLinker.NIL, kb_id=EntityLinker.NIL)
-                    for ent in doc.ents
-                ]
-                yield Example(pred_doc, doc)
+        for doc in DocBin().from_disk(path).get_docs(nlp.vocab):
+            pred_doc = nlp(doc.text)
+            pred_doc.ents = [
+                pred_doc.char_span(ent.start_char, ent.end_char, label=EntityLinker.NIL, kb_id=EntityLinker.NIL)
+                for ent in doc.ents
+            ]
+            sents = list(pred_doc.sents)
+            sents_orig = list(doc.sents)
+            assert len(sents) == len(sents_orig)
+            assert len(sents) > 0 and len(sents_orig) > 0
+            assert all([ent is not None for ent in pred_doc.ents])
+            assert len(doc.ents) == len(pred_doc.ents)
+            assert len(doc.ents) > 0
 
-        nlp.enable_pipe("entity_linker")
+            yield Example(pred_doc, doc)
+
+    return read_docbin
+
+
+@spacy.registry.readers("EntityEnrichedCorpusReader.v2")
+def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language], Iterable[Example]]:
+    """Returns Callable generating a corpus reader function that enriches read documents with the correct entities as
+    specified in the corpus annotations.
+    path (Path): Path to DocBin file with documents to prepare.
+    path_nlp_base (Path): Path to pipeline for tokenization/sentence.
+    """
+    def read_docbin(_: Language) -> Iterable[Example]:
+        """Read DocBin for training. Set all entities as they appear in the annotated corpus, but set entity type and KB
+        ID to NIL.
+        nlp (Language): Pipeline to use for creating document used in EL from reference document.
+        """
+        nlp = spacy.load(path_nlp_base, enable=["sentencizer"])
+        for example in spacy.training.Corpus(path)(nlp):
+            example.predicted = nlp(example.predicted)
+            example.predicted.ents = [
+                example.predicted.char_span(ent.start_char, ent.end_char, label=EntityLinker.NIL, kb_id=EntityLinker.NIL)
+                for ent in example.reference.ents
+            ]
+            sents = list(example.predicted.sents)
+            sents_orig = list(example.reference.sents)
+
+            assert len(sents) == len(sents_orig)
+            assert len(sents) > 0 and len(sents_orig) > 0
+            assert all([ent is not None for ent in example.predicted.ents])
+            assert len(example.reference.ents) == len(example.predicted.ents)
+            assert len(example.reference.ents) > 0
+
+            yield Example(example.predicted, example.reference)
 
     return read_docbin
 
