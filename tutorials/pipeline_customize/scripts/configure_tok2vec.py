@@ -2,7 +2,7 @@ from pathlib import Path
 
 import spacy
 import typer
-from .util import check_tok2vecs, get_tok2vecs, get_listeners
+from util import check_tok2vecs, get_tok2vecs, get_listeners
 
 def use_transformer(
     base_model: str, output_path: Path, transformer_name: str = "roberta-base"

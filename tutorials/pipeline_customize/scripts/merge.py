@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from .util import get_tok2vecs, check_tok2vecs, has_listener
-from .util import check_pipeline_names, get_listeners
+from util import get_tok2vecs, check_tok2vecs, has_listener
+from util import check_pipeline_names, get_listeners
 
 import typer
 import spacy
@@ -101,9 +101,6 @@ def merge_pipelines(base_model: str, added_model: str, output_path: Path):
 
 if __name__ == "__main__":
 
-    help_msg = """
-    Merge two spaCy pipelines, taking care of listeners.
-    """
-    app = typer.Typer(name="Pipeline Merge Helper", help=help_msg, no_args_is_help=True)
-    app.command("merge")(merge_pipelines)
+    app = typer.Typer(name="Pipeline Merge Helper")
+    app.command("merge", no_args_is_help=True)(merge_pipelines)
     app()
