@@ -7,7 +7,7 @@ from spacy.tokens import DocBin
 from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
-from wikid.scripts.kb import WikiKB
+from wikid.src.kb import WikiKB
 
 
 @spacy.registry.readers("EntityEnrichedCorpusReader.v1")
@@ -22,7 +22,7 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
         NIL.
         nlp (Language): Pipeline to use for creating document used in EL from reference document.
         """
-        nlp = spacy.load(path_nlp_base, enable=["senter"])
+        nlp = spacy.load(path_nlp_base, enable=["senter"], config={"nlp.disabled": []})
 
         for doc in DocBin().from_disk(path).get_docs(nlp.vocab):
             pred_doc = nlp(doc.text)
@@ -55,7 +55,8 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
         ID to NIL.
         nlp (Language): Pipeline to use for creating document used in EL from reference document.
         """
-        nlp = spacy.load(path_nlp_base, enable=["sentencizer"])
+        nlp = spacy.load(path_nlp_base)
+
         for example in spacy.training.Corpus(path)(nlp):
             example.predicted = nlp(example.predicted)
             example.predicted.ents = [
@@ -65,6 +66,18 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
             sents = list(example.predicted.sents)
             sents_orig = list(example.reference.sents)
 
+            if len(sents) != len(sents_orig):
+                for i in range(max(len(sents), len(sents_orig))):
+                    if i < len(sents):
+                        print(sents[i])
+                    else:
+                        print("out")
+                    if i < len(sents_orig):
+                        print(sents_orig[i])
+                    else:
+                        print("out")
+                    print("-----")
+                x = 3
             assert len(sents) == len(sents_orig)
             assert len(sents) > 0 and len(sents_orig) > 0
             assert all([ent is not None for ent in example.predicted.ents])

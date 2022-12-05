@@ -1,5 +1,6 @@
 """ Dataset class. """
 import abc
+import copy
 import csv
 import datetime
 import importlib
@@ -18,13 +19,12 @@ import tqdm
 import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
-from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
 from wikid import schemas
-from wikid.scripts.kb import WikiKB
+from wikid.src.kb import WikiKB
 from . import evaluation
 from utils import get_logger
 
@@ -91,19 +91,18 @@ class Dataset(abc.ABC):
         with open(self._paths["annotations"], "rb") as file:
             self._annotations = pickle.load(file)
         Doc.set_extension("overlapping_annotations", default=None)
-        nlp_components = ["tok2vec", "tagger", "attribute_ruler"]
-        nlp = spacy.load(model, enable=nlp_components)
-        nlp.add_pipe("sentencizer")
+        nlp_components = ["tok2vec", "senter", "tagger", "attribute_ruler"]
+        nlp = spacy.load(model)  # , enable=nlp_components, config={"nlp.disabled": []}
 
         # Incorporate annotations from corpus into documents. Only keep docs with entities (relevant mostly when working
         # with filtered data).
-        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)]
+        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)][:500]
 
         # Serialize pipeline and corpora.
         self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
         nlp.to_disk(
             self._paths["nlp_base"],
-            exclude=[comp for comp in nlp.component_names if comp not in [*nlp_components, "sentencizer"]]
+            # exclude=[comp for comp in nlp.component_names if comp not in [*nlp_components]]
         )
         self._serialize_corpora()
 
@@ -365,3 +364,50 @@ class Dataset(abc.ABC):
         automatically.
         """
         raise NotImplementedError
+
+    def _collapse_spaces(self, doc_id: str, doc_text: str) -> Tuple[str, List[schemas.Annotation]]:
+        """
+        Replace multiple spaces with singles to avoid tokenization & sentence splitting issues later
+        in pipeline.
+        doc_id (str): Doc ID to be looked up in self._annotations.
+        doc_text (str): Doc text.
+        RETURNS (Annotation): Potentially updated (1) doc text, (2) annotations (start/end positions may have changed).
+        """
+        doc_annots = self._annotations.get(doc_id, [])
+        doc_text_orig = doc_text
+        annots_orig = copy.deepcopy(doc_annots)
+
+        # This is inefficient and could surely be optimized.
+        multi_space_start_idx = doc_text.find("  ")
+        while multi_space_start_idx >= 0:
+            multi_space_stop_idx = multi_space_start_idx + 2
+            while multi_space_stop_idx == " ":
+                multi_space_stop_idx += 1
+
+            # Shrink multiple whitespaces to one.
+            doc_text = doc_text[:multi_space_start_idx] + " " + doc_text[multi_space_stop_idx:]
+
+            # Adjust annotations indices accordingly.
+            for i, annot in enumerate(doc_annots):
+                annot_text_orig = doc_text_orig[annots_orig[i].start_pos:annots_orig[i].end_pos]
+                if multi_space_start_idx <= annot.start_pos < multi_space_stop_idx:
+                    offset = multi_space_start_idx + 1 - annot.start_pos
+                    annot.start_pos -= offset
+                    annot.end_pos -= offset
+                elif annot.start_pos >= multi_space_stop_idx:
+                    offset = multi_space_stop_idx - multi_space_start_idx - 1
+                    annot.start_pos -= offset
+                    annot.end_pos -= offset
+
+                # New annotation should match old one, except for leading/trailing spaces
+                assert doc_text[annot.start_pos:annot.end_pos].split() == " ".join(annot_text_orig.split())
+
+            multi_space_start_idx = doc_text.find("  ", multi_space_start_idx)
+
+        assert doc_text.find("  ") == -1
+
+        return doc_text, doc_annots
+
+    def retrieve_candidates_for_mentions(self) -> None:
+        """Retrieves candidates for all mentions in corpus."""
+        # todo load KB, read from annotations pickle, persist results

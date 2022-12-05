@@ -10,10 +10,10 @@ vars:
   gpu_id: ""
   download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
   filter: "True"  # Whether to only use parts of Wiki data and corpus containing filter terms.
-  training_max_steps: 1000
+  training_max_steps: 10
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "evaluation"]
+directories: ["assets", "training", "configs", "src", "corpora", "evaluation"]
 
 check_requirements: True
 
@@ -39,7 +39,7 @@ commands:
   - name: download_mewsli9
     help: Download Mewsli-9 dataset.
     script:
-      - bash scripts/datasets/download_mewsli-9.sh
+      - bash src/datasets/download_mewsli-9.sh
     outputs:
       - assets/mewsli_9/
 
@@ -57,7 +57,7 @@ commands:
   - name: preprocess
     help: Preprocess and clean corpus data.
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_clean_data.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./src/cli_clean_data.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/raw"
     outputs:
@@ -90,17 +90,29 @@ commands:
   - name: extract_annotations
     help: "Extract annotations from corpus."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_extract_annotations.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./src/cli_extract_annotations.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/clean"
       - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs:
       - "assets/${vars.dataset}/annotations.pkl"
 
+  - name: retrieve_mentions_candidates
+    help: "Retrieve candidates for mentions in corpus and persist them in file."
+    script:
+      - "env PYTHONPATH=. python ./src/cli_retrieve_mentions_candidates.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+      - "assets/${vars.dataset}/annotations.pkl"
+    outputs:
+      - "corpora/${vars.dataset}/mention_candidates.pkl"
+
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.base_model} ${vars.filter}"
+      - "env PYTHONPATH=. python ./src/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.base_model} ${vars.filter}"
     deps:
       - "assets/${vars.dataset}/annotations.pkl"
       - "wikid/output/${vars.language}/kb"
@@ -113,7 +125,7 @@ commands:
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
+      - "bash src/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
     outputs:
       - "training/${vars.dataset}/${vars.run}"
     deps:
@@ -126,7 +138,7 @@ commands:
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language} ${vars.gpu_id}"
+      - "env PYTHONPATH=. python ./src/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language} ${vars.gpu_id}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
       - "training/base-nlp/${vars.language}"
@@ -139,7 +151,7 @@ commands:
   - name: compare_evaluations
     help: "Compare available set of evaluation runs."
     script:
-      - "env PYTHONPATH=. python ./scripts/cli_compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
+      - "env PYTHONPATH=. python ./src/cli_compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
     deps:
       - "evaluation/${vars.dataset}"
 

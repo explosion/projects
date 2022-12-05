@@ -13,11 +13,11 @@ if __name__ == '__main__':
         use_gpu=0,
         overrides={
             "paths.dataset_name": "mewsli_9",
-            "paths.train": "corpora/mewsli_9/train.spacy",
-            "paths.dev": "corpora/mewsli_9/dev.spacy",
-            "paths.kb": "wikid/output/en/kb",
-            "paths.db": "wikid/output/en/wiki.sqlite3",
-            "paths.base_nlp": "training/base-nlp/en",
+            "paths.train": str(root / "corpora/mewsli_9/train.spacy"),
+            "paths.dev": str(root / "corpora/mewsli_9/dev.spacy"),
+            "paths.kb": str(root / "wikid/output/en/kb"),
+            "paths.db": str(root / "wikid/output/en/wiki.sqlite3"),
+            "paths.base_nlp": str(root / "training/base-nlp/en"),
             "paths.language": "en",
             "training.max_steps": 10,
         }

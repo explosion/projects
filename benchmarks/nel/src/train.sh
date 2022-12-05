@@ -9,7 +9,7 @@ gpu_id="${6:--1}"
 #   (4) config file name,
 #   (5) max. steps.
 #   (6) GPU information if GPU is to be used.
-PYTHONPATH='scripts' python -m spacy train configs/$4 \
+PYTHONPATH='src' python -m spacy train configs/$4 \
           --paths.dataset_name $1 \
           --output training/$1/$2 \
           --paths.train corpora/$1/train.spacy \
@@ -19,5 +19,5 @@ PYTHONPATH='scripts' python -m spacy train configs/$4 \
           --paths.base_nlp training/base-nlp/$3 \
           --paths.language $3 \
           --training.max_steps $5 \
-          -c scripts/custom_functions.py \
+          -c src/custom_functions.py \
           --gpu-id $gpu_id

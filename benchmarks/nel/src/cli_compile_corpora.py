@@ -27,5 +27,5 @@ def main(dataset_name: str, language: str, model: str, use_filter_terms: bool = 
 
 
 if __name__ == "__main__":
-    main("mewsli_9", "en", "en_core_web_lg", True)
+    main("mewsli_9", "en", "en_core_web_lg", False)
     # typer.run(main)
