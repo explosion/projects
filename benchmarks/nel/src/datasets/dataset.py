@@ -10,7 +10,7 @@ import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
-from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict, Union
+from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
 
 import numpy
 import prettytable
@@ -24,7 +24,7 @@ from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
 from wikid import schemas
-from wikid.src.kb import WikiKB
+from wikid.src.kb import WikiKB, WikiKBCandidate
 from . import evaluation
 from utils import get_logger
 
@@ -74,7 +74,8 @@ class Dataset(abc.ABC):
             "annotations": assets_path / "annotations.pkl",
             "nlp_base": root_path / "training" / "base-nlp" / language,
             "nlp_best": root_path / "training" / dataset_name / run_name / "model-best",
-            "corpora": root_path / "corpora" / dataset_name
+            "corpora": root_path / "corpora" / dataset_name,
+            "mentions_candidates": root_path / "corpora" / dataset_name / "mentions_candidates.pkl",
         }
 
     @property
@@ -410,4 +411,39 @@ class Dataset(abc.ABC):
 
     def retrieve_candidates_for_mentions(self) -> None:
         """Retrieves candidates for all mentions in corpus."""
-        # todo load KB, read from annotations pickle, persist results
+        logger.info(f"Retrieving candidates for all mentions in corpus.")
+
+        self._kb = WikiKB.generate_from_disk(self._paths["kb"])
+        # This is done to ensure KB is not using outdated mention_candidates map (which happens if the current step was
+        # already done and is now repeated).
+        self._kb._mentions_candidates = None
+
+        # Our entity corpora incorporate annotated mentions as in their .ents attributes at this point, so we can
+        # extract all mentions from there.
+        mentions = {
+            ent.text: ent
+            for corpus_name in ("train", "dev", "test")
+            for doc in DocBin(
+            ).from_disk(self._paths["corpora"] / (corpus_name + ".spacy")).get_docs(self._kb.vocab)
+            for ent in doc.ents
+        }
+        mention_texts = list(mentions.keys())
+
+        # Select candidates.
+        mention_candidates: Dict[str, List[WikiKBCandidate]] = {
+            mention_text: mention_candidates
+            for mention_text, mention_candidates in zip(
+                mention_texts,
+                list(self._kb.get_candidates_all([[mentions[mt] for mt in mention_texts]]))[0]
+            )
+        }
+        for mention in mention_candidates:
+            assert all([mention == mc.mention for mc in mention_candidates[mention]])
+
+        # Store results.
+        self._paths["mentions_candidates"].parent.mkdir(parents=True, exist_ok=True)
+        with open(self._paths["mentions_candidates"], "wb") as file:
+            pickle.dump(mention_candidates, file)
+        # Update hash in KB, persist updated KB.
+        self._kb.update_path("mentions_candidates", self._paths["mentions_candidates"])
+        self._kb.to_disk(self._paths["kb"])

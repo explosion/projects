@@ -26,6 +26,7 @@ def test_nel_benchmark():
         os.environ[overrides_key] = overrides
     project_run(root, "extract_annotations", capture=True)
     project_run(root, "compile_corpora", capture=True)
+    project_run(root, "retrieve_mentions_candidates", capture=True)
     project_run(root, "train", capture=True, overrides={"vars.training_max_steps": 1, "vars.training_max_epochs": 1})
     project_run(root, "evaluate", capture=True)
     project_run(root, "compare_evaluations", capture=True)

@@ -17,6 +17,7 @@ PYTHONPATH='src' python -m spacy train configs/$4 \
           --paths.kb wikid/output/$3/kb \
           --paths.db wikid/output/$3/wiki.sqlite3 \
           --paths.base_nlp training/base-nlp/$3 \
+          --paths.mentions_candidates corpora/$1/mentions_candidates.pkl \
           --paths.language $3 \
           --training.max_steps $5 \
           -c src/custom_functions.py \

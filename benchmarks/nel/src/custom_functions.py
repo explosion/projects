@@ -66,18 +66,19 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
             sents = list(example.predicted.sents)
             sents_orig = list(example.reference.sents)
 
-            if len(sents) != len(sents_orig):
-                for i in range(max(len(sents), len(sents_orig))):
-                    if i < len(sents):
-                        print(sents[i])
-                    else:
-                        print("out")
-                    if i < len(sents_orig):
-                        print(sents_orig[i])
-                    else:
-                        print("out")
-                    print("-----")
-                x = 3
+            # if len(sents) != len(sents_orig):
+            #     for i in range(max(len(sents), len(sents_orig))):
+            #         if i < len(sents):
+            #             print(sents[i])
+            #         else:
+            #             print("out")
+            #         if i < len(sents_orig):
+            #             print(sents_orig[i])
+            #         else:
+            #             print("out")
+            #         print("-----")
+            #     x = 3
+
             assert len(sents) == len(sents_orig)
             assert len(sents) > 0 and len(sents_orig) > 0
             assert all([ent is not None for ent in example.predicted.ents])
@@ -93,6 +94,7 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
 def load_kb(kb_path: Path) -> Callable[[Vocab], WikiKB]:
     """Loads WikiKB instance from disk.
     kb_path (Path): Path to WikiKB path.
+    mention_candidates_path (Path): Path to pre-computed file with candidates per mention.
     RETURNS (Callable[[Vocab], WikiKB]): Callable generating WikiKB from disk.
     """
     def kb_from_file(_: Vocab) -> WikiKB:

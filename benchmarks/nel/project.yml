@@ -97,18 +97,6 @@ commands:
     outputs:
       - "assets/${vars.dataset}/annotations.pkl"
 
-  - name: retrieve_mentions_candidates
-    help: "Retrieve candidates for mentions in corpus and persist them in file."
-    script:
-      - "env PYTHONPATH=. python ./src/cli_retrieve_mentions_candidates.py ${vars.dataset} ${vars.language}"
-    deps:
-      - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/wiki.annoy"
-      - "wikid/output/${vars.language}/wiki.sqlite3"
-      - "assets/${vars.dataset}/annotations.pkl"
-    outputs:
-      - "corpora/${vars.dataset}/mention_candidates.pkl"
-
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
@@ -121,6 +109,18 @@ commands:
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
       - "corpora/${vars.dataset}/test.spacy"
+
+  - name: retrieve_mentions_candidates
+    help: "Retrieve candidates for mentions in corpus and persist them in file. This is an optional step, but speeds up training and evaluation"
+    script:
+      - "env PYTHONPATH=. python ./src/cli_retrieve_mentions_candidates.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+      - "assets/${vars.dataset}/annotations.pkl"
+    outputs:
+      - "corpora/${vars.dataset}/mention_candidates.pkl"
 
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"

@@ -18,6 +18,7 @@ if __name__ == '__main__':
             "paths.kb": str(root / "wikid/output/en/kb"),
             "paths.db": str(root / "wikid/output/en/wiki.sqlite3"),
             "paths.base_nlp": str(root / "training/base-nlp/en"),
+            "paths.mentions_candidates": str(root / "corpora" / "mewsli_9" / "mentions_candidates.pkl"),
             "paths.language": "en",
             "training.max_steps": 10,
         }

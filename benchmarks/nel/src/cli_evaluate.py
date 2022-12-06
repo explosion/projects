@@ -17,5 +17,5 @@ def main(dataset_name: str, run_name: str, language: str, gpu_id: Optional[int] 
 
 
 if __name__ == "__main__":
-    main("mewsli_9", "default", "en", 0)
-    # typer.run(main)
+    # main("mewsli_9", "default", "en", 0)
+    typer.run(main)
