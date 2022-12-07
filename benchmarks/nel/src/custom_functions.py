@@ -3,7 +3,6 @@ from typing import Callable, Iterable
 
 import spacy
 from spacy import registry, Vocab, Language
-from spacy.tokens import DocBin
 from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
@@ -11,39 +10,6 @@ from wikid.src.kb import WikiKB
 
 
 @spacy.registry.readers("EntityEnrichedCorpusReader.v1")
-def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language], Iterable[Example]]:
-    """Returns Callable generating a corpus reader function that enriches read documents with the correct entities as
-    specified in the corpus annotations.
-    path (Path): Path to DocBin file with documents to prepare.
-    path_nlp_base (Path): Path to pipeline for tokenization/sentence.
-    """
-    def read_docbin(_: Language) -> Iterable[Example]:
-        """Read DocBin for training. Set all entities as they appear in the annotated corpus, but set entity type to
-        NIL.
-        nlp (Language): Pipeline to use for creating document used in EL from reference document.
-        """
-        nlp = spacy.load(path_nlp_base, enable=["senter"], config={"nlp.disabled": []})
-
-        for doc in DocBin().from_disk(path).get_docs(nlp.vocab):
-            pred_doc = nlp(doc.text)
-            pred_doc.ents = [
-                pred_doc.char_span(ent.start_char, ent.end_char, label=EntityLinker.NIL, kb_id=EntityLinker.NIL)
-                for ent in doc.ents
-            ]
-            sents = list(pred_doc.sents)
-            sents_orig = list(doc.sents)
-            assert len(sents) == len(sents_orig)
-            assert len(sents) > 0 and len(sents_orig) > 0
-            assert all([ent is not None for ent in pred_doc.ents])
-            assert len(doc.ents) == len(pred_doc.ents)
-            assert len(doc.ents) > 0
-
-            yield Example(pred_doc, doc)
-
-    return read_docbin
-
-
-@spacy.registry.readers("EntityEnrichedCorpusReader.v2")
 def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language], Iterable[Example]]:
     """Returns Callable generating a corpus reader function that enriches read documents with the correct entities as
     specified in the corpus annotations.
@@ -65,19 +31,6 @@ def create_docbin_reader(path: Path, path_nlp_base: Path) -> Callable[[Language]
             ]
             sents = list(example.predicted.sents)
             sents_orig = list(example.reference.sents)
-
-            # if len(sents) != len(sents_orig):
-            #     for i in range(max(len(sents), len(sents_orig))):
-            #         if i < len(sents):
-            #             print(sents[i])
-            #         else:
-            #             print("out")
-            #         if i < len(sents_orig):
-            #             print(sents_orig[i])
-            #         else:
-            #             print("out")
-            #         print("-----")
-            #     x = 3
 
             assert len(sents) == len(sents_orig)
             assert len(sents) > 0 and len(sents_orig) > 0
