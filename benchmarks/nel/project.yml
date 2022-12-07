@@ -10,7 +10,7 @@ vars:
   gpu_id: ""
   download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
   filter: "True"  # Whether to only use parts of Wiki data and corpus containing filter terms.
-  training_max_steps: 10
+  training_max_steps: 1000
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
 directories: ["assets", "training", "configs", "src", "corpora", "evaluation"]

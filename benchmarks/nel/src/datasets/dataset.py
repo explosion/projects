@@ -92,12 +92,11 @@ class Dataset(abc.ABC):
         with open(self._paths["annotations"], "rb") as file:
             self._annotations = pickle.load(file)
         Doc.set_extension("overlapping_annotations", default=None)
-        nlp_components = ["tok2vec", "senter", "tagger", "attribute_ruler"]
-        nlp = spacy.load(model)  # , enable=nlp_components, config={"nlp.disabled": []}
+        nlp = spacy.load(model)
 
         # Incorporate annotations from corpus into documents. Only keep docs with entities (relevant mostly when working
         # with filtered data).
-        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)][:500]
+        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)]
 
         # Serialize pipeline and corpora.
         self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
@@ -414,8 +413,8 @@ class Dataset(abc.ABC):
         logger.info(f"Retrieving candidates for all mentions in corpus.")
 
         self._kb = WikiKB.generate_from_disk(self._paths["kb"])
-        # This is done to ensure KB is not using outdated mention_candidates map (which happens if the current step was
-        # already done and is now repeated).
+        # Ensure KB is not using outdated mention_candidates map (which happens if the current step was already done and
+        # is now repeated).
         self._kb._mentions_candidates = None
 
         # Our entity corpora incorporate annotated mentions as in their .ents attributes at this point, so we can

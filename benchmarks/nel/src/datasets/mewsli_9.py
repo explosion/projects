@@ -136,7 +136,7 @@ class Mewsli9Dataset(Dataset):
 
             # This is an embarrassingly parallel scenario - speed is fine for ~10k articles though.
             with tqdm.tqdm(
-                desc="Extracting annotations", total=len(docs), leave=False
+                desc="Parsing annotations", total=len(docs), leave=False
             ) as pbar:
                 for doc, row in zip(docs, docs_info_rows):
                     doc_annots = self._annotations.get(row["docid"], [])
