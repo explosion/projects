@@ -1,0 +1,67 @@
+title: "Example project for using SpanRuler as replacement for EntityRuler"
+description: |
+  This example project demonstrates how you can use the
+  [SpanRuler](https://spacy.io/api/spanruler) component for rule-based named
+  entity recognition (NER). In spaCy v3 and below, this functionality can be
+  achieved via the [EntityRuler](https://spacy.io/api/entityruler). However, 
+  we will start deprecating the `entity_ruler` component in v4 in favor of
+  `span_ruler`.
+
+  Here, we will be using the MIT Restaurant dataset (Liu, et al, 2013) to
+  determine entities such as *Rating*, *Location*, *Restaurant_Name*,
+  *Price*, *Hours*,  *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
+  First, we will train an NER model and treat it as our baseline, and then
+  attach the `SpanRuler` component before and after the existing pipeline. This
+  setup gives us three pipelines we can compare upon.
+
+  Here are some set of rules we included in the patterns file (`patterns.jsonl`):
+  -
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "spanruler_restaurant_reviews"
+  lang: "en"
+  seed: 0
+  gpu_id: -1
+  vectors: "en_core_web_lg"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "metrics", "scripts", "training"]
+
+# Assets that should be downloaded or available in the directory.
+assets:
+  - dest: "assets/train.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
+    description: "Training data from the MIT Restaurants Review dataset"
+  - dest: "assets/test.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttest.bio
+    description: "Test data from the MIT Restaurants Review dataset"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - download
+    - convert
+    # - split
+    # - train
+    # - attach-rules
+    # - evaluate-all
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "download"
+    help: "Download a spaCy model with pretrained vectors"
+    script:
+      - "python -m spacy download ${vars.vectors}"
+
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python -m spacy convert assets/train.iob corpus"
+      - "python -m spacy convert assets/test.iob corpus"
