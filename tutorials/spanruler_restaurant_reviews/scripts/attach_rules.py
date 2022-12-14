@@ -1,8 +1,8 @@
 from enum import Enum
 from pathlib import Path
 
-import typer
 import spacy
+import typer
 from srsly import read_jsonl
 from wasabi import msg
 

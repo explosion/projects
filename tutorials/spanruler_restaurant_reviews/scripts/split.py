@@ -2,11 +2,10 @@ import random
 from pathlib import Path
 from typing import Optional
 
-import typer
 import spacy
+import typer
 from spacy.tokens import DocBin
 from wasabi import msg
-
 
 Arg = typer.Argument
 Opt = typer.Option
