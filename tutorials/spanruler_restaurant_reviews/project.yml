@@ -48,8 +48,8 @@ workflows:
     - convert
     - split
     - train
-    # - attach-rules
-    # - evaluate-all
+    - attach-rules
+    - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -138,3 +138,33 @@ commands:
     outputs:
       - models/spanruler-before
       - models/spanruler-after
+
+  - name: "evaluate"
+    help: "Evaluate each model."
+    script:
+      - >-
+        python -m spacy evaluate
+        models/baseline/
+        corpus/test.spacy
+        --gpu-id ${vars.gpu_id}
+        --output metrics/baseline.json
+      - >-
+        python -m spacy evaluate
+        models/spanruler-before/
+        corpus/test.spacy
+        --gpu-id ${vars.gpu_id}
+        --output metrics/spanruler-before.json
+      - >-
+        python -m spacy evaluate
+        models/spanruler-after/
+        corpus/test.spacy
+        --gpu-id ${vars.gpu_id}
+        --output metrics/spanruler-after.json
+    deps:
+      - models/baseline
+      - models/spanruler-before
+      - models/spanruler-after
+    outputs:
+      - metrics/baseline.json
+      - metrics/spanruler-before.json
+      - metrics/spanruler-after.json
