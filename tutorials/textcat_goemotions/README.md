@@ -2,7 +2,10 @@
 
 # 🪐 spaCy Project: Categorization of emotions in Reddit posts (Text Classification)
 
-This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`.
+This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`. 
+
+> The goal of this project is to show how to train a spaCy classifier based on a csv file, not to showcase a model that's ready for production. The GoEmotions dataset has known flaws described [here](https://github.com/google-research/google-research/tree/master/goemotions#disclaimer) as well as label errors resulting from [annotator disagreement](https://www.youtube.com/watch?v=khZ5-AN-n2Y).
+
 
 ## 📋 project.yml
 
