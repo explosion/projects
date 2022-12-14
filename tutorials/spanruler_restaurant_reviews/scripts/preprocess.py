@@ -2,8 +2,13 @@ from pathlib import Path
 
 import typer
 
+Arg = typer.Argument
 
-def preprocess(input_path: Path, output_path: Path):
+
+def preprocess(
+    input_path: Path = Arg(..., help="Input path for the raw IOB files."),
+    output_path: Path = Arg(..., help="Output path for the processed IOB files."),
+):
     """Preprocess the raw IOB files from MIT Restaurant Reviews
 
     The IOB format from the MIT Restaurant reviews dataset has the tokens and
