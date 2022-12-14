@@ -89,7 +89,7 @@ commands:
   - name: "split"
     help: "Split the train-dev dataset."
     script:
-      - "python -m scripts.split corpus/train_dev.spacy corpus/ --train-size 0.8, --seed ${vars.seed}"
+      - "python -m scripts.split corpus/train_dev.spacy corpus/ --train-size 0.8 --seed ${vars.seed}"
     deps:
       - corpus/train_dev.spacy
     outputs:
