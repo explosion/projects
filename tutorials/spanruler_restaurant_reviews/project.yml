@@ -108,7 +108,7 @@ commands:
         --gpu-id ${vars.gpu_id}
       # Save baseline model somewhere
       - mkdir -p models/baseline
-      - mv training/model-best models/baseline
+      - cp -r training/model-best/. models/baseline
     deps:
       - corpus/train.spacy
       - corpus/dev.spacy
