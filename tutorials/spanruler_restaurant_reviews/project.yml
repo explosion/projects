@@ -31,10 +31,10 @@ directories: ["assets", "corpus", "configs", "metrics", "scripts", "training"]
 
 # Assets that should be downloaded or available in the directory.
 assets:
-  - dest: "assets/train.iob"
+  - dest: "assets/train_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
     description: "Training data from the MIT Restaurants Review dataset"
-  - dest: "assets/test.iob"
+  - dest: "assets/test_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttest.bio
     description: "Test data from the MIT Restaurants Review dataset"
 
@@ -44,6 +44,7 @@ assets:
 workflows:
   all:
     - download
+    - preprocess
     - convert
     # - split
     # - train
@@ -56,12 +57,41 @@ workflows:
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
   - name: "download"
-    help: "Download a spaCy model with pretrained vectors"
+    help: "Download a spaCy model with pretrained vectors."
     script:
       - "python -m spacy download ${vars.vectors}"
 
-  - name: "convert"
-    help: "Convert the data to spaCy's binary format"
+  - name: "preprocess"
+    help: "Format and process the raw IOB datasets to make them compatible with spaCy convert."
     script:
-      - "python -m spacy convert assets/train.iob corpus"
-      - "python -m spacy convert assets/test.iob corpus"
+      - "python -m scripts.preprocess assets/train_raw.iob assets/train.iob"
+      - "python -m scripts.preprocess assets/test_raw.iob assets/test.iob"
+    deps:
+      - assets/train_raw.iob
+      - assets/test_raw.iob
+    outputs:
+      - assets/train.iob
+      - assets/test.iob
+
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format."
+    script:
+      - "python -m spacy convert assets/train.iob corpus/"
+      - "python -m spacy convert assets/test.iob corpus/"
+      - "mv corpus/train.spacy corpus/train_dev.spacy"
+    deps:
+      - assets/train.iob
+      - assets/test.iob
+    outputs:
+      - corpus/train_dev.spacy
+      - corpus/test.spacy
+
+  - name: "split"
+    help: "Split the train-dev dataset."
+    script:
+      - "python -m scripts.split corpus/train_dev.spacy corpus/ --train-size 0.8, --seed ${vars.seed}"
+    deps:
+      - corpus/train_dev.spacy
+    outputs:
+      - corpus/train.spacy
+      - corpus/dev.spacy
