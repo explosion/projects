@@ -1,0 +1,13 @@
+{"label": "Price", "pattern": {"TEXT": {"REGEX": "cheap(est)?"}}}
+{"label": "Price", "pattern": {"TEXT": {"REGEX": "(in)?expensive"}}}
+{"label": "Price", "pattern": {"TEXT": {"REGEX": "decent(ly)?"}}}
+{"label": "Price", "pattern": {"LOWER": "affordable"}}
+{"label": "Price", "pattern": {"TEXT": {"REGEX": "\\d+\\sdollar(s)?"}}}
+{"label": "Rating", "pattern": {"LOWER": "good"}}
+{"label": "Rating", "pattern": {"LOWER": "great"}}
+{"label": "Rating", "pattern": {"LOWER": "fancy"}}
+{"label": "Rating", "pattern": {"LOWER": "nice"}}
+{"label": "Rating", "pattern": {"LOWER": "popular"}}
+{"label": "Rating", "pattern": [{"LOWER": "first"}, {"LOWER": "rate"}]}
+{"label": "Rating", "pattern": {"TEXT": {"REGEX": "\\d(-|\\s)?star(s)?"}}}
+{"label": "Rating", "pattern": {"TEXT": {"REGEX": "(one|two|three|four|five)\\sstar(s)?"}}}
