@@ -2,10 +2,7 @@
 
 # 🪐 spaCy Project: Categorization of emotions in Reddit posts (Text Classification)
 
-This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`. 
-
-> The goal of this project is to show how to train a spaCy classifier based on a csv file, not to showcase a model that's ready for production. The GoEmotions dataset has known flaws described [here](https://github.com/google-research/google-research/tree/master/goemotions#disclaimer) as well as label errors resulting from [annotator disagreement](https://www.youtube.com/watch?v=khZ5-AN-n2Y).
-
+This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`.
 
 ## 📋 project.yml
 
@@ -53,3 +50,120 @@ in the project directory.
 | `assets/test.tsv` | URL | The test data |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
+## Usage
+
+If you want to use the BERT-based config ([`bert.cfg`](configs/bert.cfg)), make
+sure you have `spacy-transformers` installed:
+
+```
+pip install spacy-transformers
+```
+
+You can choose your GPU by setting the `gpu_id` variable in the
+[`project.yml`](project.yml).
+
+### Tuning a hyper-parameter in the config
+
+To change hyperparameters, you can edit the [config](configs) (or create a new
+custom config). For instance, you could edit the
+`components.textcat.model.tok2vec.encode.width` value, changing it to `32`:
+
+```ini
+[components.textcat.model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v2"
+width = 32
+depth = 4
+window_size = 1
+maxout_pieces = 3
+```
+
+Now you can retrain and reevaluate, and commit the updated config and metrics:
+
+```bash
+spacy project run train
+spacy project run evaluate
+git commit configs/my_new_config.cfg metrics/my_new_config.cfg -m "Scores TODO%"
+```
+
+You can also run experiments in a more lightweight way by running `spacy train`
+directly and
+[overwriting](https://spacy.io/usage/training#config-overrides)
+hyperparameters on the command line:
+
+```bash
+spacy train \
+    configs/my_new_config.cfg \
+    --components.textcat.model.tok2vec.encode.width 32
+```
+
+### Adding components from another model
+
+Let's say you want to take tagger and NER components from the `en_core_web_sm`
+model, and add a new textcat model that you'll train, while keeping the existing
+models from the tagger and NER. This requires three changes to the config.
+
+1. Add the components to the `nlp.pipeline`.
+
+   ```ini
+   [nlp]
+   pipeline = ["tagger", "ner", "textcat"]
+   ```
+
+2. Add the "sourced" components in the `[components]` block. This tells the
+   config to build the NER and tagger components from the `en_core_web_sm`
+   config and to load their models from disk.
+
+   ```ini
+   [components]
+   tagger = {"source": "en_core_web_sm"}
+   ner = {"source": "en_core_web_sm"}
+   ```
+
+3. Specify that the tagger and NER are "frozen". This stops the weights of these
+   models from being reset, and stops the components from being updated.
+
+   ```ini
+   [training]
+   frozen_components = ["tagger", "ner"]
+   ```
+
+### Using embeddings from a spaCy package
+
+First, download an existing trained pipeline with word vectors.
+The word vectors of this model can then be specified in `paths.vectors`
+or `initialize.vectors`.
+
+```bash
+spacy download en_core_web_lg
+spacy train \
+    configs/cnn.cfg \
+    --paths.vectors "en_core_web_lg" \
+    --components.textcat.model.tok2vec.embed.include_static_vectors true
+```
+
+### Making and using new embeddings
+
+Uncomment the asset in your [`project.yml`](project.yml):
+
+```yaml
+assets:
+  - dest: "assets/vectors.zip"
+    url: "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip"
+```
+
+Then download the asset and run the `init-vectors` command:
+
+```bash
+spacy project assets
+spacy project run init-vectors
+```
+
+Use the vectors:
+
+```bash
+spacy train \
+    configs/cnn.cfg \
+    --paths.vectors "assets/en_fasttext_vectors" \
+    --components.textcat.model.tok2vec.embed.include_static_vectors true
+```
