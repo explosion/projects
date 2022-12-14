@@ -2,6 +2,7 @@ assets/
 corpus/
 training/
 metrics/
+models/
 
 
 # Byte-compiled / optimized / DLL files
