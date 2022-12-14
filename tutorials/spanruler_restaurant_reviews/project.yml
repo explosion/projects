@@ -1,4 +1,4 @@
-title: "Example project for using SpanRuler as replacement for EntityRuler"
+title: "Using SpanRuler for rule-based Named Entity Recognition"
 description: |
   This example project demonstrates how you can use the
   [SpanRuler](https://spacy.io/api/spanruler) component for rule-based named
@@ -7,15 +7,29 @@ description: |
   we will start deprecating the `entity_ruler` component in v4 in favor of
   `span_ruler`.
 
-  Here, we will be using the MIT Restaurant dataset (Liu, et al, 2013) to
+  Here, we will be using the **MIT Restaurant dataset** (Liu, et al, 2013) to
   determine entities such as *Rating*, *Location*, *Restaurant_Name*,
   *Price*, *Hours*,  *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
-  First, we will train an NER model and treat it as our baseline, and then
+  Below are a few examples from the training data:
+
+
+  First, we will train an NER model and treat it as our baseline. Then, we will
   attach the `SpanRuler` component before and after the existing pipeline. This
   setup gives us three pipelines we can compare upon.
 
   Here are some set of rules we included in the patterns file (`patterns.jsonl`):
-  -
+
+  | Label  | Pattern / Examples                                    | Description                                                                 |
+  |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
+  | Price  | `cheap(est)?`, `(in)?expensive`, `decent(ly)?`, `affordable`  | Reviewers do not often give the exact dollar amount but rather describe it. |
+  | Price  | `\d+\sdollar(s)?                                        | Reviewers, in some cases, give the exact price in dollars.                  |
+  | Rating | `good`, `great`, `fancy`                                           | Reviewers often describe the dish rather than giving an exact rating        |
+  | Rating | `\d(-|\s)?star(s)?`                                     | Reviewers can also give star ratings (5-star, 3-stars, 2 star) on a dish.   |
+  | Rating | `(one|two|three|four|five)\sstar(s)?`                  | Same as above but using words instead of numbers. |
+
+  - J. Liu, P. Pasupat, S. Cyphers, and J. Glass. 2013. Asgard: A portable
+  architecture for multilingual dialogue systems. In *2013 IEEE International
+  Conference on Acoustics, Speech and Signal Processing*, pages 8386-8390
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -126,12 +140,14 @@ commands:
         models/spanruler-before
         --patterns-file patterns.jsonl
         --location before
+        --validate
       - >-
         python -m scripts.attach_rules
         models/baseline
         models/spanruler-after
         --patterns-file patterns.jsonl
         --location before
+        --validate
     deps:
       - models/baseline
       - patterns.jsonl
