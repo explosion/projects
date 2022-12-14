@@ -46,7 +46,7 @@ workflows:
     - download
     - preprocess
     - convert
-    # - split
+    - split
     # - train
     # - attach-rules
     # - evaluate-all
