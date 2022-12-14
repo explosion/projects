@@ -20,7 +20,6 @@ description: |
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "spanruler_restaurant_reviews"
-  lang: "en"
   seed: 0
   gpu_id: -1
   vectors: "en_core_web_lg"
@@ -47,7 +46,7 @@ workflows:
     - preprocess
     - convert
     - split
-    # - train
+    - train
     # - attach-rules
     # - evaluate-all
 
@@ -95,3 +94,20 @@ commands:
     outputs:
       - corpus/train.spacy
       - corpus/dev.spacy
+
+  - name: "train"
+    help: "Train a baseline NER model."
+    script:
+      - >-
+        python -m spacy train config/ner.cfg
+        --paths.train corpus/train.spacy
+        --paths.dev corpus/dev.spacy
+        --paths.vectors ${vars.vectors}
+        --output training/
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+    outputs:
+      - training/model-best
+      - training/model-last
