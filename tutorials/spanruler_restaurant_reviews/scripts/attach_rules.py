@@ -38,10 +38,12 @@ def attach_rules(
     kwargs = {location: "ner"}
     ruler = nlp.add_pipe("span_ruler", config=config, **kwargs)
     patterns = read_jsonl(patterns_file)
+    msg.text(f"Found {len(patterns)} patterns in '{patterns_file}'.")
     ruler.add_patterns(patterns)
 
     # Save to disk
     nlp.to_disk(output_path)
+    msg.good(f"Saved model to '{output_path}'.")
 
 
 if __name__ == "__main__":
