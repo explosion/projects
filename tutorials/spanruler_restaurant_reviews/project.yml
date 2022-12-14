@@ -26,7 +26,8 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "corpus", "configs", "metrics", "scripts", "training"]
+directories:
+  ["assets", "corpus", "configs", "metrics", "models", "scripts", "training"]
 
 # Assets that should be downloaded or available in the directory.
 assets:
@@ -105,9 +106,37 @@ commands:
         --paths.vectors ${vars.vectors}
         --output training/
         --gpu-id ${vars.gpu_id}
+      # Save baseline model somewhere
+      - mkdir -p models/baseline
+      - mv training/model-best models/baseline
     deps:
       - corpus/train.spacy
       - corpus/dev.spacy
     outputs:
+      - models/baseline
       - training/model-best
       - training/model-last
+
+  - name: "attach-rules"
+    help: "Attach rules to the baseline NER model."
+    script:
+      - mkdir -p models/spanruler-before
+      - >-
+        python -m scripts.attach_rules
+        models/baseline
+        patterns.jsonl
+        models/spanruler-before
+        --loc before
+      - mkdir -p models/spanruler-after
+      - >-
+        python -m scripts.attach_rules
+        models/baseline
+        patterns.jsonl
+        models/spanruler-after
+        --loc before
+    deps:
+      - models/baseline
+      - patterns.jsonl
+    outputs:
+      - models/spanruler-before
+      - models/spanruler-after
