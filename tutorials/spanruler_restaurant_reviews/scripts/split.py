@@ -33,8 +33,8 @@ def split(
     traindev_docs = list(traindev_doc_bin.get_docs(nlp.vocab))
     msg.text(f"Found {len(traindev_docs)} documents.")
 
-    if seed:
-        msg.text(f"Shuffling the documents using seed `{seed}`")
+    if seed is not None:
+        msg.text(f"Shuffling the documents using seed '{seed}'.")
         random.seed(seed)
         random.shuffle(traindev_docs)
 
@@ -43,7 +43,7 @@ def split(
     dev_docs = traindev_docs[num_train:]
 
     msg.text(
-        f"Done splitting documents ({len(traindev_docs)}) into"
+        f"Done splitting documents ({len(traindev_docs)}) into "
         f"train ({len(train_docs)}) and dev ({len(dev_docs)})."
     )
 
@@ -52,7 +52,7 @@ def split(
 
     train_doc_bin.to_disk(output_dir / "train.spacy")
     dev_doc_bin.to_disk(output_dir / "dev.spacy")
-    msg.good(f"Saved files to {output_dir}")
+    msg.good(f"Saved files to '{output_dir}' directory.")
 
 
 if __name__ == "__main__":
