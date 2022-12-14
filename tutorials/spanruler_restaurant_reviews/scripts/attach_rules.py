@@ -35,11 +35,10 @@ def attach_rules(
         "overwrite": False,
         "validate": validate,
     }
-    kwargs = {location: "ner"}
-    ruler = nlp.add_pipe("span_ruler", config=config, **kwargs)
-    patterns = read_jsonl(patterns_file)
-    msg.text(f"Found {len(list(patterns))} patterns in '{patterns_file}'.")
+    ruler = nlp.add_pipe("span_ruler", config=config, **{location: "ner"})
+    patterns = list(read_jsonl(patterns_file))
     ruler.add_patterns(patterns)
+    msg.text(f"Found {len(patterns)} patterns in '{patterns_file}'.")
 
     # Save to disk
     nlp.to_disk(output_path)
