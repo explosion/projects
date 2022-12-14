@@ -100,7 +100,7 @@ commands:
     help: "Train a baseline NER model."
     script:
       - >-
-        python -m spacy train config/ner.cfg
+        python -m spacy train configs/ner.cfg
         --paths.train corpus/train.spacy
         --paths.dev corpus/dev.spacy
         --paths.vectors ${vars.vectors}
