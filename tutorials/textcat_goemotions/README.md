@@ -114,7 +114,7 @@ To make your own config to combine pipelines, the basic steps are:
 
 1. Include all the components you want in `nlp.pipeline`
 2. Add a section for each component, specifying the pipeline to source it from.
-3. If you have two components of the same type, specify the component names correctly.
+3. If you have two components of the same type, specify unqiue component names for each.
 4. If necessary, specify `replace_listeners` to bundle a component with its tok2vec.
 
 You can also remove many values related to training - since you aren't running
@@ -133,7 +133,7 @@ It depends on the pipeline, but often components use a Listener to just look
 for a tok2vec (or transformer) to get features from. If the tok2vec in your
 final pipeline is from the same pipeline as the component you're adding, then
 you don't have to do anything. But if a component has a different tok2vec, you
-can bundle the tok2vec with the component so that it doesn't use the wrong one.
+can bundle a standalone copy of the original tok2vec with the component so that it doesn't use the wrong one.
 
 Here's an example of a component that has a different name than it had
 originally, and also uses `replace_listeners`:
