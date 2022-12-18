@@ -14,12 +14,11 @@ determine entities such as *Rating*, *Location*, *Restaurant_Name*,
 *Price*, *Hours*,  *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
 Below are a few examples from the training data:
 
-
 First, we will train an NER model and treat it as our baseline. Then, we will
-attach the `SpanRuler` component before and after the existing pipeline. This
-setup gives us three pipelines we can compare upon.
+attach the `SpanRuler` component **after the `ner` component** of the existing
+pipeline. This setup gives us two pipelines we can compare upon.
 
-Here are some set of rules we included in the patterns file (`patterns.jsonl`):
+Here are some rules we included in the patterns file (`patterns.jsonl`):
 
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
@@ -32,6 +31,8 @@ Here are some set of rules we included in the patterns file (`patterns.jsonl`):
 | Amenity | `master card`, `take credit card`                  | Amenities mention different payment options. |
 | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
 | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
+
+**Reference**
 
 - J. Liu, P. Pasupat, S. Cyphers, and J. Glass. 2013. Asgard: A portable
 architecture for multilingual dialogue systems. In *2013 IEEE International
