@@ -1,13 +1,35 @@
-{"label": "Price", "pattern": [{"TEXT": {"REGEX": "cheap(est)?"}}]}
-{"label": "Price", "pattern": [{"TEXT": {"REGEX": "(in)?expensive"}}]}
-{"label": "Price", "pattern": [{"TEXT": {"REGEX": "decent(ly)?"}}]}
-{"label": "Price", "pattern": [{"LOWER": "affordable"}]}
-{"label": "Price", "pattern": [{"TEXT": {"REGEX": "\\d+\\sdollar(s)?"}}]}
-{"label": "Rating", "pattern": [{"LOWER": "good"}]}
-{"label": "Rating", "pattern": [{"LOWER": "great"}]}
-{"label": "Rating", "pattern": [{"LOWER": "fancy"}]}
-{"label": "Rating", "pattern": [{"LOWER": "nice"}]}
-{"label": "Rating", "pattern": [{"LOWER": "popular"}]}
-{"label": "Rating", "pattern": [{"LOWER": "first"}, {"LOWER": "rate"}]}
-{"label": "Rating", "pattern": [{"TEXT": {"REGEX": "\\d(-|\\s)?star(s)?"}}]}
-{"label": "Rating", "pattern": [{"TEXT": {"REGEX": "(one|two|three|four|five)\\sstar(s)?"}}]}
+{"label": "Rating", "pattern": [{"IS_DIGIT": true}, {"LOWER": "star"}, {"LOWER": "review", "OP": "?"}]}
+{"label": "Rating", "pattern": [{"IS_DIGIT": true}, {"LOWER": {"REGEX": "star(s)?"}}, {"LOWER": "or", "OP": "?"}, {"LOWER": "higher", "OP": "?"}]}
+{"label": "Rating", "pattern": [{"LOWER": "best"}, {"LOWER": "michelin"}, {"LOWER": "rated", "OP": "?"}]}
+{"label": "Rating", "pattern": [{"LOWER": "highest"}, {"LOWER": "approval"}, {"LOWER": "ratings", "OP": "?"}]}
+{"label": "Rating", "pattern": [{"LOWER": "highest"}, {"LOWER": "customer"}, {"LOWER": "ratings"}]}
+{"label": "Rating", "pattern": [{"LOWER": "poorest"}]}
+{"label": "Rating", "pattern": [{"LOWER": "poorest"}, {"LOWER": "quality"}]}
+{"label": "Rating", "pattern": [{"LOWER": {"REGEX": "local(ly)?"}}, {"LOWER": {"REGEX": "favo(u)?rite"}}]}
+{"label": "Rating", "pattern": [{"LOWER": "more", "OP": "?"}, {"LOWER": "than", "OP": "?"}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "star(s)?"}}, {"LOWER": {"REGEX": "rat(ed|ing|ings)?"}, "OP": "?"}]}
+{"label": "Rating", "pattern": [{"LOWER": "at", "OP": "?"}, {"LOWER": "least", "OP": "?"}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "star(s)?"}}, {"LOWER": {"REGEX": "rat(ed|ing|ings)?"}, "OP": "?"}]}
+{"label": "Rating", "pattern": [{"LOWER": "best", "OP": "?"}, {"LOWER": "michelin"}, {"LOWER": "rated", "OP": "?"}]}
+{"label": "Price", "pattern": [{"LOWER": "real", "OP": "?"}, {"LOWER": "cheap"}]}
+{"label": "Price", "pattern": [{"LOWER": "isnt", "OP": "?"}, {"LOWER": "cheap"}]}
+{"label": "Price", "pattern": [{"LOWER": "really", "OP": "?"}, {"LOWER": "tight"}, {"LOWER": "budget"}]}
+{"label": "Price", "pattern": [{"LOWER": "meal", "OP": "?"}, {"LOWER": "under"}, {"IS_DIGIT": true}]}
+{"label": "Hours", "pattern": [{"LOWER": "open"}, {"LOWER": "at"}, {"IS_DIGIT": true}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "open"}, {"LOWER": "until"}, {"IS_DIGIT": true}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "available"}, {"LOWER": "at"}, {"IS_DIGIT": true}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "available"}, {"LOWER": "until"}, {"IS_DIGIT": true}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "open"}, {"LOWER": "at"},  {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "open"}, {"LOWER": "until"},  {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "available"}, {"LOWER": "at"}, {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Hours", "pattern": [{"LOWER": "available"}, {"LOWER": "until"},  {"IS_DIGIT": true}, {"LOWER": {"REGEX": "(a|p)?m"}}]}
+{"label": "Amenity", "pattern": [{"LOWER": "formal"}, {"LOWER": "attire"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "casual"}, {"LOWER": "attire"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "take"}, {"LOWER": "visa"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "take", "OP": "?"}, {"LOWER": "master"}, {"LOWER": "card"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "take", "OP": "?"}, {"LOWER": "credit"}, {"LOWER": "card"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "date"}, {"LOWER": "night", "OP": "?"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "senior"}, {"LOWER": "discount"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "senior"}, {"LOWER": "special"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "classy"}]}
+{"label": "Amenity", "pattern": [{"LOWER": "clean"}]}
+{"label": "Location", "pattern": [{"LOWER": "in"}, {}, {"LOWER": "square"}]}
+{"label": "Location", "pattern": [{"LOWER": "airport"}]}
