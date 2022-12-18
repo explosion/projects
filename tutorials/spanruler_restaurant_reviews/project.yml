@@ -30,6 +30,12 @@ description: |
   | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
   | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
 
+  This gives us the following results:
+
+
+
+
+
   **Reference**
 
   - J. Liu, P. Pasupat, S. Cyphers, and J. Glass. 2013. Asgard: A portable
