@@ -23,11 +23,15 @@ Here are some set of rules we included in the patterns file (`patterns.jsonl`):
 
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
-| Price  | `cheap(est)?`, `(in)?expensive`, `decent(ly)?`, `affordable`  | Reviewers do not often give the exact dollar amount but rather describe it. |
-| Price  | `\d+\sdollar(s)?                                        | Reviewers, in some cases, give the exact price in dollars.                  |
-| Rating | `good`, `great`, `fancy`                                           | Reviewers often describe the dish rather than giving an exact rating        |
+| Price  | `cheap(est)?`, `(in)?expensive` | Reviewers do not often give the exact dollar amount but rather describe it. |
+| Rating | `good`, `great`, `fancy`                                      | Reviewers often describe the dish rather than giving an exact rating        |
 | Rating | `\d(-|\s)?star(s)?`                                     | Reviewers can also give star ratings (5-star, 3-stars, 2 star) on a dish.   |
-| Rating | `(one|two|three|four|five)\sstar(s)?`                  | Same as above but using words instead of numbers. |
+| Rating | `(one|two|three|four|five)\sstar(s)?`                  | Same as above but using words (four star, five star rating) instead of numbers. |
+| Rating | `michelin`, `michelin rated`                  | Reviews also mention if a restaurant has a Michelin star. |
+| Hours | `opens at 9 am`, `open at 8 30 am`                  | Opening hours, using numbers or words. |
+| Amenity | `master card`, `take credit card`                  | Amenities mention different payment options. |
+| Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
+| Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
 
 - J. Liu, P. Pasupat, S. Cyphers, and J. Glass. 2013. Asgard: A portable
 architecture for multilingual dialogue systems. In *2013 IEEE International
