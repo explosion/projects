@@ -49,7 +49,7 @@ of entities with rules:
 | Amenity  | 65.15     | **65.42**       |
 | Location | **82.41** | 82.31           |
 
-Overall, we have better performance for the combined `ner` and `span_ruler`
+We can also see benefits of combining a `span_ruler` with `ner` on the overall performance of 
 pipeline with just a few rules.
 
 |           | NER only | With Spanruler |
