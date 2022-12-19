@@ -16,7 +16,10 @@ description: |
   attach the `SpanRuler` component **after the `ner` component** of the existing
   pipeline. This setup gives us two pipelines we can compare upon.
 
-  Here are some rules we included in the patterns file (`patterns.jsonl`):
+  We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
+  because they have discernible patterns we can encode. The same cannot be said
+  for `Restaurant_Name` and `Dish`, so we'll leave them as they are. Here are
+  some rules we included in the patterns file (`patterns.jsonl`):
 
   | Label  | Pattern / Examples                                    | Description                                                                 |
   |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
@@ -30,7 +33,6 @@ description: |
   | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
   | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
 
-  This gives us the following results:
 
 
 
@@ -148,23 +150,15 @@ commands:
       - >-
         python -m scripts.attach_rules
         models/baseline
-        models/spanruler-before
+        models/spanruler
         --patterns-file patterns.jsonl
-        --location before
-        --validate
-      - >-
-        python -m scripts.attach_rules
-        models/baseline
-        models/spanruler-after
-        --patterns-file patterns.jsonl
-        --location before
+        --location after
         --validate
     deps:
       - models/baseline
       - patterns.jsonl
     outputs:
-      - models/spanruler-before
-      - models/spanruler-after
+      - models/spanruler
 
   - name: "evaluate"
     help: "Evaluate each model."
@@ -177,21 +171,13 @@ commands:
         --output metrics/baseline.json
       - >-
         python -m spacy evaluate
-        models/spanruler-before/
+        models/spanruler/
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/spanruler-before.json
-      - >-
-        python -m spacy evaluate
-        models/spanruler-after/
-        corpus/test.spacy
-        --gpu-id ${vars.gpu_id}
-        --output metrics/spanruler-after.json
     deps:
       - models/baseline
-      - models/spanruler-before
-      - models/spanruler-after
+      - models/spanruler
     outputs:
       - metrics/baseline.json
-      - metrics/spanruler-before.json
-      - metrics/spanruler-after.json
+      - metrics/spanruler

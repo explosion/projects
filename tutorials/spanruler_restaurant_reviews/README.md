@@ -18,7 +18,10 @@ First, we will train an NER model and treat it as our baseline. Then, we will
 attach the `SpanRuler` component **after the `ner` component** of the existing
 pipeline. This setup gives us two pipelines we can compare upon.
 
-Here are some rules we included in the patterns file (`patterns.jsonl`):
+We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
+because they have discernible patterns we can encode. The same cannot be said
+for `Restaurant_Name` and `Dish`, so we'll leave them as they are. Here are
+some rules we included in the patterns file (`patterns.jsonl`):
 
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
@@ -32,7 +35,6 @@ Here are some rules we included in the patterns file (`patterns.jsonl`):
 | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
 | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
 
-This gives us the following results:
 
 
 
