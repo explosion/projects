@@ -11,11 +11,11 @@ we will start **deprecating** the `entity_ruler` component in favor of
 
 Here, we will be using the **MIT Restaurant dataset** (Liu, et al, 2013) to
 determine entities such as *Rating*, *Location*, *Restaurant_Name*,
-*Price*, *Hours*,  *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
+*Price*, *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
 Below are a few examples from the training data:
 
-First, we will train an NER model and treat it as our baseline. Then, we will
-attach the `SpanRuler` component **after the `ner` component** of the existing
+First, we will train an NER-only model and treat it as our baseline. Then, we will
+attach the `SpanRuler` component **before the `ner` component** of the existing
 pipeline. This setup gives us two pipelines we can compare upon.
 
 We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
@@ -30,15 +30,29 @@ some rules we included in the patterns file (`patterns.jsonl`):
 | Rating | `\d(-\|\s)?star(s)?`                                     | Reviewers can also give star ratings (5-star, 3-stars, 2 star) on a dish.   |
 | Rating | `(one\|two\|three\|four\|five)\sstar(s)?`                  | Same as above but using words (four star, five star rating) instead of numbers. |
 | Rating | `michelin`, `michelin rated`                  | Reviews also mention if a restaurant has a Michelin star. |
-| Hours | `opens at 9 am`, `open at 8 30 am`                  | Opening hours, using numbers or words. |
 | Amenity | `master card`, `take credit card`                  | Amenities mention different payment options. |
 | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
 | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
 
+If we look at the results, we see an increase in performance for the majority
+of entities with rules:
 
+|          | NER only  | With Spanruler  |
+|----------|-----------|-----------------|
+| Price    | 76.67     | **77.99**       |
+| Rating   | 72.22     | **75.00**       |
+| Hours    | 66.67     | **67.11**       |
+| Amenity  | 65.15     | **65.42**       |
+| Location | **82.41** | 82.31           |
 
+Overall, we have better performance for the combined `ner` and `span_ruler`
+pipeline with just a non-exhaustive set of rules.
 
-
+|           | NER only | With Spanruler |
+|-----------|----------|----------------|
+| Precision | 76.63    | **76.67**      |
+| Recall    | 76.58    | **77.09**      |
+| F-score   | 76.60    | **76.69**      |
 
 **Reference**
 
