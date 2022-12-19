@@ -6,8 +6,8 @@ This example project demonstrates how you can use the
 [SpanRuler](https://spacy.io/api/spanruler) component for rule-based named
 entity recognition (NER). In spaCy v3 and below, this functionality can be
 achieved via the [EntityRuler](https://spacy.io/api/entityruler). However, 
-we will start deprecating the `entity_ruler` component in v4 in favor of
-`span_ruler`.
+we will start **deprecating** the `entity_ruler` component in favor of
+`span_ruler` in v4.
 
 Here, we will be using the **MIT Restaurant dataset** (Liu, et al, 2013) to
 determine entities such as *Rating*, *Location*, *Restaurant_Name*,
@@ -31,6 +31,12 @@ Here are some rules we included in the patterns file (`patterns.jsonl`):
 | Amenity | `master card`, `take credit card`                  | Amenities mention different payment options. |
 | Amenity | `classy`, `clean`                  | Amenities also include adjectives that describe the restaurant. |
 | Location | `in harold square`, `airport`                  | Location also mentions nearby landmarks for a restaurant. |
+
+This gives us the following results:
+
+
+
+
 
 **Reference**
 
