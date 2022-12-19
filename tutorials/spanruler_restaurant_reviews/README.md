@@ -14,6 +14,10 @@ determine entities such as *Rating*, *Location*, *Restaurant_Name*,
 *Price*, *Dish*, *Amenity*,  and *Cuisine* from restaurant reviews.
 Below are a few examples from the training data:
 
+![](figures/example_00.png)
+![](figures/example_01.png)
+![](figures/example_02.png)
+
 First, we will train an NER-only model and treat it as our baseline. Then, we will
 attach the `SpanRuler` component **before the `ner` component** of the existing
 pipeline. This setup gives us two pipelines we can compare upon.
