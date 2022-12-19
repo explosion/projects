@@ -5,7 +5,7 @@ from spacy.util import registry
 Rules: List[Dict[str, Any]]
 
 
-@registry.misc("restaurant_span_rules.v1")
+@registry.misc("restaurant_rules.v1")
 def restaurant_span_rules() -> Rules:
     rules = (
         pattern_star_ratings()
