@@ -4,6 +4,7 @@ corpus/
 training/
 wandb/
 unseen/
+analyses/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
