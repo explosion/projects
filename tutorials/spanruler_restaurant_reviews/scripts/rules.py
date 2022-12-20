@@ -2,7 +2,7 @@ from typing import Dict, List, Any
 from spacy.util import registry
 
 
-Rules: List[Dict[str, Any]]
+Rules = List[Dict[str, Any]]
 
 
 @registry.misc("restaurant_rules.v1")
