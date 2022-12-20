@@ -66,7 +66,7 @@ description: |
 vars:
   name: "spanruler_restaurant_reviews"
   seed: 0
-  gpu_id: 0
+  gpu_id: -1
   vectors: "en_core_web_lg"
   spanruler_location: before
 
