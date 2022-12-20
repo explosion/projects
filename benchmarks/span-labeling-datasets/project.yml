@@ -39,11 +39,6 @@ workflows:
     - "convert-anem-ents"
     - "convert-anem-spans"
     - "inspect-anem"
-  finer:
-    - "unpack-finer"
-    - "convert-finer-ents"
-    - "convert-finer-spans"
-    - "inspect-finer"
   all:
     - "preprocess-wnut17"
     - "convert-wnut17-ents"
@@ -55,10 +50,6 @@ workflows:
     - "convert-archaeo-spans"
     - "convert-anem-ents"
     - "convert-anem-spans"
-    - "unpack-finer"
-    - "convert-finer-ents"
-    - "convert-finer-spans"
-    - "inspect-finer"
 
 assets:
   # WNUT17 https://aclanthology.org/W17-4418/
@@ -81,9 +72,6 @@ assets:
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
   - dest: "assets/anem-test.iob"
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
-  ### FiNER https://aclanthology.org/2022.acl-long.303/ ###
-  - dest: "assets/finer139.zip"
-    url: "https://huggingface.co/datasets/nlpaueb/finer-139/resolve/main/finer139.zip"
 
 
 commands:
@@ -421,70 +409,6 @@ commands:
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/anem-train.spacy 
         --paths.dev corpus/spancat/anem-dev.spacy
-  
-  - name: "unpack-finer"
-    help: "Prepare the FiNER dataset."
-    script:
-      - mkdir temp
-      - unzip assets/finer139.zip -d temp
-      - python scripts/prepare_finer.py
-      - rm -rf temp
-
-  - name: "convert-finer-ents"
-    help: "Convert FiNER dataset into the spaCy format"
-    script:
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-train.iob corpus/ner/
-        --use-ents
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-dev.iob corpus/ner/
-        --use-ents
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-test.iob corpus/ner/
-        --use-ents
-    deps:
-      - assets/finer-train.iob
-      - assets/finer-dev.iob
-      - assets/finer-test.iob
-    outputs:
-      - corpus/ner/finer-train.spacy
-      - corpus/ner/finer-dev.spacy
-      - corpus/ner/finer-test.spacy
-
-  - name: "convert-finer-spans"
-    help: "Convert FiNER dataset into the spaCy format"
-    script:
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-train.iob corpus/spancat/
-        --spans-key ${vars.spans_key}
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-dev.iob corpus/spancat/
-        --spans-key ${vars.spans_key}
-      - >-
-        python -m scripts.convert_to_spans
-        assets/finer-test.iob corpus/spancat/
-        --spans-key ${vars.spans_key}
-    deps:
-      - assets/finer-train.iob
-      - assets/finer-dev.iob
-      - assets/finer-test.iob
-    outputs:
-      - corpus/spancat/finer-train.spacy
-      - corpus/spancat/finer-dev.spacy
-      - corpus/spancat/finer-test.spacy
-
-  - name: "inspect-finer"
-    help: "Analyze span-characteristics"
-    script:
-      - >-
-        python -m spacy debug data configs/spancat_default.cfg 
-        --paths.train corpus/spancat/finer-train.spacy 
-        --paths.dev corpus/spancat/finer-dev.spacy
   
   - name: "generate-unseen"
     help: "Create unseen entities splits for all preprocessed datasets."
