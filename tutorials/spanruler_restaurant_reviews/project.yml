@@ -41,20 +41,20 @@ description: |
 
   |          | NER only  | With Spanruler  |
   |----------|-----------|-----------------|
-  | Price    | 76.67     | **77.99**       |
-  | Rating   | 72.22     | **75.00**       |
-  | Hours    | 66.67     | **67.11**       |
-  | Amenity  | 65.15     | **65.42**       |
-  | Location | **82.41** | 82.31           |
+  | Price    | **84.50** | 80.45           |
+  | Rating   | 73.20     | **79.72**       |
+  | Hours    | 65.26     | **67.71**       |
+  | Amenity  | 66.20     | **66.54**       |
+  | Location | **81.45** | 80.97           |
 
   Overall, we have better performance for the combined `ner` and `span_ruler`
   pipeline with just a non-exhaustive set of rules.
 
   |           | NER only | With Spanruler |
   |-----------|----------|----------------|
-  | Precision | 76.63    | **76.67**      |
-  | Recall    | 76.58    | **77.09**      |
-  | F-score   | 76.60    | **76.69**      |
+  | Precision | **77.34**    | 76.71      |
+  | Recall    | 75.91    | **77.47**      |
+  | F-score   | 76.62    | **77.09**      |
 
   **Reference**
 
@@ -93,8 +93,8 @@ workflows:
     - preprocess
     - convert
     - split
-    - train
-    - attach-rules
+    - train-ner
+    - train-spanruler
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -142,7 +142,7 @@ commands:
       - corpus/train.spacy
       - corpus/dev.spacy
 
-  - name: "train"
+  - name: "train-ner"
     help: "Train a baseline NER model."
     script:
       - >-
@@ -150,18 +150,32 @@ commands:
         --paths.train corpus/train.spacy
         --paths.dev corpus/dev.spacy
         --paths.vectors ${vars.vectors}
-        --output training/
+        --output training/ner/
         --gpu-id ${vars.gpu_id}
-      # Save baseline model somewhere
-      - mkdir -p models/baseline
-      - cp -r training/model-best/. models/baseline
     deps:
       - corpus/train.spacy
       - corpus/dev.spacy
     outputs:
-      - models/baseline
-      - training/model-best
-      - training/model-last
+      - training/ner/model-best
+      - training/ner/model-last
+
+  - name: "train-spanruler"
+    help: "Train a NER model with SpanRuler."
+    script:
+      - >-
+        python -m spacy train configs/spanruler.cfg
+        --paths.train corpus/train.spacy
+        --paths.dev corpus/dev.spacy
+        --paths.vectors ${vars.vectors}
+        --output training/spanruler/
+        --gpu-id ${vars.gpu_id}
+        --code scripts/rules.py
+    deps:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+    outputs:
+      - training/spanruler/model-best
+      - training/spanruler/model-last
 
   - name: "attach-rules"
     help: "Attach rules to the baseline NER model."
@@ -184,19 +198,19 @@ commands:
     script:
       - >-
         python -m spacy evaluate
-        models/baseline/
+        training/ner/model-best/
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/baseline.json
       - >-
         python -m spacy evaluate
-        models/spanruler/
+        training/spanruler/model-best/
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/spanruler.json
     deps:
-      - models/baseline
-      - models/spanruler
+      - training/ner/model-best/
+      - training/spanruler/model-best/
     outputs:
       - metrics/baseline.json
-      - metrics/spanruler
+      - metrics/spanruler.json
