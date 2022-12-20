@@ -55,6 +55,10 @@ workflows:
     - "convert-archaeo-spans"
     - "convert-anem-ents"
     - "convert-anem-spans"
+    - "preprocess-restaurant"
+    - "convert-restaurant-ents"
+    - "convert-restaurant-spans"
+    - "inspect-restaurant"
 
 assets:
   # WNUT17 https://aclanthology.org/W17-4418/
