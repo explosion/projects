@@ -39,6 +39,11 @@ workflows:
     - "convert-anem-ents"
     - "convert-anem-spans"
     - "inspect-anem"
+  restaurant:
+    - "preprocess-restaurant"
+    - "convert-restaurant-ents"
+    - "convert-restaurant-spans"
+    - "inspect-restaurant"
   all:
     - "preprocess-wnut17"
     - "convert-wnut17-ents"
@@ -72,7 +77,13 @@ assets:
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
   - dest: "assets/anem-test.iob"
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
-
+  ### MIT Restaurants Review dataset ###
+  - dest: "assets/restaurant-train_raw.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
+    description: "Training data from the MIT Restaurants Review dataset"
+  - dest: "assets/restaurant-test_raw.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttest.bio
+    description: "Test data from the MIT Restaurants Review dataset"
 
 commands:
 
@@ -409,7 +420,77 @@ commands:
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/anem-train.spacy 
         --paths.dev corpus/spancat/anem-dev.spacy
+
+  - name: "preprocess-restaurant"
+    help: "Make MIT Restaurant Review data set format comply with convert."
+    script:
+      - python -m scripts.prepare_restaurant assets/restaurant-train_raw.iob assets/restaurant-train.iob
+      - python -m scripts.prepare_restaurant assets/restaurant-test_raw.iob assets/restaurant-test.iob
+    deps:
+      - assets/restaurant-train_raw.iob
+      - assets/restaurant-test_raw.iob
+    outputs:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
   
+  - name: "convert-restaurant-ents"
+    help: "Convert MIT Restaurant Review data to .spacy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-train.iob corpus/ner/
+        --use-ents
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/ner/restaurant-train-dev.spacy corpus/ner/restaurant-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-test.iob corpus/ner/
+        --use-ents
+        --converter auto
+    deps:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
+    outputs:
+      - corpus/ner/restaurant-train.spacy
+      - corpus/ner/restaurant-dev.spacy
+      - corpus/ner/restaurant-test.spacy
+  
+  - name: "convert-restaurant-spans"
+    help: "Convert MIT Restaurant Review dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/spancat/restaurant-train-dev.spacy corpus/spancat/restaurant-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
+    outputs:
+      - corpus/spancat/restaurant-train.spacy
+      - corpus/spancat/restaurant-dev.spacy
+      - corpus/spancat/restaurant-test.spacy
+      
+  - name: "inspect-restaurant"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/restaurant-train.spacy 
+        --paths.dev corpus/spancat/restaurant-dev.spacy
+
   - name: "generate-unseen"
     help: "Create unseen entities splits for all preprocessed datasets."
     script:
