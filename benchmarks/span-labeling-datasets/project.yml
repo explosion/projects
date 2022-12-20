@@ -81,7 +81,7 @@ assets:
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
   - dest: "assets/anem-test.iob"
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
-  ### MIT Restaurants Review dataset ###
+  ### MIT Restaurants Review dataset http://people.csail.mit.edu/jrg/2013/liu-icassp13.pdf ###
   - dest: "assets/restaurant-train_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
     description: "Training data from the MIT Restaurants Review dataset"
