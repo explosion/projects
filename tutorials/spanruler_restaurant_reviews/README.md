@@ -43,20 +43,20 @@ of entities with rules:
 
 |          | NER only  | With Spanruler  |
 |----------|-----------|-----------------|
-| Price    | 76.67     | **77.99**       |
-| Rating   | 72.22     | **75.00**       |
-| Hours    | 66.67     | **67.11**       |
-| Amenity  | 65.15     | **65.42**       |
-| Location | **82.41** | 82.31           |
+| Price    | **84.50** | 80.45           |
+| Rating   | 73.20     | **79.72**       |
+| Hours    | 65.26     | **67.71**       |
+| Amenity  | 66.20     | **66.54**       |
+| Location | **81.45** | 80.97           |
 
-We can also see benefits of combining a `span_ruler` with `ner` on the overall performance of 
-pipeline with just a few rules.
+Overall, we have better performance for the combined `ner` and `span_ruler`
+pipeline with just a non-exhaustive set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | 76.63    | **76.67**      |
-| Recall    | 76.58    | **77.09**      |
-| F-score   | 76.60    | **76.69**      |
+| Precision | **77.34**    | 76.71      |
+| Recall    | 75.91    | **77.47**      |
+| F-score   | 76.62    | **77.09**      |
 
 **Reference**
 
@@ -83,7 +83,8 @@ Commands are only re-run if their inputs have changed.
 | `preprocess` | Format and process the raw IOB datasets to make them compatible with spaCy convert. |
 | `convert` | Convert the data to spaCy's binary format. |
 | `split` | Split the train-dev dataset. |
-| `train` | Train a baseline NER model. |
+| `train-ner` | Train a baseline NER model. |
+| `train-spanruler` | Train a NER model with SpanRuler. |
 | `attach-rules` | Attach rules to the baseline NER model. |
 | `evaluate` | Evaluate each model. |
 
@@ -96,7 +97,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `download` &rarr; `preprocess` &rarr; `convert` &rarr; `split` &rarr; `train` &rarr; `attach-rules` &rarr; `evaluate` |
+| `all` | `download` &rarr; `preprocess` &rarr; `convert` &rarr; `split` &rarr; `train-ner` &rarr; `train-spanruler` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
