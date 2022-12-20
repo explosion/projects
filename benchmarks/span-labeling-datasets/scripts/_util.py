@@ -58,7 +58,7 @@ class SplitInfo:
             self.lang = tokens[0]
             self.source = f"{self.lang}-{source}"
         # known to be English data sets.
-        elif tokens[0] in ["anem", "wnut17", "archaeo", "finer"]:
+        elif tokens[0] in ["anem", "wnut17", "archaeo", "restaurant"]:
             source = tokens[0]
             self.source = tokens[0]
             self.lang = "en"
