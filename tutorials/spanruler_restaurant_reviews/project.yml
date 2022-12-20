@@ -66,7 +66,7 @@ description: |
 vars:
   name: "spanruler_restaurant_reviews"
   seed: 0
-  gpu_id: -1
+  gpu_id: 0
   vectors: "en_core_web_lg"
   spanruler_location: before
 
@@ -192,6 +192,19 @@ commands:
       - patterns.jsonl
     outputs:
       - models/spanruler
+  
+  - name: "assemble"
+    help: "Assemble trained NER pipeline with SpanRuler."
+    script:
+      - >-
+        python -m spacy assemble
+        configs/ner_ruler.cfg
+        models/ner_ruler
+        --code scripts/rules.py
+    deps:
+      - training/ner/model-best
+    outputs:
+      - models/ner_ruler
 
   - name: "evaluate"
     help: "Evaluate each model."
@@ -202,15 +215,16 @@ commands:
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/baseline.json
+      
       - >-
         python -m spacy evaluate
-        training/spanruler/model-best/
+        models/ner_ruler
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
-        --output metrics/spanruler.json
+        --output metrics/combined.json
     deps:
       - training/ner/model-best/
-      - training/spanruler/model-best/
+      - models/ner_ruler
     outputs:
       - metrics/baseline.json
-      - metrics/spanruler.json
+      - metric/combined.json
