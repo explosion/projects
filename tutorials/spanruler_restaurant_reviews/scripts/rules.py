@@ -20,6 +20,7 @@ def restaurant_span_rules() -> Rules:
         + pattern_landmark_location()
         + pattern_range_location()
         + pattern_drive_location()
+        + pattern_common_states()
     )
     return rules
 
@@ -316,7 +317,16 @@ def pattern_landmark_location() -> Rules:
         },
         {
             "label": "Location",
-            "pattern": [{"LOWER": "chinatown"}],
+            "pattern": [{"LOWER": "in", "OP": "?"}, {"LOWER": "chinatown"}],
+        },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "off"},
+                {"LOWER": "the"},
+                {"LOWER": "beaten"},
+                {"LOWER": "path"},
+            ],
         },
     ]
     return patterns
@@ -349,6 +359,57 @@ def pattern_drive_location() -> Rules:
         {
             "label": "Location",
             "pattern": [{"LOWER": "fastest"}, {"LOWER": "route"}],
+        },
+    ]
+    return patterns
+
+
+def pattern_common_states() -> Rules:
+    """Define rules to look for common states in the training data"""
+    patterns = [
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "in", "OP": "?"},
+                {"LOWER": "roxbury"},
+                {"LOWER": "crossing", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "my", "OP": "?"},
+                {"LOWER": "zip"},
+                {"LOWER": "code"},
+            ],
+        },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "in", "OP": "?"},
+                {"LOWER": "san"},
+                {"LOWER": "jose"},
+            ],
+        },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "in", "OP": "?"},
+                {"LOWER": "los"},
+                {"LOWER": "angeles"},
+            ],
+        },
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "near", "OP": "?"}, {"LOWER": "miami"}],
+        },
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "stockton"}, {"LOWER": "ca"}],
+        },
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "portland"}, {"LOWER": "or"}],
         },
     ]
     return patterns
