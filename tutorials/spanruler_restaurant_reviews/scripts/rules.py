@@ -18,6 +18,8 @@ def restaurant_span_rules() -> Rules:
         + pattern_occasion_amenity()
         + pattern_adjective_amenity()
         + pattern_landmark_location()
+        + pattern_range_location()
+        + pattern_drive_location()
     )
     return rules
 
@@ -304,5 +306,69 @@ def pattern_landmark_location() -> Rules:
     patterns = [
         {"label": "Location", "pattern": [{"LOWER": "in"}, {}, {"LOWER": "square"}]},
         {"label": "Location", "pattern": [{"LOWER": "airport"}]},
+        # {
+        #     "label": "Location",
+        #     "pattern": [{"LOWER": "street"}, {"LOWER": "address"}],
+        # },
+        # {
+        #     "label": "Location",
+        #     "pattern": [{"LOWER": "downtown"}, {"LOWER": "area"}],
+        # },
+        # {
+        #     "label": "Location",
+        #     "pattern": [{"LOWER": "chinatown"}],
+        # },
+    ]
+    return patterns
+
+
+def pattern_range_location() -> Rules:
+    """Define rules that tell the range of a place."""
+    patterns = [
+        # {
+        #     "label": "Location",
+        #     "pattern": [
+        #         {"LOWER": "within"},
+        #         {"IS_DIGIT": True},
+        #         {"LOWER": "miles"},
+        #         {"OP": "?"},
+        #         {"OP": "?"},
+        #     ],
+        # },
+        # {
+        #     "label": "Location",
+        #     "pattern": [
+        #         {"LOWER": "within"},
+        #         {"LOWER": "a"},
+        #         {"IS_DIGIT": True},
+        #         {"LOWER": {"REGEX": "mile(s)?"}},
+        #         {"OP": "?"},
+        #     ],
+        # },
+        # {
+        #     "label": "Location",
+        #     "pattern": [
+        #         {"LOWER": "within"},
+        #         {"LOWER": "a"},
+        #         {"IS_DIGIT": True},
+        #         {"LOWER": {"REGEX": "minute(s)?"}},
+        #         {"LOWER": "drive"},
+        #     ],
+        # },
+    ]
+    return patterns
+
+
+def pattern_drive_location() -> Rules:
+    """Define rules based on drive distance"""
+    patterns = [
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "driving"}, {"LOWER": "distance"}],
+        },
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "fastest"}, {"LOWER": "route"}],
+        },
     ]
     return patterns
