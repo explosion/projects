@@ -93,8 +93,8 @@ workflows:
     - preprocess
     - convert
     - split
-    - train-ner
-    - train-spanruler
+    - train
+    - assemble
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -142,7 +142,7 @@ commands:
       - corpus/train.spacy
       - corpus/dev.spacy
 
-  - name: "train-ner"
+  - name: "train"
     help: "Train a baseline NER model."
     script:
       - >-
@@ -159,40 +159,6 @@ commands:
       - training/ner/model-best
       - training/ner/model-last
 
-  - name: "train-spanruler"
-    help: "Train a NER model with SpanRuler."
-    script:
-      - >-
-        python -m spacy train configs/spanruler.cfg
-        --paths.train corpus/train.spacy
-        --paths.dev corpus/dev.spacy
-        --paths.vectors ${vars.vectors}
-        --output training/spanruler/
-        --gpu-id ${vars.gpu_id}
-        --code scripts/rules.py
-    deps:
-      - corpus/train.spacy
-      - corpus/dev.spacy
-    outputs:
-      - training/spanruler/model-best
-      - training/spanruler/model-last
-
-  - name: "attach-rules"
-    help: "Attach rules to the baseline NER model."
-    script:
-      - >-
-        python -m scripts.attach_rules
-        models/baseline
-        models/spanruler
-        --patterns-file patterns.jsonl
-        --location ${vars.spanruler_location}
-        --validate
-    deps:
-      - models/baseline
-      - patterns.jsonl
-    outputs:
-      - models/spanruler
-  
   - name: "assemble"
     help: "Assemble trained NER pipeline with SpanRuler."
     script:
@@ -200,6 +166,8 @@ commands:
         python -m spacy assemble
         configs/ner_ruler.cfg
         models/ner_ruler
+        --components.tok2vec.source training/ner/model-best/
+        --components.ner.source training/ner/model-best/
         --code scripts/rules.py
     deps:
       - training/ner/model-best
@@ -215,10 +183,10 @@ commands:
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/baseline.json
-      
+
       - >-
         python -m spacy evaluate
-        models/ner_ruler
+        models/ner_ruler/
         corpus/test.spacy
         --gpu-id ${vars.gpu_id}
         --output metrics/combined.json
