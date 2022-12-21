@@ -1,5 +1,5 @@
-title: "Named Entity Recognition (WikiNER) accelerated using nebullvm"
-description: "This project shows how nebullvm can accelerate spaCy's WikiNER pipeline.\n\n[Nebullvm](https://github.com/nebuly-ai/nebullvm) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
+title: "Named Entity Recognition (WikiNER) accelerated using speedster"
+description: "This project shows how `speedster` can accelerate spaCy's WikiNER pipeline.\n\n[Speedster](https://github.com/nebuly-ai/nebullvm/tree/main/apps/accelerate/speedster) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, `speedster` optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\n`Speedster` is built on top of [Nebullvm](https://github.com/nebuly-ai/nebullvm), an open-source framework for building AI-optimization tools.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:

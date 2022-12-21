@@ -31,7 +31,7 @@ if __name__ == "__main__":
             times.append(ot)
     print(np.mean(times))
     print("Original pipeline latency")
-    nlp.components[0][1].model._nebullvm_layer = None
+    nlp.components[0][1].model._speedster_layer = None
     times = []
     for _ in range(1):
         for text in corpus_list:

@@ -4,9 +4,8 @@ from tempfile import TemporaryDirectory
 from typing import Callable, List, Dict
 
 import torch.cuda
-from nebullvm.api.functions import optimize_model
-from nebullvm.inference_learners.base import LearnerMetadata, \
-    BaseInferenceLearner
+from nebullvm.operations.inference_learners.base import BaseInferenceLearner, \
+    LearnerMetadata
 from spacy.tokens import Doc
 from spacy_transformers import TransformerModel
 from spacy_transformers.align import get_alignment
@@ -15,6 +14,7 @@ from spacy_transformers.layers.transformer_model import huggingface_tokenize
 from spacy_transformers.truncate import truncate_oversize_splits
 from spacy_transformers.util import registry, maybe_flush_pytorch_cache, \
     log_gpu_memory, log_batch_size
+from speedster.api.functions import optimize_model
 from thinc.api import Model
 from thinc.model import OutT, InT
 
@@ -56,13 +56,13 @@ class _ModelWrapper:
         return out
 
 
-def _patch_nebullvm_model(model):
+def _patch_speedster_model(model):
     model.device = "cuda" if torch.cuda.is_available() else "cpu"
     return _ModelWrapper(model)
 
 
-class NebullvmTransformerModel(TransformerModel):
-    _nebullvm_layer = None
+class SpeedsterTransformerModel(TransformerModel):
+    _speedster_layer = None
 
     def optimize(self, input_data, **kwargs):
         tokenizer = self.layers[0].shims[0]._hfmodel.tokenizer
@@ -72,7 +72,7 @@ class NebullvmTransformerModel(TransformerModel):
             optimization_time="constrained",
             tokenizer=tokenizer,
             store_latencies=True,
-            ignore_compilers=["tensor RT"],
+            ignore_compilers=["tensor_rt"],
             tokenizer_args=dict(
                 add_special_tokens=True,
                 return_attention_mask=True,
@@ -95,20 +95,20 @@ class NebullvmTransformerModel(TransformerModel):
             input_data=input_data,
             **base_kwargs,
         )
-        self._nebullvm_layer = copy.deepcopy(self.layers[0])
-        self._nebullvm_layer.shims[0]._hfmodel.transformer = optimized_model
+        self._speedster_layer = copy.deepcopy(self.layers[0])
+        self._speedster_layer.shims[0]._hfmodel.transformer = optimized_model
 
     def predict(self, X: InT) -> OutT:
-        if self._nebullvm_layer is None:
+        if self._speedster_layer is None:
             return super().predict(X)
         else:
-            return nebullvm_forward(self, X, False)
+            return speedster_forward(self, X, False)
 
     def to_dict(self) -> Dict:
         msg = super().to_dict()
-        if self._nebullvm_layer is not None:
-            optimized_model = self._nebullvm_layer.shims[0]._hfmodel.transformer
-            nebullvm_dict = {}
+        if self._speedster_layer is not None:
+            optimized_model = self._speedster_layer.shims[0]._hfmodel.transformer
+            speedster_dict = {}
             with TemporaryDirectory() as tmp_dir:
                 tmp_dir = Path(tmp_dir)
                 optimized_model.save(tmp_dir)
@@ -118,31 +118,31 @@ class NebullvmTransformerModel(TransformerModel):
                         continue
                     file_name = str(file.relative_to(tmp_dir))
                     with open(file, "rb") as f:
-                        nebullvm_dict[file_name] = f.read()
-            msg["_nebullvm_layer"] = nebullvm_dict
+                        speedster_dict[file_name] = f.read()
+            msg["_speedster_layer"] = speedster_dict
         return msg
 
     def from_dict(self, msg: Dict) -> "Model":
         optimized_model = None
-        if "_nebullvm_layer" in msg:
-            nebullvm_dict = msg.pop("_nebullvm_layer")
+        if "_speedster_layer" in msg:
+            speedster_dict = msg.pop("_speedster_layer")
             with TemporaryDirectory() as tmp_dir:
                 tmp_dir = Path(tmp_dir)
-                for filename, bytefile in nebullvm_dict.items():
+                for filename, bytefile in speedster_dict.items():
                     file_path = tmp_dir / filename
                     file_path.parent.mkdir(exist_ok=True, parents=True)
                     with open(file_path, "wb") as f:
                         f.write(bytefile)
                 optimized_model = LearnerMetadata.read(tmp_dir).load_model(tmp_dir)
-                wrapped_model = _patch_nebullvm_model(optimized_model)
+                wrapped_model = _patch_speedster_model(optimized_model)
                 # warmup
                 # _ = optimized_model.predict(*optimized_model.get_inputs_example())
         super().from_dict(msg)
         if optimized_model is not None:
-            self._nebullvm_layer = copy.deepcopy(self.layers[0])
-            self._nebullvm_layer.shims[0]._hfmodel.transformer = optimized_model
-            self._nebullvm_layer.shims[0]._model = wrapped_model
-            self._nebullvm_layer.shims[0]._mixed_precision = False
+            self._speedster_layer = copy.deepcopy(self.layers[0])
+            self._speedster_layer.shims[0]._hfmodel.transformer = optimized_model
+            self._speedster_layer.shims[0]._model = wrapped_model
+            self._speedster_layer.shims[0]._mixed_precision = False
         return self
 
     def copy(self):
@@ -151,22 +151,22 @@ class NebullvmTransformerModel(TransformerModel):
         layers will also be deep-copied. The copy will receive a distinct `model.id`
         value.
         """
-        copied = NebullvmTransformerModel(self.name, self.attrs["get_spans"])
+        copied = SpeedsterTransformerModel(self.name, self.attrs["get_spans"])
         params = {}
         for name in self.param_names:
             params[name] = self.get_param(name) if self.has_param(name) else None
         copied.params = copy.deepcopy(params)
         copied.dims = copy.deepcopy(self._dims)
         copied.layers[0] = copy.deepcopy(self.layers[0])
-        copied._nebullvm_layer = self._nebullvm_layer
-        # nebullvm layer is not copied since it is unmodifiable
+        copied._speedster_layer = self._speedster_layer
+        # speedster layer is not copied since it is unmodifiable
         for name in self.grad_names:
             copied.set_grad(name, self.get_grad(name).copy())
         return copied
 
 
-@registry.architectures.register("NebullvmTransformerModel.v1")
-def create_NebullvmTransformerModel_v1(
+@registry.architectures.register("SpeedsterTransformerModel.v1")
+def create_SpeedsterTransformerModel_v1(
     name: str,
     get_spans: Callable,
     tokenizer_config: dict = {},
@@ -198,7 +198,7 @@ def create_NebullvmTransformerModel_v1(
         the scale should be increased when no overflows were found for
         `growth_interval` steps.
     """
-    model = NebullvmTransformerModel(
+    model = SpeedsterTransformerModel(
         name,
         get_spans,
         tokenizer_config,
@@ -209,12 +209,12 @@ def create_NebullvmTransformerModel_v1(
     return model
 
 
-def nebullvm_forward(
-    model: NebullvmTransformerModel, docs: List[Doc], is_train: bool
+def speedster_forward(
+    model: SpeedsterTransformerModel, docs: List[Doc], is_train: bool
 ) -> FullTransformerBatch:
     tokenizer = model.tokenizer
     get_spans = model.attrs["get_spans"]
-    transformer = model._nebullvm_layer
+    transformer = model._speedster_layer
 
     nested_spans = get_spans(docs)
     flat_spans = []

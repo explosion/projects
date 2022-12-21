@@ -1,10 +1,12 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Named Entity Recognition (WikiNER) accelerated using nebullvm
+# 🪐 spaCy Project: Named Entity Recognition (WikiNER) accelerated using speedster
 
-This project shows how nebullvm can accelerate spaCy's WikiNER pipeline.
+This project shows how `speedster` can accelerate spaCy's WikiNER pipeline.
 
-[Nebullvm](https://github.com/nebuly-ai/nebullvm) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, nebullvm optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.
+[Speedster](https://github.com/nebuly-ai/nebullvm/tree/main/apps/accelerate/speedster) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, `speedster` optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.
+
+`Speedster` is built on top of [Nebullvm](https://github.com/nebuly-ai/nebullvm), an open-source framework for building AI-optimization tools.
 
 Further info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner).
 
@@ -50,26 +52,26 @@ in the project directory.
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
-## 🚀 install nebullvm
+## 🚀 install speedster
 
-Before running the WikiNER pipeline, nebullvm must be installed. Nebullvm can be easily installed using `pip`:
+Before running the WikiNER pipeline, speedster must be installed. Speedster can be easily installed using `pip`:
 ```bash
-pip install nebullvm
+pip install speedster
 ```
-Some of the nebullvm components required for inference optimization are installed when nebullvm is imported into a new environment during the first run of the WikiNER pipeline.
+Some of the speedster components required for inference optimization can be installed using the `nebullvm` auto-installer module.
 
-Alternatively, these components can be installed beforehand by running
 ```bash
-python -c "import nebullvm"
+python -m nebullvm.installers.auto_installer --frameworks torch onnx huggingface --compilers all
 ```
+If you are interested in installing just a part of the compilers supported by `speedster` you can replace the `all` keyword with the wanted compilers. Further info can be found in the [speedster documentation](https://nebuly.gitbook.io/nebuly/speedster/installation).
 
 ## ⚡ Acceleration 
 
-When tested, [nebullvm](https://github.com/nebuly-ai/nebullvm) accelerated the WikiNER pipeline between **20%** and **80%** with **no impact on model performance**. The library could further accelerate deep learning model inference by applying more aggressive optimization techniques, which may result in a slight change in model performance. For more information, refer to the [nebullvm documentation](https://github.com/nebuly-ai/nebullvm).
+When tested, [speedster](https://github.com/nebuly-ai/nebullvm/tree/main/apps/accelerate/speedster) accelerated the WikiNER pipeline between **20%** and **80%** with **no impact on model performance**. The library could further accelerate deep learning model inference by applying more aggressive optimization techniques, which may result in a slight change in model performance. For more information, refer to the [speedster documentation](https://nebuly.gitbook.io/nebuly/speedster/get-started).
 
 Below are the response times of the WikiNER pipeline in milliseconds (ms).
 
-| Hardware | Original latency [ms] | Nebullvm optimized latency [ms] | Nebullvm speed-up |
+| Hardware | Original latency [ms] | Speedster optimized latency [ms] | Speedster speed-up |
 | --- | --- | --- | --- |
 | **Intel** | 139 | 114 | 1.2x |
 | **AMD** | 293 | 162 | 1.8x |

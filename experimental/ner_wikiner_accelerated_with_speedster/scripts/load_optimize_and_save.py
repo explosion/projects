@@ -1,11 +1,11 @@
 import spacy
 from spacy.training import Corpus
 
-from extra_components import NebullvmTransformerModel
+from extra_components import SpeedsterTransformerModel
 
 
 def _get_dumb_kwargs():
-    return {"name": "NebullvmTransformer", "get_spans": lambda x: x}
+    return {"name": "SpeedsterTransformer", "get_spans": lambda x: x}
 
 
 def _load_data(data_path, max_size=500):
@@ -17,7 +17,7 @@ def _load_data(data_path, max_size=500):
 
 def load_and_optimize_and_save(model_path, data_path, **kwargs):
     dumb_kwargs = _get_dumb_kwargs()
-    model = NebullvmTransformerModel(**dumb_kwargs).from_disk(model_path)
+    model = SpeedsterTransformerModel(**dumb_kwargs).from_disk(model_path)
     input_data = _load_data(data_path)
     model.optimize(input_data, **kwargs)
     model.to_disk(model_path)
