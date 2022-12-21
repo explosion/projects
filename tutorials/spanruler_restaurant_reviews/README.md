@@ -43,20 +43,20 @@ of entities with rules:
 
 |          | NER only  | With Spanruler  |
 |----------|-----------|-----------------|
-| Price    | **84.50** | 80.45           |
-| Rating   | 73.20     | **79.72**       |
-| Hours    | 65.26     | **67.71**       |
-| Amenity  | 66.20     | **66.54**       |
-| Location | **81.45** | 80.97           |
+| Price    | **83.72** | 82.90           |
+| Rating   | 77.21     | **77.78**       |
+| Hours    | 64.78     | **64.78**       |
+| Amenity  | 66.67     | **66.98**       |
+| Location | 81.17     | **81.20**       |
 
 Overall, we have better performance for the combined `ner` and `span_ruler`
 pipeline with just a non-exhaustive set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | **77.34**    | 76.71      |
-| Recall    | 75.91    | **77.47**      |
-| F-score   | 76.62    | **77.09**      |
+| Precision | 77.58    | **77.63**      |
+| Recall    | 76.23    | **76.32**      |
+| F-score   | 76.90    | **76.97**      |
 
 **Reference**
 
