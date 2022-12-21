@@ -328,6 +328,21 @@ def pattern_landmark_location() -> Rules:
                 {"LOWER": "path"},
             ],
         },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": "close"},
+                {"LOWER": "location"},
+            ],
+        },
+        {
+            "label": "Location",
+            "pattern": [
+                {"LOWER": {"REGEX": "close(st)?"}},
+                {"LOWER": "to"},
+                {"LOWER": "me"},
+            ],
+        },
     ]
     return patterns
 
@@ -359,6 +374,10 @@ def pattern_drive_location() -> Rules:
         {
             "label": "Location",
             "pattern": [{"LOWER": "fastest"}, {"LOWER": "route"}],
+        },
+        {
+            "label": "Location",
+            "pattern": [{"LOWER": "shortest"}, {"LOWER": "route"}],
         },
     ]
     return patterns
