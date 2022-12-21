@@ -170,79 +170,20 @@ def pattern_opening_hours() -> Rules:
         {
             "label": "Hours",
             "pattern": [
-                {"LOWER": "open"},
-                {"LOWER": "at"},
-                {"IS_DIGIT": True},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
+                {"LOWER": {"IN": ["open", "available"]}},
+                {"LOWER": {"IN": ["at", "until", "till"]}},
+                {"IS_DIGIT": True, "OP": "+"},
+                {"LOWER": {"REGEX": "(a|p)?m"}}
+            ]
         },
         {
             "label": "Hours",
             "pattern": [
-                {"LOWER": "open"},
-                {"LOWER": "until"},
-                {"IS_DIGIT": True},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "available"},
-                {"LOWER": "at"},
-                {"IS_DIGIT": True},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "available"},
-                {"LOWER": "until"},
-                {"IS_DIGIT": True},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "open"},
-                {"LOWER": "at"},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "open"},
-                {"LOWER": "until"},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "available"},
-                {"LOWER": "at"},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
-        {
-            "label": "Hours",
-            "pattern": [
-                {"LOWER": "available"},
-                {"LOWER": "until"},
-                {"IS_DIGIT": True},
-                {"LOWER": {"REGEX": "(a|p)?m"}},
-            ],
-        },
+                {"LOWER":
+                 {"IN":
+                  ["dinner", "lunch", "breakfast", "brunch"]}}
+            ]
+        }
     ]
     return patterns
 
