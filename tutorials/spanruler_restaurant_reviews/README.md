@@ -47,16 +47,16 @@ of entities with rules:
 | Rating   | 77.21     | **77.78**       |
 | Hours    | 64.78     | **64.78**       |
 | Amenity  | 66.67     | **66.98**       |
-| Location | 81.17     | **81.20**       |
+| Location | 81.17     | **81.99**       |
 
 Overall, we have better performance for the combined `ner` and `span_ruler`
 pipeline with just a non-exhaustive set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | 77.58    | **77.63**      |
-| Recall    | 76.23    | **76.32**      |
-| F-score   | 76.90    | **76.97**      |
+| Precision | 77.58    | **77.79**      |
+| Recall    | 76.23    | **76.58**      |
+| F-score   | 76.90    | **77.18**      |
 
 **Reference**
 
