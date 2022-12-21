@@ -23,7 +23,7 @@ description: |
   We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
   because they have discernible patterns we can encode. The same cannot be said
   for `Restaurant_Name` and `Dish`, so we'll leave them as they are. Here are
-  some rules we included in the patterns file (`patterns.jsonl`):
+  some rules we included in the patterns script (`scripts/rules.py`):
 
   | Label  | Pattern / Examples                                    | Description                                                                 |
   |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
