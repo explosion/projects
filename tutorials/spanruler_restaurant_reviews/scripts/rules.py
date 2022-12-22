@@ -173,17 +173,13 @@ def pattern_opening_hours() -> Rules:
                 {"LOWER": {"IN": ["open", "available"]}},
                 {"LOWER": {"IN": ["at", "until", "till"]}},
                 {"IS_DIGIT": True, "OP": "+"},
-                {"LOWER": {"REGEX": "(a|p)?m"}}
-            ]
+                {"LOWER": {"REGEX": "(a|p)?m"}},
+            ],
         },
         {
             "label": "Hours",
-            "pattern": [
-                {"LOWER":
-                 {"IN":
-                  ["dinner", "lunch", "breakfast", "brunch"]}}
-            ]
-        }
+            "pattern": [{"LOWER": {"IN": ["dinner", "lunch", "breakfast", "brunch"]}}],
+        },
     ]
     return patterns
 
