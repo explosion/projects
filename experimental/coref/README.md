@@ -72,7 +72,7 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `prep-ontonotes-data` | Rehydrate the data using OntoNotes |
-| `prep-test-data` | Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data! |
+| `prep-artificial-unit-test-data` | Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data! |
 | `preprocess` | Convert the data to spaCy's format |
 | `train-cluster` | Train the clustering component |
 | `prep-span-data` | Prepare data for the span resolver component. |
@@ -91,7 +91,6 @@ inputs have changed.
 | --- | --- |
 | `prep` | `preprocess` |
 | `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` |
-| `ci-test` | `prep-test-data` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
 | `all` | `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
 
 ### 🗂 Assets
@@ -103,6 +102,6 @@ in the project directory.
 | File | Source | Description |
 | --- | --- | --- |
 | `assets/` | Git | CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes. |
-| `assets/litbank` | Git | LitBank dataset. Only used for building data for tests. |
+| `assets/litbank` | Git | LitBank dataset. Only used for building data for quick unit tests. |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->

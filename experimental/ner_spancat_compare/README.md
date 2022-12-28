@@ -33,7 +33,7 @@ corpus's. The higher the number is, the more distinct the tokens are compared to
 rest of the corpus.
 
 These characteristics can give us a good intuition as to how well the SpanCat
-model identify the correct spans. In the case of GENIA, the entities
+model identifies the correct spans. In the case of GENIA, the entities
 themselves tend to be technical terms, which makes it more distinct and easier
 to classify. Again, we measure distinctiveness not only within the entities
 themselves (SD), but also in its boundaries (BD).
