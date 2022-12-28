@@ -20,4 +20,4 @@ tick off all the boxes. [] -> [x] -->
 
 - [ ] I confirm that I have the right to submit this contribution under the project's MIT license.
 - [ ] I ran the tests, and all new and existing tests passed.
-- [ ] I ran the `update` scripts in the `.github` folder, and all configs and docs are updated.
+- [ ] I ran the `update` scripts in the `.github` folder, and all the configs and docs are up-to-date.
