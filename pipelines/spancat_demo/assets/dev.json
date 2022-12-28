@@ -1,0 +1,26 @@
+[
+  [
+    "Where is Berlin?",
+    {
+      "entities":[
+        [
+          9,
+          15,
+          "LOC"
+        ]
+      ]
+    }
+  ],
+  [
+    "I like Shaka Khan.",
+    {
+      "entities":[
+        [
+          7,
+          17,
+          "PERSON"
+        ]
+      ]
+    }
+  ]
+]

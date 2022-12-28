@@ -8,7 +8,7 @@ from spacy.tokens import Doc
 
 from datasets.dataset import Dataset
 from datasets.utils import fetch_entity_information, create_spans_from_doc_annotation
-from schemas import Entity, Annotation
+from wikid import schemas
 
 
 class Mewsli9Dataset(Dataset):
@@ -18,11 +18,11 @@ class Mewsli9Dataset(Dataset):
     def name(self) -> str:
         return "mewsli_9"
 
-    def _parse_external_corpus(
+    def _parse_corpus(
         self, **kwargs
-    ) -> Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]:
+    ) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, List[schemas.Annotation]]]:
         entity_qids: Set[str] = set()
-        annotations: Dict[str, List[Annotation]] = {}
+        annotations: Dict[str, List[schemas.Annotation]] = {}
 
         with open(
             self._paths["assets"] / "clean" / "en" / "mentions.tsv", encoding="utf-8"
@@ -34,7 +34,7 @@ class Mewsli9Dataset(Dataset):
                 if row["docid"] not in annotations:
                     annotations[row["docid"]] = []
                 annotations[row["docid"]].append(
-                    Annotation(
+                    schemas.Annotation(
                         entity_name=row["url"].split("/")[-1].replace("_", " "),
                         entity_id=row["qid"],
                         start_pos=int(row["position"]),
@@ -42,9 +42,7 @@ class Mewsli9Dataset(Dataset):
                     )
                 )
 
-        entities, failed_entity_lookups, _ = fetch_entity_information(
-            "id", tuple(entity_qids)
-        )
+        entities, failed_entity_lookups, _ = fetch_entity_information(tuple(entity_qids), self._language)
 
         return entities, failed_entity_lookups, annotations
 

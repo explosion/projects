@@ -2,43 +2,29 @@ title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
 vars:
   run: "cg-default"
+  language: "en"
   config: "nel.cfg"
   vectors_model: "en_core_web_lg"
-  version: "0.0.4"
+  version: "0.0.5"
   dataset: "mewsli_9"
   gpu_id: ""
-  use_filtered_dumps: "--use_filtered_dumps"
-  use_filter_terms: "--use_filter_terms"
+  download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
+  filter: "True"  # Whether to only use parts of Wiki data and corpus containing filter terms.
   training_max_steps: 1000
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "temp", "evaluation"]
-
-assets:
-  - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
-    url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-    description: Wikidata entity dump. Download can take a long time!
-    extra: True
-  - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
-    url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
-    description: Wikipedia dump. Download can take a long time!
-    extra: True
-  - dest: 'assets/wiki/wikidata_entity_dump_filtered.json.bz2'
-    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikidata_entity_dump_filtered.json.bz2'
-    description: Filtered Wikidata entity dump for demo purposes.
-    checksum: 'ba2d979105abf174208608b942242fcb'
-  - dest: 'assets/wiki/wikipedia_dump_filtered.xml.bz2'
-    url: 'https://github.com/explosion/projects/releases/download/nel-benchmark-filtered-wiki-data/wikipedia_dump_filtered.xml.bz2'
-    description: Filtered Wikipedia dump for demo purposes.
-    checksum: 'cb624eaa5887fe1ff47a9206c9bdcfd8'
+directories: ["assets", "training", "configs", "scripts", "corpora", "evaluation"]
 
 workflows:
   all:
     - download_mewsli9
-    - preprocess
     - download_model
-    - parse_wiki_dumps
-    - create_kb
+    - wikid_clone
+    - preprocess
+    - wikid_download_assets
+    - wikid_parse
+    - wikid_create_kb
+    - parse_corpus
     - compile_corpora
     - train
     - evaluate
@@ -53,54 +39,76 @@ commands:
     script:
       - bash scripts/datasets/download_mewsli-9.sh
     outputs:
-      - assets/mewsli_9/
-
-  - name: preprocess
-    help: Preprocess test datasets.
-    script:
-      - "python ./scripts/clean_data.py ${vars.dataset}"
-    deps:
-      - "assets/${vars.dataset}/raw"
-    outputs:
-      - "assets/${vars.dataset}/clean"
+      - assets/mewsli_9/raw
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
-  - name: parse_wiki_dumps
+  - name: wikid_clone
+    help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
+    script:
+      - git clone https://github.com/explosion/wikid.git --branch main
+      - pip install -r wikid/requirements.txt
+    outputs:
+      - wikid
+
+  - name: preprocess
+    help: Preprocess and clean corpus data.
+    script:
+      - "env PYTHONPATH=. python ./scripts/clean_data.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "assets/${vars.dataset}/raw"
+    outputs:
+      - "assets/${vars.dataset}/clean"
+
+  - name: wikid_download_assets
+    help: "Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
+    script:
+      - "spacy project assets wikid ${vars.download_all_wiki_assets}"
+    outputs:
+      - "wikid/assets/"
+
+  - name: wikid_parse
     help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
-      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py ${vars.use_filtered_dumps}"
+      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter True"
     outputs:
-      - "assets/wiki/wiki.sqlite3"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
 
-  - name: create_kb
+  - name: wikid_create_kb
     help: "Create the knowledge base and write it to file."
     script:
-      - "python ./scripts/create_kb.py ${vars.dataset} ${vars.vectors_model}"
+      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model}"
+    deps:
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+    outputs_no_cache:
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
+
+  - name: parse_corpus
+    help: "Parse corpus to generate entity and annotation lookups used for corpora compilation."
+    script:
+      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/clean"
-      - "assets/wiki/wiki.sqlite3"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookup.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
-    outputs_no_cache:
-      - "temp/${vars.dataset}/kb"
-      - "temp/${vars.dataset}/nlp"
 
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py ${vars.dataset} ${vars.use_filter_terms}"
+      - "env PYTHONPATH=. python ./scripts/compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
     deps:
       - "assets/${vars.dataset}/entities.pkl"
       - "assets/${vars.dataset}/entities_failed_lookups.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
-      - "temp/${vars.dataset}/kb"
-      - "temp/${vars.dataset}/nlp"
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
       - "configs/datasets.yml"
     outputs:
       - "corpora/${vars.dataset}/train.spacy"
@@ -110,22 +118,22 @@ commands:
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
+      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
     outputs:
       - "training/${vars.dataset}/${vars.run}"
     deps:
-      - "temp/${vars.dataset}/kb"
-      - "temp/${vars.dataset}/nlp"
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
 
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}'"
+      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
-      - "temp/${vars.dataset}/nlp"
+      - "wikid/output/${vars.language}/nlp"
       - "corpora/${vars.dataset}/dev.spacy"
     outputs:
       - "evaluation/${vars.dataset}"
@@ -133,22 +141,22 @@ commands:
   - name: compare_evaluations
     help: "Compare available set of evaluation runs."
     script:
-      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} --highlight-criterion ${vars.eval_highlight_metric}"
+      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
     deps:
       - "evaluation/${vars.dataset}"
 
   - name: delete_wiki_db
-    help: "Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump."
+    help: "Deletes SQLite database generated in step wiki_parse with data parsed from Wikidata and Wikipedia dump."
     script:
-      - "rm -f assets/wiki/wiki.sqlite3"
+      - "rm -f wikid/output/${vars.language}/wiki.sqlite3"
     deps:
-      - "assets/wiki/wiki.sqlite3"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
 
   - name: clean
-    help: "Remove intermediate files for specified dataset (excluding Wiki resources and database)"
+    help: "Remove intermediate files for specified dataset and language (excluding Wiki resources and database)."
     script:
       - "rm -rf training/${vars.dataset}"
       - "rm -rf corpora/${vars.dataset}"
-      - "rm -rf temp/${vars.dataset}"
       - "rm -rf assets/${vars.dataset}"
       - "rm -rf evaluation/${vars.dataset}"
+      - "rm -rf wikid/output/${vars.language}"

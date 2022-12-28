@@ -25,4 +25,5 @@ class LexicalCandidateSelector(NearestNeighborCandidateSelector):
             kb.get_alias_candidates(entry[1]) for entry in self._lookup_struct.get(span.text, [])
             if entry[0] >= similarity_cutoff
         ][:max_n_candidates]
+
         return {cand for cands_for_alias in all_cands for cand in cands_for_alias}
