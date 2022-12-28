@@ -19,5 +19,5 @@ or new feature, or a change to the documentation? -->
 tick off all the boxes. [] -> [x] -->
 
 - [ ] I confirm that I have the right to submit this contribution under the project's MIT license.
-- [ ] I ran the tests, and the `update` scripts in the `.github` folder.
-- [ ] My changes don't require a change to the documentation, or if they do, I've added all required information.
+- [ ] I ran the tests, and all new and existing tests passed.
+- [ ] I ran the `update` scripts in the `.github` folder, and all configs and docs are updated.
