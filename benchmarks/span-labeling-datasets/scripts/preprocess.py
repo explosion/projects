@@ -4,9 +4,6 @@ from string import digits
 import typer
 from wasabi import msg
 
-Arg = typer.Argument
-Opt = typer.Option
-
 
 def preprocess(
         input_path: Path,
