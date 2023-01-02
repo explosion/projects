@@ -58,51 +58,47 @@ def plot_main_results(
     )
 
     width = 0.20
-    ind = np.arange(len(dataset_names))
+    ind = np.arange(0, 2)
 
-    def _prepare_data(
-        metrics: Dict, adjusted_scores: Optional[Dict] = None
-    ) -> Dict[str, Iterable[float]]:
-        data = {
-            # MultihashEmbed scores
-            "mhe_avgs": [],
-            "mhe_stds": [],
-            # Multiembed scores
-            "me_avgs": [],
-            "me_stds": [],
-            # Multihashembed (adjusted scores)
-            "mhe_adj_avgs": [],
-            "mhe_adj_stds": [],
-        }
-        for dataset, scores in metrics.items():
-            mhe_avg, mhe_std = scores["multihashembed"].get("f")  # get f-score
-            data["mhe_avgs"].append(round(mhe_avg, 2))
-            data["mhe_stds"].append(round(mhe_std, 2))
-            me_avg, me_std = scores["multiembed"].get("f")  # get f-score
-            data["me_avgs"].append(round(me_avg, 2))
-            data["me_stds"].append(round(me_std, 2))
+    def _prepare_data(m_spacy, m_spacy_adj, m_null, m_null_adj):
+        def _get_val(enc, dset, ddict):
+            avg = round(ddict.get(dset).get(enc).get("f")[0], 2)
+            std = round(ddict.get(dset).get(enc).get("f")[1], 2)
+            return avg, std
 
-            adjusted_report = ""
-            if adjusted_scores:
-                mhe_adj_avg, mhe_adj_std = adjusted_scores[dataset][
-                    "multihashembed"
-                ].get("f")
-                data["mhe_adj_avgs"].append(round(mhe_adj_avg, 2))
-                data["mhe_adj_stds"].append(round(mhe_adj_std, 2))
-                adjusted_report = (
-                    f"MultiHashEmbed [adjusted] {mhe_adj_avg} ({mhe_adj_std})"
-                )
+        data = {}
+        ddicts = (m_null, m_spacy)
+        ddicts_adj = (m_null_adj, m_spacy_adj)
+        for dataset in dataset_names:
+            data[dataset] = {
+                # MultihashEmbed scores
+                "mhe_avgs": [
+                    _get_val("multihashembed", dataset, ddict)[0] for ddict in ddicts
+                ],
+                "mhe_stds": [
+                    _get_val("multihashembed", dataset, ddict)[1] for ddict in ddicts
+                ],
+                # Multiembed scores
+                "me_avgs": [
+                    _get_val("multiembed", dataset, ddict)[0] for ddict in ddicts
+                ],
+                "me_stds": [
+                    _get_val("multiembed", dataset, ddict)[1] for ddict in ddicts
+                ],
+                # Multihashembed (adjusted scores)
+                # "mhe_adj_avgs": [
+                #     _get_val("multihashembed", dataset, ddict)[0]
+                #     for ddict in ddicts_adj
+                # ],
+                # "mhe_adj_stds": [
+                #     _get_val("multihashembed", dataset, ddict)[1]
+                #     for ddict in ddicts_adj
+                # ],
+            }
 
-            msg.text(
-                f"Dataset `{dataset}`: "
-                f"MultiHashEmbed {mhe_avg} ({mhe_std}) "
-                f"{adjusted_report} "
-                f"MultiEmbed {me_avg} ({me_std})",
-                show=verbose,
-            )
         return data
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6), sharex=True)
+    fig, axs = plt.subplots(3, 2, figsize=(12, 8), sharey=True)
     if use_tex:
         msg.info("Rendering using LaTeX")
         _use_tex(plt)
@@ -160,10 +156,13 @@ def plot_main_results(
         if title:
             ax.set_title(title, usetex=True)
         ax.set_xticks(ind)
-        ax.set_xticklabels(dataset_names)
+        # ax.set_xticklabels(dataset_names)
+        ax.set_xticklabels(["without", "with"])
         ax.set_ylim(top=1.0)
         if show_legend:
-            ax.legend(loc="lower center", ncol=3, bbox_to_anchor=legend_loc)
+            ax.legend(
+                loc="lower center", ncol=3, bbox_to_anchor=legend_loc, frameon=False
+            )
 
         # Hide the right and top splines
         ax.spines.right.set_visible(False)
@@ -176,27 +175,34 @@ def plot_main_results(
         _autolabel(ax, rects=rects3, xpos="right")
 
     # Plot
-    _plot(
-        ax1,
-        _prepare_data(metrics_spacy, metrics_spacy_adjusted),
-        title="with static vectors",
-        show_xlabel=False,
-        show_legend=False,
-        unseen=metrics_spacy_adjusted,
-        offset=offset,
+
+    data = _prepare_data(
+        metrics_spacy,
+        metrics_spacy_adjusted,
+        metrics_null,
+        metrics_null_adjusted,
     )
-    _plot(
-        ax2,
-        _prepare_data(metrics_null, metrics_null_adjusted),
-        title="without static vectors",
-        show_legend=True,
-        legend_loc=(0.5, -0.7),
-        unseen=metrics_null_adjusted,
-        offset=offset,
-    )
+
+    for ax, dataset in zip(axs.ravel(), dataset_names):
+        _plot(
+            ax,
+            data.get(dataset),
+            title=dataset,
+            show_xlabel=False,
+            show_legend=False,
+            unseen=metrics_spacy_adjusted,
+            offset=offset,
+        )
+
+    fig.set_size_inches(9, 6)
+
+    # Show single legend
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, ncol=3, loc=(0.3, -0.015), frameon=False)
 
     # Figure configuration
     fig.tight_layout()
+
     if title:
         fig.suptitle(
             title,
@@ -232,17 +238,33 @@ def plot_min_freq(
     dataset_names = metrics_spacy.keys()
 
     width = 0.20
-    ind = np.arange(len(dataset_names))
+    # ind = np.arange(len(dataset_names))
+    ind = np.arange(0, 2)
 
-    def _prepare_data(metrics: Dict) -> Dict[str, Iterable[float]]:
-        data = {
-            "10": [],
-            "5": [],
-            "1": [],
-        }
-        for dataset, scores in metrics.items():
-            for min_freq in data.keys():
-                data[min_freq].append(round(scores.get(min_freq), 2))
+    # def _prepare_data(metrics: Dict) -> Dict[str, Iterable[float]]:
+    #     data = {
+    #         "10": [],
+    #         "5": [],
+    #         "1": [],
+    #     }
+    #     for dataset, scores in metrics.items():
+    #         for min_freq in data.keys():
+    #             data[min_freq].append(round(scores.get(min_freq), 2))
+    #     return data
+
+    def _prepare_data(m_spacy, m_null):
+        def _get_val(mf, dset, ddict):
+            val = round(ddict.get(dset).get(str(mf)), 2)
+            return val
+
+        data = {}
+        ddicts = (m_null, m_spacy)
+        for dataset in dataset_names:
+            data[dataset] = {
+                "10": [_get_val(10, dataset, ddict) for ddict in ddicts],
+                "5": [_get_val(5, dataset, ddict) for ddict in ddicts],
+                "1": [_get_val(1, dataset, ddict) for ddict in ddicts],
+            }
         return data
 
     def _plot(
@@ -255,6 +277,7 @@ def plot_min_freq(
         legend_loc: Tuple[float, float] = (0.5, 0.5),
         offset: int = 1,
     ):
+        # breakpoint()
         rects1 = ax.bar(
             ind - width / 0.66667,
             mhe_data,
@@ -303,7 +326,7 @@ def plot_min_freq(
         if title:
             ax.set_title(title, usetex=True)
         ax.set_xticks(ind)
-        ax.set_xticklabels(dataset_names)
+        ax.set_xticklabels(["without", "with"])
         ax.set_ylim(top=1.0)
         if show_legend:
             ax.legend(
@@ -311,6 +334,7 @@ def plot_min_freq(
                 ncol=4,
                 bbox_to_anchor=legend_loc,
                 title_fontsize="x-large",
+                frameon=False,
             )
 
         # Hide the right and top splines
@@ -323,28 +347,36 @@ def plot_min_freq(
         _autolabel(ax, rects=rects3, xpos="center")
         _autolabel(ax, rects=rects4, xpos="center")
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6), sharex=True)
+    fig, axs = plt.subplots(3, 2, figsize=(12, 8), sharey=True)
     if use_tex:
         msg.info("Rendering using LaTeX")
         _use_tex(plt)
 
-    # Plot
-    _plot(
-        ax1,
-        _prepare_data(metrics_spacy),
-        [0.81, 0.82, 0.47, 0.85, 0.81, 0.86],  # MultiHashembed results
-        title="with static vectors",
-        show_xlabel=False,
-        show_legend=False,
-    )
-    _plot(
-        ax2,
-        _prepare_data(metrics_null),
-        [0.74, 0.69, 0.27, 0.83, 0.78, 0.82],  # Multihashembed results
-        title="without static vectors",
-        show_legend=True,
-        legend_loc=(0.5, -0.7),
-    )
+    mhe_data = {
+        "CoNLL es": [0.74, 0.81],
+        "CoNLL nl": [0.69, 0.82],
+        "WNUT2017": [0.27, 0.47],
+        "Archeology": [0.83, 0.85],
+        "AnEM": [0.78, 0.81],
+        "OntoNotes": [0.82, 0.86],
+    }
+
+    me_data = _prepare_data(metrics_spacy, metrics_null)
+
+    for ax, dataset in zip(axs.ravel(), dataset_names):
+        print(dataset)
+        _plot(
+            ax,
+            me_data.get(dataset),
+            mhe_data.get(dataset),
+            title=dataset,
+            show_xlabel=False,
+            show_legend=False,
+        )
+
+    # Show single legend
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, ncol=4, loc=(0.3, -0.010), frameon=False)
 
     # Figure configuration
     fig.tight_layout()
@@ -442,6 +474,7 @@ def plot_spacy_v_fasttext(
         ncol=2,
         bbox_to_anchor=(0.5, -0.5),
         title_fontsize="x-large",
+        frameon=False,
     )
 
     # Hide the right and top splines
@@ -571,6 +604,7 @@ def plot_num_seeds(
         ncol=4,
         bbox_to_anchor=(0.5, -0.5),
         title_fontsize="x-large",
+        frameon=False,
     )
 
     # Hide the right and top splines
