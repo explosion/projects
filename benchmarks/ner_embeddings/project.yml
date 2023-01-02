@@ -149,8 +149,8 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
-  - name: "train-custom-rows"
-    help: "Train NER model with custom rows."
+  - name: "train-adjust-rows"
+    help: "Train NER model with adjustable number of rows."
     script:
       - >-
         python -m spacy train
@@ -175,7 +175,7 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
   - name: "train-hash"
-    help: "Train NER model with different hashes."
+    help: "Train NER model with different number of hash functions."
     script:
       - >-
         python -m spacy train
@@ -225,7 +225,7 @@ commands:
       - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
 
   - name: "evaluate-seen-unseen"
-    help: "Evaluate NER model on seen and unseen entities."
+    help: "Evaluate NER model on seen and unseen entities separately."
     script:
       - mkdir -p ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
       - >-

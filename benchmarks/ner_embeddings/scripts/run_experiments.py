@@ -125,7 +125,7 @@ def _make_hash_command(
     min_freq: int = 10,
     tables_path: str = "tables",
 ):
-    """Construct the hash command based from a template"""
+    """Construct the make-tables command based on a template"""
     command = f"""
     spacy project run make-tables .
     --vars.ner_config {config}
