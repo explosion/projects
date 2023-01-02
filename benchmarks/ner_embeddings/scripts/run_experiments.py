@@ -293,11 +293,11 @@ def run_multiembed_features_ablation(
     dataset_vectors = _get_datasets(datasets)
     attr_combinations = {
         # fmt: off
-        "ablation/ner_multihashembed_o": ["ORTH"],
-        "ablation/ner_multihashembed_n": ["NORM"],
-        "ablation/ner_multihashembed_np": ["NORM", "PREFIX"],
-        "ablation/ner_multihashembed_nps": ["NORM", "PREFIX", "SUFFIX"],
-        "ablation/ner_multihashembed_npss": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+        "ablation/ner_multihashembed_orth": ["ORTH"],
+        "ablation/ner_multihashembed_norm": ["NORM"],
+        "ablation/ner_multihashembed_norm_prefix": ["NORM", "PREFIX"],
+        "ablation/ner_multihashembed_norm_prefix_suffix": ["NORM", "PREFIX", "SUFFIX"],
+        "ablation/ner_multihashembed_norm_prefix_suffix_shape": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         # fmt: on
     }
 
