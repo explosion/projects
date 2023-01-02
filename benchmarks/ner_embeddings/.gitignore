@@ -1,6 +1,5 @@
 assets
 metrics*
-!metrics
 training
 tables
 debug
