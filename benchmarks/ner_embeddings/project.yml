@@ -149,7 +149,7 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
-  - name: "train-custom-rows"
+  - name: "train-adjust-rows"
     help: "Train NER model with adjustable number of rows."
     script:
       - >-
