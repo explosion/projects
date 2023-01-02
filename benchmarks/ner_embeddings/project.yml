@@ -225,7 +225,7 @@ commands:
       - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
 
   - name: "evaluate-seen-unseen"
-    help: "Evaluate NER model on seen and unseen entities."
+    help: "Evaluate NER model on seen and unseen entities separately."
     script:
       - mkdir -p ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
       - >-
