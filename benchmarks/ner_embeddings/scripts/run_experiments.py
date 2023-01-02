@@ -119,7 +119,7 @@ def _make_eval_command(
     return command
 
 
-def _make_hash_command(
+def _make_tables_command(
     config: str,
     dataset: str,
     min_freq: int = 10,
@@ -171,7 +171,7 @@ def run_main_results(
 
         # Create hash tables
         if config == "ner_multiembed":
-            hash_command = _make_hash_command(
+            hash_command = _make_tables_command(
                 config=config,
                 dataset=dataset,
             )
@@ -237,7 +237,7 @@ def run_multiembed_min_freq_experiment(
             commands = []
 
             # Create hash tables
-            hash_command = _make_hash_command(
+            hash_command = _make_tables_command(
                 config=config,
                 dataset=dataset,
                 min_freq=min_freq,
@@ -308,7 +308,7 @@ def run_multiembed_features_ablation(
 
             # Create hash tables
             if "multiembed" in config:
-                hash_command = _make_hash_command(
+                hash_command = _make_tables_command(
                     config=config,
                     dataset=dataset,
                 )
