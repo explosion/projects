@@ -39,7 +39,7 @@ vars:
   ner_config: "ner_multiembed"
   dataset: "anem"
   language: "en"
-  vectors: "vectors/fasttext-en"
+  vectors: "en_core_web_lg"
   tables_path: "tables"
   metrics_dir: "metrics"
   attrs: null
