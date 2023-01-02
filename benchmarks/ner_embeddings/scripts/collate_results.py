@@ -45,8 +45,8 @@ def main(
         df = pd.DataFrame.from_dict(scores).dropna(axis=1)
 
         # Compute top-level metrics
-        # Here, I select the columns that have float values
-        top_level = df.select_dtypes(include=["float64"])
+        relevant_cols = ["ents_p", "ents_r", "ents_f", "speed"]
+        top_level = df[relevant_cols]
         top_level_df = _create_df(top_level)
         # Replace NaN with 0. This usually happens when you only have a
         # single trial and you're computing for stdev
@@ -55,7 +55,6 @@ def main(
         if verbose:
             # We're using print instead of msg because print()
             # renders a table-like appearance.
-            # TODO: Convert this to msg.table
             print(top_level_df)
 
         # Save results
