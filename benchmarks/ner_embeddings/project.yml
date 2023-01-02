@@ -175,7 +175,7 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
   - name: "train-hash"
-    help: "Train NER model with different hashes."
+    help: "Train NER model with different number of hash functions."
     script:
       - >-
         python -m spacy train
