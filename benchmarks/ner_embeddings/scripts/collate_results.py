@@ -12,7 +12,7 @@ from .constants import CONFIGS, DATASET_VECTORS
 def _create_df(input_df: pd.DataFrame) -> pd.DataFrame:
     """Create dataframe with average and stdev"""
     avg = input_df.mean(axis=0)
-    std = input_df.std(axis=0)
+    std = input_df.std(axis=0, ddof=0)
     df = avg.to_frame("avg")
     df["std"] = std.to_frame("std")
     return df
@@ -48,9 +48,6 @@ def main(
         relevant_cols = ["ents_p", "ents_r", "ents_f", "speed"]
         top_level = df[relevant_cols]
         top_level_df = _create_df(top_level)
-        # Replace NaN with 0. This usually happens when you only have a
-        # single trial and you're computing for stdev
-        top_level_df = top_level_df.fillna(0)
 
         if verbose:
             # We're using print instead of msg because print()
