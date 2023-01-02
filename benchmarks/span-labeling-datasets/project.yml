@@ -165,22 +165,19 @@ commands:
   - name: "unpack-conll"
     help: "Decompress ConLL 2002, remove temporary files and change encoding."
     script:
-      - mkdir temp
-      - tar -xvf assets/conll.tgz -C temp
-      - gzip -d temp/ner/data/esp.testa.gz 
-      - gzip -d temp/ner/data/esp.testb.gz
-      - gzip -d temp/ner/data/esp.train.gz
-      - gzip -d temp/ner/data/ned.testa.gz
-      - gzip -d temp/ner/data/ned.testb.gz
-      - gzip -d temp/ner/data/ned.train.gz
-      - iconv -f iso-8859-1 temp/ner/data/esp.testa -o assets/es-conll-dev.iob
-      - iconv -f iso-8859-1 temp/ner/data/esp.testb -o assets/es-conll-test.iob
-      - iconv -f iso-8859-1 temp/ner/data/esp.train -o assets/es-conll-train.iob
-      - iconv -f iso-8859-1 temp/ner/data/ned.testa -o assets/nl-conll-dev.iob
-      - iconv -f iso-8859-1 temp/ner/data/ned.testb -o assets/nl-conll-test.iob
-      - iconv -f iso-8859-1 temp/ner/data/ned.train -o assets/nl-conll-train.iob
-      - rm -rf temp
-      - rm assets/conll.tgz
+      - python -m scripts.cli_util untar assets/conll.tgz --output-dir temp
+      - python -m scripts.cli_util unzip temp/ner/data/esp.testa.gz 
+      - python -m scripts.cli_util unzip temp/ner/data/esp.testb.gz
+      - python -m scripts.cli_util unzip temp/ner/data/esp.train.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.testa.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.testb.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.train.gz
+      - python -m scripts.cli_util reencode temp/ner/data/esp.testa assets/es-conll-dev.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/esp.testb assets/es-conll-test.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/esp.train assets/es-conll-train.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.testa assets/nl-conll-dev.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.testb assets/nl-conll-test.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.train assets/nl-conll-train.iob iso-8859-1 utf-8
     deps:
       - assets/conll.tgz
     outputs:
