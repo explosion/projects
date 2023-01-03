@@ -17,10 +17,12 @@ def restaurant_span_rules() -> Rules:
         + pattern_payment_option_amenity()
         + pattern_occasion_amenity()
         + pattern_adjective_amenity()
+        + pattern_liquor_amenity()
         + pattern_landmark_location()
         + pattern_range_location()
         + pattern_drive_location()
         + pattern_common_states()
+        + pattern_restaurant_names()
     )
     return rules
 
@@ -225,7 +227,30 @@ def pattern_occasion_amenity() -> Rules:
         {
             "label": "Amenity",
             "pattern": [{"LOWER": "date"}, {"LOWER": "night", "OP": "?"}],
-        }
+        },
+    ]
+    return patterns
+
+
+def pattern_liquor_amenity() -> Rules:
+    """Define rules that detect liquor related entities"""
+    patterns = [
+        # {
+        #     "label": "Amenity",
+        #     "pattern": [{"LOWER": "wine"}, {"LOWER": {"REGEX": "list(s)?"}, "OP": "?"}],
+        # },
+        # {
+        #     "label": "Amenity",
+        #     "pattern": [{"LOWER": "with"}, {"LOWER": "a"}, {"LOWER": "bar"}],
+        # },
+        {
+            "label": "Amenity",
+            "pattern": [
+                {"LOWER": {"IN": ["notable", "good"]}},
+                {"LOWER": "beer"},
+                {"LOWER": {"IN": ["list", "selection"]}},
+            ],
+        },
     ]
     return patterns
 
@@ -366,6 +391,105 @@ def pattern_common_states() -> Rules:
         {
             "label": "Location",
             "pattern": [{"LOWER": "portland"}, {"LOWER": "or"}],
+        },
+    ]
+    return patterns
+
+
+def pattern_restaurant_names() -> Rules:
+    """Add patterns that check 'restaurant' or 'hotel' in proper names"""
+    patterns = [
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "asia"},
+                {"LOWER": "express"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "hard"},
+                {"LOWER": "rock"},
+                {"LOWER": "hotel", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "fatty"},
+                {"LOWER": "fish"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "donut"},
+                {"LOWER": "and"},
+                {"LOWER": "donuts"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "caranova"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "fuji"},
+                {"LOWER": "ya", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "lulus"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "tim"},
+                {"LOWER": "hortons"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "evergreen"},
+                {"LOWER": "taiwanese"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "tea"},
+                {"LOWER": "garden"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "sebastians"},
+                {"LOWER": "restaurant", "OP": "?"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "english"},
+                {"LOWER": "pub"},
+            ],
         },
     ]
     return patterns
