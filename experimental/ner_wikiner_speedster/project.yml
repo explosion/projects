@@ -33,7 +33,7 @@ commands:
     # caching works correctly.
     script:
       - "python scripts/partition.py assets/aij-wikiner-en-wp2.bz2 assets/iob"
-      - "python -m spacy convert assets/iob corpus --n-sents 10"
+      - "python -m spacy convert assets/iob corpus --converter iob --n-sents 10"
     deps:
       - "assets/aij-wikiner-en-wp2.bz2"
     outputs:
