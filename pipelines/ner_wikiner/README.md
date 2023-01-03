@@ -47,4 +47,4 @@ in the project directory.
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 ## 🚀 Accelerate
-If you are interested in accelerating this pipeline, give a look at [ner_wikiner_accelerated_with_nebullvm](https://github.com/explosion/projects/tree/v3/experimental/ner_wikiner_accelerated_with_nebullvm) pipeline.
+If you are interested in accelerating this pipeline, give a look at [ner_wikiner_accelerated_with_speedster](https://github.com/explosion/projects/tree/v3/experimental/ner_wikiner_accelerated_with_speedster) pipeline.
