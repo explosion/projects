@@ -25,7 +25,7 @@ pipeline. This setup gives us two pipelines we can compare upon.
 We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
 because they have discernible patterns we can encode. The same cannot be said
 for `Restaurant_Name` and `Dish`, so we'll leave them as they are. Here are
-some rules we included in the patterns file (`patterns.jsonl`):
+some rules we included in the patterns script (`scripts/rules.py`):
 
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
@@ -46,17 +46,18 @@ of entities with rules:
 | Price    | **83.72** | 82.90           |
 | Rating   | 77.21     | **77.78**       |
 | Hours    | 64.78     | **64.78**       |
-| Amenity  | 66.67     | **66.98**       |
+| Amenity  | 66.67     | **67.55**       |
 | Location | 81.17     | **81.99**       |
+| Restaurant_Name| 76.28     | **78.16**       |
 
 Overall, we have better performance for the combined `ner` and `span_ruler`
-pipeline with just a non-exhaustive set of rules.
+pipeline with our set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | 77.58    | **77.79**      |
-| Recall    | 76.23    | **76.58**      |
-| F-score   | 76.90    | **77.18**      |
+| Precision | 77.58    | **78.00**      |
+| Recall    | 76.23    | **76.77**      |
+| F-score   | 76.90    | **77.38**      |
 
 **Reference**
 
