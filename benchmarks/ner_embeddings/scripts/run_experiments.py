@@ -54,7 +54,7 @@ def _make_train_command(
 
     if not include_static_vectors:
         cmd_vectors = "--vars.include_static_vectors false"
-    if adjust_rows and config != "ner_multiembed":
+    if adjust_rows and config != "multiembed":
         modifier = "-custom-rows"
         new_rows = _get_computed_rows(tables_path, dataset, adjust_value)
         cmd_rows = f"--vars.rows '{new_rows}'"
@@ -150,7 +150,7 @@ def _get_datasets(datasets: Optional[List[str]]) -> Dict:
 def run_main_results(
     # fmt: off
     datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
-    config: str = Opt("ner_multihashembed", help="The spaCy configuration file to use for training."),
+    config: str = Opt("multihashembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     adjust_rows: bool = Opt(False, "--adjust-rows", help="Adjust the rows for MultiHashEmbed based on computed hash tables."),
     adjust_value: int = Opt(1, "--adjust-value", help="Setup how much should the rows be adjusted"),
@@ -170,7 +170,7 @@ def run_main_results(
         commands = []
 
         # Create hash tables
-        if config == "ner_multiembed":
+        if config == "multiembed":
             hash_command = _make_tables_command(
                 config=config,
                 dataset=dataset,
@@ -212,7 +212,7 @@ def run_main_results(
 def run_multiembed_min_freq_experiment(
     # fmt: off
     datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
-    config: str = Opt("ner_multiembed", help="The spaCy configuration file to use for training."),
+    config: str = Opt("multiembed", help="The spaCy configuration file to use for training."),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     min_freqs: Tuple[int, int , int] = Opt((1, 5, 10), help="Values to check min_freq for.", show_default=True),
     gpu_id: int = Opt(0, help="Set the random seed.", show_default=True),
@@ -293,11 +293,11 @@ def run_multiembed_features_ablation(
     dataset_vectors = _get_datasets(datasets)
     attr_combinations = {
         # fmt: off
-        "ablation/ner_multihashembed_orth": ["ORTH"],
-        "ablation/ner_multihashembed_norm": ["NORM"],
-        "ablation/ner_multihashembed_norm_prefix": ["NORM", "PREFIX"],
-        "ablation/ner_multihashembed_norm_prefix_suffix": ["NORM", "PREFIX", "SUFFIX"],
-        "ablation/ner_multihashembed_norm_prefix_suffix_shape": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
+        "ablation/multihashembed_orth": ["ORTH"],
+        "ablation/multihashembed_norm": ["NORM"],
+        "ablation/multihashembed_norm_prefix": ["NORM", "PREFIX"],
+        "ablation/multihashembed_norm_prefix_suffix": ["NORM", "PREFIX", "SUFFIX"],
+        "ablation/multihashembed_norm_prefix_suffix_shape": ["NORM", "PREFIX", "SUFFIX", "SHAPE"],
         # fmt: on
     }
 
@@ -347,7 +347,7 @@ def run_multiembed_features_ablation(
 def run_characterize_hash(
     # fmt: off
     datasets: Optional[List[str]] = Arg(None, help="Datasets to run the experiment on. If None is passed, then experiment is ran on all datasets.", show_default=True),
-    config: str = Opt("ner_multifewerhashembed", help="Name of the MultiHashFewerEmbed config", show_default=True),
+    config: str = Opt("multifewerhashembed", help="Name of the MultiHashFewerEmbed config", show_default=True),
     static_vectors: StaticVectors = Opt("null", help="Type of static vectors to use.", show_default=True),
     gpu_id: int = Opt(0, help="Set the GPU ID.", show_default=True),
     dry_run: bool = Opt(False, "--dry-run", help="Print the commands, don't run them."),

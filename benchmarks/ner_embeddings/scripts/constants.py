@@ -9,4 +9,4 @@ DATASET_VECTORS = {
     "ontonotes": {"spacy": "en_core_web_lg", "fasttext": "fasttext-en", "lang": "en"},
 }
 
-CONFIGS = ["ner_multiembed", "ner_multihashembed"]
+CONFIGS = ["multiembed", "multihashembed"]
