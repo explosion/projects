@@ -33,18 +33,16 @@ jobs:
                 versionSpec: '$(python.version)'
                 architecture: 'x64'
 
-
-
           - script: |
                 pip install "spacy>=3.2.0,<3.5.0"
                 pip install pytest
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - task: Bash@3
-            condition: ${{ contains( matrix.imageName, 'macos') }}
-            script: |
+          - script: |
               brew install bash
+            condition: ${{ contains( matrix.imageName, 'macos') }}
+            displayName: 'Install bash 5.0 on OSX'
 
           - task: Bash@3
             inputs:
