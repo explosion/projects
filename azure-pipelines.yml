@@ -41,7 +41,7 @@ jobs:
 
           - script: |
               brew install bash
-            condition: ${{ contains( matrix.imageName, 'macos') }}
+            condition: contains( $(imageName), 'macos')
             displayName: 'Install bash 5.0 on OSX'
 
           - task: Bash@3
