@@ -41,7 +41,8 @@ jobs:
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - condition: ${{ contains( matrix.imageName, 'macos') }}
+          - task: Bash@3
+            condition: ${{ contains( matrix.imageName, 'macos') }}
             script: |
               brew install bash
 
