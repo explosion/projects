@@ -41,11 +41,9 @@ jobs:
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - if: contains( matrix.imageName, 'macos')
-            name: Install bash 5.0 under macOS for mapfile
+          - condition: ${{ contains( matrix.imageName, 'macos') }}
             script: |
               brew install bash
-              sudo mv /usr/local/bin/bash /bin/bash
 
           - task: Bash@3
             inputs:
