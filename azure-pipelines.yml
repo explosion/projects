@@ -33,11 +33,19 @@ jobs:
                 versionSpec: '$(python.version)'
                 architecture: 'x64'
 
+
+
           - script: |
                 pip install "spacy>=3.2.0,<3.5.0"
                 pip install pytest
                 pip install wheel
             displayName: 'Install dependencies'
+
+          - if: contains( matrix.imageName, 'macos')
+            name: Install bash 5.0 under macOS for mapfile
+            script: |
+              brew install bash
+              sudo mv /usr/local/bin/bash /bin/bash
 
           - task: Bash@3
             inputs:

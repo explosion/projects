@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Only run tests in second-level directories that have been changed in the last commit.
 
