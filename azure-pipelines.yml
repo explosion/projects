@@ -39,11 +39,6 @@ jobs:
                 pip install wheel
             displayName: 'Install dependencies'
 
-          - script: |
-              brew install bash
-            condition: contains( $(imageName), 'macos')
-            displayName: 'Install bash 5.0 on OSX'
-
           - task: Bash@3
             inputs:
               filePath: 'run-tests.sh'
