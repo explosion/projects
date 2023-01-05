@@ -4,7 +4,7 @@
 
 # Fetch changed files.
 function get_dirs() {
-  git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -f 1-2 -d/ | grep / | sort -u
+  git diff --dirstat=files,0 HEAD~1 | sed 's/^[ 0-9.]\+% //g' | cut -f 1-2 -d/ | grep /. | sort -u
 }
 
 exit_code=0
