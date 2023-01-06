@@ -3,11 +3,11 @@
 # 🪐 spaCy Project: Using SpanRuler for rule-based Named Entity Recognition
 
 This example project demonstrates how you can use the
-[SpanRuler](https://spacy.io/api/spanruler) component for rule-based named
-entity recognition (NER). In spaCy v3 and below, this functionality can be
-achieved via the [EntityRuler](https://spacy.io/api/entityruler). However, 
-we will start **deprecating** the `entity_ruler` component in favor of
-`span_ruler` in v4.
+[SpanRuler](https://spacy.io/api/spanruler), a component introduced in spaCy
+3.3, for rule-based named entity recognition (NER). In spaCy v3 and below,
+this functionality can be achieved via the
+[EntityRuler](https://spacy.io/api/entityruler). However, we will start
+**deprecating** the `entity_ruler` component in favor of `span_ruler` in v4.
 
 Here, we will be using the **MIT Restaurant dataset** (Liu, et al, 2013) to
 determine entities such as *Rating*, *Location*, *Restaurant_Name*,
@@ -30,7 +30,7 @@ some rules we included in the patterns script (`scripts/rules.py`):
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
 | Price  | `cheap(est)?`, `(in)?expensive` | Reviewers do not often give the exact dollar amount but rather describe it. |
-| Rating | `good`, `great`, `fancy`                                      | Reviewers often describe the dish rather than giving an exact rating.        |
+| Rating | `good`, `great`, `fancy`                                      | Reviewers often describe the dish rather than giving an exact rating        |
 | Rating | `\d(-\|\s)?star(s)?`                                     | Reviewers can also give star ratings (5-star, 3-stars, 2 star) on a dish.   |
 | Rating | `(one\|two\|three\|four\|five)\sstar(s)?`                  | Same as above but using words (four star, five star rating) instead of numbers. |
 | Rating | `michelin`, `michelin rated`                  | Reviews also mention if a restaurant has a Michelin star. |
