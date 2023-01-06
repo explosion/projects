@@ -92,8 +92,6 @@ workflows:
   all:
     - download
     - preprocess
-    - convert
-    - split
     - train
     - assemble
     - evaluate
@@ -109,36 +107,20 @@ commands:
       - "python -m spacy download ${vars.vectors}"
 
   - name: "preprocess"
-    help: "Format and process the raw IOB datasets to make them compatible with spaCy convert."
+    help: "Preprocess the raw IOB, convert them into spaCy format, and split them into train, dev, and test partitions."
     script:
+      # Make raw IOB compatible with spaCy
       - "python -m scripts.preprocess assets/train_raw.iob assets/train.iob"
       - "python -m scripts.preprocess assets/test_raw.iob assets/test.iob"
-    deps:
-      - assets/train_raw.iob
-      - assets/test_raw.iob
-    outputs:
-      - assets/train.iob
-      - assets/test.iob
-
-  - name: "convert"
-    help: "Convert the data to spaCy's binary format."
-    script:
+      # Convert data to spaCy's binary format
       - "python -m spacy convert assets/train.iob corpus/"
       - "python -m spacy convert assets/test.iob corpus/"
       - "mv corpus/train.spacy corpus/train_dev.spacy"
-    deps:
-      - assets/train.iob
-      - assets/test.iob
-    outputs:
-      - corpus/train_dev.spacy
-      - corpus/test.spacy
-
-  - name: "split"
-    help: "Split the train-dev dataset."
-    script:
+      # Split corpus into train, dev, and test
       - "python -m scripts.split corpus/train_dev.spacy corpus/ --train-size 0.8 --seed ${vars.seed}"
     deps:
-      - corpus/train_dev.spacy
+      - assets/train_raw.iob
+      - assets/test_raw.iob
     outputs:
       - corpus/train.spacy
       - corpus/dev.spacy

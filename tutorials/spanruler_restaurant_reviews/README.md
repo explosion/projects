@@ -81,9 +81,7 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `download` | Download a spaCy model with pretrained vectors. |
-| `preprocess` | Format and process the raw IOB datasets to make them compatible with spaCy convert. |
-| `convert` | Convert the data to spaCy's binary format. |
-| `split` | Split the train-dev dataset. |
+| `preprocess` | Preprocess the raw IOB, convert them into spaCy format, and split them into train, dev, and test partitions. |
 | `train` | Train a baseline NER model. |
 | `assemble` | Assemble trained NER pipeline with SpanRuler. |
 | `evaluate` | Evaluate each model. |
@@ -97,7 +95,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `download` &rarr; `preprocess` &rarr; `convert` &rarr; `split` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` |
+| `all` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
