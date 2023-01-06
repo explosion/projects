@@ -19,7 +19,7 @@ Below are a few examples from the training data:
 ![](figures/example_02.png)
 
 First, we will train an NER-only model and treat it as our baseline. Then, we will
-attach the `SpanRuler` component **before the `ner` component** of the existing
+attach the `SpanRuler` component **after the `ner` component** of the existing
 pipeline. This setup gives us two pipelines we can compare upon.
 
 We will create rules for `Price`, `Rating`, `Hours`, `Amenity`, and `Location`
@@ -43,7 +43,6 @@ of entities with rules:
 
 |          | NER only  | With Spanruler  |
 |----------|-----------|-----------------|
-| Price    | **83.72** | 82.90           |
 | Rating   | 77.21     | **77.78**       |
 | Hours    | 64.78     | **64.78**       |
 | Amenity  | 66.67     | **67.55**       |
@@ -55,9 +54,10 @@ pipeline with our set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | 77.58    | **78.00**      |
-| Recall    | 76.23    | **76.77**      |
-| F-score   | 76.90    | **77.38**      |
+| Precision | 77.58    | **78.10**      |
+| Recall    | 76.23    | **76.83**      |
+| F-score   | 76.90    | **77.46**      |
+
 
 **Reference**
 

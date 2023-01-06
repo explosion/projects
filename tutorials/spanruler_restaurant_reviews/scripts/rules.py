@@ -5,6 +5,27 @@ from spacy.util import registry
 Rules = List[Dict[str, Any]]
 
 
+@registry.misc("restaurant_rules.v2")
+def restaurant_span_rules() -> Rules:
+    rules = (
+        pattern_star_ratings()
+        + pattern_good_ratings()
+        + pattern_poor_ratings()
+        + pattern_opening_hours()
+        + pattern_attire_amenity()
+        + pattern_payment_option_amenity()
+        + pattern_occasion_amenity()
+        + pattern_adjective_amenity()
+        + pattern_liquor_amenity()
+        + pattern_landmark_location()
+        + pattern_range_location()
+        + pattern_drive_location()
+        + pattern_common_states()
+        + pattern_restaurant_names()
+    )
+    return rules
+
+
 @registry.misc("restaurant_rules.v1")
 def restaurant_span_rules() -> Rules:
     rules = (
