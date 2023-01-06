@@ -1,4 +1,3 @@
-nebullvm>=0.6
 speedster>=0.0.1
 openvino-dev[onnx]
 spacy-transformers>=1.1.0,<1.2.0
