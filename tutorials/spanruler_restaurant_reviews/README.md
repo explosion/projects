@@ -30,7 +30,7 @@ some rules we included in the patterns script (`scripts/rules.py`):
 | Label  | Pattern / Examples                                    | Description                                                                 |
 |--------|-------------------------------------------------------|-----------------------------------------------------------------------------|
 | Price  | `cheap(est)?`, `(in)?expensive` | Reviewers do not often give the exact dollar amount but rather describe it. |
-| Rating | `good`, `great`, `fancy`                                      | Reviewers often describe the dish rather than giving an exact rating        |
+| Rating | `good`, `great`, `fancy`                                      | Reviewers often describe the dish rather than giving an exact rating.        |
 | Rating | `\d(-\|\s)?star(s)?`                                     | Reviewers can also give star ratings (5-star, 3-stars, 2 star) on a dish.   |
 | Rating | `(one\|two\|three\|four\|five)\sstar(s)?`                  | Same as above but using words (four star, five star rating) instead of numbers. |
 | Rating | `michelin`, `michelin rated`                  | Reviews also mention if a restaurant has a Michelin star. |
