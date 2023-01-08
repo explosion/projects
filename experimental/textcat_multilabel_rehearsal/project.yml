@@ -1,0 +1,138 @@
+title: "Multilabel Textcat rehearsal (Text Classification)"
+description: "A minimal demo showcasing the experimental rehearsal feature on a textcat_multilabel component. This project trains a textcat_multilabel pipeline on cooking data, the trained model will then be rehearsed with data it hasn't seen before. The goal of the project is to showcase how rehearsal can compensate the catastrophoic forgetting problem when training on top of a pre-trained model."
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  name: "textcat_multilabel_rehearsal"
+  # Supported languages: all except ja, ko, th, vi, and zh, which would require
+  # custom tokenizer settings in config.cfg
+  lang: "en"
+  # Set your GPU ID, -1 is CPU
+  gpu_id: -1
+  version: "0.0.0"
+  train: "cooking-train.jsonl"
+  dev: "cooking-dev.jsonl"
+  rehearsal_iterations: 10
+  rehearsal_split: 0.3
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "assets/${vars.train}"
+    description: "Training data from cooking.stackexchange.com"
+  - dest: "assets/${vars.dev}"
+    description: "Development data from cooking.stackexchange.com"
+
+# Workflows are sequences of commands (see below) executed in order. You can
+# run them via "spacy project run [workflow]". If a commands's inputs/outputs
+# haven't changed, it won't be re-run.
+workflows:
+  all:
+    - convert
+    - train
+    - update
+    - rehearse
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format. Split the data for training and rehearsal."
+    script:
+      - "python scripts/convert.py ${vars.lang} ${vars.rehearsal_split} assets/${vars.train} assets/${vars.dev} corpus/"
+    deps:
+      - "assets/${vars.train}"
+      - "assets/${vars.dev}"
+      - "scripts/convert.py"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/rehearsal.spacy"
+      - "corpus/rehearsal_dev.spacy"
+
+  - name: "train"
+    help: "Train the textcat model"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/textcat --paths.train corpus/train.spacy --paths.dev corpus/dev_all.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/textcat/model-best"
+
+  - name: "update"
+    help: "Train on top of the trained textcat model without rehearse"
+    script:
+      - "python -m spacy train configs/config_no_rehearse.cfg --output training/textcat_no_rehearse/ --paths.train corpus/train_rehearse.spacy --paths.dev corpus/dev_all.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/config_no_rehearse.cfg"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "training/textcat/model-best"
+    outputs:
+      - "training/textcat_no_rehearse/model-best"
+
+  - name: "rehearse"
+    help: "Rehearse the trained textcat_multilabel model."
+    script:
+      - "python scripts/rehearse.py training/textcat/model-best corpus/train_rehearse.spacy ${vars.rehearsal_iterations} training/textcat_rehearse/"
+    deps:
+      - "corpus/train_rehearse.spacy"
+      - "training/textcat/model-best"
+      - "scripts/rehearse.py"
+    outputs:
+      - "training/textcat_rehearse"
+
+  - name: "evaluate"
+    help: "Evaluate all the models and export metrics"
+    script:
+      - "python -m spacy evaluate training/textcat/model-best corpus/dev_all.spacy --output training/metrics.json"
+      - "python -m spacy evaluate training/textcat_no_rehearse/model-best corpus/dev_all.spacy --output training/metrics_no_rehearse.json"
+      - "python -m spacy evaluate training/textcat_rehearse corpus/dev_all.spacy --output training/metrics_rehearse.json"
+    deps:
+      - "corpus/dev_all.spacy"
+      - "training/textcat/model-best"
+      - "training/textcat_no_rehearse/model-best"
+      - "training/textcat_rehearse/"
+    outputs:
+      - "training/metrics.json"
+      - "training/metrics_no_rehearse.json"
+      - "training/metrics_rehearse.json"
+
+  - name: "evaluate_textcat"
+    help: "Evaluate the trained textcat_multilabel model and export metrics"
+    script:
+      - "python -m spacy evaluate training/textcat/model-best corpus/dev_all.spacy --output training/metrics.json"
+    deps:
+      - "corpus/dev_all.spacy"
+      - "training/textcat/model-best"
+    outputs:
+      - "training/metrics.json"
+
+  - name: "evaluate_update"
+    help: "Evaluate the update textcat model and export metrics"
+    script:
+      - "python -m spacy evaluate training/textcat_no_rehearse/model-best corpus/dev_all.spacy --output training/metrics_no_rehearse.json"
+    deps:
+      - "corpus/dev_all.spacy"
+      - "training/textcat_no_rehearse/model-best"
+    outputs:
+      - "training/metrics_no_rehearse.json"
+
+  - name: "evaluate_rehearse"
+    help: "Evaluate the rehearsed model and export metrics"
+    script:
+      - "python -m spacy evaluate training/textcat_rehearse corpus/dev_all.spacy --output training/metrics_rehearse.json"
+    deps:
+      - "corpus/dev_all.spacy"
+      - "training/textcat_rehearse/"
+    outputs:
+      - "training/metrics_rehearse.json"
+
