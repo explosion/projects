@@ -13,7 +13,7 @@ def preprocess(
     """
     with input_path.open(encoding="utf-8") as f:
         lines = f.readlines()
-    with output_path.open("w") as f:
+    with output_path.open("w", encoding="utf-8") as f:
         for i, line in enumerate(lines):
             new_line = line
             if strip_digits:
