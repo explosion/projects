@@ -5,27 +5,6 @@ from spacy.util import registry
 Rules = List[Dict[str, Any]]
 
 
-@registry.misc("restaurant_rules.v2")
-def restaurant_span_rules() -> Rules:
-    rules = (
-        pattern_star_ratings()
-        + pattern_good_ratings()
-        + pattern_poor_ratings()
-        + pattern_opening_hours()
-        + pattern_attire_amenity()
-        + pattern_payment_option_amenity()
-        + pattern_occasion_amenity()
-        + pattern_adjective_amenity()
-        + pattern_liquor_amenity()
-        + pattern_landmark_location()
-        + pattern_range_location()
-        + pattern_drive_location()
-        + pattern_common_states()
-        + pattern_restaurant_names()
-    )
-    return rules
-
-
 @registry.misc("restaurant_rules.v1")
 def restaurant_span_rules() -> Rules:
     rules = (
@@ -33,6 +12,8 @@ def restaurant_span_rules() -> Rules:
         + pattern_good_ratings()
         + pattern_poor_ratings()
         + pattern_price()
+        + pattern_time_hours()
+        + pattern_day_hours()
         + pattern_opening_hours()
         + pattern_attire_amenity()
         + pattern_payment_option_amenity()
@@ -157,14 +138,6 @@ def pattern_price() -> Rules:
     patterns = [
         {
             "label": "Price",
-            "pattern": [{"LOWER": "real", "OP": "?"}, {"LOWER": "cheap"}],
-        },
-        {
-            "label": "Price",
-            "pattern": [{"LOWER": "isnt", "OP": "?"}, {"LOWER": "cheap"}],
-        },
-        {
-            "label": "Price",
             "pattern": [
                 {"LOWER": "really", "OP": "?"},
                 {"LOWER": "tight"},
@@ -177,6 +150,14 @@ def pattern_price() -> Rules:
                 {"LOWER": "meal", "OP": "?"},
                 {"LOWER": "under"},
                 {"IS_DIGIT": True},
+            ],
+        },
+        {
+            "label": "Price",
+            "pattern": [
+                {"LOWER": "cheap"},
+                {"LOWER": "to"},
+                {"LOWER": "moderate"},
             ],
         },
     ]
@@ -202,6 +183,75 @@ def pattern_opening_hours() -> Rules:
         {
             "label": "Hours",
             "pattern": [{"LOWER": {"IN": ["dinner", "lunch", "breakfast", "brunch"]}}],
+        },
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": "open", "OP": "?"},
+                {"LOWER": "past"},
+                {"IS_DIGIT": True},
+                {"LOWER": {"REGEX": "(a|p)?m"}},
+            ],
+        },
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": {"IN": ["breakfast", "business"]}},
+                {"LOWER": "hours"},
+            ],
+        },
+    ]
+    return patterns
+
+
+def pattern_time_hours() -> Rules:
+    """Define rules that describe time"""
+    patterns = [
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": "open"},
+                {"LOWER": "for"},
+                {"LOWER": "breakfast"},
+            ],
+        },
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": "tonight"},
+                {"LOWER": "at"},
+                {"IS_DIGIT": True},
+                {"IS_DIGIT": True, "OP": "?"},
+            ],
+        },
+    ]
+    return patterns
+
+
+def pattern_day_hours() -> Rules:
+    """Define rules that describe days of the week"""
+    patterns = [
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": "next", "OP": "?"},
+                {
+                    "LOWER": {
+                        "IN": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+                    }
+                },
+                {"LOWER": {"REGEX": "night(s)?"}},
+            ],
+        },
+        {
+            "label": "Hours",
+            "pattern": [
+                {"LOWER": "open"},
+                {"LOWER": {"IN": ["7", "seven"]}},
+                {"LOWER": "days"},
+                {"LOWER": "a"},
+                {"LOWER": "week"},
+            ],
         },
     ]
     return patterns
