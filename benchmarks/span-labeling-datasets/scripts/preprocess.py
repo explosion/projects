@@ -11,7 +11,7 @@ def preprocess(
     """
     Helper function to canonicalize all datasets into the same ConLL format.
     """
-    with input_path.open() as f:
+    with input_path.open(encoding="utf-8") as f:
         lines = f.readlines()
     with output_path.open("w") as f:
         for i, line in enumerate(lines):
