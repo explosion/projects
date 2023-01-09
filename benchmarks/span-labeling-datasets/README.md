@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Spancat datasets
+# 🪐 spaCy Project: Span labeling datasets
 
 This project compiles various NER and more general spancat datasets 
 and their converters into the [spaCy format](https://spacy.io/api/data-formats). 

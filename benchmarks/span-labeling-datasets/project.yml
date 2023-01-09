@@ -1,4 +1,4 @@
-title: "Spancat datasets"
+title: "Span labeling datasets"
 description: |
   This project compiles various NER and more general spancat datasets 
   and their converters into the [spaCy format](https://spacy.io/api/data-formats). 
