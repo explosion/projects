@@ -61,27 +61,27 @@ workflows:
     - "inspect-restaurant"
 
 assets:
-  # WNUT17 https://aclanthology.org/W17-4418/
   - dest: "assets/wnut17-train.iob"
     url: "https://github.com/leondz/emerging_entities_17/blob/master/wnut17train.conll"
+    description: "WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/wnut17-test.iob"
     url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.test.annotated"
+    description: "WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/wnut17-dev.iob"
     url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.dev.conll"
-  # CoNLL-2002 (es, nl) https://aclanthology.org/W02-2024/
+    description: "WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/conll.tgz"
-    description: "ConLL 2002 shared task data."
     url: http://www.cnts.ua.ac.be/conll2002/ner.tgz
-  ### Archaeo dataset https://aclanthology.org/2020.lrec-1.562/ ###
+    description: "ConLL 2002 shared task data from Tjong Kim Sang (ACL 2002)"
   - dest: "assets/archaeo.bio"
-    description: "Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020)"
     url: https://github.com/alexbrandsen/dutch-archaeo-NER-dataset/blob/master/complete-bio-gs.bio
-  ### AnEM dataset https://aclanthology.org/W12-4304/ ###
+    description: "Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020)"
   - dest: "assets/anem-train.iob"
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
+    description: "Anatomical Entity Mention Detection training dataset from Ohta et al. (ACL 2012)"
   - dest: "assets/anem-test.iob"
     url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
-  ### MIT Restaurants Review dataset http://people.csail.mit.edu/jrg/2013/liu-icassp13.pdf ###
+    description: "Anatomical Entity Mention Detection test dataset from Ohta et al. (ACL 2012)"
   - dest: "assets/restaurant-train_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
     description: "Training data from the MIT Restaurants Review dataset"
@@ -90,7 +90,6 @@ assets:
     description: "Test data from the MIT Restaurants Review dataset"
 
 commands:
-
   - name: "preprocess-wnut17"
     help: "Canonicalize the WNUT2017 data set for conversion to .spacy."
     script:
@@ -105,7 +104,7 @@ commands:
       - assets/wnut17-train.iob
       - assets/wnut17-dev.iob
       - assets/wnut17-test.iob
-      
+
   - name: "convert-wnut17-ents"
     help: "Convert WNUT17 dataset into the spaCy format"
     script:
@@ -166,7 +165,7 @@ commands:
     help: "Decompress ConLL 2002, remove temporary files and change encoding."
     script:
       - python -m scripts.cli_util untar assets/conll.tgz --output-dir temp
-      - python -m scripts.cli_util unzip temp/ner/data/esp.testa.gz 
+      - python -m scripts.cli_util unzip temp/ner/data/esp.testa.gz
       - python -m scripts.cli_util unzip temp/ner/data/esp.testb.gz
       - python -m scripts.cli_util unzip temp/ner/data/esp.train.gz
       - python -m scripts.cli_util unzip temp/ner/data/ned.testa.gz
@@ -188,7 +187,7 @@ commands:
       - assets/nl-conll-train.iob
       - assets/nl-conll-dev.iob
       - assets/nl-conll-test.iob
-  
+
   - name: "preprocess-conll"
     help: "Canonicalize the Dutch ConLL data set for conversion to .spacy."
     script:
@@ -297,7 +296,7 @@ commands:
       - "corpus/ner/nl-conll-train.spacy"
       - "corpus/ner/nl-conll-dev.spacy"
       - "corpus/ner/nl-conll-test.spacy"
-  
+
   - name: "inspect-conll"
     help: "Analyze span-characteristics"
     script:
@@ -349,7 +348,7 @@ commands:
       - "corpus/ner/archaeo-train.spacy"
       - "corpus/ner/archaeo-dev.spacy"
       - "corpus/ner/archaeo-test.spacy"
-  
+
   - name: "inspect-archaeo"
     help: "Analyze span-characteristics"
     script:
@@ -357,7 +356,7 @@ commands:
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/archaeo-train.spacy 
         --paths.dev corpus/spancat/archaeo-dev.spacy
-  
+
   - name: "clean-archaeo"
     script:
       - mv corpus/ner/archaeo.spacy assets/archaeo_ner.spacy
@@ -387,7 +386,6 @@ commands:
       - corpus/spancat/anem-train.spacy
       - corpus/spancat/anem-dev.spacy
       - corpus/spancat/anem-test.spacy
-  
 
   - name: "convert-anem-ents"
     help: "Convert AnEM dataset into the spaCy format"
@@ -413,7 +411,7 @@ commands:
       - corpus/ner/anem-train.spacy
       - corpus/ner/anem-dev.spacy
       - corpus/ner/anem-test.spacy
-  
+
   - name: "inspect-anem"
     help: "Analyze span-characteristics"
     script:
@@ -433,7 +431,7 @@ commands:
     outputs:
       - assets/restaurant-train.iob
       - assets/restaurant-test.iob
-  
+
   - name: "convert-restaurant-ents"
     help: "Convert MIT Restaurant Review data to .spacy format"
     script:
@@ -458,7 +456,7 @@ commands:
       - corpus/ner/restaurant-train.spacy
       - corpus/ner/restaurant-dev.spacy
       - corpus/ner/restaurant-test.spacy
-  
+
   - name: "convert-restaurant-spans"
     help: "Convert MIT Restaurant Review dataset into the spaCy format"
     script:
@@ -483,7 +481,7 @@ commands:
       - corpus/spancat/restaurant-train.spacy
       - corpus/spancat/restaurant-dev.spacy
       - corpus/spancat/restaurant-test.spacy
-      
+
   - name: "inspect-restaurant"
     help: "Analyze span-characteristics"
     script:

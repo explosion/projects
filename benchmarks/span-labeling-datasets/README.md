@@ -2,15 +2,10 @@
 
 # 🪐 spaCy Project: Spancat datasets
 
-This project compiles various span-labeling datasets and their converters into the
-[spaCy format](https://spacy.io/api/data-formats). You can use this in tandem
-with the [`spancat-encoders`](tba) repository to run various experiments on
-these datasets.  
-
-The project includes two utilities:
-
-1. `scripts/analyze.py`: reports statistics of the data sets not provided by the `spacy debug` command.
-2. `scripts/generate_unseen.py`: splits `ner` test data into `seen` and `unseen` portions, where the `unseen` contains only entities not seen in the training set. 
+This project compiles various NER and more general spancat datasets 
+and their converters into the [spaCy format](https://spacy.io/api/data-formats). 
+You can use this to try out experiment with `ner` and `spancat`
+or to potentially pre-train them for your application.
 
 
 ## 📋 project.yml
@@ -27,19 +22,27 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `preprocess-wnut17` | Canonicalize the WNUT2017 data set for conversion to .spacy. |
 | `convert-wnut17-ents` | Convert WNUT17 dataset into the spaCy format |
 | `convert-wnut17-spans` | Convert WNUT17 dataset into the spaCy format |
-| `clean-wikineural` | Remove unnecessary indices from wikineural data |
-| `convert-wikineural-spans` | Convert WikiNeural dataset (de, en, es, nl) into the spaCy format |
-| `convert-wikineural-ents` | Convert WikiNeural dataset (de, en, es, nl) into the spaCy format |
-| `clean-conll` | Remove unnecessary indices from ConLL data |
+| `inspect-wnut17` | Analyze span-characteristics |
+| `unpack-conll` | Decompress ConLL 2002, remove temporary files and change encoding. |
+| `preprocess-conll` | Canonicalize the Dutch ConLL data set for conversion to .spacy. |
 | `convert-conll-spans` | Convert CoNLL dataset (de, en, es, nl) into the spaCy format |
 | `convert-conll-ents` | Convert CoNLL dataset (de, en, es, nl) into the spaCy format |
+| `inspect-conll` | Analyze span-characteristics |
 | `convert-archaeo-spans` | Convert Dutch Archaeology dataset into the spaCy format |
 | `convert-archaeo-ents` | Convert Dutch Archaeology dataset into the spaCy format |
+| `inspect-archaeo` | Analyze span-characteristics |
+| `clean-archaeo` |  |
 | `convert-anem-spans` | Convert AnEM dataset into the spaCy format |
 | `convert-anem-ents` | Convert AnEM dataset into the spaCy format |
-| `clean` | Remove intermediary files |
+| `inspect-anem` | Analyze span-characteristics |
+| `preprocess-restaurant` | Make MIT Restaurant Review data set format comply with convert. |
+| `convert-restaurant-ents` | Convert MIT Restaurant Review data to .spacy format |
+| `convert-restaurant-spans` | Convert MIT Restaurant Review dataset into the spaCy format |
+| `inspect-restaurant` | Analyze span-characteristics |
+| `generate-unseen` | Create unseen entities splits for all preprocessed datasets. |
 
 ### ⏭ Workflows
 
@@ -50,11 +53,12 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `wnut17` | `convert-wnut17-ents` &rarr; `convert-wnut17-spans` |
-| `wikineural` | `clean-wikineural` &rarr; `convert-wikineural-ents` &rarr; `convert-wikineural-spans` |
-| `conll` | `clean-conll` &rarr; `convert-conll-spans` &rarr; `convert-conll-ents` |
-| `archaeo` | `convert-archaeo-ents` &rarr; `convert-archaeo-spans` |
-| `anem` | `convert-anem-ents` &rarr; `convert-anem-spans` |
+| `wnut17` | `preprocess-wnut17` &rarr; `convert-wnut17-ents` &rarr; `convert-wnut17-spans` &rarr; `inspect-wnut17` |
+| `conll` | `unpack-conll` &rarr; `preprocess-conll` &rarr; `convert-conll-ents` &rarr; `convert-conll-spans` &rarr; `inspect-conll` |
+| `archaeo` | `convert-archaeo-ents` &rarr; `convert-archaeo-spans` &rarr; `clean-archaeo` &rarr; `inspect-archaeo` |
+| `anem` | `convert-anem-ents` &rarr; `convert-anem-spans` &rarr; `inspect-anem` |
+| `restaurant` | `preprocess-restaurant` &rarr; `convert-restaurant-ents` &rarr; `convert-restaurant-spans` &rarr; `inspect-restaurant` |
+| `all` | `preprocess-wnut17` &rarr; `convert-wnut17-ents` &rarr; `convert-wnut17-spans` &rarr; `unpack-conll` &rarr; `convert-conll-spans` &rarr; `convert-conll-ents` &rarr; `convert-archaeo-ents` &rarr; `convert-archaeo-spans` &rarr; `convert-anem-ents` &rarr; `convert-anem-spans` &rarr; `preprocess-restaurant` &rarr; `convert-restaurant-ents` &rarr; `convert-restaurant-spans` &rarr; `inspect-restaurant` |
 
 ### 🗂 Assets
 
@@ -64,35 +68,14 @@ in the project directory.
 
 | File | Source | Description |
 | --- | --- | --- |
-| `assets/wnut17-train.iob` | URL | WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al., 2017 |
-| `assets/wnut17-dev.iob` | URL | WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al., 2017 |
-| `assets/wnut17-test.iob` | URL | WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al., 2017 |
-| `assets/raw-en-wikineural-train.iob` | URL | WikiNeural (en) training dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-en-wikineural-dev.iob` | URL | WikiNeural (en) dev dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-en-wikineural-test.iob` | URL | WikiNeural (en) test dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-de-wikineural-train.iob` | URL | WikiNeural (de) training dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-de-wikineural-dev.iob` | URL | WikiNeural (de) dev dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-de-wikineural-test.iob` | URL | WikiNeural (de) test dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-es-wikineural-train.iob` | URL | WikiNeural (es) training dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-es-wikineural-dev.iob` | URL | WikiNeural (es) dev dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-es-wikineural-test.iob` | URL | WikiNeural (es) test dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-nl-wikineural-train.iob` | URL | WikiNeural (nl) training dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-nl-wikineural-dev.iob` | URL | WikiNeural (nl) dev dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-nl-wikineural-test.iob` | URL | WikiNeural (nl) test dataset from Tedeschi et al. (EMNLP 2021) |
-| `assets/raw-en-conll-train.iob` | URL | CoNLL 2003 (en) training dataset |
-| `assets/raw-en-conll-dev.iob` | URL | CoNLL 2003 (en) dev dataset |
-| `assets/raw-en-conll-test.iob` | URL | CoNLL 2003 (en) test dataset |
-| `assets/raw-de-conll-train.iob` | URL | CoNLL 2003 (de) training dataset |
-| `assets/raw-de-conll-dev.iob` | URL | CoNLL 2003 (de) dev dataset |
-| `assets/raw-de-conll-test.iob` | URL | CoNLL 2003 (de) test dataset |
-| `assets/raw-es-conll-train.iob` | URL | CoNLL 2002 (es) training dataset |
-| `assets/raw-es-conll-dev.iob` | URL | CoNLL 2002 (es) dev dataset |
-| `assets/raw-es-conll-test.iob` | URL | CoNLL (es) test dataset |
-| `assets/raw-nl-conll-train.iob` | URL | CoNLL 2002 (nl) training dataset |
-| `assets/raw-nl-conll-dev.iob` | URL | CoNLL 2002 (nl) dev dataset |
-| `assets/raw-nl-conll-test.iob` | URL | CoNLL 202 (nl) test dataset |
+| `assets/wnut17-train.iob` | URL | WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017) |
+| `assets/wnut17-test.iob` | URL | WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017) |
+| `assets/wnut17-dev.iob` | URL | WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017) |
+| `assets/conll.tgz` | URL | ConLL 2002 shared task data from Tjong Kim Sang (ACL 2002) |
 | `assets/archaeo.bio` | URL | Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020) |
-| `assets/anem-train.iob` | URL | Anatomical Entity Mention (AnEM) training corpus containing abstracts and full-text biomedical papers from Ohta et al. (ACL 2012) |
-| `assets/anem-test.iob` | URL | Anatomical Entity Mention (AnEM) test corpus containing abstracts and full-text biomedical papers from Ohta et al. (ACL 2012) |
+| `assets/anem-train.iob` | URL | Anatomical Entity Mention Detection training dataset from Ohta et al. (ACL 2012) |
+| `assets/anem-test.iob` | URL | Anatomical Entity Mention Detection test dataset from Ohta et al. (ACL 2012) |
+| `assets/restaurant-train_raw.iob` | URL | Training data from the MIT Restaurants Review dataset |
+| `assets/restaurant-test_raw.iob` | URL | Test data from the MIT Restaurants Review dataset |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
