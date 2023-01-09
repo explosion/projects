@@ -1,7 +1,7 @@
-import srsly
 import os
-import tqdm
 
+import srsly
+import tqdm
 
 for split in ["train", "validation", "test"]:
     path = os.path.join("temp", f"{split}.jsonl")

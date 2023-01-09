@@ -6,10 +6,7 @@ from wasabi import msg
 
 
 def preprocess(
-        input_path: Path,
-        output_path: Path,
-        *,
-        strip_digits: bool = False
+    input_path: Path, output_path: Path, *, strip_digits: bool = False
 ) -> None:
     """
     Helper function to canonicalize all datasets into the same ConLL format.

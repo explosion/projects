@@ -1,15 +1,14 @@
-import os
 import csv
-import tqdm
+import os
+from typing import Dict, List, Sequence, Union
 
-import spacy
-import typer
 import pandas as pd
-
-from wasabi import msg
-from spacy.tokens import Doc, DocBin
-from typing import Sequence, List, Union, Dict
+import spacy
+import tqdm
+import typer
 from _util import SplitInfo
+from spacy.tokens import Doc, DocBin
+from wasabi import msg
 
 Number = Union[int, float]
 
@@ -25,7 +24,7 @@ def per_ent_stats(docs: Sequence[Doc]) -> List[Dict]:
                 "label": None,
                 "length": None,
                 "doc_length": len(doc),
-                "num_ents": 0
+                "num_ents": 0,
             }
             spans.append(row)
         for span in doc.ents:
@@ -35,7 +34,7 @@ def per_ent_stats(docs: Sequence[Doc]) -> List[Dict]:
                 "label": span.label_,
                 "length": len(span),
                 "doc_length": len(doc),
-                "num_ents": len(doc.ents)
+                "num_ents": len(doc.ents),
             }
             spans.append(row)
     return spans
@@ -57,7 +56,7 @@ def analyze(
     model: str,
     *,
     data_dir: str = "corpus",
-    output_dir: str = "analyses"
+    output_dir: str = "analyses",
 ):
     """
     Write two .csv files one with label statistics
@@ -66,9 +65,7 @@ def analyze(
     """
     nlp = spacy.load(model)
     vocab = nlp.vocab
-    docs = list(
-        DocBin().from_disk(docbin_path).get_docs(vocab)
-    )
+    docs = list(DocBin().from_disk(docbin_path).get_docs(vocab))
     splitinfo = SplitInfo(docbin_path)
     span_stats = per_ent_stats(docs)
     df = pd.DataFrame.from_dict(span_stats)
@@ -95,7 +92,7 @@ def analyze(
     msg.info(f"Number of suffixes: {len(suffixes)}")
     msg.info(f"Number of shapes: {len(shapes)}")
     msg.info(f"Number of tokens: {num_tokens}")
-    f_prefix = (f"{splitinfo.dataset}-{splitinfo.split}")
+    f_prefix = f"{splitinfo.dataset}-{splitinfo.split}"
     if splitinfo.seen != "":
         f_prefix += f"-{splitinfo.seen}"
     span_stats_path = os.path.join(output_dir, f"{f_prefix}.csv")

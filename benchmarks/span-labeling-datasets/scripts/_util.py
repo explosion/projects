@@ -1,16 +1,13 @@
 import os
-
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union, Tuple, Dict
-from collections import defaultdict
+from typing import Dict, Tuple, Union
 
 from spacy.tokens import DocBin
 from spacy.util import ensure_path
 
-
-format_error = ("Incorrect file name {path}."
-                "(lang)-source-split-(seen/unseen).spacy")
+format_error = "Incorrect file name {path}." "(lang)-source-split-(seen/unseen).spacy"
 
 
 @dataclass
@@ -30,6 +27,7 @@ class SplitInfo:
     it stores "es-conll" or "nl-conll" as .source, but
     "conll" as .dataset for both.
     """
+
     path: Union[Path, str]
 
     def __post_init__(self):
@@ -104,10 +102,7 @@ def info(model: str, *, home: str = "corpus") -> Dict[str, DatasetInfo]:
     filenames are in the standardized format.
     """
     if model not in ["ner", "spancat"]:
-        raise ValueError(
-            "'model' has to be 'ner' or 'spancat', "
-            f"but found {model}"
-        )
+        raise ValueError("'model' has to be 'ner' or 'spancat', " f"but found {model}")
     home = os.path.join(home, model)
     filenames = os.listdir(home)
     splits = []
@@ -121,14 +116,12 @@ def info(model: str, *, home: str = "corpus") -> Dict[str, DatasetInfo]:
     out = {}
     for source in datasets:
         if len(datasets[source]) < 3:
-            raise ValueError(
-                f"Each dataset has to have 3 splits, check {source}"
-            )
+            raise ValueError(f"Each dataset has to have 3 splits, check {source}")
         datainfo = DatasetInfo(
             source,
             datasets[source]["train"],
             datasets[source]["dev"],
-            datasets[source]["test"]
+            datasets[source]["test"],
         )
         out[source] = datainfo
     return out

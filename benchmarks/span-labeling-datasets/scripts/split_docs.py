@@ -1,12 +1,12 @@
 """Split a spaCy-formatted file into train, dev, and test partitions"""
 
-from pathlib import Path
-from typing import Tuple, Optional, Any, List, Sequence
-
 import random
-import typer
-import spacy
 from math import ceil
+from pathlib import Path
+from typing import Any, List, Optional, Sequence, Tuple
+
+import spacy
+import typer
 from spacy.tokens import DocBin
 from wasabi import msg
 
@@ -32,8 +32,8 @@ def _train_dev_test_split(
     n_dev = ceil(dev_size * n_samples)
     n_train = n_samples - (n_test + n_dev)
     train = data[:n_train]
-    dev = data[n_train:n_train+n_dev]
-    test = data[n_train+n_dev:]
+    dev = data[n_train : n_train + n_dev]
+    test = data[n_train + n_dev :]
     return train, dev, test
 
 

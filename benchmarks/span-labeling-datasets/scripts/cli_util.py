@@ -1,22 +1,19 @@
-import typer
-import tarfile
 import gzip
 import shutil
-from typing import Optional
+import tarfile
 from pathlib import Path
+from typing import Optional
+
+import typer
 from spacy.util import ensure_path
 from wasabi import Printer
-
 
 app = typer.Typer()
 msg = Printer()
 
 
 @app.command()
-def untar(
-    input_file: Path,
-    output_dir: Optional[Path] = None
-):
+def untar(input_file: Path, output_dir: Optional[Path] = None):
     """
     Untar all contents of input_file into
     output_dir. If output_dir is not provided
@@ -29,9 +26,7 @@ def untar(
     else:
         output_path = ensure_path(output_dir)
     if not input_path.exists():
-        raise ValueError(
-            f"Could not find {input_file}."
-        )
+        raise ValueError(f"Could not find {input_file}.")
     if not output_path.exists():
         output_path.mkdir(parents=True, exist_ok=True)
     compressed = tarfile.open(input_path)
@@ -40,15 +35,10 @@ def untar(
 
 
 @app.command()
-def unzip(
-    input_file: Path,
-    output_file: Optional[Path] = None
-):
+def unzip(input_file: Path, output_file: Optional[Path] = None):
     input_file = ensure_path(input_file)
     if not input_file.exists():
-        raise ValueError(
-            f"Could not find {input_file}."
-        )
+        raise ValueError(f"Could not find {input_file}.")
     if output_file is None:
         if not input_file.suffix:
             msg.fail("Please provide output_file")
@@ -57,32 +47,23 @@ def unzip(
     else:
         output_file = ensure_path(output_file)
     if output_file.exists():
-        raise ValueError(
-            f"Output file already exists {output_file}."
-        )
-    with gzip.open(input_file, 'rb') as fin:
-        with open(output_file, 'wb') as fout:
+        raise ValueError(f"Output file already exists {output_file}.")
+    with gzip.open(input_file, "rb") as fin:
+        with open(output_file, "wb") as fout:
             shutil.copyfileobj(fin, fout)
 
 
 @app.command()
 def reencode(
-    input_path: Path,
-    output_path: Path,
-    source_encoding: str,
-    target_encoding: str
+    input_path: Path, output_path: Path, source_encoding: str, target_encoding: str
 ) -> None:
     input_path = ensure_path(input_path)
     output_path = ensure_path(output_path)
     if not input_path.exists():
-        raise ValueError(
-            f"Could not find {input_path}."
-        )
+        raise ValueError(f"Could not find {input_path}.")
     if output_path.exists():
-        raise ValueError(
-            f"Output file already exists {output_path}."
-        )
-    with open(input_path, 'r', encoding=source_encoding) as fin:
+        raise ValueError(f"Output file already exists {output_path}.")
+    with open(input_path, "r", encoding=source_encoding) as fin:
         content = fin.read()
     with open(output_path, "w", encoding=target_encoding) as fout:
         fout.write(content)

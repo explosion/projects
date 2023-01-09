@@ -1,17 +1,20 @@
-import typer
-import spacy
 import os
+from typing import Optional, Sequence, Set
 
-from typing import Set, Sequence, Optional
-
+import spacy
+import typer
+from _util import info
+from spacy.tokens import Doc, DocBin
 from tqdm import tqdm
 from wasabi import msg
-from spacy.tokens import DocBin, Doc
-from _util import info
 
 
 def _mark_as_missing(
-    docs: Sequence[Doc], seen: Set[str], mark_seen: bool = True, *, total: Optional[int] = None
+    docs: Sequence[Doc],
+    seen: Set[str],
+    mark_seen: bool = True,
+    *,
+    total: Optional[int] = None,
 ) -> DocBin:
     """
     Marks some of the ents in the input Docs as missing.
