@@ -5,8 +5,6 @@ from spacy.cli.project.assets import project_assets
 
 
 def test_wikiner_speedster_project():
-    import openvino_telemetry as tm
-    tm.Telemetry.opt_out("UA-17808594-29")
     overrides = {
         "vars.optimize_opts": "-ot constrained",
         "vars.corpora_dev_limit": 10,
