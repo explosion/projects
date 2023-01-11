@@ -1,6 +1,6 @@
 from pathlib import Path
 from spacy.cli.project.document import project_document
-from spacy.cli._util import PROJECT_FILE, load_project_config
+from spacy.cli._util import PROJECT_FILE
 from wasabi import msg
 import typer
 
