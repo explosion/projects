@@ -14,12 +14,9 @@ jobs:
     - job: 'Test'
       strategy:
           matrix:
-              Python39Linux:
+              Python37Linux:
                   imageName: 'ubuntu-latest'
-                  python.version: '3.9'
-              Python38Mac:
-                  imageName: 'macos-latest'
-                  python.version: '3.8'
+                  python.version: '3.7'
               Python37Windows:
                   imageName: 'windows-latest'
                   python.version: '3.7'
