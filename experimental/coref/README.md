@@ -4,58 +4,6 @@
 
 This project trains a coreference model for spaCy using OntoNotes.
 
-
-## 📋 project.yml
-
-The [`project.yml`](project.yml) defines the data assets required by the
-project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
-
-### ⏯ Commands
-
-The following commands are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
-Commands are only re-run if their inputs have changed.
-
-| Command | Description |
-| --- | --- |
-| `prep-ontonotes-data` | Rehydrate the data using OntoNotes |
-| `prep-artificial-unit-test-data` | Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data! |
-| `preprocess` | Convert the data to spaCy's format |
-| `train-cluster` | Train the clustering component |
-| `prep-span-data` | Prepare data for the span resolver component. |
-| `train-span-resolver` | Train the span resolver component. |
-| `assemble` | Assemble all parts into a complete coref pipeline. |
-| `eval` | Evaluate model on the test set. |
-
-### ⏭ Workflows
-
-The following workflows are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
-and will run the specified commands in order. Commands are only re-run if their
-inputs have changed.
-
-| Workflow | Steps |
-| --- | --- |
-| `prep` | `preprocess` |
-| `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` |
-| `all` | `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
-
-### 🗂 Assets
-
-The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
-in the project directory.
-
-| File | Source | Description |
-| --- | --- | --- |
-| `assets/` | Git | CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes. |
-| `assets/litbank` | Git | LitBank dataset. Only used for building data for quick unit tests. |
-
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
-
-# Getting Started
-
 Before using this project:
 
 1. install spaCy with GPU support - see the [install widget](https://spacy.io/usage)
@@ -107,3 +55,54 @@ for cluster in full_clusters:
 
 The prefixes used here are a user setting, so you can customize them for your
 own pipelines.
+
+
+## 📋 project.yml
+
+The [`project.yml`](project.yml) defines the data assets required by the
+project, as well as the available commands and workflows. For details, see the
+[spaCy projects documentation](https://spacy.io/usage/projects).
+
+### ⏯ Commands
+
+The following commands are defined by the project. They
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
+Commands are only re-run if their inputs have changed.
+
+| Command | Description |
+| --- | --- |
+| `prep-ontonotes-data` | Rehydrate the data using OntoNotes |
+| `prep-test-data` | Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data! |
+| `preprocess` | Convert the data to spaCy's format |
+| `train-cluster` | Train the clustering component |
+| `prep-span-data` | Prepare data for the span resolver component. |
+| `train-span-resolver` | Train the span resolver component. |
+| `assemble` | Assemble all parts into a complete coref pipeline. |
+| `eval` | Evaluate model on the test set. |
+
+### ⏭ Workflows
+
+The following workflows are defined by the project. They
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
+and will run the specified commands in order. Commands are only re-run if their
+inputs have changed.
+
+| Workflow | Steps |
+| --- | --- |
+| `prep` | `preprocess` |
+| `train` | `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` |
+| `ci-test` | `prep-test-data` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
+| `all` | `preprocess` &rarr; `train-cluster` &rarr; `prep-span-data` &rarr; `train-span-resolver` &rarr; `assemble` &rarr; `eval` |
+
+### 🗂 Assets
+
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+in the project directory.
+
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/` | Git | CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes. |
+| `assets/litbank` | Git | LitBank dataset. Only used for building data for tests. |
+
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
