@@ -52,4 +52,4 @@ in the project directory.
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
 Note that `svn` is required for downloading the Mewsli-9 dataset (should be replaceable by `git` with sparse 
-checkout).
+checkout). 

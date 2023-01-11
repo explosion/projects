@@ -49,4 +49,4 @@ in the project directory.
 | --- | --- | --- |
 | `assets/annotation.jsonl` | URL | NER annotations exported from Prodigy with 5000 examples and 2 labels |
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) --> 
