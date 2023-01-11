@@ -114,3 +114,4 @@ commands:
       - "rm -rf corpus/*"
       - "rm -rf temp/${vars.kb}"
       - "rm -rf temp/${vars.nlp}"
+

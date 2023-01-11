@@ -210,3 +210,4 @@ commands:
     help: "Evaluate model on the test set."
     script:
       - python scripts/run_eval.py --model training/coref --test-data corpus/test.spacy --gpu ${vars.gpu_id}
+

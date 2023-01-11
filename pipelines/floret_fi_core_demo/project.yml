@@ -294,3 +294,4 @@ commands:
       - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
       - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
       - "metrics/${vars.corpus_ner}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/metrics.json"
+

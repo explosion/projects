@@ -346,3 +346,4 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "metrics/spancat/scores.json"
+

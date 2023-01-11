@@ -42,3 +42,4 @@ commands:
     deps:
       - "scripts/main.py"
     no_skip: true
+

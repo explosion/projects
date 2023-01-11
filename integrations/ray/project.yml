@@ -71,3 +71,4 @@ commands:
       - "configs/${vars.config}.cfg"
     outputs:
       - "training/${vars.treebank}/model-best"
+

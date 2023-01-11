@@ -160,3 +160,4 @@ commands:
       - "rm -rf assets/${vars.dataset}"
       - "rm -rf evaluation/${vars.dataset}"
       - "rm -rf wikid/output/${vars.language}"
+

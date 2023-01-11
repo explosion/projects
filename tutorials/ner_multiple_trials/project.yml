@@ -120,3 +120,4 @@ commands:
       - rm -rf training/
       - rm -rf corpus/
       - rm -rf metrics/
+

@@ -89,3 +89,4 @@ commands:
     help: "Summarize the results from the runs and print the best & last scores for each run."
     script:
       - "python ./scripts/summarize_results.py results/"
+

@@ -33,3 +33,4 @@ assets:
     checksum: "11e4c3f0744bcc16fb464c23c5c418ce"
     description: "sense2vec vectors trained on Reddit comments of 2015. Used to bootstrap the terminology list"
     url: "https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz"
+

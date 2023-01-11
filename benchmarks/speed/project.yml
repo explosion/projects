@@ -83,3 +83,4 @@ commands:
     help: "Remove output file(s)"
     script:
       - "rm -rf results/*"
+

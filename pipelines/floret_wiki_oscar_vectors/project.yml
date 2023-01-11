@@ -273,3 +273,4 @@ commands:
       - "${vars.vector_input_dir}/${vars.lang}.txt"
     outputs:
       - "vectors/${vars.lang}.fasttext.vec"
+

@@ -134,3 +134,4 @@ commands:
       - "rm -rf corpus/*"
       - "rm -rf training/*"
       - "rm -rf metrics/*"
+

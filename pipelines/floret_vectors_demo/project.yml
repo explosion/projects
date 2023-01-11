@@ -67,3 +67,4 @@ commands:
       - "scripts/nn_floret.py"
       - "vectors/${vars.oscar_dataset}.${vars.max_texts}.dim300.minCount10.n3-6.neg10.modeFloret.hashCount2.bucket20000.bin"
 
+

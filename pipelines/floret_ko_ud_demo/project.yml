@@ -197,3 +197,4 @@ commands:
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json"
       - "metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/metrics.json"
+

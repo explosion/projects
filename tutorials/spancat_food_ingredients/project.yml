@@ -72,3 +72,4 @@ commands:
     help: "Export the database defined in the project.yml to `.spacy` files"
     script:
       - "python -m prodigy data-to-spacy ./data --spancat ${vars.database} --eval-split ${vars.eval_split}"
+

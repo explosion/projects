@@ -116,3 +116,4 @@ commands:
       - "python -m spacy assemble configs/cnn_with_pretrained.cfg cnn_with_pretrained"
     deps:
       - "training/cnn/model-best"
+

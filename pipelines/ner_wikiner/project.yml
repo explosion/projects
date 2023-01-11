@@ -66,3 +66,4 @@ commands:
       - "rm -rf training/*"
       - "rm -rf metrics/*"
       - "rm -rf corpus/*"
+

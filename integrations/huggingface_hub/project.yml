@@ -104,3 +104,4 @@ commands:
       - "python -m spacy huggingface-hub push packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
     deps:
       - "packages/en_${vars.name}-${vars.version}"
+

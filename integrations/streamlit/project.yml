@@ -27,3 +27,4 @@ commands:
     deps:
       - "scripts/visualize.py"
     no_skip: true
+

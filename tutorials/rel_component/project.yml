@@ -81,3 +81,4 @@ commands:
     script:
       - "rm -rf data/*"
       - "rm -rf training/*"
+
