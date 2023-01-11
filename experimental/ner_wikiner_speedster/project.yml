@@ -1,0 +1,71 @@
+title: "Named Entity Recognition (WikiNER) accelerated using speedster"
+description: "This project shows how `speedster` can accelerate spaCy's WikiNER pipeline.\n\n[Speedster](https://github.com/nebuly-ai/nebullvm/tree/main/apps/accelerate/speedster) is an open-source tool designed to accelerate AI inference of deep learning models in a few lines of code. Within the WikiNER pipeline, `speedster` optimizes BERT to achieve the maximum acceleration physically possible on the hardware used.\n\n`Speedster` is built on top of [Nebullvm](https://github.com/nebuly-ai/nebullvm), an open-source framework for building AI-optimization tools.\n\nFurther info on the WikiNER pipeline can be found in [this section](https://github.com/explosion/projects/tree/v3/pipelines/ner_wikiner)."
+
+# Variables can be referenced across the project.yml using ${vars.var_name}
+vars:
+  config: "default"
+  optimize_opts: "-ot unconstrained -at 0.1"
+  gpu: -1
+  # limit the number of train/dev docs used during initial NER model training,
+  # -1 for no limit (limit mainly for testing purposes)
+  corpora_train_limit: -1
+  corpora_dev_limit: -1
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "training", "configs", "metrics", "corpus"]
+
+assets:
+  -
+    dest: "assets/aij-wikiner-en-wp2.bz2"
+    url: "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/aij-wikiner-en-wp2.bz2"
+
+workflows:
+  all:
+    - corpus
+    - train
+    - evaluate
+
+commands:
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
+    script:
+      - "python scripts/partition.py assets/aij-wikiner-en-wp2.bz2 assets/iob"
+      - "python -m spacy convert assets/iob corpus --n-sents 10"
+    deps:
+      - "assets/aij-wikiner-en-wp2.bz2"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+
+  - name: train
+    help: "Train the full pipeline and optimize the transformer model for inference"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code scripts/extra_components.py --corpora.dev.limit ${vars.corpora_dev_limit} --corpora.train.limit ${vars.corpora_train_limit}"
+      - "python scripts/load_optimize_and_save.py -d corpus/dev.spacy -m training/model-best/transformer/model ${vars.optimize_opts}"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/model-best"
+
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu} --code scripts/extra_components.py"
+    deps:
+      - "training/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf metrics/*"
+      - "rm -rf corpus/*"
