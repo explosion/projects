@@ -12,7 +12,7 @@ def main(root: Path = typer.Argument(Path.cwd(), help="Root path to look in")):
     Unlike the docs update script, this is desigend to only be run on the root
     of the whole repository.
     """
-    msg.info(f"Updating projects.json in {root}")
+    msg.info(f"Updating projects.jsonl in {root}")
     entries = []
     # We look specifically for project directories
     for path in root.glob(f"**/*/{PROJECT_FILE}"):
