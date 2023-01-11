@@ -15,7 +15,7 @@ jobs:
         with:
             ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v4
-      - name: Auto-format code if needed
+      - name: Build Docs
         run: |
           python .github/update_docs.py
           python .github/update_category_docs.py
