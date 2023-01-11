@@ -2,6 +2,8 @@
 
 # Only run tests in second-level directories that have been changed in the last commit.
 
+set -x
+
 # Fetch changed files.
 function get_dirs() {
   git diff --dirstat=files,0 HEAD~1 |
@@ -13,7 +15,6 @@ function get_dirs() {
 
 exit_code=0
 get_dirs | while read dir
-echo $get_dirs
 do
   if [ -e $dir/requirements.txt ]; then
     python -m pip install -q -r $dir/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
