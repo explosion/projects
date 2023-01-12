@@ -16,16 +16,22 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command           | Description                                                                  |
-| ----------------- | ---------------------------------------------------------------------------- |
-| `setup`           | Install dependencies                                                         |
-| `preprocess`      | Preprocess test datasets                                                     |
-| `download`        | Download a model with pretrained vectors and NER component                   |
-| `create_kb`       | Create the knowledge base and write it to file                               |
-| `compile_corpora` | Compile corpora, separated in in train/dev/test sets                         |
-| `train`           | Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU |
-| `evaluate`        | Evaluation on the test set                                                   |
-| `clean`           | Remove intermediate files                                                    |
+| Command | Description |
+| --- | --- |
+| `download_mewsli9` | Download Mewsli-9 dataset. |
+| `download_model` | Download a model with pretrained vectors and NER component. |
+| `wikid_clone` | Clone `wikid` to prepare Wiki database and `KnowledgeBase`. |
+| `preprocess` | Preprocess and clean corpus data. |
+| `wikid_download_assets` | Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps! |
+| `wikid_parse` | Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps! |
+| `wikid_create_kb` | Create the knowledge base and write it to file. |
+| `parse_corpus` | Parse corpus to generate entity and annotation lookups used for corpora compilation. |
+| `compile_corpora` | Compile corpora, separated in train/dev/test sets. |
+| `train` | Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time! |
+| `evaluate` | Evaluate on the test set. |
+| `compare_evaluations` | Compare available set of evaluation runs. |
+| `delete_wiki_db` | Deletes SQLite database generated in step wiki_parse with data parsed from Wikidata and Wikipedia dump. |
+| `clean` | Remove intermediate files for specified dataset and language (excluding Wiki resources and database). |
 
 ### ⏭ Workflows
 
@@ -34,23 +40,10 @@ can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#proj
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
-| Workflow   | Steps                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `all`      | `setup` &rarr; `preprocess` &rarr; `download` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
-| `training` | `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate`                                                      |
-
-### 🗂 Assets
-
-The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
-in the project directory.
-
-| File                                                 | Source | Description                                          |
-| ---------------------------------------------------- | ------ | ---------------------------------------------------- |
-| `assets/wiki/wikidata_entity_dump.json.bz2`          | URL    | Wikidata entity dump. Download can take a long time! |
-| `assets/wiki/wikipedia_dump.xml.bz2`                 | URL    | Wikipedia dump. Download can take a long time!       |
-| `assets/wiki/wikidata_entity_dump_filtered.json.bz2` | URL    | Filtered Wikidata entity dump for demo purposes.     |
-| `assets/wiki/wikipedia_dump_filtered.xml.bz2`        | URL    | Filtered Wikipedia dump for demo purposes.           |
+| Workflow | Steps |
+| --- | --- |
+| `all` | `download_mewsli9` &rarr; `download_model` &rarr; `wikid_clone` &rarr; `preprocess` &rarr; `wikid_download_assets` &rarr; `wikid_parse` &rarr; `wikid_create_kb` &rarr; `parse_corpus` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` &rarr; `compare_evaluations` |
+| `training` | `train` &rarr; `evaluate` |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
