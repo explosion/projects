@@ -11,8 +11,7 @@ vars:
   version: "0.0.0"
   train: "cooking-train.jsonl"
   dev: "cooking-dev.jsonl"
-  rehearsal_iterations: 10
-  rehearsal_split: 0.3
+  rehearsal_iterations: 50
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -45,7 +44,7 @@ commands:
   - name: "convert"
     help: "Convert the data to spaCy's binary format. Split the data for training and rehearsal."
     script:
-      - "python scripts/convert.py ${vars.lang} ${vars.rehearsal_split} assets/${vars.train} assets/${vars.dev} corpus/"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.train} assets/${vars.dev} corpus/"
     deps:
       - "assets/${vars.train}"
       - "assets/${vars.dev}"
@@ -136,3 +135,17 @@ commands:
     outputs:
       - "training/metrics_rehearse.json"
 
+  - name: "compare"
+    help: "Compare all three generated metrics to each other and provide insight about the performance boost/degradation"
+    script:
+      - "python scripts/compare.py training/metrics.json training/metrics_no_rehearse.json training/metrics_rehearse.json"
+    deps:
+      - "training/metrics.json"
+      - "training/metrics_no_rehearse.json"
+      - "training/metrics_rehearse.json"
+
+  - name: "reset"
+    help: "Reset the project to its original state and delete all training process"
+    script:
+      - "python scripts/reset.py training"
+      - "python scripts/reset.py corpus"

@@ -12,12 +12,14 @@ def rehearse_model(
 ):
     msg.info("Starting rehearse")
     nlp = spacy.load(model_path)
-    msg.good("Model loaded")
+    msg.good("Model loaded.")
 
     optimizer = nlp.resume_training()
     db = DocBin().from_disk(train_input)
     docs = list(db.get_docs(nlp.vocab))
     examples = []
+    min_loss = None
+
     for doc in docs:
         words = [token.text for token in doc]
         spaces = [bool(token.whitespace_) for token in doc]
@@ -28,9 +30,14 @@ def rehearse_model(
 
     for i in range(iterations):
         losses = nlp.rehearse(examples, sgd=optimizer)
-        msg.info(f"Iteration {i} / {losses}")
-
-    nlp.to_disk(output_path)
+        if not min_loss:
+            min_loss = losses["textcat_multilabel"]
+        if losses["textcat_multilabel"] < min_loss:
+            nlp.to_disk(output_path)
+            min_loss = losses["textcat_multilabel"]
+            msg.info(f"Iteration {i} / {losses} / Model saved")
+        else:
+            msg.info(f"Iteration {i} / {losses}")
 
 
 if __name__ == "__main__":
