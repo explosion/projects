@@ -140,6 +140,6 @@ def main(
 
 if __name__ == '__main__':
     # rm -rf .venv && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && source .env/bin/activate
-    if main(Path(".venv") / "bin" / "python", True, "vv") != 0:
+    # if main(Path(".venv") / "bin" / "python", True, "vv") != 0:
+    if typer.run(main) != 0:
         raise Exception("Test run failed. Review logs for more details.")
-    # typer.run(main)
