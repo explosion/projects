@@ -37,5 +37,5 @@ jobs:
               - deactivate
             displayName: 'Set up environment'
 
-          - script: python -m run-tests $(pwd)/.env/bin/python
+          - script: python -m run-tests $(pwd)/.env/bin/python --verbosity vv
             displayName: 'Run tests'
