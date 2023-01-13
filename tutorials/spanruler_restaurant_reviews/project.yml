@@ -163,6 +163,7 @@ commands:
     deps:
       - training/ner/model-best/
       - models/ner_ruler
+      - corpus/test.spacy
     outputs:
       - metrics/baseline.json
       - metric/combined.json
