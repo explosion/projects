@@ -110,6 +110,7 @@ commands:
     outputs:
       - corpus/train.spacy
       - corpus/dev.spacy
+      - corpus/test.spacy
 
   - name: "train"
     help: "Train a baseline NER model."
