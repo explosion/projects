@@ -6,6 +6,57 @@ This project demonstrates how spaCy's Span Categorization (SpanCat) and
 Named-Entity Recognition (NER) perform on different types of entities. Here, we used
 a dataset of biomedical literature containing both overlapping and non-overlapping spans.
 
+
+## 📋 project.yml
+
+The [`project.yml`](project.yml) defines the data assets required by the
+project, as well as the available commands and workflows. For details, see the
+[spaCy projects documentation](https://spacy.io/usage/projects).
+
+### ⏯ Commands
+
+The following commands are defined by the project. They
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
+Commands are only re-run if their inputs have changed.
+
+| Command | Description |
+| --- | --- |
+| `install` | Install dependencies |
+| `convert` | Convert IOB file into the spaCy format |
+| `create-ner` | Split corpus into separate NER datasets for each GENIA label |
+| `train-ner` | Train an NER model for each label |
+| `train-spancat` | Train a SpanCat model |
+| `evaluate-ner` | Evaluate all NER models |
+| `assemble-ner` | Assemble all NER models into a single pipeline |
+| `evaluate-spancat` | Evaluate SpanCat model |
+
+### ⏭ Workflows
+
+The following workflows are defined by the project. They
+can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
+and will run the specified commands in order. Commands are only re-run if their
+inputs have changed.
+
+| Workflow | Steps |
+| --- | --- |
+| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `assemble-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
+| `spancat` | `install` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
+| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` &rarr; `assemble-ner` |
+
+### 🗂 Assets
+
+The following assets are defined by the project. They can
+be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+in the project directory.
+
+| File | Source | Description |
+| --- | --- | --- |
+| `assets/train.iob2` | URL | The training dataset for GENIA in IOB format. |
+| `assets/dev.iob2` | URL | The evaluation dataset for GENIA in IOB format. |
+| `assets/test.iob2` | URL | The test dataset for GENIA in IOB format. |
+
+<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
 ### About the dataset
 
 [GENIA](http://www.geniaproject.org/genia-corpus) is a dataset containing
@@ -89,54 +140,3 @@ have a lot.
 Since we have five (5) separate models in NER, what we can do afterwards is
 combine them into a single `Doc` that transfers `doc.ents` to `doc.spans`. Since
 the tokens are the same, we don't need to worry about misalignments and the like.
-
-
-## 📋 project.yml
-
-The [`project.yml`](project.yml) defines the data assets required by the
-project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
-
-### ⏯ Commands
-
-The following commands are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
-Commands are only re-run if their inputs have changed.
-
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies |
-| `convert` | Convert IOB file into the spaCy format |
-| `create-ner` | Split corpus into separate NER datasets for each GENIA label |
-| `train-ner` | Train an NER model for each label |
-| `train-spancat` | Train a SpanCat model |
-| `evaluate-ner` | Evaluate all NER models |
-| `assemble-ner` | Assemble all NER models into a single pipeline |
-| `evaluate-spancat` | Evaluate SpanCat model |
-
-### ⏭ Workflows
-
-The following workflows are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
-and will run the specified commands in order. Commands are only re-run if their
-inputs have changed.
-
-| Workflow | Steps |
-| --- | --- |
-| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `assemble-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
-| `spancat` | `install` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
-| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` &rarr; `assemble-ner` |
-
-### 🗂 Assets
-
-The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
-in the project directory.
-
-| File | Source | Description |
-| --- | --- | --- |
-| `assets/train.iob2` | URL | The training dataset for GENIA in IOB format. |
-| `assets/dev.iob2` | URL | The evaluation dataset for GENIA in IOB format. |
-| `assets/test.iob2` | URL | The test dataset for GENIA in IOB format. |
-
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
