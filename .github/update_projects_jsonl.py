@@ -7,7 +7,7 @@ import typer
 
 def main(root: Path = typer.Argument(Path.cwd(), help="Root path to look in")):
     """
-    Update the projects.json file for the repo.
+    Update the projects.jsonl file for the repo.
 
     Unlike the docs update script, this is desigend to only be run on the root
     of the whole repository.
