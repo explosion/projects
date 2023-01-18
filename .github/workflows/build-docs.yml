@@ -21,7 +21,8 @@ jobs:
           pip install spacy
           python .github/update_docs.py
           python .github/update_category_docs.py
-          python .github/update_projects_json.py
+          # Temporarily commented out while PR is reviewed
+          # python .github/update_projects_json.py
       - name: Check for modified files
         id: git-check
         run: echo modified=$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi) >> $GITHUB_OUTPUT
