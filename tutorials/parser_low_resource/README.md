@@ -12,8 +12,6 @@ validation](https://universaldependencies.org/release_checklist.html#data-split)
 How to implement this split will be demonstrated in this project
 (`scripts/kfold.py`). The cross validation results can be seen below.
 
-### 10-fold Cross-validation results
-
 |         | TOKEN_ACC | POS_ACC | MORPH_ACC | TAG_ACC | DEP_UAS | DEP_LAS |
 |---------|-----------|---------|-----------|---------|---------|---------|
 | TRG     | **1.000**     | **0.843**   | 0.749     | **0.833**   | *80.846**   | **0.554**   |
