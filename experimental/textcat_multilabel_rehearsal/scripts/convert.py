@@ -1,7 +1,6 @@
 """Convert textcat annotation from JSONL to spaCy v3 .spacy format."""
 import srsly
 import typer
-import warnings
 from pathlib import Path
 from wasabi import msg
 

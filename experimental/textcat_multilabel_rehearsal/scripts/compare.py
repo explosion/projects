@@ -35,6 +35,24 @@ def compare_metrics(
     update_improvement = 0
     rehearse_improvement = 0
 
+    textcat_f = round(textcat_metrics["cats_score"], 3)
+    update_f = round(update_metrics["cats_score"], 3)
+    rehearse_f = round(rehearse_metrics["cats_score"], 3)
+
+    update_difference = calculate_percentage(textcat_f, update_f)
+    update_improvement += update_difference
+    rehearse_difference = calculate_percentage(textcat_f, rehearse_f)
+    rehearse_improvement += rehearse_difference
+
+    data.append(
+        (
+            "cats_score",
+            f"{textcat_f}",
+            f"{update_f} ({update_difference})",
+            f"{rehearse_f} ({rehearse_difference})",
+        )
+    )
+
     for label_metric in textcat_metrics["cats_f_per_type"]:
         textcat_f = round(textcat_metrics["cats_f_per_type"][label_metric]["f"], 3)
         update_f = round(update_metrics["cats_f_per_type"][label_metric]["f"], 3)
