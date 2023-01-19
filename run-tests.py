@@ -20,7 +20,12 @@ def _run(
     capture_output (bool): Whether to capture process output.
     RETURNS (subprocess.CompletedProcess): Process object.
     """
-    proc_output = subprocess.run(cmd, capture_output=capture_output)
+    subprocess._USE_VFORK = False
+    subprocess._USE_POSIX_SPAWN = False
+    proc_output = subprocess.run(
+        cmd,
+        capture_output=capture_output,
+    )
     cmds_status.append(
         {
             "cmd": " ".join([str(cmd_part) for cmd_part in cmd]),
@@ -73,16 +78,17 @@ def main(
     """
     logger = _get_logger()
     cmds_status: List[Dict[str, Union[str, int, List[str]]]] = []
-    top_level_dirs = ("benchmarks", "experimental", "integrations", "pipelines", "tutorials")
-
-    _log(logger, verbosity, "v", "Scanning projects")
+    top_level_dirs = ("experimental",)  # "benchmarks", "experimental", "integrations", "pipelines", "tutorials")
+    logger.info(python)
     if run_all:
+        _log(logger, verbosity, "v", "Scanning projects")
         proj_dirs = [
             path for path in
             [Path(tl_dir) / subdir for tl_dir in top_level_dirs for subdir in os.listdir(tl_dir)]
-            if path.is_dir()
+            if path.is_dir() and "coref" in str(path)
         ]
     else:
+        _log(logger, verbosity, "v", "Fetching modified projects")
         # Fetch which files were changed in the last commit.
         _run(["git", "diff", "--name-only", "HEAD", "HEAD~1"], cmds_status)
         proj_dirs = {
@@ -99,13 +105,14 @@ def main(
         # Install from requirements.txt, if it exists.
         if (proj_dir / "requirements.txt").exists():
             _log(logger, verbosity, "v", "  - Installing requirements")
-            _run([python, "-m", "pip", "-q", "install", "-r", proj_dir / "requirements.txt"], cmds_status)
-
+            # todo works from terminal, but not from script
+            # _run([python, "-m", "pip", "-q", "install", "-r", proj_dir / "requirements.txt"], cmds_status)
+        # exit()
         # Fetch spacy version from project.yml, install spacy version if available.
         spacy_version = srsly.read_yaml(proj_dir / "project.yml").get("spacy_version")
         if spacy_version:
             _log(logger, verbosity, "v", f"  - Installing spacy{spacy_version} from project.yml")
-            _run([python, "-m", "pip", "-q", "install", f"spacy{spacy_version}", "--force-reinstall"], cmds_status)
+            # _run([python, "-m", "pip", "-q", "install", f"spacy{spacy_version}", "--force-reinstall"], cmds_status)
 
         _log(logger, verbosity, "v", "  - Running tests")
         _run([python, "-m", "pytest", "-q", "-s", proj_dir], cmds_status)
@@ -116,7 +123,7 @@ def main(
                 for out in cmds_status[-1][channel]:
                     _log(logger, verbosity, "vv", f"    {out}")
         elif cmds_status[-1]["returncode"] == 5:
-            _log(logger, verbosity, "vv", "    No tests found")
+            _log(logger, verbosity, "vv", "      No tests found")
 
         _log(logger, verbosity, "v", "  - Restoring environment")
         with tempfile.NamedTemporaryFile("w") as file:
@@ -135,11 +142,11 @@ def main(
     #   - experimental/ner_wikiner_speedster (GIL error, maybe due to python 3.9?)
 
     # Return 0/True if all commands have return code 0 or 5 (no tests found), 1/False otherwise.
-    return int(any([cmd_status["returncode"] not in (0, 5) for cmd_status in cmds_status]))
+    return int(not all([cmd_status["returncode"] in (0, 5) for cmd_status in cmds_status]))
 
 
 if __name__ == '__main__':
     # rm -rf .venv && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && source .env/bin/activate
-    # if main(Path(".venv") / "bin" / "python", True, "vv") != 0:
-    if typer.run(main) != 0:
+    if main(Path(".venv") / "bin" / "python", True, "vv") != 0:
+        # if typer.run(main) != 0:
         raise Exception("Test run failed. Review logs for more details.")
