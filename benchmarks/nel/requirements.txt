@@ -1,7 +1,6 @@
+spacy @ git+https://github.com/rmitsch/spaCy.git@feature/candidate-generation-by-docs
 pyyaml
 tqdm
 prettytable
-scikit-learn
-fuzzyset2
-spacyfishing
 virtualenv
+spacyfishing

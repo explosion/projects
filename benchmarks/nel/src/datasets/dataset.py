@@ -1,5 +1,6 @@
 """ Dataset class. """
 import abc
+import copy
 import csv
 import datetime
 import importlib
@@ -9,7 +10,7 @@ import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
-from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict, Union
+from typing import Tuple, Set, List, Optional, TypeVar, Type, Dict
 
 import numpy
 import prettytable
@@ -18,12 +19,12 @@ import tqdm
 import yaml
 from spacy import Language
 from spacy.kb import KnowledgeBase
-from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from spacy.pipeline import EntityLinker
 
 from wikid import schemas
+from wikid.src.kb import WikiKB, WikiKBCandidate
 from . import evaluation
 from utils import get_logger
 
@@ -47,11 +48,8 @@ class Dataset(abc.ABC):
         with open(self._paths["root"] / "configs" / "datasets.yml", "r") as stream:
             self._options = yaml.safe_load(stream)[self.name]
 
-        self._entities: Optional[Dict[str, schemas.Entity]] = None
-        self._failed_entity_lookups: Optional[Set[str]] = None
         self._annotations: Optional[Dict[str, List[schemas.Annotation]]] = None
         self._kb: Optional[KnowledgeBase] = None
-        self._nlp_base: Optional[Language] = None
         self._nlp_best: Optional[Language] = None
         self._annotated_docs: Optional[List[Doc]] = None
 
@@ -65,20 +63,19 @@ class Dataset(abc.ABC):
         """
 
         root_path = Path(os.path.abspath(__file__)).parent.parent.parent
-        wikid_path = root_path / "wikid" / "output"
+        wikid_output_path = root_path / "wikid" / "output"
         assets_path = root_path / "assets" / dataset_name
 
         return {
             "root": root_path,
             "evaluation": root_path / "configs" / "evaluation.yml",
             "assets": assets_path,
-            "nlp_base": wikid_path / language / "nlp",
-            "kb": wikid_path / language / "kb",
-            "entities": assets_path / "entities.pkl",
-            "failed_entity_lookups": assets_path / "entities_failed_lookups.pkl",
+            "kb": wikid_output_path / language / "kb",
             "annotations": assets_path / "annotations.pkl",
+            "nlp_base": root_path / "training" / "base-nlp" / language,
             "nlp_best": root_path / "training" / dataset_name / run_name / "model-best",
-            "corpora": root_path / "corpora" / dataset_name
+            "corpora": root_path / "corpora" / dataset_name,
+            "mentions_candidates": root_path / "corpora" / dataset_name / "mentions_candidates.pkl",
         }
 
     @property
@@ -86,52 +83,50 @@ class Dataset(abc.ABC):
         """Returns dataset name."""
         raise NotImplementedError
 
-    def compile_corpora(self, filter_terms: Optional[Set[str]] = None) -> None:
+    def compile_corpora(self, model: str, filter_terms: Optional[Set[str]] = None) -> None:
         """Creates train/dev/test corpora for dataset.
+        model (str): Name or path of model with tokenizer, tok2vec, parser, tagger, parser.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         """
-        self._load_resource("entities")
-        self._load_resource("failed_entity_lookups")
-        self._load_resource("annotations")
-        self._load_resource("nlp_base")
+        with open(self._paths["annotations"], "rb") as file:
+            self._annotations = pickle.load(file)
         Doc.set_extension("overlapping_annotations", default=None)
-        self._annotated_docs = self._create_annotated_docs(filter_terms)
+        nlp = spacy.load(model)
+
+        # Incorporate annotations from corpus into documents. Only keep docs with entities (relevant mostly when working
+        # with filtered data).
+        self._annotated_docs = [doc for doc in self._create_annotated_docs(nlp, filter_terms) if len(doc.ents)]
+
+        # Serialize pipeline and corpora.
+        self._paths["nlp_base"].parent.mkdir(parents=True, exist_ok=True)
+        nlp.to_disk(
+            self._paths["nlp_base"],
+            # exclude=[comp for comp in nlp.component_names if comp not in [*nlp_components]]
+        )
         self._serialize_corpora()
 
-    def _create_annotated_docs(self, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
-        """Creates docs annotated with entities.
+    def _create_annotated_docs(self, nlp: Language, filter_terms: Optional[Set[str]] = None) -> List[Doc]:
+        """Creates docs annotated with entities. This should set documents `ents` attribute.
+        nlp (Language): Model with tokenizer, tok2vec and parser.
         filter_terms (Optional[Set[str]]): Set of filter terms. Only documents containing at least one of the specified
             terms will be included in corpora. If None, all documents are included.
         RETURN (List[Doc]): List of docs reflecting all entity annotations.
         """
         raise NotImplementedError
 
-    def parse_corpus(self, **kwargs) -> None:
-        """Parses corpus. Loads data on entities and mentions.
-        Populates self._entities, self._failed_entity_lookups, self._annotations.
-        RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, List[Annotation]]]): entities, titles of failed entity
-            lookups, annotations.
+    def extract_annotations(self, **kwargs) -> None:
+        """Parses corpus and extracts annotations. Loads data on entities and mentions.
+        Populates self._annotations.
         """
-        self._load_resource("nlp_base")
-        logger.info("Parsing external corpus")
-        (
-            self._entities,
-            self._failed_entity_lookups,
-            self._annotations,
-        ) = self._parse_corpus(**kwargs)
+        logger.info("Extracting annotations from corpus")
+        self._annotations = self._extract_annotations_from_corpus(**kwargs)
+        with open(self._paths["annotations"], "wb") as fp:
+            pickle.dump(self._annotations, fp)
 
-        # Serialize entity information.
-        for to_serialize in (
-            (self._paths["entities"], self._entities),
-            (self._paths["failed_entity_lookups"], self._failed_entity_lookups),
-            (self._paths["annotations"], self._annotations),
-        ):
-            with open(to_serialize[0], "wb") as fp:
-                pickle.dump(to_serialize[1], fp)
-        logger.info("Successfully parsed corpus.")
+        logger.info("Successfully extracted annotations from corpus.")
 
-    def _parse_corpus(
+    def _extract_annotations_from_corpus(
             self, **kwargs
     ) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, List[schemas.Annotation]]]:
         """Parses corpus. Loads data on entities and mentions.
@@ -169,55 +164,26 @@ class Dataset(abc.ABC):
 
         for key, idx in indices.items():
             corpus = DocBin(store_user_data=True, docs=[self._annotated_docs[i] for i in idx])
-            if not self._paths["corpora"].exists():
-                self._paths["corpora"].mkdir()
+            self._paths["corpora"].mkdir(parents=True, exist_ok=True)
             corpus.to_disk(self._paths["corpora"] / f"{key}.spacy")
         logger.info(f"Completed serializing corpora at {self._paths['corpora']}.")
 
-    def _load_resource(self, key: str, force: bool = False) -> None:
-        """Loads serialized resource.
-        key (str): Resource key. Must be in self._paths.
-        force (bool): Load from disk even if already not None.
-        """
-
-        path = self._paths[key]
-
-        if key == "nlp_base" and (force or not self._nlp_base):
-            self._nlp_base = spacy.load(path)
-        elif key == "nlp_best" and (force or not self._nlp_best):
-            self._nlp_best = spacy.load(path)
-        elif key == "kb" and (force or not self._kb):
-            self._load_resource("nlp_base")
-            self._kb = KnowledgeBase(
-                vocab=self._nlp_base.vocab,
-                entity_vector_length=self._nlp_base.vocab.vectors_length,
-            )
-            self._kb.from_disk(path)
-        elif key == "annotations" and (force or not self._annotations):
-            with open(path, "rb") as file:
-                self._annotations = pickle.load(file)
-        elif key == "entities" and (force or not self._entities):
-            with open(path, "rb") as file:
-                self._entities = pickle.load(file)
-        elif key == "failed_entity_lookups" and (
-            force or not self._failed_entity_lookups
-        ):
-            with open(self._paths["failed_entity_lookups"], "rb") as file:
-                self._failed_entity_lookups = pickle.load(file)
-
-    def evaluate(self, run_name: str) -> None:
+    def evaluate(self, gpu_id: Optional[int] = None) -> None:
         """Evaluates trained pipeline on test set.
         run_name (str): Run name.
+        gpu_id (Optional[int]): ID of GPU to utilize.
         """
-        self._load_resource("nlp_best")
-        self._load_resource("nlp_base")
-        self._load_resource("kb")
+        if gpu_id is not None:
+            spacy.require_gpu(gpu_id)
+
+        nlp_base = spacy.load(self._paths["nlp_base"])
+        self._nlp_best = spacy.load(self._paths["nlp_best"])
+        self._kb = WikiKB.generate_from_disk(self._paths["kb"])
 
         with open(self._paths["evaluation"], "r") as config_file:
             eval_config = yaml.safe_load(config_file)
-
         if eval_config["external"]["spacyfishing"]:
-            self._nlp_base.add_pipe("entityfishing", last=True)
+            nlp_base.add_pipe("entityfishing", last=True)
 
         # Apply config overrides, if defined.
         if "config_overrides" in eval_config and eval_config["config_overrides"]:
@@ -227,26 +193,18 @@ class Dataset(abc.ABC):
         # Infer test set.
         test_set_path = self._paths["corpora"] / "test.spacy"
         docs = list(DocBin().from_disk(test_set_path).get_docs(self._nlp_best.vocab))
-        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all
-        # leading "the " and adjust the entity positions accordingly.
-        for doc in docs:
-            doc.ents = [
-                doc.char_span(ent.start_char + 4, ent.end_char, label=ent.label, kb_id=ent.kb_id)
-                if ent.text.lower().startswith("the ") else ent
-                for ent in doc.ents
-            ]
 
         test_set = [
             Example(predicted_doc, doc)
             for predicted_doc, doc in zip(
                 [
                     doc for doc in tqdm.tqdm(
-                        self._nlp_best.pipe(texts=[doc.text for doc in docs], n_process=-1, batch_size=500),
+                        self._nlp_best.pipe(texts=docs, n_process=1 if gpu_id else -1, batch_size=500),
                         desc="Inferring entities for test set",
                         total=len(docs)
                     )
                 ],
-                DocBin().from_disk(self._paths["corpora"] / "test.spacy").get_docs(self._nlp_best.vocab)
+                docs
             )
         ]
 
@@ -261,19 +219,19 @@ class Dataset(abc.ABC):
         for example in tqdm.tqdm(test_set, total=len(test_set), leave=True, desc="Evaluating test set"):
             example: Example
             if len(example) > 0:
-                entity_linker: Union[EntityLinker, EntityLinker_v1] = \
-                    self._nlp_best.get_pipe("entity_linker")  # type: ignore
+                entity_linker: EntityLinker = self._nlp_best.get_pipe("entity_linker")  # type: ignore
                 ent_gold_ids = {
                     evaluation.offset(ent.start_char, ent.end_char): ent.kb_id_ for ent in example.reference.ents
                 }
                 if len(ent_gold_ids) == 0:
                     continue
                 ent_pred_labels = {(ent.start_char, ent.end_char): ent.label_ for ent in example.predicted.ents}
-                ent_cands = {
-                    (ent.start_char, ent.end_char): {
-                        cand.entity_: cand for cand in entity_linker.get_candidates(self._kb, ent)
-                    }
-                    for ent in example.reference.ents
+                ent_cands_by_offset = {
+                    (ent.start_char, ent.end_char): {cand.entity_: cand for cand in ent_cands}
+                    for ent, ent_cands in zip(
+                        example.reference.ents,
+                        next(entity_linker.get_candidates_all(self._kb, (ents for ents in [example.reference.ents])))
+                    )
                 }
 
                 # Update candidate generation stats.
@@ -283,7 +241,9 @@ class Dataset(abc.ABC):
                         # For the candidate generation evaluation also mis-aligned entities are considered.
                         label = ent_pred_labels.get(ent_offset, "NIL")
                         cand_gen_label_counts[label] += 1
-                        candidate_results.update_metrics(label, ent.kb_id_, set(ent_cands.get(ent_offset, {}).keys()))
+                        candidate_results.update_metrics(
+                            label, ent.kb_id_, set(ent_cands_by_offset.get(ent_offset, {}).keys())
+                        )
 
                 # Update entity disambiguation stats for baselines.
                 evaluation.add_disambiguation_baseline(
@@ -291,15 +251,15 @@ class Dataset(abc.ABC):
                     label_counts,
                     example.predicted,
                     ent_gold_ids,
-                    ent_cands,
+                    ent_cands_by_offset,
                 )
 
                 # Update entity disambiguation stats for trained model.
-                evaluation.add_disambiguation_eval_result(trained_results, example.predicted, ent_gold_ids, ent_cands)
+                evaluation.add_disambiguation_eval_result(trained_results, example.predicted, ent_gold_ids, ent_cands_by_offset)
 
-                if eval_config["external"]["spacyfishing"]:
+                if eval_config["external"].get("spacyfishing", False):
                     try:
-                        doc = self._nlp_base(example.reference.text)
+                        doc = nlp_base(example.reference.text)
                     except TypeError:
                         doc = None
                     evaluation.add_disambiguation_spacyfishing_eval_result(spacyfishing_results, doc, ent_gold_ids)
@@ -317,7 +277,7 @@ class Dataset(abc.ABC):
             eval_results.append(spacyfishing_results)
 
         logger.info(dict(cand_gen_label_counts))
-        evaluation.EvaluationResults.report(tuple(eval_results), run_name=run_name, dataset_name=self.name)
+        evaluation.EvaluationResults.report(tuple(eval_results), run_name=self._run_name, dataset_name=self.name)
 
     def compare_evaluations(self, highlight_criterion: str) -> None:
         """Generate and display table for comparison of all available runs for this dataset.
@@ -404,3 +364,85 @@ class Dataset(abc.ABC):
         automatically.
         """
         raise NotImplementedError
+
+    def _collapse_spaces(self, doc_id: str, doc_text: str) -> Tuple[str, List[schemas.Annotation]]:
+        """
+        Replace multiple spaces with singles to avoid tokenization & sentence splitting issues later
+        in pipeline.
+        doc_id (str): Doc ID to be looked up in self._annotations.
+        doc_text (str): Doc text.
+        RETURNS (Annotation): Potentially updated (1) doc text, (2) annotations (start/end positions may have changed).
+        """
+        doc_annots = self._annotations.get(doc_id, [])
+        doc_text_orig = doc_text
+        annots_orig = copy.deepcopy(doc_annots)
+
+        # This is inefficient and could surely be optimized.
+        multi_space_start_idx = doc_text.find("  ")
+        while multi_space_start_idx >= 0:
+            multi_space_stop_idx = multi_space_start_idx + 2
+            while multi_space_stop_idx == " ":
+                multi_space_stop_idx += 1
+
+            # Shrink multiple whitespaces to one.
+            doc_text = doc_text[:multi_space_start_idx] + " " + doc_text[multi_space_stop_idx:]
+
+            # Adjust annotations indices accordingly.
+            for i, annot in enumerate(doc_annots):
+                annot_text_orig = doc_text_orig[annots_orig[i].start_pos:annots_orig[i].end_pos]
+                if multi_space_start_idx <= annot.start_pos < multi_space_stop_idx:
+                    offset = multi_space_start_idx + 1 - annot.start_pos
+                    annot.start_pos -= offset
+                    annot.end_pos -= offset
+                elif annot.start_pos >= multi_space_stop_idx:
+                    offset = multi_space_stop_idx - multi_space_start_idx - 1
+                    annot.start_pos -= offset
+                    annot.end_pos -= offset
+
+                # New annotation should match old one, except for leading/trailing spaces
+                assert doc_text[annot.start_pos:annot.end_pos].split() == " ".join(annot_text_orig.split())
+
+            multi_space_start_idx = doc_text.find("  ", multi_space_start_idx)
+
+        assert doc_text.find("  ") == -1
+
+        return doc_text, doc_annots
+
+    def retrieve_candidates_for_mentions(self) -> None:
+        """Retrieves candidates for all mentions in corpus."""
+        logger.info(f"Retrieving candidates for all mentions in corpus.")
+
+        self._kb = WikiKB.generate_from_disk(self._paths["kb"])
+        # Ensure KB is not using outdated mention_candidates map (which happens if the current step was already done and
+        # is now repeated).
+        self._kb._mentions_candidates = None
+
+        # Our entity corpora incorporate annotated mentions as in their .ents attributes at this point, so we can
+        # extract all mentions from there.
+        mentions = {
+            ent.text: ent
+            for corpus_name in ("train", "dev", "test")
+            for doc in DocBin(
+            ).from_disk(self._paths["corpora"] / (corpus_name + ".spacy")).get_docs(self._kb.vocab)
+            for ent in doc.ents
+        }
+        mention_texts = list(mentions.keys())
+
+        # Select candidates.
+        mention_candidates: Dict[str, List[WikiKBCandidate]] = {
+            mention_text: mention_candidates
+            for mention_text, mention_candidates in zip(
+                mention_texts,
+                list(self._kb.get_candidates_all([[mentions[mt] for mt in mention_texts]]))[0]
+            )
+        }
+        for mention in mention_candidates:
+            assert all([mention == mc.mention for mc in mention_candidates[mention]])
+
+        # Store results.
+        self._paths["mentions_candidates"].parent.mkdir(parents=True, exist_ok=True)
+        with open(self._paths["mentions_candidates"], "wb") as file:
+            pickle.dump(mention_candidates, file)
+        # Update hash in KB, persist updated KB.
+        self._kb.update_path("mentions_candidates", self._paths["mentions_candidates"])
+        self._kb.to_disk(self._paths["kb"])

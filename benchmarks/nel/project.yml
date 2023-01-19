@@ -1,19 +1,21 @@
 title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
 vars:
-  run: "cg-default"
+  run: "default"
   language: "en"
   config: "nel.cfg"
-  vectors_model: "en_core_web_lg"
-  version: "0.0.5"
+  base_model: "en_core_web_lg"
+  version: "0.0.6"
   dataset: "mewsli_9"
   gpu_id: ""
   download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
   filter: "True"  # Whether to only use parts of Wiki data and corpus containing filter terms.
-  training_max_steps: 1000
+  training_max_steps: 10000
   eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "evaluation"]
+directories: ["assets", "training", "configs", "src", "corpora", "evaluation"]
+
+check_requirements: True
 
 workflows:
   all:
@@ -24,7 +26,7 @@ workflows:
     - wikid_download_assets
     - wikid_parse
     - wikid_create_kb
-    - parse_corpus
+    - extract_annotations
     - compile_corpora
     - train
     - evaluate
@@ -37,27 +39,25 @@ commands:
   - name: download_mewsli9
     help: Download Mewsli-9 dataset.
     script:
-      - bash scripts/datasets/download_mewsli-9.sh
+      - bash src/datasets/download_mewsli-9.sh
     outputs:
-      - assets/mewsli_9/raw
+      - assets/mewsli_9/
 
   - name: download_model
     help: "Download a model with pretrained vectors and NER component."
     script:
-      - "python -m spacy download ${vars.vectors_model}"
+      - "python -m spacy download ${vars.base_model}"
 
   - name: wikid_clone
-    help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
+    help: "Clone `wikid` to prepare Wiki database and `KnowledgeBase`."
     script:
-      - git clone https://github.com/explosion/wikid.git --branch main
-      - pip install -r wikid/requirements.txt
-    outputs:
-      - wikid
+      - "git clone https://github.com/rmitsch/wikid.git --branch fix/reestablish-db-connection-after-load"
+      - "pip install -r wikid/requirements.txt"
 
   - name: preprocess
     help: Preprocess and clean corpus data.
     script:
-      - "env PYTHONPATH=. python ./scripts/clean_data.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./src/cli_clean_data.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/raw"
     outputs:
@@ -73,67 +73,77 @@ commands:
   - name: wikid_parse
     help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
     script:
-      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter True"
+      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter ${vars.filter}"
     outputs:
       - "wikid/output/${vars.language}/wiki.sqlite3"
 
   - name: wikid_create_kb
     help: "Create the knowledge base and write it to file."
     script:
-      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model}"
+      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.base_model} --force"
     deps:
       - "wikid/output/${vars.language}/wiki.sqlite3"
-    outputs_no_cache:
+    outputs:
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
+      - "wikid/output/${vars.language}/wiki.annoy"
 
-  - name: parse_corpus
-    help: "Parse corpus to generate entity and annotation lookups used for corpora compilation."
+  - name: extract_annotations
+    help: "Extract annotations from corpus."
     script:
-      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language}"
+      - "env PYTHONPATH=. python ./src/cli_extract_annotations.py ${vars.dataset} ${vars.language}"
     deps:
       - "assets/${vars.dataset}/clean"
       - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs:
-      - "assets/${vars.dataset}/entities.pkl"
-      - "assets/${vars.dataset}/entities_failed_lookup.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
 
   - name: compile_corpora
     help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "env PYTHONPATH=. python ./scripts/compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
+      - "env PYTHONPATH=. python ./src/cli_compile_corpora.py ${vars.dataset} ${vars.language} ${vars.base_model} ${vars.filter}"
     deps:
-      - "assets/${vars.dataset}/entities.pkl"
-      - "assets/${vars.dataset}/entities_failed_lookups.pkl"
       - "assets/${vars.dataset}/annotations.pkl"
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
       - "configs/datasets.yml"
     outputs:
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
       - "corpora/${vars.dataset}/test.spacy"
 
+  - name: retrieve_mentions_candidates
+    help: "Retrieve candidates for mentions in corpus and persist them in file. This is an optional step, but speeds up training and evaluation"
+    script:
+      - "env PYTHONPATH=. python ./src/cli_retrieve_mentions_candidates.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+      - "assets/${vars.dataset}/annotations.pkl"
+    outputs:
+      - "corpora/${vars.dataset}/mention_candidates.pkl"
+
   - name: train
     help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
+      - "bash src/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
     outputs:
       - "training/${vars.dataset}/${vars.run}"
     deps:
       - "wikid/output/${vars.language}/kb"
-      - "wikid/output/${vars.language}/nlp"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "training/base-nlp/${vars.language}"
       - "corpora/${vars.dataset}/train.spacy"
       - "corpora/${vars.dataset}/dev.spacy"
 
   - name: evaluate
     help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
+      - "env PYTHONPATH=. python ./src/cli_evaluate.py ${vars.dataset} '${vars.run}' ${vars.language} ${vars.gpu_id}"
     deps:
       - "training/${vars.dataset}/${vars.run}/model-best"
-      - "wikid/output/${vars.language}/nlp"
+      - "training/base-nlp/${vars.language}"
+      - "wikid/output/${vars.language}/wiki.annoy"
+      - "training/base-nlp/${vars.language}"
       - "corpora/${vars.dataset}/dev.spacy"
     outputs:
       - "evaluation/${vars.dataset}"
@@ -141,7 +151,7 @@ commands:
   - name: compare_evaluations
     help: "Compare available set of evaluation runs."
     script:
-      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
+      - "env PYTHONPATH=. python ./src/cli_compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
     deps:
       - "evaluation/${vars.dataset}"
 
