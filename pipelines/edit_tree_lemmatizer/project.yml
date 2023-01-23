@@ -1,0 +1,66 @@
+title: "Edit tree lemmatizer"
+
+vars:
+  lang: "nl"
+  treebank: "UD_Dutch-Alpino"
+  train_name: "nl_alpino-ud-train"
+  dev_name: "nl_alpino-ud-dev"
+  test_name: "nl_alpino-ud-test"
+  gpu: -1
+
+directories: ["configs", "assets", "corpus", "training"]
+
+assets:
+  - dest: "assets/${vars.treebank}"
+    git:
+      repo: "https://github.com/UniversalDependencies/${vars.treebank}"
+      branch: "master"
+      path: ""
+
+workflows:
+  all:
+    - preprocess
+    - create-config
+    - train
+    - evaluate
+
+commands:
+  - name: "preprocess"
+    help: "Convert data to spaCy format"
+    script:
+      - "mkdir -p corpus/${vars.treebank}"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.dev_name}.spacy corpus/${vars.treebank}/dev.spacy"
+      - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
+      - "mv corpus/${vars.treebank}/${vars.test_name}.spacy corpus/${vars.treebank}/test.spacy"
+    deps:
+      - "assets/${vars.treebank}/"
+    outputs:
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+      - "corpus/${vars.treebank}/test.spacy"
+
+  - name: "create-config"
+    help: "Create a config"
+    script:
+      - "python -m spacy init config -l ${vars.lang} -p trainable_lemmatizer configs/${vars.treebank}/config.cfg -F"
+
+  - name: "train"
+    help: "Train the lemmatizer"
+    script:
+      - "python -m spacy train configs/${vars.treebank}/config.cfg --output training/${vars.treebank} --gpu-id ${vars.gpu} --paths.train corpus/${vars.treebank}/train.spacy --paths.dev corpus/${vars.treebank}/dev.spacy"
+    deps:
+      - "configs/${vars.treebank}/config.cfg"
+      - "corpus/${vars.treebank}/train.spacy"
+      - "corpus/${vars.treebank}/dev.spacy"
+    outputs:
+      - "training/${vars.treebank}/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the lemmatization model evaluate on the test corpus."
+    script:
+      - "python -m spacy evaluate training/${vars.treebank}/model-best corpus/${vars.treebank}/test.spacy"
+    deps:
+      - "training/${vars.treebank}/model-best"
