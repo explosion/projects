@@ -1,4 +1,4 @@
-title: "Edit tree lemmatizer"
+title: "Demo the trainable edit-tree lemmatizer"
 
 vars:
   lang: "nl"
