@@ -1,9 +1,10 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Pipelines (16)
+# 🪐 Project Templates: Pipelines (17)
 
 | Template | Description |
 | --- | --- |
+| [`edit_tree_lemmatizer`](edit_tree_lemmatizer) | Demo the trainable edit-tree lemmatizer |
 | [`floret_fi_core_demo`](floret_fi_core_demo) | Demo floret vectors for Finnish |
 | [`floret_ko_ud_demo`](floret_ko_ud_demo) | Demo floret vectors for UD Korean Kaist |
 | [`floret_vectors_demo`](floret_vectors_demo) | Demo floret vectors |
