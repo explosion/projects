@@ -8,6 +8,7 @@ OSCAR and trains vectors with [floret](https://github.com/explosion/floret).
 
 By default, the project trains floret vectors for Macedonian.
 
+
 ## 📋 project.yml
 
 The [`project.yml`](project.yml) defines the data assets required by the
