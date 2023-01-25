@@ -19,15 +19,19 @@ Commands are only re-run if their inputs have changed.
 | Command | Description |
 | --- | --- |
 | `download_mewsli9` | Download Mewsli-9 dataset. |
-| `preprocess` | Preprocess test datasets. |
 | `download_model` | Download a model with pretrained vectors and NER component. |
-| `parse_wiki_dumps` | Parse Wikipedia dumps. This can take a long time! |
-| `create_kb` | Create the knowledge base and write it to file. |
-| `compile_corpora` | Compile corpora, separated in in train/dev/test sets. |
+| `wikid_clone` | Clone `wikid` to prepare Wiki database and `KnowledgeBase`. |
+| `preprocess` | Preprocess and clean corpus data. |
+| `wikid_download_assets` | Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps! |
+| `wikid_parse` | Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps! |
+| `wikid_create_kb` | Create the knowledge base and write it to file. |
+| `parse_corpus` | Parse corpus to generate entity and annotation lookups used for corpora compilation. |
+| `compile_corpora` | Compile corpora, separated in train/dev/test sets. |
 | `train` | Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time! |
 | `evaluate` | Evaluate on the test set. |
-| `delete_wiki_db` | Deletes SQLite database generated in step parse_wiki_dumps with data parsed from Wikidata and Wikipedia dump. |
-| `clean` | Remove intermediate files (excluding Wiki resources and database) |
+| `compare_evaluations` | Compare available set of evaluation runs. |
+| `delete_wiki_db` | Deletes SQLite database generated in step wiki_parse with data parsed from Wikidata and Wikipedia dump. |
+| `clean` | Remove intermediate files for specified dataset and language (excluding Wiki resources and database). |
 
 ### ⏭ Workflows
 
@@ -38,21 +42,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `download_mewsli9` &rarr; `preprocess` &rarr; `download_model` &rarr; `parse_wiki_dumps` &rarr; `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
-| `training` | `create_kb` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` |
-
-### 🗂 Assets
-
-The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
-in the project directory.
-
-| File | Source | Description |
-| --- | --- | --- |
-| `assets/wiki/wikidata_entity_dump.json.bz2` | URL | Wikidata entity dump. Download can take a long time! |
-| `assets/wiki/wikipedia_dump.xml.bz2` | URL | Wikipedia dump. Download can take a long time! |
-| `assets/wiki/wikidata_entity_dump_filtered.json.bz2` | URL | Filtered Wikidata entity dump for demo purposes. |
-| `assets/wiki/wikipedia_dump_filtered.xml.bz2` | URL | Filtered Wikipedia dump for demo purposes. |
+| `all` | `download_mewsli9` &rarr; `download_model` &rarr; `wikid_clone` &rarr; `preprocess` &rarr; `wikid_download_assets` &rarr; `wikid_parse` &rarr; `wikid_create_kb` &rarr; `parse_corpus` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` &rarr; `compare_evaluations` |
+| `training` | `train` &rarr; `evaluate` |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
