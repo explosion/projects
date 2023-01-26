@@ -7,4 +7,4 @@ def test_benchmark_speed_project():
     # project_assets(root)   # there are currently no assets defined for this project
     # don't capture due to encoding issues in windows
     project_run(root, "setup")
-    project_run(root, "timing_cpu", capture=True)
+    project_run(root, "timing_cpu")
