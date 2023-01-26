@@ -27,6 +27,7 @@ Commands are only re-run if their inputs have changed.
 | `evaluate` | Evaluate on the test data and save the metrics |
 | `package` | Package the trained model so it can be installed |
 | `visualize` | Visualize the model's output interactively using Streamlit |
+| `assemble` | Combine the model with a pretrained pipeline. |
 
 ### ⏭ Workflows
 

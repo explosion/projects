@@ -1,6 +1,6 @@
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Edit tree lemmatizer
+# 🪐 spaCy Project: Demo the trainable edit-tree lemmatizer
 
 ## 📋 project.yml
 
