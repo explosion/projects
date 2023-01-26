@@ -24,11 +24,13 @@ chmod +x get-mewsli-9.sh
 PYTHONPATH=. bash get-mewsli-9.sh
 
 # Move output & log data to folder, clean up everything else.
-mkdir -p ../../mewsli_9/clean ../../mewsli_9/raw
+mkdir -p ../../mewsli_9/clean
+mkdir -p ../../mewsli_9/raw
 cp -r mewsli-9/output/* ../../mewsli_9
 cd ../..
 rm -rf $SUBDIR
 mkdir -p mewsli_9/en
 cp -r mewsli_9/dataset/en/* mewsli_9/en/
-rm -rf mewsli_9/dataset mewsli_9/download mewsli_9/wikiextractor mewsli_9/en/wiki
+rm -rf mewsli_9/dataset mewsli_9/download mewsli_9/wikiextractor
+rm -rf mewsli_9/en/wiki
 mv mewsli_9/en mewsli_9/raw
