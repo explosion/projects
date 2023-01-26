@@ -25,7 +25,7 @@ def main(root: Path = typer.Argument(Path.cwd(), help="Root path to look in")):
         entry["description"] = config.get("description", "")
         entries.append(entry)
 
-    with open("projects.jsonl", "w") as jsonfile:
+    with open("projects.jsonl", "w", encoding="utf-8") as jsonfile:
         for entry in entries:
             jsonfile.write(json.dumps(entry))
             jsonfile.write("\n")
