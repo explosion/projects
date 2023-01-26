@@ -13,6 +13,8 @@ vars:
   dev: "dev"
   version: "0.0.3"
 
+spacy_version: ">=3.0.0,<3.5.0"
+
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories: ["assets", "training", "configs", "scripts", "corpus", "notebooks", "temp"]
