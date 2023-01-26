@@ -6,7 +6,7 @@ sample results are stored in assets/emerson_annotated_text.jsonl
 """
 
 import spacy
-from spacy.kb import InMemoryLookupKB, get_candidates
+from spacy.kb import KnowledgeBase, get_candidates
 
 import prodigy
 from prodigy.models.ner import EntityRecognizer
@@ -39,7 +39,7 @@ from pathlib import Path
 def entity_linker_manual(dataset, source, nlp_dir, kb_loc, entity_loc):
     # Load the NLP and KB objects from file
     nlp = spacy.load(nlp_dir)
-    kb = InMemoryLookupKB(vocab=nlp.vocab, entity_vector_length=1)
+    kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=1)
     kb.from_disk(kb_loc)
     model = EntityRecognizer(nlp)
 
