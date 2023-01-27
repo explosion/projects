@@ -157,6 +157,8 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+      - >-
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/wnut17-train.spacy 
         --paths.dev corpus/spancat/wnut17-dev.spacy
@@ -301,6 +303,8 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+      - >-
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/es-conll-train.spacy 
         --paths.dev corpus/spancat/es-conll-dev.spacy
@@ -352,6 +356,8 @@ commands:
   - name: "inspect-archaeo"
     help: "Analyze span-characteristics"
     script:
+      - >-
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
       - >-
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/archaeo-train.spacy 
@@ -415,6 +421,8 @@ commands:
   - name: "inspect-anem"
     help: "Analyze span-characteristics"
     script:
+      - >-
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
       - >-
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/anem-train.spacy 
@@ -485,6 +493,8 @@ commands:
   - name: "inspect-restaurant"
     help: "Analyze span-characteristics"
     script:
+      - >-
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
       - >-
         python -m spacy debug data configs/spancat_default.cfg 
         --paths.train corpus/spancat/restaurant-train.spacy 
