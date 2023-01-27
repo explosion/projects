@@ -1,0 +1,496 @@
+title: "Span labeling datasets"
+description: |
+  This project compiles various NER and more general spancat datasets 
+  and their converters into the [spaCy format](https://spacy.io/api/data-formats). 
+  You can use this to try out experiment with `ner` and `spancat`
+  or to potentially pre-train them for your application.
+
+vars:
+  spans_key: "sc"
+  gpu_id: 0
+
+directories:
+  - "assets"
+  - "configs"
+  - "corpus/spancat"
+  - "corpus/ner"
+  - "scripts"
+  - "analyses"
+  - "unseen"
+
+workflows:
+  wnut17:
+    - "preprocess-wnut17"
+    - "convert-wnut17-ents"
+    - "convert-wnut17-spans"
+    - "inspect-wnut17"
+  conll:
+    - "unpack-conll"
+    - "preprocess-conll"
+    - "convert-conll-ents"
+    - "convert-conll-spans"
+    - "inspect-conll"
+  archaeo:
+    - "convert-archaeo-ents"
+    - "convert-archaeo-spans"
+    - "clean-archaeo"
+    - "inspect-archaeo"
+  anem:
+    - "convert-anem-ents"
+    - "convert-anem-spans"
+    - "inspect-anem"
+  restaurant:
+    - "preprocess-restaurant"
+    - "convert-restaurant-ents"
+    - "convert-restaurant-spans"
+    - "inspect-restaurant"
+  all:
+    - "preprocess-wnut17"
+    - "convert-wnut17-ents"
+    - "convert-wnut17-spans"
+    - "unpack-conll"
+    - "convert-conll-spans"
+    - "convert-conll-ents"
+    - "convert-archaeo-ents"
+    - "convert-archaeo-spans"
+    - "convert-anem-ents"
+    - "convert-anem-spans"
+    - "preprocess-restaurant"
+    - "convert-restaurant-ents"
+    - "convert-restaurant-spans"
+    - "inspect-restaurant"
+
+assets:
+  - dest: "assets/wnut17-train.iob"
+    url: "https://github.com/leondz/emerging_entities_17/blob/master/wnut17train.conll"
+    description: "WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
+  - dest: "assets/wnut17-test.iob"
+    url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.test.annotated"
+    description: "WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
+  - dest: "assets/wnut17-dev.iob"
+    url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.dev.conll"
+    description: "WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
+  - dest: "assets/conll.tgz"
+    url: http://www.cnts.ua.ac.be/conll2002/ner.tgz
+    description: "ConLL 2002 shared task data from Tjong Kim Sang (ACL 2002)"
+  - dest: "assets/archaeo.bio"
+    url: https://github.com/alexbrandsen/dutch-archaeo-NER-dataset/blob/master/complete-bio-gs.bio
+    description: "Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020)"
+  - dest: "assets/anem-train.iob"
+    url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
+    description: "Anatomical Entity Mention Detection training dataset from Ohta et al. (ACL 2012)"
+  - dest: "assets/anem-test.iob"
+    url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
+    description: "Anatomical Entity Mention Detection test dataset from Ohta et al. (ACL 2012)"
+  - dest: "assets/restaurant-train_raw.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
+    description: "Training data from the MIT Restaurants Review dataset"
+  - dest: "assets/restaurant-test_raw.iob"
+    url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttest.bio
+    description: "Test data from the MIT Restaurants Review dataset"
+
+commands:
+  - name: "preprocess-wnut17"
+    help: "Canonicalize the WNUT2017 data set for conversion to .spacy."
+    script:
+      - python -m scripts.preprocess assets/wnut17-train.iob assets/wnut17-train.iob
+      - python -m scripts.preprocess assets/wnut17-dev.iob assets/wnut17-dev.iob
+      - python -m scripts.preprocess assets/wnut17-test.iob assets/wnut17-test.iob
+    deps:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+    outputs:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+
+  - name: "convert-wnut17-ents"
+    help: "Convert WNUT17 dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-test.iob corpus/ner/
+        --use-ents
+    deps:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+    outputs:
+      - corpus/ner/wnut17-train.spacy
+      - corpus/ner/wnut17-dev.spacy
+      - corpus/ner/wnut17-test.spacy
+
+  - name: "convert-wnut17-spans"
+    help: "Convert WNUT17 dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+      - >-
+        python -m scripts.convert_to_spans
+        assets/wnut17-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+    deps:
+      - assets/wnut17-train.iob
+      - assets/wnut17-dev.iob
+      - assets/wnut17-test.iob
+    outputs:
+      - corpus/spancat/wnut17-train.spacy
+      - corpus/spancat/wnut17-dev.spacy
+      - corpus/spancat/wnut17-test.spacy
+
+  - name: "inspect-wnut17"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/wnut17-train.spacy 
+        --paths.dev corpus/spancat/wnut17-dev.spacy
+
+  - name: "unpack-conll"
+    help: "Decompress ConLL 2002, remove temporary files and change encoding."
+    script:
+      - python -m scripts.cli_util untar assets/conll.tgz --output-dir temp
+      - python -m scripts.cli_util unzip temp/ner/data/esp.testa.gz
+      - python -m scripts.cli_util unzip temp/ner/data/esp.testb.gz
+      - python -m scripts.cli_util unzip temp/ner/data/esp.train.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.testa.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.testb.gz
+      - python -m scripts.cli_util unzip temp/ner/data/ned.train.gz
+      - python -m scripts.cli_util reencode temp/ner/data/esp.testa assets/es-conll-dev.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/esp.testb assets/es-conll-test.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/esp.train assets/es-conll-train.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.testa assets/nl-conll-dev.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.testb assets/nl-conll-test.iob iso-8859-1 utf-8
+      - python -m scripts.cli_util reencode temp/ner/data/ned.train assets/nl-conll-train.iob iso-8859-1 utf-8
+    deps:
+      - assets/conll.tgz
+    outputs:
+      # Cleaned CoNLL datasets
+      - assets/es-conll-train.iob
+      - assets/es-conll-dev.iob
+      - assets/es-conll-test.iob
+      - assets/nl-conll-train.iob
+      - assets/nl-conll-dev.iob
+      - assets/nl-conll-test.iob
+
+  - name: "preprocess-conll"
+    help: "Canonicalize the Dutch ConLL data set for conversion to .spacy."
+    script:
+      - python -m scripts.preprocess assets/nl-conll-train.iob assets/nl-conll-train.iob
+      - python -m scripts.preprocess assets/nl-conll-dev.iob assets/nl-conll-dev.iob
+      - python -m scripts.preprocess assets/nl-conll-test.iob assets/nl-conll-test.iob
+    deps:
+      - assets/nl-conll-train.iob
+      - assets/nl-conll-dev.iob
+      - assets/nl-conll-test.iob
+    outputs:
+      - assets/nl-conll-train.iob
+      - assets/nl-conll-dev.iob
+      - assets/nl-conll-test.iob
+
+  - name: "convert-conll-spans"
+    help: "Convert CoNLL dataset (de, en, es, nl) into the spaCy format"
+    script:
+      # Convert es dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      # Convert nl dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-dev.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - "assets/es-conll-train.iob"
+      - "assets/es-conll-dev.iob"
+      - "assets/es-conll-test.iob"
+      - "assets/nl-conll-train.iob"
+      - "assets/nl-conll-dev.iob"
+      - "assets/nl-conll-test.iob"
+    outputs:
+      - "corpus/spancat/es-conll-train.spacy"
+      - "corpus/spancat/es-conll-dev.spacy"
+      - "corpus/spancat/es-conll-test.spacy"
+      - "corpus/spancat/nl-conll-train.spacy"
+      - "corpus/spancat/nl-conll-dev.spacy"
+      - "corpus/spancat/nl-conll-test.spacy"
+
+  - name: "convert-conll-ents"
+    help: "Convert CoNLL dataset (de, en, es, nl) into the spaCy format"
+    script:
+      # Convert es dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/es-conll-test.iob corpus/ner/
+        --use-ents
+      # Convert nl dataset
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-train.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-dev.iob corpus/ner/
+        --use-ents
+      - >-
+        python -m scripts.convert_to_spans
+        assets/nl-conll-test.iob corpus/ner/
+        --use-ents
+    deps:
+      - "assets/es-conll-train.iob"
+      - "assets/es-conll-dev.iob"
+      - "assets/es-conll-test.iob"
+      - "assets/nl-conll-train.iob"
+      - "assets/nl-conll-dev.iob"
+      - "assets/nl-conll-test.iob"
+    outputs:
+      - "corpus/ner/es-conll-train.spacy"
+      - "corpus/ner/es-conll-dev.spacy"
+      - "corpus/ner/es-conll-test.spacy"
+      - "corpus/ner/nl-conll-train.spacy"
+      - "corpus/ner/nl-conll-dev.spacy"
+      - "corpus/ner/nl-conll-test.spacy"
+
+  - name: "inspect-conll"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/es-conll-train.spacy 
+        --paths.dev corpus/spancat/es-conll-dev.spacy
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/nl-conll-train.spacy 
+        --paths.dev corpus/spancat/nl-conll-dev.spacy
+
+  - name: "convert-archaeo-spans"
+    help: "Convert Dutch Archaeology dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/archaeo.bio corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter iob
+      - >-
+        python -m scripts.split_docs
+        corpus/spancat/archaeo.spacy corpus/spancat
+        --seed 42
+        --shuffle
+    deps:
+      - "assets/archaeo.bio"
+    outputs:
+      - "corpus/spancat/archaeo-train.spacy"
+      - "corpus/spancat/archaeo-dev.spacy"
+      - "corpus/spancat/archaeo-test.spacy"
+
+  - name: "convert-archaeo-ents"
+    help: "Convert Dutch Archaeology dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/archaeo.bio corpus/ner/
+        --use-ents
+        --converter iob
+      - >-
+        python -m scripts.split_docs
+        corpus/ner/archaeo.spacy corpus/ner/
+        --seed 42
+        --shuffle
+    deps:
+      - "assets/archaeo.bio"
+    outputs:
+      - "corpus/ner/archaeo-train.spacy"
+      - "corpus/ner/archaeo-dev.spacy"
+      - "corpus/ner/archaeo-test.spacy"
+
+  - name: "inspect-archaeo"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/archaeo-train.spacy 
+        --paths.dev corpus/spancat/archaeo-dev.spacy
+
+  - name: "clean-archaeo"
+    script:
+      - mv corpus/ner/archaeo.spacy assets/archaeo_ner.spacy
+      - mv corpus/spancat/archaeo.spacy assets/archaeo_span.spacy
+
+  - name: "convert-anem-spans"
+    help: "Convert AnEM dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/spancat/anem-train-dev.spacy corpus/spancat/anem-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - assets/anem-train.iob
+      - assets/anem-test.iob
+    outputs:
+      - corpus/spancat/anem-train.spacy
+      - corpus/spancat/anem-dev.spacy
+      - corpus/spancat/anem-test.spacy
+
+  - name: "convert-anem-ents"
+    help: "Convert AnEM dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-train.iob corpus/ner/
+        --use-ents
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/ner/anem-train-dev.spacy corpus/ner/anem-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/anem-test.iob corpus/ner/
+        --use-ents
+        --converter auto
+    deps:
+      - assets/anem-train.iob
+      - assets/anem-test.iob
+    outputs:
+      - corpus/ner/anem-train.spacy
+      - corpus/ner/anem-dev.spacy
+      - corpus/ner/anem-test.spacy
+
+  - name: "inspect-anem"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/anem-train.spacy 
+        --paths.dev corpus/spancat/anem-dev.spacy
+
+  - name: "preprocess-restaurant"
+    help: "Make MIT Restaurant Review data set format comply with convert."
+    script:
+      - python -m scripts.prepare_restaurant assets/restaurant-train_raw.iob assets/restaurant-train.iob
+      - python -m scripts.prepare_restaurant assets/restaurant-test_raw.iob assets/restaurant-test.iob
+    deps:
+      - assets/restaurant-train_raw.iob
+      - assets/restaurant-test_raw.iob
+    outputs:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
+
+  - name: "convert-restaurant-ents"
+    help: "Convert MIT Restaurant Review data to .spacy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-train.iob corpus/ner/
+        --use-ents
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/ner/restaurant-train-dev.spacy corpus/ner/restaurant-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-test.iob corpus/ner/
+        --use-ents
+        --converter auto
+    deps:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
+    outputs:
+      - corpus/ner/restaurant-train.spacy
+      - corpus/ner/restaurant-dev.spacy
+      - corpus/ner/restaurant-test.spacy
+
+  - name: "convert-restaurant-spans"
+    help: "Convert MIT Restaurant Review dataset into the spaCy format"
+    script:
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-train.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+        --train-size 0.8
+        --seed 42
+        --shuffle
+      - mv corpus/spancat/restaurant-train-dev.spacy corpus/spancat/restaurant-dev.spacy
+      - >-
+        python -m scripts.convert_to_spans
+        assets/restaurant-test.iob corpus/spancat/
+        --spans-key ${vars.spans_key}
+        --converter auto
+    deps:
+      - assets/restaurant-train.iob
+      - assets/restaurant-test.iob
+    outputs:
+      - corpus/spancat/restaurant-train.spacy
+      - corpus/spancat/restaurant-dev.spacy
+      - corpus/spancat/restaurant-test.spacy
+
+  - name: "inspect-restaurant"
+    help: "Analyze span-characteristics"
+    script:
+      - >-
+        python -m spacy debug data configs/spancat_default.cfg 
+        --paths.train corpus/spancat/restaurant-train.spacy 
+        --paths.dev corpus/spancat/restaurant-dev.spacy
+
+  - name: "generate-unseen"
+    help: "Create unseen entities splits for all preprocessed datasets."
+    script:
+      - python scripts/generate_unseen.py
