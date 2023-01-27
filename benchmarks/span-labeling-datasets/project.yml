@@ -494,3 +494,4 @@ commands:
     help: "Create unseen entities splits for all preprocessed datasets."
     script:
       - python scripts/generate_unseen.py
+
