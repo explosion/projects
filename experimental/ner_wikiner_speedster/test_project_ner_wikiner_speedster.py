@@ -13,4 +13,4 @@ def test_wikiner_speedster_project():
     }
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "all", overrides=overrides, capture=True, encoding=sys.getdefaultencoding())
+    project_run(root, "all", overrides=overrides)
