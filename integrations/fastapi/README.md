@@ -16,10 +16,10 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies and download models |
-| `serve` | Serve the models via a FastAPI REST API using the given host and port |
+| Command    | Description                                                           |
+|------------|-----------------------------------------------------------------------|
+| `download` | Download models                                                       |
+| `serve`    | Serve the models via a FastAPI REST API using the given host and port |
 
 ### ⏭ Workflows
 

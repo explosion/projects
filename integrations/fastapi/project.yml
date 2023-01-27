@@ -1,5 +1,5 @@
 title: "FastAPI integration"
-description: "Use [FastAPI](https://fastapi.tiangolo.com/) to serve your spaCy models and host modern REST APIs. To install the dependencies and start the server, you can run `spacy project run start`. To explore the REST API interactively, navigate to `http://${vars.host}:${vars.port}/docs` in your browser. See the examples for how to query the API using Python or JavaScript."
+description: "Use [FastAPI](https://fastapi.tiangolo.com/) to serve your spaCy models and host modern REST APIs. To start the server, you can run `spacy project run start`. To explore the REST API interactively, navigate to `http://${vars.host}:${vars.port}/docs` in your browser. See the examples for how to query the API using Python or JavaScript."
 
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
@@ -19,7 +19,7 @@ assets:
 
 workflows:
   start:
-    - install
+    - download
     - serve
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -27,13 +27,11 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install dependencies and download models"
+  - name: "download"
+    help: "Download models"
     script:
-      - "pip install -r requirements.txt"
       - "./scripts/download_models.sh"
     deps:
-      - "requirements.txt"
       - "scripts/download_models.sh"
   - name: "serve"
     help: "Serve the models via a FastAPI REST API using the given host and port"

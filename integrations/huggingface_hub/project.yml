@@ -47,13 +47,12 @@ workflows:
     - push_to_hub
 
 commands:
-  - name: "install"
-    help: "Install dependencies, log in to Hugging Face and download a model"
+  - name: "login"
+    help: "Log in to Hugging Face and download a model"
     script:
-      - "pip install -r requirements.txt"
       - "huggingface-cli login"
 
-  # Replace this with any code to train a pipeline
+  # Replace this with any code to train a pipeline
   - name: "preprocess"
     help: "Convert the data to spaCy's binary format"
     script:

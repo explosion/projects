@@ -9,12 +9,13 @@ want to account for variance and *dependency* on a random seed.
 
 Under the hood, the training script in `scripts/train_with_trials.py`
 generates a random seed per trial, and runs the `train` command as usual.  You
-can find the trained model per trial in `training/{seed}/`.
+can find the trained model per trial in `training/trial_{n}/`.
 
 > **Note**
 > Because the WikiNEuRal dataset is large, we're limiting the number of samples in the train
-> and dev corpus to 500. You can adjust this by overriding `vars.limit`, or setting it to `0`
-> to train on the whole training corpus.
+> and dev corpus to 500 for demonstration purposes. You can adjust this by
+> overriding `vars.limit_samples`, or setting it to `0` to train on the whole
+> training corpus.
 
 At evaluation, you can pass a directory containing all the models for each
 trial. This process is demonstrated in `scripts/evaluate_with_trials.py`.
@@ -36,7 +37,6 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install spaCy models |
 | `preprocess` | Preprocess the WikiNEuRal dataset to remove indices and update delimiters. |
 | `convert` | Convert IOB dataset into the spaCy format. |
 | `train` | Train a named-entity recognition (NER) model for a multiple number of trials. |
@@ -52,7 +52,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `install` &rarr; `preprocess` &rarr; `convert` &rarr; `train` &rarr; `evaluate` |
+| `all` | `preprocess` &rarr; `convert` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 

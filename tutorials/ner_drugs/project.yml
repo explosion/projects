@@ -33,6 +33,7 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
+    - download
     - preprocess
     - train
     - evaluate
@@ -42,6 +43,11 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: download
+    help: "Download a spaCy model with pretrained vectors"
+    script:
+      - "python -m spacy download en_core_web_md"
+
   - name: "preprocess"
     help: "Convert the data to spaCy's binary format"
     script:

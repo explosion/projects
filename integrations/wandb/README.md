@@ -16,13 +16,13 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies and log in to Weights & Biases |
-| `data` | Extract the gold-standard annotations |
-| `train` | Train a model using the default config |
+| Command        | Description                                                                                                                 |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `login`        | Log in to Weights & Biases                                                                                                  |
+| `data`         | Extract the gold-standard annotations                                                                                       |
+| `train`        | Train a model using the default config                                                                                      |
 | `train-search` | Run customized training runs for hyperparameter search using [Weights & Biases Sweeps](https://docs.wandb.ai/guides/sweeps) |
-| `clean` | Remove intermediate files. |
+| `clean`        | Remove intermediate files.                                                                                                  |
 
 ### ⏭ Workflows
 
