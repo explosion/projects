@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from spacy.cli.project.run import project_run
@@ -12,4 +13,4 @@ def test_wikiner_speedster_project():
     }
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "all", overrides=overrides, capture=True)
+    project_run(root, "all", overrides=overrides)
