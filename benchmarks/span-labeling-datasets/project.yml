@@ -5,7 +5,7 @@ description: |
   You can use this to try out experiment with `ner` and `spancat`
   or to potentially pre-train them for your application.
 
-spacy_version: ">=3.1.7,<4.0.0"
+spacy_version: ">=3.2.5,<4.0.0"
 
 vars:
   spans_key: "sc"
