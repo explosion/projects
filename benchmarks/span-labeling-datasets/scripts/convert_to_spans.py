@@ -54,8 +54,8 @@ def convert_cli(
     output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, input_path, output_dir, FILE_TYPE, converter, ner_map)
     converter = _get_converter(msg, converter, input_path)
+    verify_cli_args(msg, input_path, output_dir, FILE_TYPE, converter, ner_map)
     convert(
         input_path,
         output_dir,
