@@ -1,6 +1,6 @@
 title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
-spacy_version: ">=3.0.0,<3.5.0"
+# spacy_version: ">=3.0.0,<3.5.0"
 vars:
   run: "cg-default"
   language: "en"
