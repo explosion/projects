@@ -3,6 +3,8 @@ description: |
   This project demonstrates how to improve spaCy's pretrained models by
   augmenting the training data and adapting it to a different domain.
 
+spacy_version: ">=3.3.0,<4.0.0"
+
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
@@ -44,7 +46,7 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   all:
-    - install
+    - download
     - preprocess
     - decompress
     - augment
@@ -52,7 +54,7 @@ workflows:
     - train-with-augmenter
     - evaluate
   setup:
-    - install
+    - download
     - preprocess
     - decompress
   finetune:
@@ -66,10 +68,9 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install dependencies"
-    script: 
-      - "pip3 install --user -r requirements.txt"
+  - name: "download"
+    help: "Download models"
+    script:
       - "python -m spacy download en_core_web_lg"
   - name: "preprocess"
     help: "Convert raw inputs into spaCy's binary format"

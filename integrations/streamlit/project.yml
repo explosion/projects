@@ -13,10 +13,9 @@ vars:
 directories: ["scripts"]
 
 commands:
-  - name: "install"
-    help: "Install dependencies and download models"
+  - name: "download"
+    help: "Download models"
     script:
-      - "pip install -r requirements.txt"
       - "python -m spacy download en_core_web_sm"
       - "python -m spacy download en_core_web_lg"
       - "python -m spacy download en_core_web_trf"

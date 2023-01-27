@@ -33,13 +33,6 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install dependencies"
-    script:
-      - "pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
   - name: convert
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the

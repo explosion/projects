@@ -8,7 +8,7 @@ from pathlib import Path
 def test_fastapi_project():
     root = Path(__file__).parent
     project_assets(root)
-    project_run(root, "install", capture=True)
+    project_run(root, "download", capture=True)
 
     # This is ugly, but we only have the dependency here
     from fastapi.testclient import TestClient

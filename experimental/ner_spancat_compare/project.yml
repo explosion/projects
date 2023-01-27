@@ -27,7 +27,7 @@ directories:
 
 workflows:
   all:
-    - "install"
+    - "download"
     - "convert"
     - "create-ner"
     - "train-ner"
@@ -36,12 +36,12 @@ workflows:
     - "evaluate-ner"
     - "evaluate-spancat"
   spancat:
-    - "install"
+    - "download"
     - "convert"
     - "train-spancat"
     - "evaluate-spancat"
   ner:
-    - "install"
+    - "download"
     - "convert"
     - "create-ner"
     - "train-ner"
@@ -60,10 +60,9 @@ assets:
     url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.test.iob2
 
 commands:
-  - name: "install"
-    help: "Install dependencies"
+  - name: "download"
+    help: "Download model-related assets"
     script:
-      - "pip install --user -r requirements.txt"
       - "python -m spacy download en_core_web_lg"
   - name: "convert"
     help: "Convert IOB file into the spaCy format"
