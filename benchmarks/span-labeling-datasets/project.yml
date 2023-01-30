@@ -5,6 +5,8 @@ description: |
   You can use this to try out experiment with `ner` and `spancat`
   or to potentially pre-train them for your application.
 
+spacy_version: ">=3.2.5,<4.0.0"
+
 vars:
   spans_key: "sc"
   gpu_id: 0
@@ -62,25 +64,25 @@ workflows:
 
 assets:
   - dest: "assets/wnut17-train.iob"
-    url: "https://github.com/leondz/emerging_entities_17/blob/master/wnut17train.conll"
+    url: "https://raw.githubusercontent.com/leondz/emerging_entities_17/master/wnut17train.conll"
     description: "WNUT17 training dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/wnut17-test.iob"
-    url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.test.annotated"
+    url: "https://raw.githubusercontent.com/leondz/emerging_entities_17/master/emerging.test.annotated"
     description: "WNUT17 test dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/wnut17-dev.iob"
-    url: "https://github.com/leondz/emerging_entities_17/blob/master/emerging.dev.conll"
+    url: "https://raw.githubusercontent.com/leondz/emerging_entities_17/master/emerging.dev.conll"
     description: "WNUT17 dev dataset for Emerging and Rare Entities Task from Derczynski et al. (ACL 2017)"
   - dest: "assets/conll.tgz"
     url: http://www.cnts.ua.ac.be/conll2002/ner.tgz
     description: "ConLL 2002 shared task data from Tjong Kim Sang (ACL 2002)"
   - dest: "assets/archaeo.bio"
-    url: https://github.com/alexbrandsen/dutch-archaeo-NER-dataset/blob/master/complete-bio-gs.bio
+    url: https://raw.githubusercontent.com/alexbrandsen/dutch-archaeo-NER-dataset/master/complete-bio-gs.bio
     description: "Dutch Archaeological NER dataset by Alex Brandsen (LREC 2020)"
   - dest: "assets/anem-train.iob"
-    url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.train"
+    url: "https://raw.githubusercontent.com/openbiocorpora/anem/master/original-data/test/AnEM.train"
     description: "Anatomical Entity Mention Detection training dataset from Ohta et al. (ACL 2012)"
   - dest: "assets/anem-test.iob"
-    url: "https://github.com/openbiocorpora/anem/blob/master/original-data/test/AnEM.test"
+    url: "https://raw.githubusercontent.com/openbiocorpora/anem/master/original-data/test/AnEM.test"
     description: "Anatomical Entity Mention Detection test dataset from Ohta et al. (ACL 2012)"
   - dest: "assets/restaurant-train_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
@@ -157,7 +159,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
+      - >-
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/wnut17-train.spacy 
         --paths.dev corpus/spancat/wnut17-dev.spacy
 
@@ -301,11 +305,13 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
+      - >-
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/es-conll-train.spacy 
         --paths.dev corpus/spancat/es-conll-dev.spacy
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/nl-conll-train.spacy 
         --paths.dev corpus/spancat/nl-conll-dev.spacy
 
@@ -353,7 +359,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
+      - >-
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/archaeo-train.spacy 
         --paths.dev corpus/spancat/archaeo-dev.spacy
 
@@ -416,7 +424,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
+      - >-
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/anem-train.spacy 
         --paths.dev corpus/spancat/anem-dev.spacy
 
@@ -486,7 +496,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
+      - >-
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/restaurant-train.spacy 
         --paths.dev corpus/spancat/restaurant-dev.spacy
 
