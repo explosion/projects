@@ -17,7 +17,6 @@ InT = TypeVar("InT", bound=Union[Ints1d, Ints2d])
 OutT = Floats2d
 
 
-# TODO: rename
 def FewerHashEmbed(
     nO: int,
     nV: int,
@@ -26,14 +25,17 @@ def FewerHashEmbed(
     num_hashes: Literal[1, 2, 3, 4] = 4,
     column: Optional[int] = None,
     initializer: Callable = uniform_init,
-    dropout: Optional[float] = None
+    dropout: Optional[float] = None,
 ) -> Model[InT, OutT]:
     """
-    An embedding layer that uses the “hashing trick” to map keys to distinct values.
+    An embedding layer that uses the "hashing trick" to map keys to distinct values.
+    This layer is a slightly modified version of MultiHashEmbed that parametrizes
+    the number of hash functions.
+
     The hashing trick involves hashing each key 1-4 times with distinct seeds,
     to produce 1-4 likely differing values. Those values are modded into the
     table, and the resulting vectors summed to produce a single result. Because
-    it’s unlikely that two different keys will collide on all multiple
+    it's unlikely that two different keys will collide on all multiple
     “buckets”, most distinct keys will receive a distinct vector under this
     scheme, even when the number of vectors in the table is very low.
     """
@@ -154,7 +156,14 @@ def MultiFewerHashEmbed(
     def make_hash_embed(index):
         nonlocal seed
         seed += 1
-        return FewerHashEmbed(width, rows[index], column=index, seed=seed, num_hashes=num_hashes, dropout=0.0)
+        return FewerHashEmbed(
+            width,
+            rows[index],
+            column=index,
+            seed=seed,
+            num_hashes=num_hashes,
+            dropout=0.0,
+        )
 
     embeddings = [make_hash_embed(i) for i in range(len(attrs))]
     concat_size = width * (len(embeddings) + include_static_vectors)

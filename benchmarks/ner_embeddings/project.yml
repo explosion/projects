@@ -27,10 +27,10 @@ description: |
   ```
 
 vars:
-  ner_config: "ner_multiembed"
+  ner_config: "multiembed"
   dataset: "anem"
   language: "en"
-  vectors: "vectors/fasttext-en"
+  vectors: "en_core_web_lg"
   tables_path: "tables"
   metrics_dir: "metrics"
   attrs: null
@@ -39,6 +39,8 @@ vars:
   min_freq: 10
   gpu_id: 0
   seed: 42
+  batch_size: 1000
+  num_hashes: 4
 
 directories:
   - "assets"
@@ -75,6 +77,7 @@ commands:
       - "python -m spacy download en_core_web_lg"
       - "python -m spacy download es_core_news_lg"
       - "python -m spacy download nl_core_news_lg"
+      - "python -m spacy download fi_core_news_lg"
 
   - name: "init-fasttext"
     help: "Initialize the FastText vectors."
@@ -101,8 +104,8 @@ commands:
 
   - name: "init-labels"
     help: "Initialize labels first before training"
-    script: 
-      - >- 
+    script:
+      - >-
         python -m spacy init labels
         configs/${vars.ner_config}.cfg
         corpus/labels/${vars.dataset}.labels
@@ -126,6 +129,7 @@ commands:
         --paths.vectors ${vars.vectors}
         --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
+        --nlp.batch_size ${vars.batch_size}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
@@ -136,8 +140,8 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
-  - name: "train-custom-rows"
-    help: "Train NER model with custom rows."
+  - name: "train-adjust-rows"
+    help: "Train NER model with adjustable number of rows."
     script:
       - >-
         python -m spacy train
@@ -150,6 +154,32 @@ commands:
         --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
         --components.tok2vec.model.embed.rows ${vars.rows}
+        --nlp.batch_size ${vars.batch_size}
+        --system.seed ${vars.seed}
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - corpus/${vars.dataset}-train.spacy
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-last
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+
+  - name: "train-hash"
+    help: "Train NER model with different number of hash functions."
+    script:
+      - >-
+        python -m spacy train
+        configs/${vars.ner_config}.cfg
+        --nlp.lang ${vars.language}
+        --output training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+        --paths.train corpus/${vars.dataset}-train.spacy
+        --paths.dev corpus/${vars.dataset}-dev.spacy
+        --paths.vectors ${vars.vectors}
+        --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
+        --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
+        --components.tok2vec.model.embed.num_hashes ${vars.num_hashes}
+        --nlp.batch_size ${vars.batch_size}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
@@ -167,29 +197,67 @@ commands:
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-test.spacy
+        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-test.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
         corpus/${vars.dataset}-dev.spacy
-        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --output ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
     deps:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
       - corpus/${vars.dataset}-dev.spacy
     outputs:
-      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-test.json
+      - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
 
-  - name: "evaluate-unseen"
-    help: "Evaluate NER model on unseen entities."
+  - name: "evaluate-seen-unseen"
+    help: "Evaluate NER model on seen and unseen entities separately."
     script:
-      - mkdir -p ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - mkdir -p ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
         corpus/${vars.dataset}-dev-unseen.spacy
-        --output ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --output ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - mkdir -p ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-test-unseen.spacy
+        --output ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - mkdir -p ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-dev-seen.spacy
+        --output ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - mkdir -p ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-test-seen.spacy
+        --output ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
     deps:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
       - corpus/${vars.dataset}-dev-unseen.spacy
+      - corpus/${vars.dataset}-test-unseen.spacy
+      - corpus/${vars.dataset}-dev-seen.spacy
+      - corpus/${vars.dataset}-test-seen.spacy
     outputs:
-      - ${vars.metrics_dir}-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json

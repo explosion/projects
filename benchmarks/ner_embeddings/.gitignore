@@ -1,8 +1,10 @@
 assets
-metrics
+metrics*
 training
 tables
 debug
 corpus
 vectors
 metrics_summary
+figures
+*.ipynb
