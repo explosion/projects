@@ -50,7 +50,7 @@ commands:
   - name: wikid_clone
     help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
     script:
-      - git clone https://github.com/explosion/wikid.git --branch main
+      - git clone https://github.com/rmitsch/wikid.git --branch chore/pysqlite3
       - pip install -r wikid/requirements.txt
     outputs:
       - wikid
