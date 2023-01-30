@@ -159,9 +159,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/wnut17-train.spacy 
         --paths.dev corpus/spancat/wnut17-dev.spacy
 
@@ -305,13 +305,13 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/es-conll-train.spacy 
         --paths.dev corpus/spancat/es-conll-dev.spacy
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/nl-conll-train.spacy 
         --paths.dev corpus/spancat/nl-conll-dev.spacy
 
@@ -359,9 +359,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/archaeo-train.spacy 
         --paths.dev corpus/spancat/archaeo-dev.spacy
 
@@ -424,9 +424,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/anem-train.spacy 
         --paths.dev corpus/spancat/anem-dev.spacy
 
@@ -496,9 +496,9 @@ commands:
     help: "Analyze span-characteristics"
     script:
       - >-
-        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default.cfg
+        python -m spacy init fill-config configs/spancat_default.cfg configs/spancat_default_filled.cfg
       - >-
-        python -m spacy debug data configs/spancat_default.cfg 
+        python -m spacy debug data configs/spancat_default_filled.cfg
         --paths.train corpus/spancat/restaurant-train.spacy 
         --paths.dev corpus/spancat/restaurant-dev.spacy
 
