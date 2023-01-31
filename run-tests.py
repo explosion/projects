@@ -127,10 +127,10 @@ def main(
 
         _log(logger, verbosity, "v", "  - Restoring environment")
         with tempfile.NamedTemporaryFile("w") as file:
-            file.writelines(
+            file.write(
                 _run(
                     [python, "-m", "pip", "freeze", "--exclude", "torch", "cupy-cuda111"], cmds_status
-                ).stdout.decode("utf-8").split("\n")
+                ).stdout.decode("utf-8")
             )
             _run([python, "-m", "pip", "-q", "uninstall", "-y", "-r", file.name], cmds_status)
             _run([python, "-m", "pip", "-q", "install", "-r", "requirements.txt"], cmds_status)
