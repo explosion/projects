@@ -2,4 +2,10 @@
 title: Autodoc build failed
 ---
 
-Building docs automatically failed, check [the log](https://github.com/explosion/projects/actions/workflows/build-docs.yml) for more details.
+Building docs automatically failed, check [the log]({{ env.run_url }}) for more details.
+
+Output is included below.
+
+```
+{{ env.run_output }}
+```

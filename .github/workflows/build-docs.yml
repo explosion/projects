@@ -16,6 +16,7 @@ jobs:
             ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v4
       - name: Build Docs
+        id: build_docs
         run: |
           pip install spacy
           python .github/update_docs.py
@@ -27,6 +28,8 @@ jobs:
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          run_output: ${{ join(steps.build_docs.outputs.*, '\n') }}
         with:
           filename: .github/failed-autodoc-issue.md
       - name: Check for modified files
