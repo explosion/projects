@@ -5,7 +5,6 @@ description: |
 
 spacy_version: ">=3.3.0,<4.0.0"
 
-spacy_version: ">=3.3.0,<4.0.0"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
