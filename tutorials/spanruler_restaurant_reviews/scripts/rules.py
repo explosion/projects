@@ -20,6 +20,7 @@ def restaurant_span_rules() -> Rules:
         + pattern_occasion_amenity()
         + pattern_adjective_amenity()
         + pattern_liquor_amenity()
+        + pattern_atmosphere_amenity()
         + pattern_landmark_location()
         + pattern_range_location()
         + pattern_drive_location()
@@ -288,6 +289,14 @@ def pattern_payment_option_amenity() -> Rules:
         },
         {"label": "Amenity", "pattern": [{"LOWER": "senior"}, {"LOWER": "discount"}]},
         {"label": "Amenity", "pattern": [{"LOWER": "senior"}, {"LOWER": "special"}]},
+        {
+            "label": "Amenity",
+            "pattern": [
+                {"LOWER": {"REGEX": "accept(s)?"}},
+                {"LOWER": "credit"},
+                {"LOWER": "cards"},
+            ],
+        },
     ]
     return patterns
 
@@ -331,6 +340,14 @@ def pattern_adjective_amenity() -> Rules:
     patterns = [
         {"label": "Amenity", "pattern": [{"LOWER": "classy"}]},
         {"label": "Amenity", "pattern": [{"LOWER": "clean"}]},
+    ]
+    return patterns
+
+
+def pattern_atmosphere_amenity() -> Rules:
+    """Define rules that detect atmosphere-related phrases found in reviews"""
+    patterns = [
+        {"label": "Amenity", "pattern": [{"LOWER": "allows"}, {"LOWER": "smoking"}]},
     ]
     return patterns
 
@@ -560,6 +577,19 @@ def pattern_restaurant_names() -> Rules:
             "pattern": [
                 {"LOWER": "english"},
                 {"LOWER": "pub"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "tgi"},
+                {"LOWER": "fridays"},
+            ],
+        },
+        {
+            "label": "Restaurant_Name",
+            "pattern": [
+                {"LOWER": "hooters"},
             ],
         },
     ]
