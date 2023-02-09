@@ -28,21 +28,21 @@ of entities with rules:
 
 |          | NER only  | With Spanruler  |
 |----------|-----------|-----------------|
-| Price    | 83.72     | **84.88**       |
-| Rating   | 77.21     | **77.78**       |
-| Hours    | 64.78     | **65.31**       |
-| Amenity  | 66.67     | **67.61**       |
-| Location | 81.17     | **81.99**       |
-| Restaurant_Name| 76.28     | **78.44**       |
+| Price    | 81.68     | **83.23**       |
+| Rating   | 78.42     |   78.06         |
+| Hours    | 64.91     | **65.80**       |
+| Amenity  | 64.26     | **64.96**       |
+| Location | 82.28     | **82.82**       |
+| Restaurant_Name| 76.88     | **78.92**       |
 
 Overall, we have better performance for the combined `ner` and `span_ruler`
 pipeline with our set of rules.
 
 |           | NER only | With Spanruler |
 |-----------|----------|----------------|
-| Precision | 77.58    | **78.30**      |
-| Recall    | 76.23    | **76.96**      |
-| F-score   | 76.90    | **77.62**      |
+| Precision | 76.39    | **77.06**      |
+| Recall    | 76.64    | **77.40**      |
+| F-score   | 76.52    | **77.23**      |
 
 
 **Reference**
