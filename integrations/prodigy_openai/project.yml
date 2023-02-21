@@ -2,14 +2,18 @@ title: "Benchmarking OpenAI datasets"
 
 directories:
   - "assets"
-  - "corpus"
   - "configs"
-  - "training"
+  - "corpus"
   - "metrics"
+  - "openai"
+  - "scripts"
+  - "training"
 
 vars:
   gpu_id: 0
-  trf_model: "roberta-large"
+  config: "ner.cfg"
+  prompt_template: "ner_template.jinja2"
+  seed: 42
 
 assets:
   - dest: "assets/span-labeling-datasets"
@@ -18,6 +22,16 @@ assets:
       repo: "https://github.com/explosion/span-labeling-datasets/"
       branch: "master"
       path: ""
+
+workflows:
+  ner:
+    - get-dataset
+    - train
+    - evaluate
+  gpt:
+    - openai-preprocess
+    - openai-predict
+    - openai-evaluate
 
 commands:
   - name: "get-dataset"
@@ -35,32 +49,70 @@ commands:
       - corpus/anem-test.spacy
 
   - name: "train"
-    help: "Train a word vector-based NER model from the AnEM corpus"
-    script:
-      - >-
-        ls
-
-  - name: "train-trf"
-    help: "Train a transformer-based NER model from the AnEM corpus"
+    help: "Train a NER model from the AnEM corpus"
     script:
       - >-
         python -m spacy train
+        configs/${vars.config}
+        --output training/
+        --paths.train corpus/anem-train.spacy
+        --paths.dev corpus/anem-dev.spacy
+        --system.seed ${vars.seed}
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - corpus/anem-train.spacy
+      - corpus/anem-dev.spacy
+    outputs:
+      - training/model-best
 
   - name: "evaluate"
-    help: "Evaluate results for the transformer model"
+    help: "Evaluate results for the NER model"
     script:
       - >-
         python -m spacy evaluate
+        training/model-best corpus/anem-test.spacy
+        --output metrics/scores.json
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - training/model-best/
+      - corpus/anem-test.spacy
+    outputs:
+      - metrics/scores.json
 
-  - name: "openai-fetch"
+  - name: "openai-preprocess"
+    help: "Convert from spaCy format into JSONL."
+    script:
+      - python -m scripts.convert_to_jsonl corpus/anem-test.spacy corpus/anem-test_texts.jsonl
+    deps:
+      - corpus/anem-test.spacy
+    outputs:
+      - corpus/anem-test_texts.jsonl
+
+  - name: "openai-predict"
     help: "Fetch zero-shot NER results using Prodigy's GPT-3 integration"
     script:
-      - ls
+      - >-
+        python -m prodigy ner.openai.fetch corpus/anem-test_texts.jsonl openai/zeroshot_preds.jsonl
+        --prompt-path openai/templates/${vars.prompt_template}
+        --labels TODO
+        -F ./openai/recipes/ner.py
+    deps:
+      - corpus/anem-test_texts.jsonl
+    outputs:
+      - openai/zeroshot_preds.jsonl
 
   - name: "openai-evaluate"
     help: "Evaluate zero-shot GPT-3 predictions"
     script:
-      - ls
+      - >-
+        python -m scripts.evaluate_gpt 
+        openai/zeroshot_preds.jsonl corpus/test.spacy
+        --output metrics/scores_gpt.json
+    deps:
+      - openai/zeroshot_preds.jsonl
+      - corpus/test.spacy
+    outputs:
+      - metrics/scores_gpt.json
 
   - name: "train-curve"
     help: "Train a model at 25%, 50%, and 75% of the training data"
