@@ -1,0 +1,68 @@
+title: "Benchmarking OpenAI datasets"
+
+directories:
+  - "assets"
+  - "corpus"
+  - "configs"
+  - "training"
+  - "metrics"
+
+vars:
+  gpu_id: 0
+  trf_model: "roberta-large"
+
+assets:
+  - dest: "assets/span-labeling-datasets"
+    description: "The span-labeling-datasets repository that contains loaders for AnEM"
+    git:
+      repo: "https://github.com/explosion/span-labeling-datasets/"
+      branch: "master"
+      path: ""
+
+commands:
+  - name: "get-dataset"
+    help: "Preprocess the AnEM dataset"
+    script:
+      - sh -c '(cd assets/span-labeling-datasets && spacy project assets)'
+      - sh -c '(cd assets/span-labeling-datasets && spacy project run anem)'
+      - cp -a ./assets/span-labeling-datasets/corpus/ner/. ./corpus/.
+      - rm -rf ./assets/span-labeling-datasets/ # to save space
+    deps:
+      - assets/span-labeling-datasets
+    outputs:
+      - corpus/anem-train.spacy
+      - corpus/anem-dev.spacy
+      - corpus/anem-test.spacy
+
+  - name: "train"
+    help: "Train a word vector-based NER model from the AnEM corpus"
+    script:
+      - >-
+        ls
+
+  - name: "train-trf"
+    help: "Train a transformer-based NER model from the AnEM corpus"
+    script:
+      - >-
+        python -m spacy train
+
+  - name: "evaluate"
+    help: "Evaluate results for the transformer model"
+    script:
+      - >-
+        python -m spacy evaluate
+
+  - name: "openai-fetch"
+    help: "Fetch zero-shot NER results using Prodigy's GPT-3 integration"
+    script:
+      - ls
+
+  - name: "openai-evaluate"
+    help: "Evaluate zero-shot GPT-3 predictions"
+    script:
+      - ls
+
+  - name: "train-curve"
+    help: "Train a model at 25%, 50%, and 75% of the training data"
+    script:
+      - ls
