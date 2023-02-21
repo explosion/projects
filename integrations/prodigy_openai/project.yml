@@ -12,7 +12,7 @@ directories:
 vars:
   gpu_id: 0
   config: "ner.cfg"
-  prompt_template: "ner_template.jinja2"
+  prompt_template: "ner_prompt.jinja2"
   seed: 42
 
 assets:
