@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Set
 
 import spacy
 import srsly
@@ -13,23 +13,26 @@ from wasabi import msg
 Arg = typer.Argument
 Opt = typer.Option
 
-# The Prodigy recipe normalizes the labels into lowercase for easier parsing so
-# we need to map them with the proper capitalization.
-CATEGORY_MAP = {
-    "argument_for": "Argument_for",
-    "noargument": "NoArgument",
-    "argument_against": "Argument_against",
-}
+
+def get_labels(docs: List[str]) -> Set[str]:
+    """Get all entity types"""
+    ents = []
+    ents.extend([ent.label_ for doc in docs for ent in doc.ents])
+    return set(ents)
 
 
-def convert_record(
-    nlp: Language, record: Dict[str, str], category_map: Dict[str, str] = CATEGORY_MAP
-):
+def convert_record(nlp: Language, record: Dict[str, str]):
     """Convert a record from the OpenAI output into a spaCy Doc object"""
     doc = nlp.make_doc(record.get("text"))
-    label = category_map.get(record.get("accept")[0])
-    doc.cats = {category: 0 for category in category_map.values()}
-    doc.cats[label] = 1
+    spans = [
+        doc.char_span(
+            start_idx=span.get("start"),
+            end_idx=span.get("end"),
+            label=span.get("label").capitalize(),
+        )
+        for span in record.get("spans", [])
+    ]
+    doc.set_ents(spans)
     return doc
 
 
@@ -47,12 +50,11 @@ def evaluate_gpt(
     # Create examples for evaluation
     reference = list(doc_bin.get_docs(nlp.vocab))
     predicted = [convert_record(nlp, pred) for pred in srsly.read_jsonl(input_path)]
+    assert get_labels(reference) == get_labels(predicted)
     examples = [Example(pred, ref) for pred, ref in zip(predicted, reference)]
 
     # Perform evaluation
-    scores = Scorer.score_cats(
-        examples, attr="cats", labels=CATEGORY_MAP.values(), multi_label=False
-    )
+    scores = Scorer.score_spans(examples, attr="ents")
     msg.text(title="Scores", text=scores)
     if output_path:
         msg.good(f"Saved metrics to {output_path}")
