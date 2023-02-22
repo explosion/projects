@@ -40,7 +40,8 @@ commands:
       - sh -c '(cd assets/span-labeling-datasets && spacy project assets)'
       - sh -c '(cd assets/span-labeling-datasets && spacy project run anem)'
       - cp -a ./assets/span-labeling-datasets/corpus/ner/. ./corpus/.
-      - rm -rf ./assets/span-labeling-datasets/ # to save space
+    deps:
+      - assets/span-labeling-datasets
     outputs:
       - corpus/anem-train.spacy
       - corpus/anem-dev.spacy
@@ -92,7 +93,7 @@ commands:
       - >-
         python -m prodigy ner.openai.fetch corpus/anem-test_texts.jsonl openai/zeroshot_preds.jsonl
         --prompt-path openai/templates/${vars.prompt_template}
-        --labels TODO
+        --labels Cell,Organism_substance,Pathological_formation,Multitissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity 
         -F ./openai/recipes/ner.py
     deps:
       - corpus/anem-test_texts.jsonl
