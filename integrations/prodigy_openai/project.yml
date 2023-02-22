@@ -105,11 +105,11 @@ commands:
     script:
       - >-
         python -m scripts.evaluate_gpt 
-        openai/zeroshot_preds.jsonl corpus/test.spacy
+        openai/zeroshot_preds.jsonl corpus/anem-test.spacy
         --output metrics/scores_gpt.json
     deps:
       - openai/zeroshot_preds.jsonl
-      - corpus/test.spacy
+      - corpus/anem-test.spacy
     outputs:
       - metrics/scores_gpt.json
 
