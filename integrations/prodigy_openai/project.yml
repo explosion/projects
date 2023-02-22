@@ -41,8 +41,6 @@ commands:
       - sh -c '(cd assets/span-labeling-datasets && spacy project run anem)'
       - cp -a ./assets/span-labeling-datasets/corpus/ner/. ./corpus/.
       - rm -rf ./assets/span-labeling-datasets/ # to save space
-    deps:
-      - assets/span-labeling-datasets
     outputs:
       - corpus/anem-train.spacy
       - corpus/anem-dev.spacy
