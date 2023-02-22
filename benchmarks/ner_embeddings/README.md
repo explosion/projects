@@ -4,20 +4,15 @@
 
 This project compares `MultiHashEmbed` with its standard embedding counterpart
 `MultiEmbed` for Named Entity Recognition. In order to access the datasets,
-you first need to clone the [`spancat-datasets`](https://github.com/explosion/spancat-datasets)
-repository:
+you first need run the [`spancat-labeling-datasets`](https://github.com/explosion/projects/tree/v3/benchmarks/span-labeling-datasets)
+project.
 
-```sh
-# Clone the spancat-datasets repo to access the datasets
-git clone git@github.com:explosion/spancat-datasets.git
-```
-
-and run the necessary conversion scripts. For example, let's perform the
-conversion command for the [Anatomical Entity Mention (AnEM)](http://www.nactem.ac.uk/anatomy/)
+For example, let's perform the conversion command for the 
+[Anatomical Entity Mention (AnEM)](http://www.nactem.ac.uk/anatomy/)
 corpus:
 
 ```sh
-# While inside the spancat-datasets repository
+# While inside the spancat-labeling-datasets project.
 spacy project run anem
 ```
 
@@ -26,7 +21,7 @@ you **should copy these files to this project**. For example, you can perform
 a directory copy in Linux via:
 
 ```sh
-cp -r spancat-datasets/corpus/ner/*. ner_embeddings/corpus/. 
+cp -r spancat-labeling-datasets/corpus/ner/*. ner_embeddings/corpus/. 
 ```
 
 You can now supply the local path to the commands and workflows to
