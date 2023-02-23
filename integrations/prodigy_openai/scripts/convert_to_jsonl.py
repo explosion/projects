@@ -18,15 +18,20 @@ def convert_to_jsonl(
     # fmt: on
 ):
     """Convert spaCy file into JSONL to use for Prodigy"""
-
     nlp = spacy.blank(lang)
     doc_bin = DocBin().from_disk(input_path)
-    docs = list(doc_bin.get_docs(nlp.vocab))
 
-    texts = [{"text": doc.text} for doc in docs]
-    msg.text(f"Found {len(texts)} documents in {input_path}")
+    records = []
+    for doc in doc_bin.get_docs(nlp.vocab):
+        spans = [
+            {"start": ent.start_char, "end": ent.end_char, "label": ent.label_}
+            for ent in doc.ents
+        ]
+        records.append({"text": doc.text, "spans": spans})
 
-    srsly.write_jsonl(output_path, texts)
+    msg.text(f"Found {len(records)} documents in {input_path}")
+
+    srsly.write_jsonl(output_path, records)
     msg.good(f"Saved texts to {output_path}")
 
 
