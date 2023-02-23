@@ -11,6 +11,7 @@ directories:
 
 vars:
   gpu_id: 0
+  prodigy_dataset: "prodigy_openai"
   config: "ner.cfg"
   prompt_template: "ner_prompt.jinja2"
   seed: 42
@@ -114,6 +115,24 @@ commands:
       - metrics/scores_gpt.json
 
   - name: "train-curve"
-    help: "Train a model at 25%, 50%, and 75% of the training data"
+    help: "Train a model at varying portions of the training data"
     script:
-      - ls
+      # Create JSONL files to hydrate prodigy dataset into
+      - python -m scripts.convert_to_jsonl corpus/anem-train.spacy corpus/anem-train.jsonl
+      - python -m scripts.convert_to_jsonl corpus/anem-dev.spacy corpus/anem-dev.jsonl
+      # Hydrate the prodigy dataset
+      - python -m prodigy db-in ${vars.prodigy_dataset} corpus/anem-train.jsonl
+      - python -m prodigy db-in ${vars.prodigy_dataset}_eval corpus/anem-dev.jsonl
+      # Run train-curve command
+      - >-
+        python -m prodigy train-curve
+        --ner ${vars.prodigy_dataset},eval:${vars.prodigy_dataset}_eval
+        --config ${vars.config}
+        --gpu-id ${vars.gpu_id}
+        --show-plot
+    deps:
+      - corpus/anem-train.spacy
+      - corpus/anem-dev.spacy
+    outputs:
+      - corpus/anem-train.jsonl
+      - corpus/anem-dev.jsonl
