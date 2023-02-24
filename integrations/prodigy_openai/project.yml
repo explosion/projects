@@ -127,7 +127,7 @@ commands:
       - >-
         python -m prodigy train-curve
         --ner ${vars.prodigy_dataset},eval:${vars.prodigy_dataset}_eval
-        --config ${vars.config}
+        --config configs/${vars.config}
         --gpu-id ${vars.gpu_id}
         --show-plot
     deps:
@@ -136,3 +136,9 @@ commands:
     outputs:
       - corpus/anem-train.jsonl
       - corpus/anem-dev.jsonl
+
+  - name: "clean-datasets"
+    help: "Drop the Prodigy dataset that was automatically created during the train-curve command"
+    script:
+      - python -m prodigy drop ${vars.prodigy_dataset}
+      - python -m prodigy drop ${vars.prodigy_dataset}_eval
