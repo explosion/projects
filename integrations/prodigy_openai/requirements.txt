@@ -1,4 +1,5 @@
 spacy>=3.4.0,<3.5.0
 spacy-transformers
+plotext==4.2.0
 typer
 wasabi
