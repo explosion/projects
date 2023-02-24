@@ -55,7 +55,7 @@ def _make_train_command(
     if not include_static_vectors:
         cmd_vectors = "--vars.include_static_vectors false"
     if adjust_rows and config != "multiembed":
-        modifier = "-custom-rows"
+        modifier = "-adjust-rows"
         new_rows = _get_computed_rows(tables_path, dataset, adjust_value)
         cmd_rows = f"--vars.rows '{new_rows}'"
     if num_hash:

@@ -25,7 +25,7 @@ description: |
   # Perform experiments in the ner_embeddings project
   spacy project run train . --vars.dataset anem
   ```
-  
+
 vars:
   ner_config: "multifewerhashembed"
   dataset: "anem"
@@ -153,7 +153,7 @@ commands:
         --paths.vectors ${vars.vectors}
         --paths.tables ${vars.tables_path}/${vars.dataset}/${vars.dataset}-train.tables
         --components.tok2vec.model.embed.include_static_vectors ${vars.include_static_vectors}
-        --components.tok2vec.model.embed.rows ${vars.rows}
+        --components.tok2vec.model.embed.rows '${vars.rows}'
         --nlp.batch_size ${vars.batch_size}
         --system.seed ${vars.seed}
         --gpu-id ${vars.gpu_id}
