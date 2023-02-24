@@ -1,17 +1,16 @@
-from typing import Callable, Dict, Tuple, Optional, Any, Union, cast, TypeVar
-from typing import List
-from thinc.api import chain, concatenate, with_array, Model, list2ragged
-from thinc.api import ragged2list, Maxout
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import cast
+
+from spacy.ml.featureextractor import FeatureExtractor
+from spacy.ml.staticvectors import StaticVectors
+from spacy.tokens import Doc
+from spacy.util import registry
+from thinc.api import Maxout, Model, chain, concatenate, list2ragged
+from thinc.api import ragged2list, with_array
 from thinc.initializers import uniform_init
 from thinc.layers.array_getitem import ints_getitem
 from thinc.types import Floats1d, Floats2d, Ints1d, Ints2d, Literal, Ragged
 from thinc.util import partial
-
-from spacy.tokens import Doc
-from spacy.util import registry
-from spacy.ml.staticvectors import StaticVectors
-from spacy.ml.featureextractor import FeatureExtractor
-
 
 InT = TypeVar("InT", bound=Union[Ints1d, Ints2d])
 OutT = Floats2d

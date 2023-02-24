@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import Optional, Dict, Iterable, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
+import matplotlib.pyplot as plt
 import numpy as np
 import srsly
 import typer

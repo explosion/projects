@@ -1,20 +1,19 @@
-import srsly
-import typer
-from wasabi import msg
-from tqdm import tqdm
-
-from typing import Optional, List, Dict
 from collections import Counter
 from pathlib import Path
+from typing import Dict, List, Optional
 
-from thinc.api import ConfigValidationError
-from spacy.attrs import intify_attr
-from spacy.tokens import Doc
+import srsly
+import typer
 from spacy import util
-from spacy.schemas import ConfigSchemaTraining
-from spacy.cli._util import Arg, Opt, show_validation_error
-from spacy.cli._util import parse_config_overrides, import_code
+from spacy.attrs import intify_attr
+from spacy.cli._util import Arg, Opt, import_code, parse_config_overrides
+from spacy.cli._util import show_validation_error
 from spacy.errors import Errors
+from spacy.schemas import ConfigSchemaTraining
+from spacy.tokens import Doc
+from thinc.api import ConfigValidationError
+from tqdm import tqdm
+from wasabi import msg
 
 app = typer.Typer()
 

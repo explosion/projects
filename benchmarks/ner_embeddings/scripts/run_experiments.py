@@ -2,7 +2,7 @@ import shlex
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import srsly
 import typer

@@ -1,9 +1,11 @@
-import shutil
 import gzip
-import typer
+import shutil
 from pathlib import Path
 from typing import Optional
+
+import typer
 from spacy.util import ensure_path
+from wasabi import msg
 
 
 def unzip(input_file: Path, output_file: Optional[Path] = None):
@@ -26,4 +28,3 @@ def unzip(input_file: Path, output_file: Optional[Path] = None):
 
 if __name__ == "__main__":
     typer.run(unzip)
-

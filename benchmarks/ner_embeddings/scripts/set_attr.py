@@ -1,10 +1,10 @@
-import srsly
-import spacy
-
 from pathlib import Path
+from typing import Callable, Optional
+
+import spacy
+import srsly
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
-from typing import Optional, Callable
 
 
 @spacy.registry.callbacks("set_attr")

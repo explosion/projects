@@ -1,12 +1,11 @@
-import thinc
-import spacy
+from typing import Any, Dict, List, Optional, Sequence, Union
 
+import spacy
+import thinc
 from spacy.tokens import Doc
-from thinc.api import Model, chain, with_array
-from thinc.api import list2ragged, ragged2list, concatenate
-from thinc.types import Floats2d, Ints2d, Array2d
-from typing import Optional, List, Dict, Any
-from typing import Union, Sequence
+from thinc.api import Model, chain, concatenate, list2ragged, ragged2list
+from thinc.api import with_array
+from thinc.types import Array2d, Floats2d, Ints2d
 
 Embed = thinc.registry.layers.get("Embed.v1")
 Maxout = thinc.registry.layers.get("Maxout.v1")
