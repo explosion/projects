@@ -1,4 +1,42 @@
-title: "Benchmarking OpenAI datasets"
+title: "Using Prodigy's OpenAI recipes for a bio NER task"
+description: |
+  This project showcases Prodigy's OpenAI recipe for named-entity recognition
+  using the [Anatomical Entity Mention (AnEM)
+  dataset](https://aclanthology.org/W12-4304/).  The dataset contains 11
+  anatomical entities (e.g., *organ*, *tissue*, *cellular component*, etc.)
+  based from the Common Anatomy Reference Ontology. The dataset statistics (and
+  some examples) are shown below:
+
+  <!-- TODO: insert dataset statistics -->
+
+  In this project, we trained a transformer-based NER model and compared it with the zero-shot
+  predictions of GPT-3. We wanted to test how large language models fare in a specific domain and
+  suggest ways on how we can leverage them to improve our annotations. 
+
+  <!-- TODO: insert zero-shot and supervised learning diagrams -->
+  <!-- TODO: insert results -->
+
+  The transformer and zero-shot pipelines are defined by the `ner` and `gpt` workflows respectively.
+  In order to run the `gpt` workflow, make sure to [install Prodigy](https://prodi.gy/docs/install) as well
+  as a few additional Python dependencies:
+
+  ```
+  python -m pip install prodigy -f https://XXXX-XXXX-XXXX-XXXX@download.prodi.gy
+  python -m pip install -r requirements.txt
+  ```
+
+  With `XXXX-XXXX-XXXX-XXXX` being your personal Prodigy license key.
+
+  Then, [create a new API key from
+  openai.com](https://platform.openai.com/account/api-keys) or fetch an existing
+  one. Record the secret key as well as the organization key and make sure these
+  are available as environmental variables. For instance, set them in a `.env`
+  file in the root directory:
+
+  ```
+  PRODIGY_OPENAI_ORG = "org-..."
+  PRODIGY_OPENAI_KEY = "sk-..."
+  ```
 
 directories:
   - "assets"
