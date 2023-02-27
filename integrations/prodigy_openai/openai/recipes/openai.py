@@ -108,7 +108,7 @@ class OPENAI_DEFAULTS:
     # prompt paths #
     # fmt: off
     TEMPLATES_DIR = "templates"
-    NER_PROMPT_PATH = str(Path(__file__).parent / TEMPLATES_DIR / "ner_prompt.jinja2")
+    NER_PROMPT_PATH = Path(__file__).parent / TEMPLATES_DIR / "ner_prompt.jinja2"
     # fmt: on
 
     # html templates #

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import spacy
@@ -154,10 +155,10 @@ def _unique(items: List[str]) -> List[str]:
     source=("Data to annotate (file path or '-' to read from standard input)", "positional", None, str),
     labels=("Labels (comma delimited)", "option", "L", lambda s: s.split(",")),
     model=("GPT-3 model to use for initial predictions", "option", "m", str),
-    examples_path=("Path to examples to help define the task", "option", "e", str),
+    examples_path=("Path to examples to help define the task", "option", "e", Path),
     lang=("Language to use for tokenizer", "option", "l", str),
     max_examples=("Max examples to include in prompt", "option", "n", int),
-    prompt_path=("Path to jinja2 prompt template", "option", "p", str),
+    prompt_path=("Path to jinja2 prompt template", "option", "p", Path),
     batch_size=("Batch size to send to OpenAI API", "option", "b", int),
     segment=("Split articles into sentences", "flag", "S", bool),
     loader=("Loader (guessed from file extension if not set)", "option", "lo", str),
@@ -172,8 +173,8 @@ def openai_correct_ner(
     model: str = "text-davinci-003",
     batch_size: int = 10,
     segment: bool = False,
-    examples_path: Optional[str] = None,
-    prompt_path: str = OPENAI_DEFAULTS.NER_PROMPT_PATH,
+    examples_path: Optional[Path] = None,
+    prompt_path: Path = OPENAI_DEFAULTS.NER_PROMPT_PATH,
     max_examples: int = 2,
     loader: Optional[str] = None,
     verbose: bool = False,
@@ -187,6 +188,11 @@ def openai_correct_ner(
     if segment:
         nlp.add_pipe("sentencizer")
     api_key, api_org = get_api_credentials(model)
+
+    if not labels:
+        msg.fail("No --label argument set", exits=1)
+    msg.text(f"Using {len(labels)} labels from model: {', '.join(labels)}")
+
     labels = [normalize_label(label) for label in labels]
     openai = OpenAISuggester(
         response_parser=make_ner_response_parser(labels=labels, lang=lang),
@@ -239,31 +245,32 @@ def openai_correct_ner(
 
 @recipe(
     "ner.openai.fetch",
-    file_path=("Path to jsonl data to annotate", "positional", None, str),
-    output_path=("Path to save the output", "positional", None, str),
+    source=("Path to jsonl data to annotate", "positional", None, str),
+    output_path=("Path to save the output", "positional", None, Path),
     labels=("Labels (comma delimited)", "option", "L", lambda s: s.split(",")),
     lang=("Language to use for tokenizer.", "option", "l", str),
     model=("GPT-3 model to use for completion", "option", "m", str),
-    examples_path=("Examples file to help define the task", "option", "e", str),
+    examples_path=("Examples file to help define the task", "option", "e", Path),
     max_examples=("Max examples to include in prompt", "option", "n", int),
-    prompt_path=("Path to jinja2 prompt template", "option", "p", str),
+    prompt_path=("Path to jinja2 prompt template", "option", "p", Path),
     batch_size=("Batch size to send to OpenAI API", "option", "b", int),
     segment=("Split sentences", "flag", "S", bool),
     resume=("Resume fetch by passing a path to a cache", "flag", "r", bool),
     verbose=("Print extra information to terminal", "flag", "v", bool),
 )
 def openai_fetch_ner(
-    file_path: str,
-    output_path: str,
+    source: str,
+    output_path: Path,
     labels: List[str],
     lang: str = "en",
     model: str = "text-davinci-003",
     batch_size: int = 10,
     segment: bool = False,
-    examples_path: Optional[str] = None,
-    prompt_path: str = OPENAI_DEFAULTS.NER_PROMPT_PATH,
+    examples_path: Optional[Path] = None,
+    prompt_path: Path = OPENAI_DEFAULTS.NER_PROMPT_PATH,
     max_examples: int = 2,
     resume: bool = False,
+    loader=("Loader (guessed from file extension if not set)", "option", "lo", str),
     verbose: bool = False,
 ):
     """
@@ -279,6 +286,10 @@ def openai_fetch_ner(
     nlp = spacy.blank(lang)
     if segment:
         nlp.add_pipe("sentencizer")
+
+    if not labels:
+        msg.fail("No --label argument set", exits=1)
+    msg.text(f"Using {len(labels)} labels from model: {', '.join(labels)}")
 
     labels = [normalize_label(label) for label in labels]
     openai = OpenAISuggester(
@@ -299,7 +310,12 @@ def openai_fetch_ner(
     )
     for eg in examples:
         openai.add_example(eg)
-    stream = list(srsly.read_jsonl(file_path))
+
+    # Set up the stream
+    stream = get_stream(
+        source, loader=loader, rehash=False, dedup=False, input_key="text"
+    )
+
     # If we want to resume, we take the path to the cache and
     # compare the hashes with respect to our inputs.
     if resume:
