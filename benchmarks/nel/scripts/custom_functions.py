@@ -4,9 +4,10 @@ from functools import partial
 from typing import Iterable, Callable
 import typing
 import spacy
-from spacy.kb import Candidate, KnowledgeBase
+from spacy.kb import Candidate
 from spacy.tokens import Span
 
+from compat import KnowledgeBase
 from scripts.candidate_generation import embeddings
 from scripts.candidate_generation import lexical
 

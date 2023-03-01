@@ -17,7 +17,6 @@ import spacy
 import tqdm
 import yaml
 from spacy import Language
-from spacy.kb import KnowledgeBase
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.tokens import Doc, DocBin
 from spacy.training import Example
@@ -25,6 +24,7 @@ from spacy.pipeline import EntityLinker
 
 from wikid import schemas
 from . import evaluation
+from compat import KnowledgeBase
 from utils import get_logger
 
 logger = get_logger(__name__)

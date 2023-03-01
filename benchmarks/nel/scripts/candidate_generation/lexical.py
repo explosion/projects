@@ -1,9 +1,9 @@
 """ Candidate generation via distance in lexical space. """
 from typing import Iterable
 
-from spacy.kb import KnowledgeBase, Candidate
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
+from compat import KnowledgeBase
 from cfuzzyset import cFuzzySet as FuzzySet
 
 

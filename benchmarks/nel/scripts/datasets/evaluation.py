@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
-from spacy.kb import KnowledgeBase, Candidate
+from spacy.kb import Candidate
 from spacy.tokens import Doc
 from utils import get_logger
 

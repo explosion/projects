@@ -1,13 +1,12 @@
 """ Candidate generation via distance in embedding space. """
-import time
 from typing import Iterable, List, Set
 
 import numpy
 from sklearn.neighbors import NearestNeighbors
 
-from spacy.kb import KnowledgeBase
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
+from compat import KnowledgeBase
 from rapidfuzz.string_metric import normalized_levenshtein
 
 
