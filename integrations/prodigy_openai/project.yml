@@ -139,6 +139,17 @@ commands:
     outputs:
       - openai/zeroshot_preds.jsonl
 
+  - name: "openai-correct"
+    help: "Correct zero-shot NER results using Prodigy's GPT-3 integration"
+    script:
+      - >-
+        python -m prodigy ner.openai.correct openai_ner_anem corpus/anem-test_texts.jsonl
+        --prompt-path openai/templates/${vars.prompt_template}
+        --labels Cell,Organism_substance,Pathological_formation,Multitissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity 
+        -F ./openai/recipes/ner.py
+    deps:
+      - corpus/anem-test_texts.jsonl
+
   - name: "openai-evaluate"
     help: "Evaluate zero-shot GPT-3 predictions"
     script:

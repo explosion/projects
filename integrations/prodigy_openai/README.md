@@ -60,6 +60,7 @@ Commands are only re-run if their inputs have changed.
 | `evaluate` | Evaluate results for the NER model |
 | `openai-preprocess` | Convert from spaCy format into JSONL. |
 | `openai-predict` | Fetch zero-shot NER results using Prodigy's GPT-3 integration |
+| `openai-correct` | Correct zero-shot NER results using Prodigy's GPT-3 integration |
 | `openai-evaluate` | Evaluate zero-shot GPT-3 predictions |
 | `train-curve` | Train a model at varying portions of the training data |
 | `clean-datasets` | Drop the Prodigy dataset that was automatically created during the train-curve command |
