@@ -163,6 +163,15 @@ commands:
     outputs:
       - metrics/scores_gpt.json
 
+  - name: "ner-manual"
+    help: "Run ner.manual on zero-shot predictions to visualize silver-standard annotations"
+    script:
+      - >-
+        python -m prodigy ner.manual anem blank:en openai/zeroshot_preds.jsonl
+        --label Cell,Organism_substance,Pathological_formation,Multitissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity
+    deps:
+      - openai/zeroshot_preds.jsonl
+
   - name: "train-curve"
     help: "Train a model at varying portions of the training data"
     script:
