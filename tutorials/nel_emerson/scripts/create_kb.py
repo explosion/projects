@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import spacy
-from spacy.kb import KnowledgeBase
+from spacy.kb import InMemoryLookupKB
 
 
 def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
@@ -20,7 +20,7 @@ def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
 
     name_dict, desc_dict = _load_entities(entities_loc)
 
-    kb = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=300)
+    kb = InMemoryLookupKB(vocab=nlp.vocab, entity_vector_length=300)
 
     for qid, desc in desc_dict.items():
         desc_doc = nlp(desc)

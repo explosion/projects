@@ -1,1 +1,2 @@
 google-cloud-storage
+spacy>=3.5
