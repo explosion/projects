@@ -7,7 +7,7 @@ import spacy
 from spacy.kb import Candidate
 from spacy.tokens import Span
 
-from .compat import KnowledgeBase
+from compat import KnowledgeBase
 from scripts.candidate_generation import embeddings
 from scripts.candidate_generation import lexical
 
