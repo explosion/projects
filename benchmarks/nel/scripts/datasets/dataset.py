@@ -24,7 +24,7 @@ from spacy.pipeline import EntityLinker
 
 from wikid import schemas
 from . import evaluation
-from ..compat import KnowledgeBase
+from compat import KnowledgeBase
 from utils import get_logger
 
 logger = get_logger(__name__)

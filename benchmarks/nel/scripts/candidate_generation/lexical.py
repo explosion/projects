@@ -3,7 +3,7 @@ from typing import Iterable
 
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
-from ..compat import KnowledgeBase
+from compat import KnowledgeBase
 from cfuzzyset import cFuzzySet as FuzzySet
 
 

@@ -8,7 +8,7 @@ from spacy import Language
 from spacy.kb import Candidate
 from spacy.tokens import Span
 
-from ..compat import KnowledgeBase
+from compat import KnowledgeBase
 from datasets.dataset import Dataset
 
 

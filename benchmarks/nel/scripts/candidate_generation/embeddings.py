@@ -6,7 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
-from ..compat import KnowledgeBase
+from compat import KnowledgeBase
 from rapidfuzz.string_metric import normalized_levenshtein
 
 
