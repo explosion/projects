@@ -1,5 +1,3 @@
-# temporary spacy requirement
-spacy>=3.0.0,<3.5.0
 pyyaml
 tqdm
 prettytable
