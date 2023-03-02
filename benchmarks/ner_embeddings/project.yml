@@ -27,10 +27,10 @@ description: |
   ```
 
 vars:
-  ner_config: "multiembed"
+  ner_config: "multihashembed"
   dataset: "archaeo"
-  language: "en"
-  vectors: "en_core_web_lg"
+  language: "nl"
+  vectors: "nl_core_news_lg"
   tables_path: "tables"
   metrics_dir: "metrics"
   attrs: null
@@ -55,9 +55,16 @@ directories:
 
 workflows:
   setup:
-    - "prepare-datasets"
     - "download-models"
     - "init-fasttext"
+    - "prepare-datasets"
+    - "make-tables"
+
+  trial:
+    - "init-labels"
+    - "train"
+    - "evaluate"
+    - "evaluate-seen-unseen"
 
 assets:
   - dest: "assets/fasttext.en.gz"
@@ -112,7 +119,7 @@ commands:
     script:
       - >-
         python -m scripts.token_map
-        configs/${vars.ner_config}.cfg
+        configs/multiembed.cfg
         ${vars.tables_path}/${vars.dataset}
         --min-freq ${vars.min_freq}
         --paths.train corpus/${vars.dataset}-train.spacy
