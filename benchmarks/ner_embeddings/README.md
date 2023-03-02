@@ -2,31 +2,20 @@
 
 # 🪐 spaCy Project: Comparing embedding layers in spaCy
 
-This project compares `MultiHashEmbed` with its standard embedding counterpart
-`MultiEmbed` for Named Entity Recognition. In order to download and preprocess the datasets,
-you first need to run the commands in the [span-labeling-datasets](https://github.com/explosion/projects/tree/v3/benchmarks/span-labeling-datasets) project. For example, let's perform the
-conversion command for the [Anatomical Entity Mention (AnEM)](http://www.nactem.ac.uk/anatomy/) corpus:
+This project contains the code to reproduce the results of the
+[Multi hash embeddings in spaCy](https://arxiv.org/abs/2212.09255) technical report by Explosion.
+The `project.yml` provides commands to download and preprocess the data sets as well as to
+run the training and evaluation procedures. Different configuration of `vars` correspond
+to different experiments in the report.
 
-```sh
-# While inside the spancat-datasets repository
-spacy project run anem
-```
-
-This will generate the spaCy files that you can use for training. Once done,
-you **should copy these files to this project**. For example, you can perform
-a directory copy in Linux via:
-
-```sh
-cp -r spancat-datasets/corpus/ner/*. ner_embeddings/corpus/. 
-```
-
-You can now supply the local path to the commands and workflows to
-perform experiments in **this project:**
-
-```sh
-# Perform experiments in the ner_embeddings project
-spacy project run train . --vars.dataset anem
-```
+There are a few scripts included that were used during the technical report writing process
+to run experiments in bulk and summarize the results. 
+The `scripts/run_experiments.py` runs multiple experiments one after the other
+by constructing and running `spacy project run` commands. The module
+`scipts/collate_results.py` summarizes the results of the same trials with multiple seeds.
+Finally, `scripts/plot_results.py` was used to produce the visualizations in the report.
+These are all small command line apps and you can learn more about the usage as usual with the
+`--help` flag.
 
 
 ## 📋 project.yml
@@ -43,6 +32,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `prepare-datasets` | Download and preprocess all available data sets using the span-labeling-datasets project. |
 | `download-models` | Download spaCy models for their word-embeddings. |
 | `init-fasttext` | Initialize the FastText vectors. |
 | `make-tables` | Pre-compute token-to-id tables for MultiEmbed. |
@@ -62,7 +52,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `setup` | `download-models` &rarr; `init-fasttext` &rarr; `make-tables` |
+| `setup` | `download-models` &rarr; `init-fasttext` &rarr; `prepare-datasets` &rarr; `make-tables` |
+| `trial` | `init-labels` &rarr; `train` &rarr; `evaluate` &rarr; `evaluate-seen-unseen` |
 
 ### 🗂 Assets
 
@@ -75,5 +66,6 @@ in the project directory.
 | `assets/fasttext.en.gz` | URL | English fastText vectors. |
 | `assets/fasttext.es.gz` | URL | Spanish fastText vectors. |
 | `assets/fasttext.nl.gz` | URL | Dutch fastText vectors. |
+| `span-labeling-datasets` | Git |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
