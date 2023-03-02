@@ -1,0 +1,12 @@
+# Whether to include candidate generation stats in the benchmark.
+candidate_generation: True
+
+### External approaches to compare with. ###
+external:
+  # Whether to include (i.e. run and show in results) spacyfishing.
+  spacyfishing: False
+
+### Config overrides. ###
+config_overrides:
+#   incl_context: True
+#   incl_prior: True

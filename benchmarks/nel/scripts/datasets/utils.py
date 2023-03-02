@@ -1,10 +1,9 @@
 """ Utilities for NEL benchmark. """
 
-from typing import Dict, List, Set, Tuple, Iterable
+from typing import Dict, List, Set, Tuple
 import tqdm
 from spacy.tokens import Token, Span, Doc
-from schemas import Entity, Annotation
-from wiki import wiki_dump_api
+from wikid import schemas, load_entities
 
 
 def _does_token_overlap_with_annotation(
@@ -24,14 +23,14 @@ def _does_token_overlap_with_annotation(
 
 
 def fetch_entity_information(
-    key: str,
     values: Tuple[str, ...],
-    batch_size: int = 1000,
-) -> Tuple[Dict[str, Entity], Set[str], Dict[str, str]]:
+    language: str,
+    batch_size: int = 5000,
+) -> Tuple[Dict[str, schemas.Entity], Set[str], Dict[str, str]]:
     """
     Fetches information on entities from database.
-    key (str): Attribute to match values to. Must be one of ("id", "name").
     values (Tuple[str]): Values for key to look up.
+    language (str): Language.
     db_conn (sqlite3.Connection): Database connection.
     batch_size (int): Number of entity titles to resolve in the same API request. Between 1 and 50.
     RETURNS (Tuple[Dict[str, Entity], Set[str], Dict[str, str]]): Updated entities, failed lookups, mappings of titles
@@ -43,18 +42,18 @@ def fetch_entity_information(
     pbar = tqdm.tqdm(total=len(values))
     failed_lookups: Set[str] = set()
     name_qid_map: Dict[str, str] = {}
-    entities: Dict[str, Entity] = {}
+    entities: Dict[str, schemas.Entity] = {}
 
     for i in range(0, len(values), batch_size):
         chunk = tuple([v.replace("_", " ") for v in values[i : i + batch_size]])
-        entities_chunk = wiki_dump_api.load_entities(key, chunk)
+        entities_chunk = load_entities(language, chunk)
         _failed_lookups = set(chunk)
 
         # Replace entity titles keys in dict with Wikidata QIDs. Add entity description.
         for entity in entities_chunk.values():
             entities[entity.qid] = entity
             name_qid_map[entity.name] = entity.qid
-            _failed_lookups.remove(entity.qid if key == "id" else entity.name)
+            _failed_lookups.remove(entity.qid)
 
         failed_lookups |= _failed_lookups
         pbar.update(len(chunk))
@@ -66,32 +65,29 @@ def fetch_entity_information(
 
 def create_spans_from_doc_annotation(
     doc: Doc,
-    entities_info: Dict[str, Entity],
-    annotations: List[Annotation],
-    entities_failed_lookups: Set[str],
+    entities_info: Dict[str, schemas.Entity],
+    annotations: List[schemas.Annotation],
     harmonize_with_doc_ents: bool,
-) -> Tuple[List[Span], List[Annotation]]:
+) -> Tuple[List[Span], List[schemas.Annotation]]:
     """Creates spans from annotations for one document.
     doc (Doc): Document for whom to create spans.
     entities_info (Dict[str, Entity]): All available entities.
     annotation (List[Dict[str, Union[Set[str], str, int]]]): Annotations for this post/comment.
-    entities_entities_failed_lookups (Set[str]): Set of entity names for whom Wiki API lookup failed).
     harmonize_harmonize_with_doc_ents (Language): Whether to only keep those annotations matched by entities in the
         provided Doc object.
     RETURNS (Tuple[List[Span], List[Dict[str, Union[Set[str], str, int]]]]): List of doc spans for annotated entities;
         list of overlapping entities.
     """
-
     doc_ents_idx = {
-        # spaCy includes leading articles in entities, our benchmark datasets don't. Hence we drop all leading "the "
-        # and adjust the entity positions accordingly.
+        # spaCy sometimes includes leading articles in entities, our benchmark datasets don't. Hence we drop all leading
+        # "the " and adjust the entity positions accordingly.
         (ent.start_char + (0 if not ent.text.lower().startswith("the ") else 4), ent.end_char)
         for ent in doc.ents
     }
-    doc_annots: List[Annotation] = []
-    overlapping_doc_annotations: List[Annotation] = []
+    doc_annots: List[schemas.Annotation] = []
+    overlapping_doc_annotations: List[schemas.Annotation] = []
 
-    if harmonize_with_doc_ents and not doc_ents_idx:
+    if harmonize_with_doc_ents and len(doc_ents_idx) == 0:
         return [], []
 
     for i, annot_data in enumerate(
@@ -132,11 +128,6 @@ def create_spans_from_doc_annotation(
         # and end, we try to create a span with this token's position.
         overlaps = False
         if count == -1:
-            # todo RM do we need this assertion? if so, how to fix assertion violations?
-            # assert (
-            #     annot.entity_id not in entities_info
-            #     and annot.entity_name in entities_failed_lookups
-            # )
             continue
         for j in range(0, len(doc_annots)):
             if not (

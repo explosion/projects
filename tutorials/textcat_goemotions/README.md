@@ -2,7 +2,10 @@
 
 # 🪐 spaCy Project: Categorization of emotions in Reddit posts (Text Classification)
 
-This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`.
+This project uses spaCy to train a text classifier on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) with options for a pipeline with and without transformer weights. To use the BERT-based config, change the `config` variable in the `project.yml`. 
+
+> The goal of this project is to show how to train a spaCy classifier based on a csv file, not to showcase a model that's ready for production. The GoEmotions dataset has known flaws described [here](https://github.com/google-research/google-research/tree/master/goemotions#disclaimer) as well as label errors resulting from [annotator disagreement](https://www.youtube.com/watch?v=khZ5-AN-n2Y).
+
 
 ## 📋 project.yml
 
@@ -99,34 +102,59 @@ spacy train \
 
 ### Adding components from another model
 
-Let's say you want to take tagger and NER components from the `en_core_web_sm`
-model, and add a new textcat model that you'll train, while keeping the existing
-models from the tagger and NER. This requires three changes to the config.
+Suppose you want to keep all the functionality of the `en_core_web_sm` model
+and add the textcat model you just trained. You can do this using without
+changing your training config by using [`spacy
+assemble`](https://spacy.io/api/cli#assemble) - you'll just need to prepare a
+config describing your final pipeline.
 
-1. Add the components to the `nlp.pipeline`.
+A sample config for doing this is included in
+`configs/cnn_with_pretrained.cfg`. After training the model in this project,
+you can combine it with a pretrained pipeline by running `spacy project run
+assemble`, which will save the new pipeline to `cnn_with_pretrained/`. 
 
-   ```ini
-   [nlp]
-   pipeline = ["tagger", "ner", "textcat"]
-   ```
+To make your own config to combine pipelines, the basic steps are:
 
-2. Add the "sourced" components in the `[components]` block. This tells the
-   config to build the NER and tagger components from the `en_core_web_sm`
-   config and to load their models from disk.
+1. Include all the components you want in `nlp.pipeline`
+2. Add a section for each component, specifying the pipeline to source it from.
+3. If you have two components of the same type, specify unqiue component names for each.
+4. If necessary, [specify `replace_listeners`](https://spacy.io/api/language#replace_listeners) to bundle a component with its tok2vec.
 
-   ```ini
-   [components]
-   tagger = {"source": "en_core_web_sm"}
-   ner = {"source": "en_core_web_sm"}
-   ```
+You can also remove many values related to training - since you aren't running
+a training loop with `spacy assemble`, default values are fine.
 
-3. Specify that the tagger and NER are "frozen". This stops the weights of these
-   models from being reset, and stops the components from being updated.
+Let's go over the last two steps in a little more detail.
 
-   ```ini
-   [training]
-   frozen_components = ["tagger", "ner"]
-   ```
+By default, components have a simple default name in the pipeline, like "ner"
+or "textcat". However, if you have two copies of a component, then they need to
+have different names. If you need to change the name of a component you can do
+that by giving it a different name in `nlp.pipeline`, and specifying the name
+in the original pipeline using the `name` value in the section for the
+component.
+
+It depends on the pipeline, but often components use a Listener to just look
+for a tok2vec (or transformer) to get features from. If the tok2vec in your
+final pipeline is from the same pipeline as the component you're adding, then
+you don't have to do anything. But if a component has a different tok2vec, you
+can bundle a standalone copy of the original tok2vec with the component so that it doesn't use the wrong one.
+
+Here's an example of a component where the name has changed from `ner` to `renamed_ner`, and also uses `replace_listeners`:
+
+```ini
+[components.renamed_ner]
+source = "my_pipeline"
+# the "ner" here is the name in the base pipeline
+name = "ner"
+# and it listened to the "tok2vec" in the original pipeline
+replace_listeners = ["model.tok2vec"]
+```
+
+In the sample config, since most of our components come from the pretrained
+pipeline, we use the tok2vec from that in the pipeline, and replace the
+listeners for the textcat component we trained in this project. Exactly what
+configuration of tok2vecs and listeners works depends on your pipeline, for
+more details see the [docs on shared vs. indepedent embedding layers
+](https://spacy.io/usage/embeddings-transformers#embedding-layers).
 
 ### Using embeddings from a spaCy package
 

@@ -28,7 +28,7 @@ def main(
     nlp.max_length = 10 ** 8
 
     dataset = load_dataset("oscar", oscar_dataset, split="train", streaming=True)
-    with open(output_file, "w") as output_fileh:
+    with open(output_file, "w", encoding="utf8") as output_fileh:
         texts = (
             re.sub("\s+", " ", line["text"].strip())
             for line in islice(iter(dataset), max_texts)

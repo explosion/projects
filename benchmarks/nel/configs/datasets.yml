@@ -1,4 +1,4 @@
 mewsli_9:
-  frac_train: .6
+  frac_train: .5
   frac_dev: .2
-  frac_test: .2
+  frac_test: .3
