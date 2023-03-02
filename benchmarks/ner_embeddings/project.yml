@@ -27,8 +27,8 @@ description: |
   ```
 
 vars:
-  ner_config: "multifewerhashembed"
-  dataset: "anem"
+  ner_config: "multiembed"
+  dataset: "archaeo"
   language: "en"
   vectors: "en_core_web_lg"
   tables_path: "tables"
@@ -55,9 +55,9 @@ directories:
 
 workflows:
   setup:
+    - "prepare-datasets"
     - "download-models"
     - "init-fasttext"
-    - "make-tables"
 
 assets:
   - dest: "assets/fasttext.en.gz"
@@ -69,8 +69,26 @@ assets:
   - dest: "assets/fasttext.nl.gz"
     description: "Dutch fastText vectors."
     url: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.nl.300.vec.gz
+  - dest: "span-labeling-datasets"
+    git:
+      repo: "https://github.com/explosion/projects"
+      branch: "v3"
+      path: "benchmarks/span-labeling-datasets"
 
 commands:
+  
+  - name: "prepare-datasets"
+    help: "Download and preprocess all available data sets using the span-labeling-datasets project."
+    script:
+      - "python -m spacy project assets span-labeling-datasets"
+      - "python -m spacy project run all span-labeling-datasets"
+      - "python -m spacy project run clean-archaeo span-labeling-datasets"
+      - "python -m spacy project run generate-unseen span-labeling-datasets"
+      - "python -m scripts.cli_util copy-contents span-labeling-datasets/corpus/ner corpus"
+      - "python -m scripts.cli_util copy-contents span-labeling-datasets/unseen corpus"
+      - "python -m scripts.cli_util remove span-labeling-datasets"
+
+
   - name: "download-models"
     help: "Download spaCy models for their word-embeddings."
     script:
@@ -82,9 +100,9 @@ commands:
   - name: "init-fasttext"
     help: "Initialize the FastText vectors."
     script:
-      - "python -m scripts.unzip assets/fasttext.en.gz"
-      - "python -m scripts.unzip assets/fasttext.es.gz"
-      - "python -m scripts.unzip assets/fasttext.nl.gz"
+      - "python -m scripts.cli_util unzip assets/fasttext.en.gz"
+      - "python -m scripts.cli_util unzip assets/fasttext.es.gz"
+      - "python -m scripts.cli_util unzip assets/fasttext.nl.gz"
       - "python -m spacy init vectors en assets/fasttext.en vectors/fasttext-en"
       - "python -m spacy init vectors es assets/fasttext.es vectors/fasttext-es"
       - "python -m spacy init vectors nl assets/fasttext.nl vectors/fasttext-nl"
