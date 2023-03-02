@@ -30,12 +30,8 @@ jobs:
                 versionSpec: '$(python.version)'
                 architecture: 'x64'
 
-          - script: |
-                pip install "spacy>=3.2.0,<3.5.0"
-                pip install pytest
-                pip install wheel
+          - script: pip install -r requirements.txt
             displayName: 'Install dependencies'
 
-          - task: Bash@3
-            inputs:
-              filePath: 'run-tests.sh'
+          - script: bash run-tests.sh python
+            displayName: 'Run tests'

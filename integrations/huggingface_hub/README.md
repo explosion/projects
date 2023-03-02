@@ -23,14 +23,14 @@ The following commands are defined by the project. They
 can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
 Commands are only re-run if their inputs have changed.
 
-| Command | Description |
-| --- | --- |
-| `install` | Install dependencies, log in to Hugging Face and download a model |
-| `preprocess` | Convert the data to spaCy's binary format |
-| `train` | Train a named entity recognition model |
-| `evaluate` | Evaluate the model and export metrics |
-| `package` | Package the trained model so it can be installed |
-| `push_to_hub` | Push the model to the Hub |
+| Command       | Description                                      |
+|---------------|--------------------------------------------------|
+| `login`       | Log in to Hugging Face and download a model      |
+| `preprocess`  | Convert the data to spaCy's binary format        |
+| `train`       | Train a named entity recognition model           |
+| `evaluate`    | Evaluate the model and export metrics            |
+| `package`     | Package the trained model so it can be installed |
+| `push_to_hub` | Push the model to the Hub                        |
 
 ### ⏭ Workflows
 

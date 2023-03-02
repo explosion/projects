@@ -30,10 +30,9 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "install"
-    help: "Install dependencies and log in to Weights & Biases"
+  - name: "login"
+    help: "Log in to Weights & Biases"
     script:
-      - "pip install -r requirements.txt"
       - "wandb login"
     deps:
       - "requirements.txt"

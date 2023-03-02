@@ -1,0 +1,7 @@
+assets
+corpus
+training
+metrics
+latencies*
+nc_workspace
+quantized_model

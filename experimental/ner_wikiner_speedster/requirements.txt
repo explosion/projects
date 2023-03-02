@@ -1,0 +1,2 @@
+speedster>=0.0.1
+spacy-transformers>=1.1.0,<1.2.0
