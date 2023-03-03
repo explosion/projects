@@ -27,7 +27,7 @@ vars:
   rows: [5000, 2500, 2500, 2500]
   include_static_vectors: true
   min_freq: 10
-  gpu_id: 0
+  gpu_id: -1
   seed: 42
   batch_size: 1000
   num_hashes: 4
