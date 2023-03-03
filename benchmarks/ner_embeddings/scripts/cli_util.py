@@ -32,15 +32,15 @@ def unzip(input_file: Path, output_file: Optional[Path] = None):
 @app.command()
 def copy_contents(input_dir: Path, output_dir: Path):
     input_dir = ensure_path(input_dir)
-    ouput_dir = ensure_path(output_dir)
+    output_dir = ensure_path(output_dir)
     if not input_dir.exists():
-        raise ValueError(f"Could not find {input_file}.")
+        raise ValueError(f"Could not find {input_dir}.")
     elif not output_dir.exists():
         raise ValueError(f"Could not find {output_dir}.")
     elif not input_dir.is_dir():
-        raise ValueError(f"'input_dir' must be a directory")
+        raise ValueError("'input_dir' must be a directory")
     elif not output_dir.is_dir():
-        raise ValueError(f"'output_dir' must be a directory")
+        raise ValueError("'output_dir' must be a directory")
     for path in input_dir.iterdir():
         if path.is_dir():
             shutil.copytree(path, output_dir)
