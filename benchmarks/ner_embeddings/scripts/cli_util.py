@@ -54,9 +54,21 @@ def remove(input_path: Path):
     if not input_path.exists():
         raise ValueError(f"Could not find {input_path}.")
     if input_path.is_dir():
-        shutil.rmtree(input_path)
+        try:
+            shutil.rmtree(input_path)
+        except PermissionError:
+            msg.warn(
+                f"Do not seem to have permission to remove {input_path}. "
+                "This is a known issue that can occur on Windows."
+            )
     else:
-        input_path.unlink()
+        try:
+            input_path.unlink()
+        except PermissionError:
+            msg.warn(
+                f"Do not seem to have permission to remove {input_path}. "
+                "This is a known issue that can occur on Windows."
+            )
 
 
 if __name__ == "__main__":
