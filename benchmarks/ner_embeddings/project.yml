@@ -54,7 +54,9 @@ workflows:
     - "init-labels"
     - "train"
     - "evaluate"
-    - "evaluate-seen-unseen"
+    - "evaluate-seen-only"
+    - "evaluate-unseen-only"
+
 
 assets:
   - dest: "assets/fasttext.en.gz"
@@ -84,6 +86,52 @@ commands:
       - "python -m scripts.cli_util copy-contents span-labeling-datasets/corpus/ner corpus"
       - "python -m scripts.cli_util copy-contents span-labeling-datasets/unseen corpus"
       - "python -m scripts.cli_util remove span-labeling-datasets"
+    deps:
+      - span-labeling-datasets/
+    outputs: 
+      - corpus/anem-dev-seen.spacy
+      - corpus/anem-dev-unseen.spacy
+      - corpus/anem-dev.spacy
+      - corpus/anem-test-seen.spacy
+      - corpus/anem-test-unseen.spacy
+      - corpus/anem-test.spacy
+      - corpus/anem-train.spacy
+      - corpus/archaeo-dev-seen.spacy
+      - corpus/archaeo-dev-unseen.spacy
+      - corpus/archaeo-dev.spacy
+      - corpus/archaeo-test-seen.spacy
+      - corpus/archaeo-test-unseen.spacy
+      - corpus/archaeo-test.spacy
+      - corpus/archaeo-train.spacy
+      - corpus/es-conll-dev-seen.spacy
+      - corpus/es-conll-dev-unseen.spacy
+      - corpus/es-conll-dev.spacy
+      - corpus/es-conll-test-seen.spacy
+      - corpus/es-conll-test-unseen.spacy
+      - corpus/es-conll-test.spacy
+      - corpus/es-conll-train.spacy
+      - corpus/labels
+      - corpus/nl-conll-dev-seen.spacy
+      - corpus/nl-conll-dev-unseen.spacy
+      - corpus/nl-conll-dev.spacy
+      - corpus/nl-conll-test-seen.spacy
+      - corpus/nl-conll-test-unseen.spacy
+      - corpus/nl-conll-test.spacy
+      - corpus/nl-conll-train.spacy
+      - corpus/restaurant-dev-seen.spacy
+      - corpus/restaurant-dev-unseen.spacy
+      - corpus/restaurant-dev.spacy
+      - corpus/restaurant-test-seen.spacy
+      - corpus/restaurant-test-unseen.spacy
+      - corpus/restaurant-test.spacy
+      - corpus/restaurant-train.spacy
+      - corpus/wnut17-dev-seen.spacy
+      - corpus/wnut17-dev-unseen.spacy
+      - corpus/wnut17-dev.spacy
+      - corpus/wnut17-test-seen.spacy
+      - corpus/wnut17-test-unseen.spacy
+      - corpus/wnut17-test.spacy
+      - corpus/wnut17-train.spacy
 
 
   - name: "download-models"
@@ -94,6 +142,7 @@ commands:
       - "python -m spacy download nl_core_news_lg"
       - "python -m spacy download fi_core_news_lg"
 
+
   - name: "init-fasttext"
     help: "Initialize the FastText vectors."
     script:
@@ -103,6 +152,14 @@ commands:
       - "python -m spacy init vectors en assets/fasttext.en vectors/fasttext-en"
       - "python -m spacy init vectors es assets/fasttext.es vectors/fasttext-es"
       - "python -m spacy init vectors nl assets/fasttext.nl vectors/fasttext-nl"
+    deps:
+      - assets/fasttext.en.gz
+      - assets/fasttext.es.gz
+      - assets/fasttext.nl.gz
+    outputs:
+      - vectors/fasttext-en
+      - vectors/fasttext-es
+      - vectors/fasttext-nl
 
   - name: "make-tables"
     help: "Pre-compute token-to-id tables for MultiEmbed."
@@ -116,6 +173,12 @@ commands:
         --paths.dev corpus/${vars.dataset}-dev.spacy
         --code scripts/custom_components.py
         --paths.tables ${vars.tables_path}
+    deps:
+      - corpus/${vars.dataset}-train.spacy
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - ${vars.tables_path}/${vars.dataset}
+
 
   - name: "init-labels"
     help: "Initialize labels first before training"
@@ -130,6 +193,11 @@ commands:
         --paths.tables tables/${vars.dataset}/${vars.dataset}-train.tables
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
+    deps:
+      - corpus/${vars.dataset}-train.spacy
+      - corpus/${vars.dataset}-dev.spacy
+    outputs:
+      - corpus/labels/${vars.dataset}.labels
 
   - name: "train"
     help: "Train NER model."
@@ -230,9 +298,36 @@ commands:
     outputs:
       - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-test.json
       - ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores-dev.json
+  
+  - name: "evaluate-seen-only"
+    help: "Evaluate NER model on the dev and tests sets only considering entities that appear in the training set."
+    script:
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-dev-seen.spacy
+        --output ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+      - mkdir -p ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - >-
+        python -m spacy evaluate
+        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+        corpus/${vars.dataset}-test-seen.spacy
+        --output ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+        --gpu-id ${vars.gpu_id}
+        --code scripts/custom_components.py
+    deps:
+      - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
+      - corpus/${vars.dataset}-dev-seen.spacy
+      - corpus/${vars.dataset}-test-seen.spacy
+    outputs:
+      - ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
+      - ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
 
-  - name: "evaluate-seen-unseen"
-    help: "Evaluate NER model on seen and unseen entities separately."
+
+  - name: "evaluate-unseen-only"
+    help: "Evaluate NER model on the dev and tests sets only considering entities that did not appear in the training set."
     script:
       - mkdir -p ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
       - >-
@@ -251,29 +346,10 @@ commands:
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
       - mkdir -p ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
-      - >-
-        python -m spacy evaluate
-        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
-        corpus/${vars.dataset}-dev-seen.spacy
-        --output ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
-        --gpu-id ${vars.gpu_id}
-        --code scripts/custom_components.py
-      - mkdir -p ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
-      - >-
-        python -m spacy evaluate
-        training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
-        corpus/${vars.dataset}-test-seen.spacy
-        --output ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
-        --gpu-id ${vars.gpu_id}
-        --code scripts/custom_components.py
     deps:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
       - corpus/${vars.dataset}-dev-unseen.spacy
       - corpus/${vars.dataset}-test-unseen.spacy
-      - corpus/${vars.dataset}-dev-seen.spacy
-      - corpus/${vars.dataset}-test-seen.spacy
     outputs:
       - ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
       - ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
-      - ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
-      - ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
