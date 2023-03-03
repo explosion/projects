@@ -71,5 +71,12 @@ def remove(input_path: Path):
             )
 
 
+@app.command()
+def expected_arg(config: str, expected: str, given: str):
+    if given != expected:
+        msg.warn(f"For the argument '{config}' "
+                 f"expected '{expected}', but found '{given}'.", exits=1)
+
+
 if __name__ == "__main__":
     app()

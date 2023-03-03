@@ -183,6 +183,7 @@ commands:
   - name: "train-hash"
     help: "Train NER model with different number of hash functions. (only works with the multifewerhashembed.cfg)"
     script:
+      - python -m scripts.cli_util expected-arg config multifewerhashembed ${vars.ner_config}
       - >-
         python -m spacy train
         configs/${vars.ner_config}.cfg
