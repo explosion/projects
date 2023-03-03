@@ -17,6 +17,13 @@ Finally, `scripts/plot_results.py` was used to produce the visualizations in the
 These are all small command line apps and you can learn more about the usage as usual with the
 `--help` flag.
 
+The `rows` argument for the `train-adjusted-rows` command is provided as a list and 
+this may lead to errors on Windows machines. Unfortunately, this might lead not being able to
+reproduce the `MultiHashEmbed (adjusted)` experiments from the paper on Windows using `run_experiment.py`.
+This is due to known issue with handling quotes on Windows and is something we are looking into.
+The config files can be edited by manually or in some other way to adjust the number of rows for 
+the hash embedding layers. We apologize for the inconvenience.
+
 
 ## 📋 project.yml
 
@@ -41,7 +48,8 @@ Commands are only re-run if their inputs have changed.
 | `train-adjust-rows` | Train NER model with adjustable number of rows. |
 | `train-hash` | Train NER model with different number of hash functions. (only works with the multifewerhashembed.cfg) |
 | `evaluate` | Evaluate NER model. |
-| `evaluate-seen-unseen` | Evaluate NER model on seen and unseen entities separately. |
+| `evaluate-seen-only` | Evaluate NER model on the dev and tests sets only considering entities that appear in the training set. |
+| `evaluate-unseen-only` | Evaluate NER model on the dev and tests sets only considering entities that did not appear in the training set. |
 
 ### ⏭ Workflows
 
@@ -53,7 +61,7 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `setup` | `download-models` &rarr; `init-fasttext` &rarr; `prepare-datasets` &rarr; `make-tables` |
-| `trial` | `init-labels` &rarr; `train` &rarr; `evaluate` &rarr; `evaluate-seen-unseen` |
+| `trial` | `init-labels` &rarr; `train` &rarr; `evaluate` &rarr; `evaluate-seen-only` &rarr; `evaluate-unseen-only` |
 
 ### 🗂 Assets
 

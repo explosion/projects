@@ -15,6 +15,12 @@ description: |
   These are all small command line apps and you can learn more about the usage as usual with the
   `--help` flag.
 
+  The `rows` argument for the `train-adjusted-rows` command is provided as a list and 
+  this may lead to errors on Windows machines. Unfortunately, this might lead not being able to
+  reproduce the `MultiHashEmbed (adjusted)` experiments from the paper on Windows using `run_experiment.py`.
+  This is due to known issue with handling quotes on Windows and is something we are looking into.
+  The config files can be edited by manually or in some other way to adjust the number of rows for 
+  the hash embedding layers. We apologize for the inconvenience.
 
 vars:
   ner_config: "multihashembed"
