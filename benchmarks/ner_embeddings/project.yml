@@ -24,7 +24,7 @@ vars:
   tables_path: "tables"
   metrics_dir: "metrics"
   attrs: null
-  rows: "[5000, 2500, 2500, 2500]"
+  rows: [5000, 2500, 2500, 2500]
   include_static_vectors: true
   min_freq: 10
   gpu_id: 0
@@ -181,7 +181,7 @@ commands:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
 
   - name: "train-hash"
-    help: "Train NER model with different number of hash functions."
+    help: "Train NER model with different number of hash functions. (only works with the multifewerhashembed.cfg)"
     script:
       - >-
         python -m spacy train
