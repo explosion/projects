@@ -39,7 +39,7 @@ Commands are only re-run if their inputs have changed.
 | `init-labels` | Initialize labels first before training |
 | `train` | Train NER model. |
 | `train-adjust-rows` | Train NER model with adjustable number of rows. |
-| `train-hash` | Train NER model with different number of hash functions. |
+| `train-hash` | Train NER model with different number of hash functions. (only works with the multifewerhashembed.cfg) |
 | `evaluate` | Evaluate NER model. |
 | `evaluate-seen-unseen` | Evaluate NER model on seen and unseen entities separately. |
 
