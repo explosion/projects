@@ -63,7 +63,7 @@ Commands are only re-run if their inputs have changed.
 | `openai-correct` | Correct zero-shot NER results using Prodigy's GPT-3 integration |
 | `openai-evaluate` | Evaluate zero-shot GPT-3 predictions |
 | `ner-manual` | Run ner.manual on zero-shot predictions to visualize silver-standard annotations |
-| `train-curve` | Train a model at varying portions of the training data |
+| `train-curve` | Train a model at varying portions of the training data (original annotations) |
 | `clean-datasets` | Drop the Prodigy dataset that was automatically created during the train-curve command |
 
 ### ⏭ Workflows

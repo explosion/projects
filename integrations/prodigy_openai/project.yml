@@ -173,7 +173,7 @@ commands:
       - openai/zeroshot_preds.jsonl
 
   - name: "train-curve"
-    help: "Train a model at varying portions of the training data"
+    help: "Train a model at varying portions of the training data (original annotations)"
     script:
       # Create JSONL files to hydrate prodigy dataset into
       - python -m scripts.convert_to_jsonl corpus/anem-train.spacy corpus/anem-train.jsonl
