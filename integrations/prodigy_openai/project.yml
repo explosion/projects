@@ -145,7 +145,7 @@ commands:
       - >-
         python -m prodigy ner.openai.correct openai_ner_anem corpus/anem-test_texts.jsonl
         --prompt-path openai/templates/${vars.prompt_template}
-        --labels Cell,Organism_substance,Pathological_formation,Multitissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity 
+        --labels Cell,Organism_substance,Pathological_formation,Multi-tissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity 
         -F ./openai/recipes/ner.py
     deps:
       - corpus/anem-test_texts.jsonl
@@ -168,7 +168,7 @@ commands:
     script:
       - >-
         python -m prodigy ner.manual anem blank:en openai/zeroshot_preds.jsonl
-        --label Cell,Organism_substance,Pathological_formation,Multitissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity
+        --label Cell,Organism_substance,Pathological_formation,Multi-tissue_structure,Organism_subdivision,Organ,Cellular_component,Anatomical_system,Tissue,Developing_anatomical_structure,Immaterial_anatomical_entity
     deps:
       - openai/zeroshot_preds.jsonl
 
