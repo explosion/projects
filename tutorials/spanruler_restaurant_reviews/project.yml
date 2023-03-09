@@ -42,6 +42,33 @@ description: |
   | Recall    | 76.64    | **77.40**      |
   | F-score   | 76.52    | **77.23**      |
 
+  When we noticed some inconsistencies in the original dataset, we went back and
+  fixed them with a [Prodigy](https://prodi.gy) workflow. The commands are included
+  here to reproduce our process for annotation, but we've also included the outputted
+  datasets so you can directly skip to training a new model. 
+
+  With the new annotations and rules, we saw an improvement in both the NER and NER with 
+  Spanruler pipelines.
+
+  |          | NER only  | With Spanruler  |
+  |----------|-----------|-----------------|
+  | Price    | 87.00     | **87.25**       |
+  | Rating   | 89.39     | **92.55**       |
+  | Hours    | 82.12     | **82.52**       |
+  | Amenity  | 80.95     | **83.07**       |
+  | Location | 92.03     | **92.70**       |
+  | Restaurant_Name| 82.90     | **87.48**       |
+  | Cuisine  | 90.00     | **91.09**       |
+  | Dish     | 83.05     | **85.66**       |
+
+  Overall, we have better performance for the combined `ner` and `span_ruler`
+  pipeline with our new set of rules.
+
+  |           | NER only | With Spanruler |
+  |-----------|----------|----------------|
+  | Precision | 87.05    | **88.86**      |
+  | Recall    | 86.31    | **88.10**      |
+  | F-score   | 86.68    | **88.48**      |
 
   **Reference**
 
@@ -60,9 +87,11 @@ vars:
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
 directories:
-  ["assets", "corpus", "configs", "metrics", "models", "scripts", "training"]
+  ["assets", "corpus/review", "configs", "metrics", "models", "scripts", "training"]
 
-# Assets that should be downloaded or available in the directory.
+# Assets that should be downloaded or available in the directory. We're shipping
+# the reviewed annotated datasets with the project, so they won't have to be 
+# downloaded. 
 assets:
   - dest: "assets/train_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttrain.bio
@@ -70,6 +99,10 @@ assets:
   - dest: "assets/test_raw.iob"
     url: https://groups.csail.mit.edu/sls/downloads/restaurant/restauranttest.bio
     description: "Test data from the MIT Restaurants Review dataset"
+  - dest: "assets/train_review.jsonl"
+    description: "JSONL-formatted training data exported from Prodigy (7662 examples)"
+  - dest: "assets/test_review.jsonl"
+    description: "JSONL-formatted test data exported from Prodigy (1521 examples)"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
@@ -81,6 +114,14 @@ workflows:
     - train
     - assemble
     - evaluate
+  prodigy:
+    - preprocess-prodigy
+    - db-in
+  review:
+    - prodigy-convert
+    - train-review
+    - assemble-review
+    - evaluate-review
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -167,3 +208,128 @@ commands:
     outputs:
       - metrics/baseline.json
       - metric/combined.json
+
+  - name: "preprocess-prodigy"
+    help: "Preprocess raw IOB data into JSONL format for Prodigy review recipe."
+    script:
+      - "python -m scripts.preprocess_prodigy corpus/train_dev.spacy assets/mult_annotator_train.jsonl training/ner/model-best"
+      - "python -m scripts.preprocess_prodigy corpus/test.spacy assets/mult_annotator_test.jsonl training/ner/model-best"
+    deps:
+      - corpus/test.spacy
+      - corpus/train_dev.spacy
+    outputs:
+      - "assets/mult_annotator_train.jsonl"
+      - "assets/mult_annotator_test.jsonl"
+
+  - name: "db-in"
+    help: "Add datasets to Prodigy database."
+    script:
+      - "prodigy db-in mult_annotator_train assets/mult_annotator_train.jsonl --answer accept"
+      - "prodigy db-in mult_annotator_test assets/mult_annotator_test.jsonl --answer accept"
+    deps:
+      - "assets/mult_annotator_train.jsonl"
+      - "assets/mult_annotator_test.jsonl"
+
+  - name: "prodigy-review-train"
+    help: "Annotate the train data with the Prodigy review recipe."
+    script:
+      - >-
+        prodigy review 
+        train_review 
+        mult_annotator_train 
+        --label Rating,Amenity,Location,Restaurant_Name,Price,Hours,Dish,Cuisine  
+        --view-id ner_manual 
+        --auto-accept
+    deps:
+      - "assets/mult_annotator_train.jsonl"
+
+  - name: "prodigy-review-test"
+    help: "Annotate the test data with the Prodigy review recipe."
+    script:
+      - >- 
+        prodigy review 
+        test_review 
+        mult_annotator_test 
+        --label Rating,Amenity,Location,Restaurant_Name,Price,Hours,Dish,Cuisine  
+        --view-id ner_manual 
+        --auto-accept
+    deps:
+      - "assets/mult_annotator_test.jsonl"
+
+  - name: "db-out"
+    help: "Export Prodigy data."
+    script:
+      - "prodigy db-out train_review assets/"
+      - "prodigy db-out test_review assets/"
+
+  - name: "prodigy-convert"
+    help: "Convert JSONL files into spaCy's binary format for model training."
+    script:
+      - "python -m scripts.convert assets/train_review.jsonl corpus/review/train.spacy"
+      - "python -m scripts.convert assets/test_review.jsonl corpus/review/test.spacy"
+      - "mv corpus/review/train.spacy corpus/review/train_dev.spacy"
+      # Split corpus into train, dev, and test
+      - "python -m scripts.split corpus/review/train_dev.spacy corpus/review/ --train-size 0.8 --seed ${vars.seed}"
+    deps:
+      - "assets/train_review.jsonl"
+      - "assets/test_review.jsonl"
+    outputs:
+      - "corpus/review/train.spacy"
+      - "corpus/review/dev.spacy"
+      - "corpus/review/test.spacy"
+      
+  - name: "train-review"
+    help: "Train a NER model with reviewed data."
+    script:
+      - >-
+        python -m spacy train configs/ner.cfg
+        --paths.train corpus/review/train.spacy
+        --paths.dev corpus/review/dev.spacy
+        --paths.vectors ${vars.vectors}
+        --output training/ner_review/
+        --gpu-id ${vars.gpu_id}
+    deps:
+      - corpus/review/train.spacy
+      - corpus/review/dev.spacy
+    outputs:
+      - training/ner_review/model-best
+      - training/ner_review/model-last
+
+  - name: "assemble-review"
+    help: "Assemble trained NER pipeline with SpanRuler with reviewed data."
+    script:
+      - >-
+        python -m spacy assemble
+        configs/ner_ruler.cfg
+        models/ner_ruler_review
+        --components.tok2vec.source training/ner_review/model-best/
+        --components.ner.source training/ner_review/model-best/
+        --code scripts/rules_review.py
+    deps:
+      - training/ner_review/model-best
+    outputs:
+      - models/ner_ruler_review
+
+  - name: "evaluate-review"
+    help: "Evaluate each model with reviewed data."
+    script:
+      - >-
+        python -m spacy evaluate
+        training/ner_review/model-best/
+        corpus/review/test.spacy
+        --gpu-id ${vars.gpu_id}
+        --output metrics/baseline_review.json
+
+      - >-
+        python -m spacy evaluate
+        models/ner_ruler_review/
+        corpus/review/test.spacy
+        --gpu-id ${vars.gpu_id}
+        --output metrics/combined_review.json
+    deps:
+      - training/ner_review/model-best/
+      - models/ner_ruler_review/
+      - corpus/review/test.spacy
+    outputs:
+      - metrics/baseline_review.json
+      - metric/combined_review.json

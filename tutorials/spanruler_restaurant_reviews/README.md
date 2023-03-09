@@ -44,6 +44,33 @@ pipeline with our set of rules.
 | Recall    | 76.64    | **77.40**      |
 | F-score   | 76.52    | **77.23**      |
 
+When we noticed some inconsistencies in the original dataset, we went back and
+fixed them with a [Prodigy](https://prodi.gy) workflow. The commands are included
+here to reproduce our process for annotation, but we've also included the outputted
+datasets so you can directly skip to training a new model. 
+
+With the new annotations and rules, we saw an improvement in both the NER and NER with 
+Spanruler pipelines.
+
+|          | NER only  | With Spanruler  |
+|----------|-----------|-----------------|
+| Price    | 87.00     | **87.25**       |
+| Rating   | 89.39     | **92.55**       |
+| Hours    | 82.12     | **82.52**       |
+| Amenity  | 80.95     | **83.07**       |
+| Location | 92.03     | **92.70**       |
+| Restaurant_Name| 82.90     | **87.48**       |
+| Cuisine  | 90.00     | **91.09**       |
+| Dish     | 83.05     | **85.66**       |
+
+Overall, we have better performance for the combined `ner` and `span_ruler`
+pipeline with our new set of rules.
+
+|           | NER only | With Spanruler |
+|-----------|----------|----------------|
+| Precision | 87.05    | **88.86**      |
+| Recall    | 86.31    | **88.10**      |
+| F-score   | 86.68    | **88.48**      |
 
 **Reference**
 
@@ -71,6 +98,15 @@ Commands are only re-run if their inputs have changed.
 | `train` | Train a baseline NER model. |
 | `assemble` | Assemble trained NER pipeline with SpanRuler. |
 | `evaluate` | Evaluate each model. |
+| `preprocess-prodigy` | Preprocess raw IOB data into JSONL format for Prodigy review recipe. |
+| `db-in` | Add datasets to Prodigy database. |
+| `prodigy-review-train` | Annotate the train data with the Prodigy review recipe. |
+| `prodigy-review-test` | Annotate the test data with the Prodigy review recipe. |
+| `db-out` | Export Prodigy data. |
+| `prodigy-convert` | Convert Prodigy files into spaCy's binary format for model training. |
+| `train-review` | Train a NER model with reviewed data. |
+| `assemble-review` | Assemble trained NER pipeline with SpanRuler with reviewed data. |
+| `evaluate-review` | Evaluate each model with reviewed data. |
 
 ### ⏭ Workflows
 
@@ -82,6 +118,8 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `all` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` |
+| `prodigy` | `preprocess-prodigy` &rarr; `db-in` |
+| `review` | `prodigy-convert` &rarr; `train-review` &rarr; `assemble-review` &rarr; `evaluate-review` |
 
 ### 🗂 Assets
 
@@ -93,5 +131,7 @@ in the project directory.
 | --- | --- | --- |
 | `assets/train_raw.iob` | URL | Training data from the MIT Restaurants Review dataset |
 | `assets/test_raw.iob` | URL | Test data from the MIT Restaurants Review dataset |
+| [`assets/train_review.jsonl`](assets/train_review.jsonl) | Local | JSONL-formatted training data exported from Prodigy (7662 examples) |
+| [`assets/test_review.jsonl`](assets/test_review.jsonl) | Local | JSONL-formatted test data exported from Prodigy (1521 examples) |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
