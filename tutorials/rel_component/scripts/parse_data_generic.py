@@ -69,8 +69,8 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                 for relation in relations:
                     # the 'head' and 'child' annotations refer to the end token in the span
                     # but we want the first token
-                    start = span_end_to_start[relation["head"]]
-                    end = span_end_to_start[relation["child"]]
+                    start = span_end_to_start.get([relation["head"]], start)
+                    end = span_end_to_start.get([relation["child"]], end)
                     label = relation["label"]
                     if label not in SYMM_LABELS + DIRECTED_LABELS:
                         msg.warn(f"Found label '{label}' not defined in SYMM_LABELS or DIRECTED_LABELS - skipping")
