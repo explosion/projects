@@ -40,81 +40,77 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
             if example["answer"] == "accept":
                 neg = 0
                 pos = 0
-                try:
-                    # Parse the tokens
-                    words = [t["text"] for t in example["tokens"]]
-                    spaces = [t["ws"] for t in example["tokens"]]
-                    doc = Doc(vocab, words=words, spaces=spaces)
+                # Parse the tokens
+                words = [t["text"] for t in example["tokens"]]
+                spaces = [t["ws"] for t in example["tokens"]]
+                doc = Doc(vocab, words=words, spaces=spaces)
 
-                    # Parse the entities
-                    spans = example["spans"]
-                    entities = []
-                    span_end_to_start = {}
-                    for span in spans:
-                        entity = doc.char_span(
-                            span["start"], span["end"], label=span["label"]
-                        )
-                        span_end_to_start[span["token_end"]] = span["token_start"]
-                        entities.append(entity)
-                        span_starts.add(span["token_start"])
-                    if not entities:
-                        msg.warn("Could not parse any entities from the JSON file.")
-                    doc.ents = entities
+                # Parse the entities
+                spans = example["spans"]
+                entities = []
+                span_end_to_start = {}
+                for span in spans:
+                    entity = doc.char_span(
+                        span["start"], span["end"], label=span["label"]
+                    )
+                    span_end_to_start[span["token_end"]] = span["token_start"]
+                    entities.append(entity)
+                    span_starts.add(span["token_start"])
+                if not entities:
+                    msg.warn("Could not parse any entities from the JSON file.")
+                doc.ents = entities
 
-                    # Parse the relations
-                    rels = {}
+                # Parse the relations
+                rels = {}
+                for x1 in span_starts:
+                    for x2 in span_starts:
+                        rels[(x1, x2)] = {}
+                relations = example["relations"]
+                for relation in relations:
+                    # the 'head' and 'child' annotations refer to the end token in the span
+                    # but we want the first token
+                    start = span_end_to_start[relation["head"]]
+                    end = span_end_to_start[relation["child"]]
+                    label = relation["label"]
+                    if label not in SYMM_LABELS + DIRECTED_LABELS:
+                        msg.warn(f"Found label '{label}' not defined in SYMM_LABELS or DIRECTED_LABELS - skipping")
+                        break
+                    if label not in rels[(start, end)]:
+                        rels[(start, end)][label] = 1.0
+                        pos += 1
+                    if label in SYMM_LABELS:
+                        if label not in rels[(end, start)]:
+                            rels[(end, start)][label] = 1.0
+                            pos += 1
+
+                # If the annotation is complete, fill in zero's where the data is missing
+                if is_complete:
                     for x1 in span_starts:
                         for x2 in span_starts:
-                            rels[(x1, x2)] = {}
-                    relations = example["relations"]
-                    for relation in relations:
-                        # the 'head' and 'child' annotations refer to the end token in the span
-                        # but we want the first token
-                        start = span_end_to_start[relation["head"]]
-                        end = span_end_to_start[relation["child"]]
-                        label = relation["label"]
-                        if label not in SYMM_LABELS + DIRECTED_LABELS:
-                            msg.warn(f"Found label '{label}' not defined in SYMM_LABELS or DIRECTED_LABELS - skipping")
-                            break
-                        if label not in rels[(start, end)]:
-                            rels[(start, end)][label] = 1.0
-                            pos += 1
-                        if label in SYMM_LABELS:
-                            if label not in rels[(end, start)]:
-                                rels[(end, start)][label] = 1.0
-                                pos += 1
+                            for label in SYMM_LABELS + DIRECTED_LABELS:
+                                if label not in rels[(x1, x2)]:
+                                    neg += 1
+                                    rels[(x1, x2)][label] = 0.0
+                doc._.rel = rels
 
-                    # If the annotation is complete, fill in zero's where the data is missing
-                    if is_complete:
-                        for x1 in span_starts:
-                            for x2 in span_starts:
-                                for label in SYMM_LABELS + DIRECTED_LABELS:
-                                    if label not in rels[(x1, x2)]:
-                                        neg += 1
-                                        rels[(x1, x2)][label] = 0.0
-                    doc._.rel = rels
-
-                    # only keeping documents with at least 1 positive case
-                    if pos > 0:
-                        # create the train/dev/test split randomly
-                        # Note that this is not good practice as instances from the same article
-                        # may end up in different splits. Ideally, change this method to keep
-                        # documents together in one split (as in the original parse_data.py)
-                        if random.random() < test_portion:
-                            docs["test"].append(doc)
-                            count_pos["test"] += pos
-                            count_all["test"] += pos + neg
-                        elif random.random() < (test_portion + dev_portion):
-                            docs["dev"].append(doc)
-                            count_pos["dev"] += pos
-                            count_all["dev"] += pos + neg
-                        else:
-                            docs["train"].append(doc)
-                            count_pos["train"] += pos
-                            count_all["train"] += pos + neg
-
-                except KeyError as e:
-                    msg.fail(f"Skipping doc because of key error: {e} in {example['meta']['source']}")
+                # only keeping documents with at least 1 positive case
+                if pos > 0:
+                    # create the train/dev/test split randomly
+                    # Note that this is not good practice as instances from the same article
+                    # may end up in different splits. Ideally, change this method to keep
+                    # documents together in one split (as in the original parse_data.py)
+                    if random.random() < test_portion:
+                        docs["test"].append(doc)
+                        count_pos["test"] += pos
+                        count_all["test"] += pos + neg
+                    elif random.random() < (test_portion + dev_portion):
+                        docs["dev"].append(doc)
+                        count_pos["dev"] += pos
+                        count_all["dev"] += pos + neg
+                    else:
+                        docs["train"].append(doc)
+                        count_pos["train"] += pos
+                        count_all["train"] += pos + neg
 
     docbin = DocBin(docs=docs["train"], store_user_data=True)
     docbin.to_disk(train_file)
