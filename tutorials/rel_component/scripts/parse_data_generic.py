@@ -70,6 +70,7 @@ def main(json_loc: Path, train_file: Path, dev_file: Path, test_file: Path):
                     # Ignoring relations that are not between spans (they are annotated on the token level
                     if not relation["head"] in span_end_to_start or not relation["child"] in span_end_to_start:
                         msg.warn(f"This script only supports relationships between annotated entities.")
+                        break
                     # the 'head' and 'child' annotations refer to the end token in the span
                     # but we want the first token
                     start = span_end_to_start[relation["head"]]
