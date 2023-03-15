@@ -1,5 +1,5 @@
-title: "Use Pretraining to improve training a morphologizer component"
-description: "This project runs various pretraining experiments with different languages to train a morphologizer"
+title: "Enhancing Morphological Analysis with spaCy Pretraining"
+description: "This project explores the effectiveness of pretraining techniques on morphological analysis (morphologizer) by conducting experiments on multiple languages. The objective of this project is to demonstrate the benefits of pretraining word vectors using domain-specific data on the performance of morphological analysis. We leverage the OSCAR dataset to pretrain out vectors for tok2vec and utilize the UD_Treebanks dataset to train a morphologizer component. We evaluate and compare the performance of different pretraining techniques and also compare the performance without any pretraining."
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   # Change all three variables to change the language
@@ -10,9 +10,9 @@ vars:
   oscar_path: "data"
   max_pretraining_texts: 1000000
   # This variable depends on the output of the pretrain commands
-  pretraining_model: "model22.bin"
+  pretraining_model: "model01.bin" # modelxx.bin
   # Choose -1 for CPU
-  gpu: 0
+  gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -31,6 +31,7 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   data:
+    - install_requirements
     - download_oscar
     - download_model
     - extract_ud
@@ -55,6 +56,13 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: install_requirements
+    help: "Download and install all requirements"
+    script:
+      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.spacy_lang} ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
+    outputs:
+      - "${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
+
   - name: download_oscar
     help: "Download a subset of the oscar dataset"
     script:
@@ -203,13 +211,19 @@ commands:
     script:
       - "python scripts/evaluate_metrics.py ./metrics/"
 
-  - name: "reset"
+  - name: "reset_project"
     help: "Reset the project to its original state and delete all training process"
     script:
       - "python scripts/reset.py training"
       - "python scripts/reset.py metrics"
       - "python scripts/reset.py assets"
       - "python scripts/reset.py data"
+      - "python scripts/reset.py pretraining"
+
+  - name: "reset_training"
+    help: "Reset the training progress"
+    script:
+      - "python scripts/reset.py training"
       - "python scripts/reset.py pretraining"
 
   - name: "reset_metrics"
