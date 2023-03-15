@@ -45,3 +45,6 @@ in the project directory.
 | `assets/aij-wikiner-en-wp2.bz2` | URL |  |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+
+## 🚀 Accelerate
+If you are interested in accelerating this pipeline, have a look at [ner_wikiner_speedster](https://github.com/explosion/projects/tree/v3/experimental/ner_wikiner_speedster) pipeline.

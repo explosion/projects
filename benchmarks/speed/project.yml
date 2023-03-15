@@ -17,21 +17,19 @@ vars:
 # sure that they always exist.
 directories: ["scripts", "texts", "results"]
 
-# Assets that should be downloaded or available in the directory. We're shipping
-# some of them with the project, so they won't have to be downloaded. But the
-# 'project assets' command still lets you verify that the checksums match.
-
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
   setup:
-    - install
     - download
   benchmark:
     - timing_cpu
     - timing_gpu
 
+# Assets that should be downloaded or available in the directory. We're shipping
+# some of them with the project, so they won't have to be downloaded. But the
+# 'project assets' command still lets you verify that the checksums match.
 assets:
   -
     dest: "texts/reddit-100k.jsonl"
@@ -43,13 +41,6 @@ assets:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: install
-    help: "Install dependencies"
-    script:
-      - "python -m pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html"
-    deps:
-      - "requirements.txt"
-
   - name: download
     help: "Download models"
     script:

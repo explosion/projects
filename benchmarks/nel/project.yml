@@ -1,131 +1,163 @@
 title: 'NEL Benchmark'
 description: "Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation)."
+spacy_version: ">=3.0.0,<3.6.0"
 vars:
-  name: "nel_benchmark"
+  run: "cg-default"
+  language: "en"
   config: "nel.cfg"
-  vectors_model: "en_core_web_md"
-  version: "0.0.1"
+  vectors_model: "en_core_web_lg"
+  version: "0.0.5"
+  dataset: "mewsli_9"
+  gpu_id: ""
+  download_all_wiki_assets: ""  # "--extra" to download full Wiki dumps.
+  filter: "True"  # Whether to only use parts of Wiki data and corpus containing filter terms.
+  training_max_steps: 1000
+  eval_highlight_metric: "F"  # one of ("F", "r", "p")
 
-directories: ["assets", "training", "configs", "scripts", "corpora", "temp"]
-
-assets:
-  - dest: 'assets/reddit.zip'
-    url: 'https://zenodo.org/record/3970806/files/reddit_el.zip?download=1'
-    checksum: 'eea345cc7574a5c9c376748d1871d557'
-    description: Entity linking dataset scraped from Reddit. See [paper](https://arxiv.org/abs/2101.01228).
-  - dest: 'assets/wiki/wikidata_entity_dump.json.bz2'
-    url: 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-    description: Wikidata entity dump.
-  - dest: 'assets/wiki/wikipedia_dump.xml.bz2'
-    url: 'https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2'
-    description: Wikipedia dump.
+directories: ["assets", "training", "configs", "scripts", "corpora", "evaluation"]
 
 workflows:
   all:
-    - setup
-    - preprocess
+    - download_mewsli9
     - download_model
-    - create_kb
+    - wikid_clone
+    - preprocess
+    - wikid_download_assets
+    - wikid_parse
+    - wikid_create_kb
+    - parse_corpus
     - compile_corpora
     - train
     - evaluate
+    - compare_evaluations
   training:
-    - create_kb
-    - compile_corpora
     - train
     - evaluate
 
 commands:
-  - name: setup
-    help: Install dependencies
+  - name: download_mewsli9
+    help: Download Mewsli-9 dataset.
     script:
-      - "python -m pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
-  - name: preprocess
-    help: Preprocess test datasets
-    script:
-      - "unzip -q -d assets/reddit assets/reddit.zip"
-      - "python ./scripts/clean_data.py reddit"
-    deps:
-      - "assets/reddit.zip"
+      - bash scripts/datasets/download_mewsli-9.sh
     outputs:
-      - "assets/reddit"
+      - assets/mewsli_9/raw
 
   - name: download_model
-    help: "Download a model with pretrained vectors and NER component"
+    help: "Download a model with pretrained vectors and NER component."
     script:
       - "python -m spacy download ${vars.vectors_model}"
 
-  - name: parse_wiki_dumps
-    help: "Parses Wikipedia dumps."
+  - name: wikid_clone
+    help: Clone `wikid` to prepare Wiki database and `KnowledgeBase`.
     script:
-      - "env PYTHONPATH=scripts python ./scripts/parse_wiki_dumps.py"
-
-  - name: create_kb
-    help: "Create the knowledge base and write it to file"
-    script:
-      - "python ./scripts/create_kb.py reddit ${vars.vectors_model}"
-    deps:
-      - "assets/reddit"
+      - git clone https://github.com/explosion/wikid.git --branch main
+      - pip install -r wikid/requirements.txt
     outputs:
-      - "assets/reddit/entities.pkl"
-      - "assets/reddit/entities_failed_lookup.pkl"
-      - "assets/reddit/annotations.pkl"
+      - wikid
+
+  - name: preprocess
+    help: Preprocess and clean corpus data.
+    script:
+      - "env PYTHONPATH=. python ./scripts/clean_data.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "assets/${vars.dataset}/raw"
+    outputs:
+      - "assets/${vars.dataset}/clean"
+
+  - name: wikid_download_assets
+    help: "Download Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
+    script:
+      - "spacy project assets wikid ${vars.download_all_wiki_assets}"
+    outputs:
+      - "wikid/assets/"
+
+  - name: wikid_parse
+    help: "Parse Wikipedia dumps. This can take a long time if you're not using the filtered dumps!"
+    script:
+      - "spacy project run parse wikid --vars.language ${vars.language} --vars.filter True"
+    outputs:
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+
+  - name: wikid_create_kb
+    help: "Create the knowledge base and write it to file."
+    script:
+      - "spacy project run create_kb wikid --vars.language ${vars.language} --vars.vectors_model ${vars.vectors_model}"
+    deps:
+      - "wikid/output/${vars.language}/wiki.sqlite3"
     outputs_no_cache:
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
+
+  - name: parse_corpus
+    help: "Parse corpus to generate entity and annotation lookups used for corpora compilation."
+    script:
+      - "env PYTHONPATH=. python ./scripts/parse_corpus.py ${vars.dataset} ${vars.language}"
+    deps:
+      - "assets/${vars.dataset}/clean"
+      - "wikid/output/${vars.language}/wiki.sqlite3"
+    outputs:
+      - "assets/${vars.dataset}/entities.pkl"
+      - "assets/${vars.dataset}/entities_failed_lookup.pkl"
+      - "assets/${vars.dataset}/annotations.pkl"
 
   - name: compile_corpora
-    help: "Compile corpora, separated in in train/dev/test sets"
+    help: "Compile corpora, separated in train/dev/test sets."
     script:
-      - "python ./scripts/compile_corpora.py reddit"
+      - "env PYTHONPATH=. python ./scripts/compile_corpora.py ${vars.dataset} ${vars.language} ${vars.filter}"
     deps:
-      - "assets/reddit/entities.pkl"
-      - "assets/reddit/entities_failed_lookups.pkl"
-      - "assets/reddit/annotations.pkl"
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
+      - "assets/${vars.dataset}/entities.pkl"
+      - "assets/${vars.dataset}/entities_failed_lookups.pkl"
+      - "assets/${vars.dataset}/annotations.pkl"
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
       - "configs/datasets.yml"
-    outputs_no_cache:
-      - "corpora/reddit/train.spacy"
-      - "corpora/reddit/dev.spacy"
-      - "corpora/reddit/test.spacy"
+    outputs:
+      - "corpora/${vars.dataset}/train.spacy"
+      - "corpora/${vars.dataset}/dev.spacy"
+      - "corpora/${vars.dataset}/test.spacy"
 
   - name: train
-    help: "Train a new Entity Linking component. Pass --gpu_id GPU_ID to train with GPU"
+    help: "Train a new Entity Linking component. Pass --vars.gpu_id GPU_ID to train with GPU. Training with some datasets may take a long time!"
     script:
-      - "python -m spacy train configs/${vars.config} \
-          --paths.dataset_name reddit \
-          --output training/reddit \
-          --paths.train corpora/reddit/train.spacy \
-          --paths.dev corpora/reddit/dev.spacy \
-          --paths.kb temp/reddit/kb \
-          --paths.base_nlp temp/reddit/nlp \
-          -c scripts/custom_functions.py"
+      - "bash scripts/train.sh ${vars.dataset} '${vars.run}' ${vars.language} ${vars.config} ${vars.training_max_steps} ${vars.gpu_id}"
+    outputs:
+      - "training/${vars.dataset}/${vars.run}"
     deps:
-      - "temp/reddit/kb"
-      - "temp/reddit/nlp"
-      - "corpora/reddit/train.spacy"
-      - "corpora/reddit/dev.spacy"
+      - "wikid/output/${vars.language}/kb"
+      - "wikid/output/${vars.language}/nlp"
+      - "corpora/${vars.dataset}/train.spacy"
+      - "corpora/${vars.dataset}/dev.spacy"
 
   - name: evaluate
-    help: "Evaluation on the test set"
+    help: "Evaluate on the test set."
     script:
-      - "env PYTHONPATH=. python ./scripts/evaluate.py reddit"
+      - "env PYTHONPATH=. python ./scripts/evaluate.py ${vars.dataset} '${vars.run}' ${vars.language}"
     deps:
-      - "training/reddit/model-best"
-      - "corpora/reddit/dev.spacy"
+      - "training/${vars.dataset}/${vars.run}/model-best"
+      - "wikid/output/${vars.language}/nlp"
+      - "corpora/${vars.dataset}/dev.spacy"
+    outputs:
+      - "evaluation/${vars.dataset}"
+
+  - name: compare_evaluations
+    help: "Compare available set of evaluation runs."
+    script:
+      - "env PYTHONPATH=. python ./scripts/compare_evaluations.py ${vars.dataset} ${vars.language} --highlight-criterion ${vars.eval_highlight_metric}"
+    deps:
+      - "evaluation/${vars.dataset}"
 
   - name: delete_wiki_db
-    help: "Deletes SQLite database with data parsed from Wikidata and Wikipedia dump."
+    help: "Deletes SQLite database generated in step wiki_parse with data parsed from Wikidata and Wikipedia dump."
     script:
-      - "rm -f assets/wiki/wiki.sqlite3"
+      - "rm -f wikid/output/${vars.language}/wiki.sqlite3"
+    deps:
+      - "wikid/output/${vars.language}/wiki.sqlite3"
 
   - name: clean
-    help: "Remove intermediate files"
+    help: "Remove intermediate files for specified dataset and language (excluding Wiki resources and database)."
     script:
-      - "rm -rf training/*"
-      - "rm -rf corpora/*"
-      - "rm -rf temp/*"
+      - "rm -rf training/${vars.dataset}"
+      - "rm -rf corpora/${vars.dataset}"
+      - "rm -rf assets/${vars.dataset}"
+      - "rm -rf evaluation/${vars.dataset}"
+      - "rm -rf wikid/output/${vars.language}"

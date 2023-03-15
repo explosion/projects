@@ -24,20 +24,12 @@ assets:
 
 workflows:
   all:
-    - install
     - vectors
     - corpus
     - train
     - evaluate
 
 commands:
-  - name: install
-    help: "Install dependencies"
-    script:
-      - "python -m pip install -r requirements.txt"
-    deps:
-      - "requirements.txt"
-
   - name: corpus
     help: "Convert the data to spaCy's format"
     # Make sure we specify the branch in the command string, so that the

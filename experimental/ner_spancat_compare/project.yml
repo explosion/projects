@@ -4,90 +4,6 @@ description: |
   Named-Entity Recognition (NER) perform on different types of entities. Here, we used
   a dataset of biomedical literature containing both overlapping and non-overlapping spans.
 
-  ### About the dataset
-
-  [GENIA](http://www.geniaproject.org/genia-corpus) is a dataset containing
-  biomedical literature from 1,999 Medline abstracts. It contains a collection
-  of overlapping and hierarchical spans. To make parsing easier, we will be
-  using the [pre-constructed IOB
-  tags](https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia)
-  from the [Boundary Aware Nested NER
-  paper](https://aclanthology.org/D19-1034/)
-  [repository](https://github.com/thecharm/boundary-aware-nested-ner/). Running `debug data` gives us the
-  following span characteristics (**SD** = Span Distinctiveness, **BD** = Boundary Distinctiveness):
-
-  | Span Type | Span Length | SD                   | BD                       |
-  |-----------|-------------|----------------------|--------------------------|
-  | DNA       | 2.81        | 1.45                 | 0.80                     |
-  | protein   | 2.19        | 1.19                 | 0.57                     |
-  | cell_type | 2.09        | 2.35                 | 1.05                     |
-  | cell_line | 3.29        | 1.91                 | 1.04                     |
-  | RNA       | 2.73        | 2.68                 | 1.28                     |
-
-  The table above shows the average span length for each span type, and their
-  corresponding distinctiveness characteristics. The latter is computed using
-  the KL-divergence of the span's token distribution with respect to the overall
-  corpus's. The higher the number is, the more distinct the tokens are compared to the
-  rest of the corpus.
-
-  These characteristics can give us a good intuition as to how well the SpanCat
-  model identifies the correct spans. In the case of GENIA, the entities
-  themselves tend to be technical terms, which makes it more distinct and easier
-  to classify. Again, we measure distinctiveness not only within the entities
-  themselves (SD), but also in its boundaries (BD).
-
-  Here's some example data:
-
-  ![](./images/sample_00.png)
-  ![](./images/sample_01.png)
-
-
-  ### Experiments
-
-  Given what we know from the dataset, we will create the following pipelines:
-
-  | Pipeline | Description                                                                                                                             | Workflow Name |
-  |----------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------|
-  | SpanCat  | Pure Span Categorization for all types of entities. Serves as illustration to demonstrate suggester functions and as comparison to NER. | `spancat` |
-  | NER      | Named-Entity Recognition for all types of entities. Serves as illustration to compare with the pure SpanCat implementation       | `ner`         |
-
-
-  #### SpanCat Results
-
-  Below are the results for SpanCat. It seems that overall, span categorization
-  is biased towards precision. This means that a large number of the suggested
-  spans belong to the correct class. We can always tune how precise we want it
-  to be: make the suggester lenient and we might get a lot of irrelevant hits,
-  make it strict and we miss might out on some true positives.
-
-  |           | Precision   | Recall   | F-score   |
-  |-----------|-------------|----------|-----------|
-  | DNA       |    0.70     | 0.36     |  0.47     |
-  | protein   |    0.77     | 0.52     |  0.62     |
-  | cell_line |    0.77     | 0.30     |  0.44     |
-  | cell_type |    0.76     | 0.62     |  0.68     |
-  | RNA       |    0.77     | 0.25     |  0.38     |
-  | **Overall**| 0.76       | 0.47     |  0.58     |
-
-  #### NER Results
-
-  NER performs well against SpanCat for all entity types, but note that this
-  process entails training five (5) models per entity type. This might work if
-  you have a small number of entities, but can be computationally heavy if you
-  have a lot.
-
-  |           |   Precision | Recall |   F-score |
-  |-----------|-------------|--------|-----------|
-  | DNA       |    0.74     | 0.63   |  0.68     |
-  | protein   |    0.76     | 0.72   |  0.74     |
-  | cell_line |    0.74     | 0.57   |  0.64     |
-  | cell_type |    0.78     | 0.72   |  0.75     |
-  | RNA       |    0.86     | 0.65   |  0.74     |
-
-  Since we have five (5) separate models in NER, what we can do afterwards is
-  combine them into a single `Doc` that transfers `doc.ents` to `doc.spans`. Since
-  the tokens are the same, we don't need to worry about misalignments and the like.
-
 vars:
   name: "ner_spancat_compare"
   version: "1.0.0"
@@ -111,7 +27,7 @@ directories:
 
 workflows:
   all:
-    - "install"
+    - "download"
     - "convert"
     - "create-ner"
     - "train-ner"
@@ -120,12 +36,12 @@ workflows:
     - "evaluate-ner"
     - "evaluate-spancat"
   spancat:
-    - "install"
+    - "download"
     - "convert"
     - "train-spancat"
     - "evaluate-spancat"
   ner:
-    - "install"
+    - "download"
     - "convert"
     - "create-ner"
     - "train-ner"
@@ -144,10 +60,9 @@ assets:
     url: https://github.com/thecharm/boundary-aware-nested-ner/blob/master/Our_boundary-aware_model/data/genia/genia.test.iob2
 
 commands:
-  - name: "install"
-    help: "Install dependencies"
+  - name: "download"
+    help: "Download model-related assets"
     script:
-      - "pip install --user -r requirements.txt"
       - "python -m spacy download en_core_web_lg"
   - name: "convert"
     help: "Convert IOB file into the spaCy format"

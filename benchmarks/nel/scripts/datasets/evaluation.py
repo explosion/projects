@@ -1,15 +1,16 @@
 """ Evaluation utilities.
 Adapted from https://github.com/explosion/projects/blob/master/nel-wikipedia/entity_linker_evaluation.py.
 """
-
+import datetime
 import logging
+import os
 import random
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
+from pathlib import Path
+from typing import Dict, List, Set, Tuple, Optional
 
 import prettytable
-from spacy import Language
-from spacy.kb import KnowledgeBase
+from spacy.kb import Candidate
 from spacy.tokens import Doc
 from utils import get_logger
 
@@ -24,6 +25,11 @@ class Metrics(object):
     n_candidates = 0
 
     def update_results(self, true_entity: str, candidates: Set[str]):
+        """Update metric results. Note that len(candidates) will always be 1 for NEL checks, as only one suggestion is
+        picked. For candidate generation however an arbitrary number of candidates is possible.
+        true_entity (str): ID of correct entity.
+        candidates (Set[str]): Suggested entity ID(s).
+        """
         self.n_updates += 1
         self.n_candidates += len(candidates)
         candidate_is_correct = true_entity in candidates
@@ -32,9 +38,11 @@ class Metrics(object):
         # Therefore, if candidate_is_correct then we have a true positive and never a true negative.
         self.true_pos += candidate_is_correct
         self.false_neg += not candidate_is_correct
-        if candidates and candidates not in ({""}, {"NIL"}):
-            # A wrong prediction (e.g. Q42 != Q3) counts both as a FP as well as a FN.
-            self.false_pos += not candidate_is_correct
+        if candidates and len(candidates) and candidates not in ({""}, {"NIL"}):
+            # A wrong prediction (e.g. Q42 != Q3) counts both as a FP as well as a FN. When update_results() is used for
+            # candidate generation, multiple candidates are passed - all suggestions except the correct one are counted
+            # as FP. Only one candidate is ever passed during the evaluation of disambiguation results.
+            self.false_pos += len(candidates) - int(candidate_is_correct)
 
     def calculate_precision(self):
         if self.true_pos == 0:
@@ -85,9 +93,9 @@ class EvaluationResults(object):
                 str(self.metrics.true_pos),
                 str(self.metrics.false_pos),
                 str(self.metrics.false_neg),
-                f"{round(self.metrics.calculate_fscore(), 3)}",
-                f"{round(self.metrics.calculate_recall(), 3)}",
-                f"{round(self.metrics.calculate_precision(), 3)}",
+                round(self.metrics.calculate_fscore(), 3),
+                round(self.metrics.calculate_recall(), 3),
+                round(self.metrics.calculate_precision(), 3),
             ]
         )
 
@@ -103,18 +111,20 @@ class EvaluationResults(object):
         for label in labels:
             table.add_row(
                 [
-                    self.name.title(),
                     label,
-                    self.metrics_by_label[label].calculate_fscore(),
-                    self.metrics_by_label[label].calculate_recall(),
-                    self.metrics_by_label[label].calculate_precision(),
+                    self.name.title(),
+                    round(self.metrics_by_label[label].calculate_fscore(), 3),
+                    round(self.metrics_by_label[label].calculate_recall(), 3),
+                    round(self.metrics_by_label[label].calculate_precision(), 3)
                 ]
             )
 
     @staticmethod
-    def report(evaluation_results: Tuple["EvaluationResults"]) -> None:
+    def report(evaluation_results: Tuple["EvaluationResults"], run_name: str, dataset_name: str) -> None:
         """Reports evaluation results.
         evaluation_result (Tuple["EvaluationResults"]): Evaluation results.
+        run_name (str): Run name.
+        dataset_name (str): Dataset name.
         """
         labels = sorted(
             list(
@@ -128,24 +138,31 @@ class EvaluationResults(object):
         overview_table = prettytable.PrettyTable(
             field_names=[
                 "Model",
-                "TPOS",
-                "FPOS",
-                "FNEG",
+                "TP",
+                "FP",
+                "FN",
                 "F-score",
                 "Recall",
                 "Precision",
             ]
         )
         label_table = prettytable.PrettyTable(
-            field_names=["Model", "Label", "F-score", "Recall", "Precision"]
+            field_names=["Label", "Model", "F-score", "Recall", "Precision"]
         )
 
         for eval_result in evaluation_results:
             eval_result._extend_report_overview_table(overview_table)
-            eval_result._extend_report_labels_table(label_table, tuple(labels))
+        for label in labels:
+            for eval_result in evaluation_results:
+                eval_result._extend_report_labels_table(label_table, (label,))
 
-        logger.info(overview_table)
-        logger.info(label_table)
+        logger.info("\n" + str(overview_table))
+        logger.info("\n" + str(label_table))
+
+        dir_path = Path(os.path.abspath(__file__)).parent.parent.parent / "evaluation" / dataset_name
+        dir_path.mkdir(parents=True, exist_ok=True)
+        with open(dir_path / f"{run_name}.csv", "w") as csv_file:
+            csv_file.write(overview_table.get_csv_string())
 
 
 class DisambiguationBaselineResults(object):
@@ -175,7 +192,7 @@ def add_disambiguation_eval_result(
     results: EvaluationResults,
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    el_nlp: Language,
+    ent_cands: Dict[Tuple[int, int], Dict[str, Candidate]],
 ) -> None:
     """
     Evaluate the ent.kb_id_ annotations against the gold standard.
@@ -183,15 +200,39 @@ def add_disambiguation_eval_result(
     results (EvaluationResults): Container for evaluation results.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Dictionary with offsets to entity QIDs.
-    el_nlp (Language): Pipeline.
+    ent_cands (Dict[Tuple[int, int], Dict[str, Candidate]]): Candidates per recognized entities' offsets and entity ID.
     """
     try:
-        for ent in el_nlp(pred_doc).ents:
-            gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
+        for ent in pred_doc.ents:
+            idx = (ent.start_char, ent.end_char)
+            gold_entity = correct_ents.get(offset(*idx), None)
             # the gold annotations are not complete so we can't evaluate missing annotations as 'wrong'
+            if gold_entity in ent_cands.get(idx, {}):
+                results.update_metrics(ent.label_, gold_entity, {ent.kb_id_})
+
+    except Exception as e:
+        logging.error("Error assessing accuracy " + str(e))
+
+
+def add_disambiguation_spacyfishing_eval_result(
+    results: EvaluationResults, pred_doc: Optional[Doc], correct_ents: Dict[str, str]
+) -> None:
+    """Measure NEL performance with spacyfishing.
+    results (EvaluationResults): Eval. results object.
+    pred_doc (Optional[Doc]): Document after running it through spacyfishing pipeline. Might be None in case of pipeline
+        error.
+    correct_ents (Dict[str, str]): Mapping from stringified offsets to correct entity IDs.
+    """
+
+    try:
+        if pred_doc is None:
+            results.update_metrics("NIL", "", {"NIL"})
+            return
+
+        for ent in pred_doc.ents:
+            gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
             if gold_entity is not None:
-                pred_entity = ent.kb_id_
-                results.update_metrics(ent.label_, gold_entity, {pred_entity})
+                results.update_metrics(ent.label_, gold_entity, {ent._.kb_qid})
 
     except Exception as e:
         logging.error("Error assessing accuracy " + str(e))
@@ -202,7 +243,7 @@ def add_disambiguation_baseline(
     counts: Dict[str, int],
     pred_doc: Doc,
     correct_ents: Dict[str, str],
-    kb: KnowledgeBase,
+    ent_cands: Dict[Tuple[int, int], Dict[str, Candidate]],
 ) -> None:
     """
     Measure 3 performance baselines: random selection, prior probabilities, and 'oracle' prediction for upper bound.
@@ -211,16 +252,16 @@ def add_disambiguation_baseline(
     counts (Dict[str, int]): Counts per label.
     pred_doc (Doc): Predicted Doc object to evaluate.
     correct_ents (Dict[str, str]): Offsets in the shape of {f"{start_char}_{end_char}": QID}.
-    kb (KnowledgeBase): Knowledge base.
+    ent_cands (Dict[Tuple[int, int], Dict[str, Candidate]]): Candidates per recognized entities' offsets and entity ID.
     """
     for ent in pred_doc.ents:
         ent_label = ent.label_
-        gold_entity = correct_ents.get(offset(ent.start_char, ent.end_char), None)
+        idx = (ent.start_char, ent.end_char)
+        gold_entity = correct_ents.get(offset(*idx), None)
 
         # The gold annotations are not necessarily complete so we can't evaluate missing annotations as wrong.
-        if gold_entity is not None:
-
-            candidates = kb.get_alias_candidates(ent.text)
+        if gold_entity in ent_cands.get(idx, set()):
+            candidates = list(ent_cands[idx].values())
             oracle_candidate = ""
             prior_candidate = ""
             random_candidate = ""

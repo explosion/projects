@@ -1,0 +1,9 @@
+analyses/
+assets/
+configs/*filled.cfg
+corpus/
+project.lock
+temp/
+training/
+unseen/
+wandb/

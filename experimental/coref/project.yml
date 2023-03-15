@@ -1,0 +1,160 @@
+title: "Training a spaCy Coref Model"
+description: |
+  This project trains a coreference model for spaCy using OntoNotes.
+
+spacy_version: ">=3.3.0,<4.0.0"
+
+vars:
+  # XXX Change to your actual GPU ID
+  gpu_id: 0
+  # XXX fill with your local path to OntoNotes
+  ontonotes: /home/USER/ontonotes5/data
+  max_epochs: 20
+  # File to use for data in ci testing
+  test_file: assets/litbank/95_the_prisoner_of_zenda_brat.conll
+  # Changed in testing to use CPU configs
+  config_dir: configs/
+  # Heads to use when prepping span data, can be "gold" or "silver".
+  # For OntoNotes, there isn't a significant difference with either.
+  heads: silver
+
+  # conll training data split files
+  train_conll: assets/train.gold.conll
+  dev_conll: assets/dev.gold.conll
+  test_conll: assets/test.gold.conll
+
+directories: ["assets", "corpus", "scripts", "configs", "training"]
+
+assets:
+  - dest: assets/
+    git:
+      repo: "https://github.com/explosion/conll-2012"
+      branch: "main"
+      path: ""
+    description: "CoNLL-2012 scripts and dehydrated data, used for preprocessing OntoNotes."
+  - dest: assets/litbank
+    extra: True
+    git:
+      repo: "https://github.com/dbamman/litbank"
+      branch: "master"
+      path: "coref/conll"
+    description: "LitBank dataset. Only used for building data for quick unit tests."
+
+workflows:
+  prep:
+    - preprocess
+  train:
+    - train-cluster
+    - prep-span-data
+    - train-span-resolver
+    - assemble
+
+  all:
+    # prep
+    - preprocess
+    # train
+    - train-cluster
+    - prep-span-data
+    - train-span-resolver
+    - assemble
+    # eval
+    - eval
+
+commands:
+  - name: "prep-ontonotes-data"
+    help: "Rehydrate the data using OntoNotes"
+    script: 
+      - bash scripts/prep_data.sh "${vars.ontonotes}"
+    deps:
+      - assets/conll-2012-development.v4.tar.gz
+      - assets/conll-2012-test-key.tar.gz
+      - assets/conll-2012-test-official.v9.tar.gz
+      - assets/conll-2012-train.v4.tar.gz
+      - assets/conll-2012/v3/scripts/skeleton2conll.sh
+      - ${vars.ontonotes}
+    outputs: 
+      - assets/train.gold.conll
+      - assets/dev.gold.conll
+      - assets/test.gold.conll
+
+  - name: "prep-artificial-unit-test-data"
+    # Note this writes to the same paths as real data in order to re-use the actions.
+    help: "Prepare minimal dataset for CI testing. Note this will overwrite train/dev/test data!"
+    deps:
+      - ${vars.test_file}
+      - scripts/preprocess.py
+    script:
+      - python scripts/preprocess.py ${vars.test_file} corpus/train.spacy
+      - python scripts/preprocess.py ${vars.test_file} corpus/dev.spacy
+      - python scripts/preprocess.py ${vars.test_file} corpus/test.spacy
+    outputs:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - corpus/test.spacy
+
+  - name: "preprocess"
+    help: "Convert the data to spaCy's format"
+    deps:
+      - ${vars.train_conll}
+      - ${vars.dev_conll}
+      - ${vars.test_conll}
+      - scripts/preprocess.py
+    script:
+      - python scripts/preprocess.py ${vars.train_conll} corpus/train.spacy
+      - python scripts/preprocess.py ${vars.dev_conll} corpus/dev.spacy
+      - python scripts/preprocess.py ${vars.test_conll} corpus/test.spacy
+    outputs:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - corpus/test.spacy
+
+  - name: "train-cluster"
+    help: "Train the clustering component"
+    script: 
+      - "python -m spacy train ${vars.config_dir}/cluster.cfg -g ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy -o training/cluster --training.max_epochs ${vars.max_epochs}"
+    deps:
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - ${vars.config_dir}/cluster.cfg
+    outputs:
+      - training/cluster/model-best
+  
+  - name: "prep-span-data"
+    help: "Prepare data for the span resolver component."
+    script:
+      - python scripts/prep_span_data.py --heads ${vars.heads} --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/train.spacy --output-path corpus/spans.train.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+      - python scripts/prep_span_data.py --heads ${vars.heads} --model-path training/cluster/model-best/ --gpu ${vars.gpu_id} --input-path corpus/dev.spacy --output-path corpus/spans.dev.spacy --head-prefix coref_head_clusters --span-prefix coref_clusters
+    deps:
+      - scripts/prep_span_data.py
+      - corpus/train.spacy
+      - corpus/dev.spacy
+      - training/cluster/model-best
+    outputs:
+      - corpus/spans.train.spacy
+      - corpus/spans.dev.spacy
+  
+  - name: "train-span-resolver"
+    help: "Train the span resolver component."
+    script:
+      - spacy train ${vars.config_dir}/span.cfg -c scripts/custom_functions.py -g ${vars.gpu_id} --paths.train corpus/spans.train.spacy --paths.dev corpus/spans.dev.spacy --training.max_epochs ${vars.max_epochs} --paths.transformer_source training/cluster/model-best -o training/span_resolver
+    deps:
+      - corpus/spans.train.spacy
+      - corpus/spans.dev.spacy
+      - ${vars.config_dir}/span.cfg
+      - training/cluster/model-best
+    outputs:
+      - training/span_resolver/model-best
+
+  - name: "assemble"
+    help: "Assemble all parts into a complete coref pipeline."
+    script:
+      - spacy assemble ${vars.config_dir}/coref.cfg training/coref
+    deps:
+      - training/cluster/model-best
+      - training/span_resolver/model-best
+      - ${vars.config_dir}/coref.cfg
+
+  - name: "eval"
+    help: "Evaluate model on the test set."
+    script:
+      - python scripts/run_eval.py --model training/coref --test-data corpus/test.spacy --gpu ${vars.gpu_id}
