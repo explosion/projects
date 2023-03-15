@@ -31,7 +31,6 @@ assets:
 # haven't changed, it won't be re-run.
 workflows:
   data:
-    - install_requirements
     - download_oscar
     - download_model
     - extract_ud
@@ -59,9 +58,7 @@ commands:
   - name: install_requirements
     help: "Download and install all requirements"
     script:
-      - "python scripts/get_oscar_dataset.py ${vars.max_pretraining_texts} ${vars.spacy_lang} ${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
-    outputs:
-      - "${vars.oscar_path}/oscar_data_${vars.spacy_lang}.jsonl"
+      - "pip install -r requirements.txt"
 
   - name: download_oscar
     help: "Download a subset of the oscar dataset"
