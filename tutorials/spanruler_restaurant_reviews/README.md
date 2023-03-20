@@ -103,7 +103,7 @@ Commands are only re-run if their inputs have changed.
 | `prodigy-review-train` | Annotate the train data with the Prodigy review recipe. |
 | `prodigy-review-test` | Annotate the test data with the Prodigy review recipe. |
 | `db-out` | Export Prodigy data. |
-| `prodigy-convert` | Convert Prodigy files into spaCy's binary format for model training. |
+| `prodigy-convert` | Convert JSONL files into spaCy's binary format for model training. |
 | `train-review` | Train a NER model with reviewed data. |
 | `assemble-review` | Assemble trained NER pipeline with SpanRuler with reviewed data. |
 | `evaluate-review` | Evaluate each model with reviewed data. |
@@ -117,9 +117,10 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` |
+| `all` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` &rarr; `prodigy-convert` &rarr; `train-review` &rarr; `assemble-review` &rarr; `evaluate-review` |
 | `prodigy` | `preprocess-prodigy` &rarr; `db-in` |
-| `review` | `prodigy-convert` &rarr; `train-review` &rarr; `assemble-review` &rarr; `evaluate-review` |
+| `before-review` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `assemble` &rarr; `evaluate` |
+| `after-review` | `prodigy-convert` &rarr; `train-review` &rarr; `assemble-review` &rarr; `evaluate-review` |
 
 ### 🗂 Assets
 

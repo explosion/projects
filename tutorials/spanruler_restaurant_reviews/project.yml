@@ -114,10 +114,20 @@ workflows:
     - train
     - assemble
     - evaluate
+    - prodigy-convert
+    - train-review
+    - assemble-review
+    - evaluate-review
   prodigy:
     - preprocess-prodigy
     - db-in
-  review:
+  before-review:
+    - download
+    - preprocess
+    - train
+    - assemble
+    - evaluate
+  after-review:
     - prodigy-convert
     - train-review
     - assemble-review
@@ -300,7 +310,7 @@ commands:
     script:
       - >-
         python -m spacy assemble
-        configs/ner_ruler.cfg
+        configs/ner_ruler_review.cfg
         models/ner_ruler_review
         --components.tok2vec.source training/ner_review/model-best/
         --components.ner.source training/ner_review/model-best/
