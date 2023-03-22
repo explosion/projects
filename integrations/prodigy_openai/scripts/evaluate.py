@@ -36,9 +36,9 @@ def convert_record(nlp: Language, record: Dict[str, str]):
     return doc
 
 
-def evaluate_gpt(
+def evaluate(
     # fmt: off
-    input_path: Path = Arg(..., help="Path to the JSONL predictions of GPT-3"),
+    input_path: Path = Arg(..., help="Path to the JSONL predictions"),
     test_path: Path = Arg(..., help="Path to the test set in spaCy format"),
     output_path: Optional[Path] = Opt(None, "--output-path", "--output", "-o", help="Path to save the metrics"),
     # fmt: on
@@ -62,4 +62,4 @@ def evaluate_gpt(
 
 
 if __name__ == "__main__":
-    typer.run(evaluate_gpt)
+    typer.run(evaluate)

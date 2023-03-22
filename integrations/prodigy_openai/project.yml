@@ -154,7 +154,7 @@ commands:
     help: "Evaluate zero-shot GPT-3 predictions"
     script:
       - >-
-        python -m scripts.evaluate_gpt 
+        python -m scripts.evaluate 
         openai/zeroshot_preds.jsonl corpus/anem-test.spacy
         --output metrics/scores_gpt.json
     deps:
