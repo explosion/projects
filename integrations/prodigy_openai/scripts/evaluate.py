@@ -50,7 +50,10 @@ def evaluate(
     # Create examples for evaluation
     reference = list(doc_bin.get_docs(nlp.vocab))
     predicted = [convert_record(nlp, pred) for pred in srsly.read_jsonl(input_path)]
-    assert get_labels(reference) == get_labels(predicted)
+
+    # When we're downsampling, it's possible that not all labels
+    # will be present in the predicted annotations.
+    assert get_labels(predicted).issubset(get_labels(reference))
     examples = [Example(pred, ref) for pred, ref in zip(predicted, reference)]
 
     # Perform evaluation
