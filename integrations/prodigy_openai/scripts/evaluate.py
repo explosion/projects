@@ -6,7 +6,7 @@ import srsly
 import typer
 from spacy import Language
 from spacy.scorer import Scorer
-from spacy.tokens import DocBin
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
 from wasabi import msg
 
@@ -21,7 +21,7 @@ def get_labels(docs: List[str]) -> Set[str]:
     return set(ents)
 
 
-def convert_record(nlp: Language, record: Dict[str, str]):
+def convert_record(nlp: Language, record: Dict[str, str]) -> Doc:
     """Convert a record from the OpenAI output into a spaCy Doc object"""
     doc = nlp.make_doc(record.get("text"))
     spans = [
@@ -36,11 +36,18 @@ def convert_record(nlp: Language, record: Dict[str, str]):
     return doc
 
 
+def filter_by_members(on: List[Doc], by: List[str]) -> List[Doc]:
+    """Filter documents based on membership"""
+    docs = [doc for doc in on if doc.text in set(by)]
+    return docs
+
+
 def evaluate(
     # fmt: off
     input_path: Path = Arg(..., help="Path to the JSONL predictions"),
     test_path: Path = Arg(..., help="Path to the test set in spaCy format"),
     output_path: Optional[Path] = Opt(None, "--output-path", "--output", "-o", help="Path to save the metrics"),
+    filter_gold: bool = Opt(False, "--filter", "--filter-gold", help="Filter test set based on the predictions")
     # fmt: on
 ):
     """Evaluate the zero-shot annotations of GPT-3"""
@@ -50,6 +57,9 @@ def evaluate(
     # Create examples for evaluation
     reference = list(doc_bin.get_docs(nlp.vocab))
     predicted = [convert_record(nlp, pred) for pred in srsly.read_jsonl(input_path)]
+    if filter_gold:
+        reference = filter_by_members(on=reference, by=[doc.text for doc in predicted])
+        msg.text(f"Filtered gold examples. Obtained {len(reference)} documents.")
 
     # When we're downsampling, it's possible that not all labels
     # will be present in the predicted annotations.
