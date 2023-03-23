@@ -15,7 +15,7 @@ vars:
   # This variable depends on the output of the pretrain commands
   pretraining_model: "model19.bin"
   # Choose -1 for CPU
-  gpu: 0
+  gpu: -1
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
