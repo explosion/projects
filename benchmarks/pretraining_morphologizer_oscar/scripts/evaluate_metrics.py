@@ -13,18 +13,21 @@ def main(metric_folder: Path):
     datasets = {
         "UD_English-EWT": {
             "no_pretraining": {},
+            "static": {},
             "character_objective": {},
             "vector_objective": {},
             "transformer": {},
         },
         "UD_German-HDT": {
             "no_pretraining": {},
+            "static": {},
             "character_objective": {},
             "vector_objective": {},
             "transformer": {},
         },
         "UD_Dutch-Alpino": {
             "no_pretraining": {},
+            "static": {},
             "character_objective": {},
             "vector_objective": {},
             "transformer": {},
@@ -68,10 +71,14 @@ def main(metric_folder: Path):
     # Training eval
     msg.info("Starting training evaluation")
     for dataset in datasets:
+        if dataset not in datasets_exist:
+            continue
         x_list = []
         y_list = []
         name_list = []
         for metric_type in datasets[dataset]:
+            if not datasets[dataset][metric_type]:
+                continue
             epochs = []
             scores = []
             for line in datasets[dataset][metric_type]["training"]:
@@ -114,15 +121,20 @@ def main(metric_folder: Path):
 
     metric_types = [
         "no_pretraining",
+        "static",
         "character_objective",
         "vector_objective",
         "transformer",
     ]
     for dataset in datasets:
+        if dataset not in datasets_exist:
+            continue
         metric_table = {}
         for metric in compare_metrics:
             metric_table[metric] = {}
             for metric_type in datasets[dataset]:
+                if not datasets[dataset][metric_type]:
+                    continue
                 eval_data = datasets[dataset][metric_type]["evaluation"]
 
                 if type(eval_data[metric]) == dict:
@@ -147,6 +159,8 @@ def main(metric_folder: Path):
             if len(metric_table[metric]) > 0:
                 no_pretraining_value = 0
                 for metric_type in metric_types:
+                    if metric_type not in metric_table[metric]:
+                        continue
                     difference = 0
                     if metric_type == "no_pretraining":
                         no_pretraining_value = metric_table[metric][metric_type]
