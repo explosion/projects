@@ -42,24 +42,32 @@ def filter_by_members(on: List[Doc], by: List[str]) -> List[Doc]:
     return docs
 
 
+def read_records(path: Path) -> List[Doc]:
+    nlp = spacy.blank("en")
+    if path.suffix == ".spacy":
+        doc_bin = DocBin().from_disk(path)
+        docs = list(doc_bin.get_docs(nlp.vocab))
+    elif path.suffix == ".jsonl":
+        docs = [convert_record(nlp, record) for record in srsly.read_jsonl(path)]
+    else:
+        msg.fail(
+            f"Unknown file extension: {path.suffix}. Pass a spaCy or JSONL file.",
+            exits=1,
+        )
+    return docs
+
+
 def evaluate(
     # fmt: off
-    input_path: Path = Arg(..., help="Path to the JSONL predictions"),
-    test_path: Path = Arg(..., help="Path to the test set in spaCy format"),
+    prediction_path: Path = Arg(..., help="Path to the predictions"),
+    reference_path: Path = Arg(..., help="Path to the gold annotations"),
     output_path: Optional[Path] = Opt(None, "--output-path", "--output", "-o", help="Path to save the metrics"),
-    filter_gold: bool = Opt(False, "--filter", "--filter-gold", help="Filter test set based on the predictions")
     # fmt: on
 ):
     """Evaluate the zero-shot annotations of GPT-3"""
-    nlp = spacy.blank("en")
-    doc_bin = DocBin().from_disk(test_path)
-
-    # Create examples for evaluation
-    reference = list(doc_bin.get_docs(nlp.vocab))
-    predicted = [convert_record(nlp, pred) for pred in srsly.read_jsonl(input_path)]
-    if filter_gold:
-        reference = filter_by_members(on=reference, by=[doc.text for doc in predicted])
-        msg.text(f"Filtered gold examples. Obtained {len(reference)} documents.")
+    # Read records
+    reference = read_records(reference_path)
+    predicted = read_records(prediction_path)
 
     # When we're downsampling, it's possible that not all labels
     # will be present in the predicted annotations.
