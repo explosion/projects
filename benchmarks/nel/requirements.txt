@@ -3,6 +3,7 @@ tqdm
 prettytable
 scikit-learn
 fuzzyset2
+rapidfuzz>=2.0.0
 spacyfishing
 virtualenv
 pysqlite3-binary
