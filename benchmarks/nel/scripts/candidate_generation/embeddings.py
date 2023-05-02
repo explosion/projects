@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 from spacy.tokens import Span
 from .base import NearestNeighborCandidateSelector
 from compat import KnowledgeBase
-from rapidfuzz.string_metric import normalized_levenshtein
+from rapidfuzz.distance.Levenshtein import normalized_similarity
 
 
 class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
@@ -39,7 +39,7 @@ class EmbeddingCandidateSelector(NearestNeighborCandidateSelector):
         candidate_entity_ids: Set[str] = set()
         for nne in nn_entities:
             for name in nn_entities[nne].aliases:
-                if normalized_levenshtein(name.lower(), span.text.lower()) / 100 >= lexical_similarity_cutoff:
+                if normalized_similarity(name.lower(), span.text.lower()) / 100 >= lexical_similarity_cutoff:
                     candidate_entity_ids.add(nne)
                     break
 
