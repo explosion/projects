@@ -1,15 +1,15 @@
 # coding: utf-8
-from random import shuffle
-
 import logging
 import numpy as np
+from random import shuffle
 
-from spacy._ml import zero_init, create_default_optimizer
-from spacy.cli.pretrain import get_cossim_loss
+import spacy
+from thinc.api import chain, Model
+from thinc.layers import Dropout
+#Affine,
+from affine import Affine
+from thinc.initializers import zero_init as InitZero
 
-from thinc.v2v import Model
-from thinc.api import chain
-from thinc.neural._classes.affine import Affine
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class EntityEncoder:
     This entity vector will be stored in the KB, for further downstream use in the entity model.
     """
 
-    DROP = 0
+    DROP = 0.0
     BATCH_SIZE = 1000
 
     # Set min. acceptable loss to avoid a 'mean of empty slice' warning by numpy
@@ -119,34 +119,29 @@ class EntityEncoder:
 
     @staticmethod
     def _get_doc_embedding(doc):
-        indices = np.zeros((len(doc),), dtype="i")
-        for i, word in enumerate(doc):
-            if word.orth in doc.vocab.vectors.key2row:
-                indices[i] = doc.vocab.vectors.key2row[word.orth]
-            else:
-                indices[i] = 0
-        word_vectors = doc.vocab.vectors.data[indices]
+        word_vectors = np.array([token.vector for token in doc])
         doc_vector = np.mean(word_vectors, axis=0)
         return doc_vector
 
-    def _build_network(self, orig_width, hidden_with):
+    def _build_network(self, orig_width, hidden_width):
         with Model.define_operators({">>": chain}):
-            # very simple encoder-decoder model
-            self.encoder = Affine(hidden_with, orig_width)
-            self.model = self.encoder >> zero_init(
-                Affine(orig_width, hidden_with, drop_factor=0.0)
-            )
-        self.sgd = create_default_optimizer(self.model.ops)
+            self.encoder = Affine(hidden_width, orig_width, init_W=InitZero(), init_b=InitZero())
+            self.model = self.encoder >> Dropout(rate=self.DROP)
+
+        self.model.initialize()
+        self.sgd = self.model.ops.optimizer
 
     def _update(self, vectors):
-        predictions, bp_model = self.model.begin_update(
-            np.asarray(vectors), drop=self.DROP
-        )
-        loss, d_scores = self._get_loss(scores=predictions, golds=np.asarray(vectors))
+        predictions, bp_model = self.model.begin_update(np.asarray(vectors), drop=self.DROP)
+        loss, d_scores = self._get_loss(predictions, np.asarray(vectors))
         bp_model(d_scores, sgd=self.sgd)
         return loss / len(vectors)
 
     @staticmethod
-    def _get_loss(golds, scores):
-        loss, gradients = get_cossim_loss(scores, golds)
+    def _get_loss(scores, golds):
+        predictions_norm = np.linalg.norm(scores, axis=1, keepdims=True)
+        golds_norm = np.linalg.norm(golds, axis=1, keepdims=True)
+        cosine_sim = np.dot(scores, golds.T) / (predictions_norm * golds_norm.T)
+        loss = np.mean(1 - cosine_sim)
+        gradients = (scores - golds) / (len(scores) * predictions_norm * golds_norm.T)
         return loss, gradients

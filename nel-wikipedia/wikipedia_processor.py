@@ -7,7 +7,9 @@ import logging
 import random
 import json
 
-from spacy.gold import GoldParse
+#from spacy.gold import GoldParse
+from spacy.training.example import Example
+
 import wiki_io as io
 from wiki_namespaces import WP_META_NAMESPACE, WP_FILE_NAMESPACE, WP_CATEGORY_NAMESPACE
 
@@ -536,8 +538,9 @@ def _get_gold_parse(doc, entities, dev, kb, labels_discard):
                         {kb_id: 0.0 for kb_id in candidate_ids if kb_id != entity_id}
                     )
                 gold_entities[(start, end)] = value_by_id
+    example = Example.from_dict(doc, {"links": gold_entities})
 
-    return GoldParse(doc, links=gold_entities)
+    return example
 
 
 def is_dev(article_id):
