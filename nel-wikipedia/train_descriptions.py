@@ -6,7 +6,6 @@ from random import shuffle
 import spacy
 from thinc.api import chain, Model
 from thinc.layers import Dropout
-#Affine,
 from affine import Affine
 from thinc.initializers import zero_init as InitZero
 
