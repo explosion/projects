@@ -1,0 +1,25 @@
+title: 'Clinical trial results extraction with LLMs'
+description: "Using an LLM in a spaCy pipeline to extract patient groups, treatments and outcomes in clinical trials."
+
+vars:
+  config: "config_openai.cfg"
+  pmid: 27144689
+
+# These are the directories that the project needs.
+directories: ["assets", "configs", "scripts"]
+
+# Assets that should be available in the directory.
+assets:
+  - dest: "assets/23206895.txt"
+  - dest: "assets/27144689.txt"
+  - dest: "assets/35172054.txt"
+
+# Project commands
+commands:
+  - name: summarize
+    help: "Run the LLM-powered spaCy pipeline"
+    script:
+      - "python ./scripts/run_pipeline.py ${vars.pmid} ./configs/${vars.config}"
+    deps:
+      - "assets/${vars.pmid}.txt"
+      - "configs/${vars.config}"

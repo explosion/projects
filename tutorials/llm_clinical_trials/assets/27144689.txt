@@ -1,0 +1,14 @@
+Hemodynamic Effects of Phenylephrine, Vasopressin, and Epinephrine in Children With Pulmonary Hypertension: A Pilot Study
+
+Abstract
+Objectives: During a pulmonary hypertensive crisis, the marked increase in pulmonary vascular resistance can result in acute right ventricular failure and death. Currently, there are no therapeutic guidelines for managing an acute crisis. This pilot study examined the hemodynamic effects of phenylephrine, arginine vasopressin, and epinephrine in pediatric patients with pulmonary hypertension.
+
+Design: In this prospective, open-label, nonrandomized pilot study, we enrolled pediatric patients previously diagnosed with pulmonary hypertensive who were scheduled electively for cardiac catheterization. Primary outcome was a change in the ratio of pulmonary-to-systemic vascular resistance. Baseline hemodynamic data were collected before and after the study drug was administered.
+
+Patients: Eleven of 15 participants were women, median age was 9.2 years (range, 1.7-14.9 yr), and median weight was 26.8 kg (range, 8.5-55.2 kg). Baseline mean pulmonary artery pressure was 49 ± 19 mm Hg, and mean indexed pulmonary vascular resistance was 10 ± 5.4 Wood units. Etiology of pulmonary hypertensive varied, and all were on systemic pulmonary hypertensive medications.
+
+Interventions: Patients 1-5 received phenylephrine 1 μg/kg; patients 6-10 received arginine vasopressin 0.03 U/kg; and patients 11-15 received epinephrine 1 μg/kg. Hemodynamics was measured continuously for up to 10 minutes following study drug administration.
+
+Measurements and main results: After study drug administration, the ratio of pulmonary-to-systemic vascular resistance decreased in three of five patients receiving phenylephrine, five of five patients receiving arginine vasopressin, and three of five patients receiving epinephrine. Although all three medications resulted in an increase in aortic pressure, only arginine vasopressin consistently resulted in a decrease in the ratio of systolic pulmonary artery-to-aortic pressure.
+
+Conclusions: This prospective pilot study of phenylephrine, arginine vasopressin, and epinephrine in pediatric patients with pulmonary hypertensive showed an increase in aortic pressure with all drugs although only vasopressin resulted in a consistent decrease in the ratio of pulmonary-to-systemic vascular resistance. Studies with more subjects are warranted to define optimal dosing strategies of these medications in an acute pulmonary hypertensive crisis.
