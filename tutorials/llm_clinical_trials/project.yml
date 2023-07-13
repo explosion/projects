@@ -2,7 +2,8 @@ title: 'Clinical trial results extraction with LLMs'
 description: "Using an LLM in a spaCy pipeline to extract patient groups, treatments and outcomes in clinical trials."
 
 vars:
-  config: "config_openai.cfg"
+  ner_config: "ner_openai.cfg"
+  trial_config: "trial_openai.cfg"
   pmid: 27144689
 
 # These are the directories that the project needs.
@@ -16,10 +17,18 @@ assets:
 
 # Project commands
 commands:
+  - name: zero_shot_ner
+    help: "Run an LLM pipeline with zero-shot NER"
+    script:
+      - "python ./scripts/visualise_entities.py ${vars.pmid} ./configs/${vars.ner_config}"
+    deps:
+      - "assets/${vars.pmid}.txt"
+      - "configs/${vars.ner_config}"
+
   - name: summarize
     help: "Run the LLM-powered spaCy pipeline"
     script:
-      - "python ./scripts/run_pipeline.py ${vars.pmid} ./configs/${vars.config}"
+      - "python ./scripts/extract_results.py ${vars.pmid} ./configs/${vars.trial_config}"
     deps:
       - "assets/${vars.pmid}.txt"
-      - "configs/${vars.config}"
+      - "configs/${vars.trial_config}"
