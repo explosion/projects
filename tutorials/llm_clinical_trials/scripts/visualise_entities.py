@@ -13,8 +13,12 @@ def visualise_entities(pmid: int, config_path: Path, verbose: bool = False):
     text = read_trial(pmid, verbose=verbose)
     nlp = assemble(config_path)
     doc = nlp(text)
-    options = {"ents": ["Drug", "Dose"], "colors": {"Drug": "pink", "Dose": "orange"}}
-    displacy.serve(doc, style="ent", options=options)
+    # options = {"ents": ["Drug", "Dose"], "colors": {"Drug": "pink", "Dose": "orange"}}
+    ents = list(doc.ents)
+    print("ents", len(ents))
+    for ent in ents:
+        print(ent.text, ent.label_)
+    #displacy.serve(doc, style="ent", options=options)
 
 
 if __name__ == "__main__":

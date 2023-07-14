@@ -1,0 +1,4 @@
+cupy-cuda117
+torch==1.13.1+cu117 -f https://download.pytorch.org/whl/torch_stable.html
+transformers
+einops
