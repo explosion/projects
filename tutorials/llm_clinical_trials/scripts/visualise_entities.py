@@ -8,8 +8,14 @@ from wasabi import msg
 
 
 def visualise_entities(pmid: int, config_path: Path, verbose: bool = False):
-    msg.text(f"Processing PMID {pmid}", show=verbose)
-    msg.text(f"Loading config from {config_path}", show=verbose)
+    import logging
+    import spacy_llm
+
+    spacy_llm.logger.addHandler(logging.StreamHandler())
+    spacy_llm.logger.setLevel(logging.DEBUG)
+
+    #msg.text(f"Processing PMID {pmid}", show=verbose)
+    #msg.text(f"Loading config from {config_path}", show=verbose)
     text = read_trial(pmid, verbose=verbose)
     nlp = assemble(config_path)
     doc = nlp(text)
