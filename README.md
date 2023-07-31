@@ -2,20 +2,22 @@
 
 # 🪐 Project Templates
 
-[spaCy projects](https://spacy.io/usage/projects) let you manage and
-share **end-to-end spaCy workflows** for different **use cases and domains**,
-and orchestrate training, packaging and serving your custom pipelines. You can
-start off by cloning a pre-defined project template, adjust it to fit your
-needs, load in your data, train a pipeline, export it as a Python package,
-upload your outputs to a remote storage and share your results with your team.
+[spaCy projects](https://spacy.io/usage/projects) let you manage and share
+**end-to-end spaCy workflows** for different **use cases and domains**, and
+orchestrate training, packaging and serving your custom pipelines. You can start
+off by cloning a pre-defined project template, adjust it to fit your needs, load
+in your data, train a pipeline, export it as a Python package, upload your
+outputs to a remote storage and share your results with your team.
 
 > ⚠️ spaCy project templates require [**spaCy v3**](https://spacy.io). You can
-> install it from pip with `pip install spacy` or conda with `conda install spacy -c conda-forge`. Make sure to use a fresh virtual environment.
+> install it from pip with `pip install spacy` or conda with
+> `conda install spacy -c conda-forge`. Make sure to use a fresh virtual
+> environment.
 >
 > See the [`master` branch](https://github.com/explosion/projects/tree/master)
 > for the previous version of this repo.
 
-[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/20/v3.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=20)
+[![tests](https://github.com/explosion/projects/actions/workflows/tests.yml/badge.svg)](https://github.com/explosion/projects/actions/workflows/tests.yml)
 [![spaCy](https://img.shields.io/static/v1?label=made%20with%20%E2%9D%A4%20and&message=spaCy&color=09a3d5&style=flat-square)](https://spacy.io)
 
 ## 🗃 Categories
@@ -31,8 +33,8 @@ upload your outputs to a remote storage and share your results with your team.
 ## 🚀 Quickstart
 
 Projects can be used via the new
-[`spacy project`](https://spacy.io/api/cli#project) CLI. To find out
-more about a command, add `--help`. For detailed instructions, see the
+[`spacy project`](https://spacy.io/api/cli#project) CLI. To find out more about
+a command, add `--help`. For detailed instructions, see the
 [usage guide](https://spacy.io/usage/projects).
 
 <!-- TODO: update example -->
@@ -62,9 +64,9 @@ more about a command, add `--help`. For detailed instructions, see the
 To keep the project templates and their documentation up to date, this repo
 contains several scripts:
 
-| Script                                                       | Description                                                                                                                                                                                                               |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`update_docs.py`](.github/update_docs.py)                   | Update all auto-generated docs in the given root. Calls into [`spacy project document`](https://spacy.io/api/cli#project-document) and only replaces the auto-generated sections, not any custom content before or after. |
-| [`update_category_docs.py`](.github/update_category_docs.py) | Update the auto-generated `README.md` in the category directories listing the available project templates.                                                                                                                |
-| [`update_configs.py`](.github/update_configs.py)             | Update and auto-fill all `config.cfg` files included in the repo, similar to [`spacy init fill-config`](https://spacy.io/api/cli#init-fill-config). Can be used to keep the configs up to date with changes in spaCy.     |
+| Script                                                         | Description                                                                                                                                                                                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`update_docs.py`](.github/update_docs.py)                     | Update all auto-generated docs in the given root. Calls into [`spacy project document`](https://spacy.io/api/cli#project-document) and only replaces the auto-generated sections, not any custom content before or after. |
+| [`update_category_docs.py`](.github/update_category_docs.py)   | Update the auto-generated `README.md` in the category directories listing the available project templates.                                                                                                                |
+| [`update_configs.py`](.github/update_configs.py)               | Update and auto-fill all `config.cfg` files included in the repo, similar to [`spacy init fill-config`](https://spacy.io/api/cli#init-fill-config). Can be used to keep the configs up to date with changes in spaCy.     |
 | [`update_projects_jsonl.py`](.github/update_projects_jsonl.py) | Update `projects.jsonl` file in the given root. Should be used at the root level of the repo.                                                                                                                             |

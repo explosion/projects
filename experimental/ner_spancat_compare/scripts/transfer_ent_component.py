@@ -3,7 +3,7 @@ from spacy.tokens import Doc
 from spacy.tokens.span_group import SpanGroup
 
 
-@Language.factory("transfer-ent.v1", requires=["doc._.ents"])
+@Language.factory("transfer-ent", requires=["doc._.ents"])
 def make_transfer_component(nlp: Language, name: str, span_key: str):
     return TransferEntComponent(nlp, name, span_key)
 

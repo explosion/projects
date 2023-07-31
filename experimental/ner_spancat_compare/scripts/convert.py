@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List
 
 import typer
-from spacy.tokens import Doc, DocBin, SpanGroup
+from spacy.tokens import Doc, DocBin, Span, SpanGroup
 from spacy.training.converters import conll_ner_to_docs
 from wasabi import msg
 
@@ -46,8 +46,11 @@ def convert_iob_to_docs(
     docs_with_spans: List[Doc] = []
 
     for docs in zip(*docs_per_level):
-        spans = [ent for doc in docs for ent in doc.ents]
         doc = docs[0]
+        # recreate all spans for the same underlying doc
+        spans = []
+        for span in [ent for doc in docs for ent in doc.ents]:
+            spans.append(Span(doc, span.start, span.end, span.label_))
         group = SpanGroup(doc, name=spans_key, spans=spans)
         doc.spans[spans_key] = group
         docs_with_spans.append(doc)
