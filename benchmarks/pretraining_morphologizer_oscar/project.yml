@@ -13,9 +13,11 @@ vars:
   oscar_path: "data"
   max_pretraining_texts: 1000
   # This variable depends on the output of the pretrain commands
-  pretraining_model: "model19.bin"
+  pretraining_model: "model-last.bin"
   # Choose -1 for CPU
   gpu: -1
+
+spacy_version: ">=3.5.2,<4.0.0"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
