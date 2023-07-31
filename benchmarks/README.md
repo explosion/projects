@@ -1,6 +1,6 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Benchmarks (8)
+# 🪐 Project Templates: Benchmarks (10)
 
 | Template | Description |
 | --- | --- |
@@ -9,7 +9,7 @@
 | [`ner_conll03`](ner_conll03) | Named Entity Recognition (CoNLL-2003) |
 | [`ner_embeddings`](ner_embeddings) | Comparing embedding layers in spaCy |
 | [`parsing_penn_treebank`](parsing_penn_treebank) | Dependency Parsing (Penn Treebank) |
-| [`pretraining_morphologizer_oscar`](pretraining_morphologizer_oscar) | Pretraining Morphologizer |
+| [`pretraining_morphologizer_oscar`](pretraining_morphologizer_oscar) | Enhancing Morphological Analysis with spaCy Pretraining |
 | [`span-labeling-datasets`](span-labeling-datasets) | Span labeling datasets |
 | [`speed`](speed) | Project for speed benchmarking of various pretrained models of different NLP libraries. |
 | [`textcat_architectures`](textcat_architectures) | Textcat performance benchmarks |

@@ -20,7 +20,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies |
+| `download` | Download models |
 | `preprocess` | Convert raw inputs into spaCy's binary format |
 | `decompress` | Decompress relevant assets that will be used latter by our weak supervision model |
 | `augment` | Augment an input dataset via weak supervision then split it into training and evaluation datasets |
@@ -38,8 +38,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `install` &rarr; `preprocess` &rarr; `decompress` &rarr; `augment` &rarr; `train` &rarr; `train-with-augmenter` &rarr; `evaluate` |
-| `setup` | `install` &rarr; `preprocess` &rarr; `decompress` |
+| `all` | `download` &rarr; `preprocess` &rarr; `decompress` &rarr; `augment` &rarr; `train` &rarr; `train-with-augmenter` &rarr; `evaluate` |
+| `setup` | `download` &rarr; `preprocess` &rarr; `decompress` |
 | `finetune` | `augment` &rarr; `train` &rarr; `train-with-augmenter` &rarr; `evaluate` |
 
 ### 🗂 Assets

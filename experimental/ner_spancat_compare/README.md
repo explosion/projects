@@ -21,7 +21,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies |
+| `download` | Download model-related assets |
 | `convert` | Convert IOB file into the spaCy format |
 | `create-ner` | Split corpus into separate NER datasets for each GENIA label |
 | `train-ner` | Train an NER model for each label |
@@ -39,9 +39,9 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `assemble-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
-| `spancat` | `install` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
-| `ner` | `install` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` &rarr; `assemble-ner` |
+| `all` | `download` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `assemble-ner` &rarr; `train-spancat` &rarr; `evaluate-ner` &rarr; `evaluate-spancat` |
+| `spancat` | `download` &rarr; `convert` &rarr; `train-spancat` &rarr; `evaluate-spancat` |
+| `ner` | `download` &rarr; `convert` &rarr; `create-ner` &rarr; `train-ner` &rarr; `evaluate-ner` &rarr; `assemble-ner` |
 
 ### 🗂 Assets
 

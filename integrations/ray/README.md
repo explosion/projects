@@ -18,7 +18,6 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies |
 | `convert` | Convert the data to spaCy's format |
 | `train` | Train UD_English-EWT |
 

@@ -18,7 +18,6 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies |
 | `download` | Download models |
 | `timing_cpu` | Run all timing benchmarks on CPU and add the numbers to output/results.csv |
 | `timing_gpu` | Run all timing benchmarks on GPU and add the numbers to output/results.csv |
@@ -33,7 +32,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `setup` | `install` &rarr; `download` |
+| `setup` | `download` |
 | `benchmark` | `timing_cpu` &rarr; `timing_gpu` |
 
 ### 🗂 Assets

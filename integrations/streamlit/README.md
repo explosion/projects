@@ -20,7 +20,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies and download models |
+| `download` | Download models |
 | `visualize` | Visualize a pipeline interactively using Streamlit |
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
