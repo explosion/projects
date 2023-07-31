@@ -23,8 +23,10 @@ Commands are only re-run if their inputs have changed.
 | `download_model` | Download the specified spaCy model for vector-objective pretraining |
 | `extract_ud` | Extract the ud-treebanks data |
 | `convert_ud` | Convert the ud-treebanks data to spaCy's format |
-| `train` | Train a morphologizer component without pretrained weights |
-| `evaluate` | Evaluate the trained morphologizer component without pretrained weights |
+| `train` | Train a morphologizer component without pretrained weights and static vectors |
+| `evaluate` | Evaluate the trained morphologizer component without pretrained weights and static vectors |
+| `train_static` | Train a morphologizer component with static vectors from a pretrained model |
+| `evaluate_static` | Evaluate the trained morphologizer component with static weights |
 | `pretrain_char` | Pretrain a tok2vec component with the character objective |
 | `train_char` | Train a morphologizer component with pretrained weights (character_objective) |
 | `evaluate_char` | Evaluate the trained morphologizer component with pretrained weights (character-objective) |
@@ -49,6 +51,7 @@ inputs have changed.
 | --- | --- |
 | `data` | `download_oscar` &rarr; `download_model` &rarr; `extract_ud` &rarr; `convert_ud` |
 | `training` | `train` &rarr; `evaluate` |
+| `training_static` | `train_static` &rarr; `evaluate_static` |
 | `training_char` | `pretrain_char` &rarr; `train_char` &rarr; `evaluate_char` |
 | `training_vector` | `pretrain_vector` &rarr; `train_vector` &rarr; `evaluate_vector` |
 | `training_trf` | `train_trf` &rarr; `evaluate_trf` |
