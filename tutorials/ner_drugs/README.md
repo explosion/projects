@@ -18,6 +18,7 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
+| `download` | Download a spaCy model with pretrained vectors |
 | `preprocess` | Convert the data to spaCy's binary format |
 | `train` | Train a named entity recognition model |
 | `evaluate` | Evaluate the model and export metrics |
@@ -34,7 +35,7 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `all` | `preprocess` &rarr; `train` &rarr; `evaluate` |
+| `all` | `download` &rarr; `preprocess` &rarr; `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 

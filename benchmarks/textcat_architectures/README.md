@@ -18,7 +18,6 @@ Commands are only re-run if their inputs have changed.
 
 | Command | Description |
 | --- | --- |
-| `install` | Install dependencies. |
 | `data` | Extract the datasets from their archives. |
 | `train` | Run customized training runs: 3 textcat architectures trained on 2 datasets. |
 | `summarize` | Summarize the results from the runs and print the best & last scores for each run. |

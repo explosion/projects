@@ -1,6 +1,6 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# 🪐 Project Templates: Tutorials (13)
+# 🪐 Project Templates: Tutorials (14)
 
 | Template | Description |
 | --- | --- |
@@ -15,5 +15,6 @@
 | [`parser_low_resource`](parser_low_resource) | Training a POS tagger and dependency parser for a low-resource language |
 | [`rel_component`](rel_component) | Example project of creating a novel nlp component to do relation extraction from scratch. |
 | [`spancat_food_ingredients`](spancat_food_ingredients) | Span Categorization in Prodigy |
+| [`spanruler_restaurant_reviews`](spanruler_restaurant_reviews) | Using SpanRuler for rule-based Named Entity Recognition |
 | [`textcat_docs_issues`](textcat_docs_issues) | Predicting whether a GitHub issue is about documentation (Text Classification) |
 | [`textcat_goemotions`](textcat_goemotions) | Categorization of emotions in Reddit posts (Text Classification) |
