@@ -2,8 +2,6 @@ title: "Training a spaCy Coref Model"
 description: |
   This project trains a coreference model for spaCy using OntoNotes.
 
-spacy_version: ">=3.3.0,<4.0.0"
-
 vars:
   # XXX Change to your actual GPU ID
   gpu_id: 0

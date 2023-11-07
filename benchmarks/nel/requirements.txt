@@ -7,3 +7,4 @@ rapidfuzz>=2.0.0
 spacyfishing
 virtualenv
 pysqlite3-binary
+spacy>=3.0.0,<3.6.0

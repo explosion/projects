@@ -1,6 +1,5 @@
 title: "Demo floret vectors for Finnish"
 description: "Train floret vectors on OSCAR and compare standard vectors vs. floret vectors on UD Finnish TDT and turku-ner-corpus."
-spacy_version: ">=3.2.0,<4.0.0"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "floret_fi_ud_demo"

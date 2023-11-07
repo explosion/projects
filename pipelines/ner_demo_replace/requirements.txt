@@ -1,2 +1,3 @@
 spacy-streamlit>=1.0.0a0
 spacy-lookups-data>=1.0.0,<1.1.0
+spacy>=3.0.6,<4.0.0

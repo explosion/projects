@@ -8,7 +8,6 @@ vars:
   train: "docs_issues_training"
   dev: "docs_issues_eval"
   gpu_id: -1
-spacy_version: ">=3.0.6,<4.0.0"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
