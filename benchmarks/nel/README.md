@@ -1,6 +1,6 @@
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: NEL Benchmark
+# 🪐 Weasel Project: NEL Benchmark
 
 Pipeline for benchmarking NEL approaches (incl. candidate generation and entity disambiguation).
 
@@ -8,12 +8,12 @@ Pipeline for benchmarking NEL approaches (incl. candidate generation and entity 
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
+[Weasel documentation](https://github.com/explosion/weasel).
 
 ### ⏯ Commands
 
 The following commands are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
+can be executed using [`weasel run [name]`](https://github.com/explosion/weasel/tree/main/docs/cli.md#rocket-run).
 Commands are only re-run if their inputs have changed.
 
 | Command | Description |
@@ -36,7 +36,7 @@ Commands are only re-run if their inputs have changed.
 ### ⏭ Workflows
 
 The following workflows are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
+can be executed using [`weasel run [name]`](https://github.com/explosion/weasel/tree/main/docs/cli.md#rocket-run)
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
@@ -45,7 +45,7 @@ inputs have changed.
 | `all` | `download_mewsli9` &rarr; `download_model` &rarr; `wikid_clone` &rarr; `preprocess` &rarr; `wikid_download_assets` &rarr; `wikid_parse` &rarr; `wikid_create_kb` &rarr; `parse_corpus` &rarr; `compile_corpora` &rarr; `train` &rarr; `evaluate` &rarr; `compare_evaluations` |
 | `training` | `train` &rarr; `evaluate` |
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS END (do not remove) -->
 
 Notes: 
 > **Warning**: Parts of this project are currently not platform-agnostic and run only on Linux. Making the entire 
