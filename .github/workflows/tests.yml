@@ -24,9 +24,9 @@ jobs:
       matrix:
         include:
           - os: windows-2019
-            python_version: "3.7"
+            python_version: "3.8"
           - os: ubuntu-20.04
-            python_version: "3.7"
+            python_version: "3.8"
     runs-on: ${{ matrix.os }}
 
     steps:
