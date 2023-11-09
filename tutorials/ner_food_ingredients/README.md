@@ -1,8 +1,8 @@
 <a href="https://www.youtube.com/watch?v=59BKHO_xBPA" target="_blank"><img src="https://user-images.githubusercontent.com/13643239/76709989-cd96db00-6703-11ea-927a-456200f74f45.png" width="300" height="auto" align="right" /></a>
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Analyzing how mentions of ingredients change over time (Named Entity Recognition)
+# 🪐 Weasel Project: Analyzing how mentions of ingredients change over time (Named Entity Recognition)
 
 **This project was created as part of a [step-by-step video tutorial](https://www.youtube.com/watch?v=59BKHO_xBPA).** It uses [`sense2vec`](https://github.com/explosion/sense2vec) and [Prodigy](https://prodi.gy) to bootstrap an NER model to detect ingredients [Reddit comments](https://files.pushshift.io/reddit/comments/) and to calculate how mentions change over time. The results were then used to create a [bar chart race visualization](https://public.flourish.studio/visualisation/1532208/) of selected ingredients.
 
@@ -10,12 +10,12 @@
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
+[Weasel documentation](https://github.com/explosion/weasel).
 
 ### 🗂 Assets
 
 The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+be fetched by running [`weasel assets`](https://github.com/explosion/weasel/tree/main/docs/cli.md#open_file_folder-assets)
 in the project directory.
 
 | File | Source | Description |
@@ -28,7 +28,7 @@ in the project directory.
 | `assets/tok2vec_cd8_model289.bin` | URL | Pretrained tok2vec weights to initialize the model |
 | `assets/s2v_reddit_2015_md.tar.gz` | URL | sense2vec vectors trained on Reddit comments of 2015. Used to bootstrap the terminology list |
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS END (do not remove) -->
 
 ## 🧮 Results
 

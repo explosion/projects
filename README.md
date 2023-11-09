@@ -2,17 +2,19 @@
 
 # 🪐 Project Templates
 
-[spaCy projects](https://spacy.io/usage/projects) let you manage and share
-**end-to-end spaCy workflows** for different **use cases and domains**, and
+[Weasel](https://github.com/explosion/weasel), previously
+[spaCy projects](https://spacy.io/usage/projects), lets you manage and share
+**end-to-end workflows** for different **use cases and domains**, and
 orchestrate training, packaging and serving your custom pipelines. You can start
 off by cloning a pre-defined project template, adjust it to fit your needs, load
 in your data, train a pipeline, export it as a Python package, upload your
 outputs to a remote storage and share your results with your team.
 
-> ⚠️ spaCy project templates require [**spaCy v3**](https://spacy.io). You can
-> install it from pip with `pip install spacy` or conda with
-> `conda install spacy -c conda-forge`. Make sure to use a fresh virtual
-> environment.
+> ⚠️ Weasel project templates require
+> [**Weasel**](https://github.com/explosion/weasel), which is also included by
+> default with spaCy v3.7+. You can install it from pip with
+> `pip install weasel` or conda with `conda install weasel -c conda-forge`. Make
+> sure to use a fresh virtual environment.
 >
 > See the [`master` branch](https://github.com/explosion/projects/tree/master)
 > for the previous version of this repo.
@@ -32,31 +34,35 @@ outputs to a remote storage and share your results with your team.
 
 ## 🚀 Quickstart
 
-Projects can be used via the new
-[`spacy project`](https://spacy.io/api/cli#project) CLI. To find out more about
-a command, add `--help`. For detailed instructions, see the
-[usage guide](https://spacy.io/usage/projects).
-
-<!-- TODO: update example -->
+Projects can be used via the
+[`weasel`](https://github.com/explosion/weasel/blob/main/docs/cli.md) CLI, or
+through the [`spacy project`](https://spacy.io/api/cli#project) alias. To find
+out more about a command, add `--help`. For detailed instructions, see the
+[Weasel documentation](https://github.com/explosion/weasel/tree/main#-documentation)
+or [spaCy projects usage guide](https://spacy.io/usage/projects).
 
 1. **Clone** the project template you want to use.
    ```bash
-   python -m spacy project clone tutorials/ner_fashion_brands
+   python -m weasel clone tutorials/ner_fashion_brands
    ```
-2. **Fetch assets** (data, weights) defined in the `project.yml`.
+2. **Install** any project requirements.
    ```bash
    cd ner_fashion_brands
-   python -m spacy project assets
+   python -m pip install -r requirements.txt
    ```
-3. **Run a command** defined in the `project.yml`.
+3. **Fetch assets** (data, weights) defined in the `project.yml`.
    ```bash
-   python -m spacy project run preprocess
+   python -m weasel assets
    ```
-4. **Run a workflow** of multiple steps in order.
+4. **Run a command** defined in the `project.yml`.
    ```bash
-   python -m spacy project run all
+   python -m weasel run preprocess
    ```
-5. **Adjust** the template for **your specific use case**, load in your own
+5. **Run a workflow** of multiple steps in order.
+   ```bash
+   python -m weasel run all
+   ```
+6. **Adjust** the template for **your specific use case**, load in your own
    data, adjust the settings and model and share the result with your team.
 
 ## 👷‍♀️Repository maintanance

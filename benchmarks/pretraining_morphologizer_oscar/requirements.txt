@@ -2,3 +2,4 @@ spacy
 datasets
 spacy-transformers
 matplotlib
+spacy>=3.5.2,<4.0.0

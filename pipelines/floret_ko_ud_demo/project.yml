@@ -1,6 +1,5 @@
 title: "Demo floret vectors for UD Korean Kaist"
 description: "Train floret vectors on OSCAR and compare no vectors, standard vectors, and floret vectors on UD Korean Kaist."
-spacy_version: ">=3.2.0,<4.0.0"
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "ftb_ko_ud_demo"

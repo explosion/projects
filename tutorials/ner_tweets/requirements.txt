@@ -2,3 +2,5 @@
 skweak==0.2.13
 hmmlearn==0.2.6
 nlpaug
+
+spacy>=3.3.0,<4.0.0

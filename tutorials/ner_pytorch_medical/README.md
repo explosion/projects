@@ -1,6 +1,6 @@
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS START (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS START (do not remove) -->
 
-# 🪐 spaCy Project: Detecting entities in Medical Records with PyTorch
+# 🪐 Weasel Project: Detecting entities in Medical Records with PyTorch
 
 This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/) to bootstrap a PyTorch NER model to detect entities in Medical Records. It also demonstrates how to anonymize medical records for annotators in [Prodigy](https://prodi.gy).
 
@@ -8,12 +8,12 @@ This project uses the [i2b2 (n2c2) 2011 Challenge Dataset](https://portal.dbmi.h
 
 The [`project.yml`](project.yml) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
-[spaCy projects documentation](https://spacy.io/usage/projects).
+[Weasel documentation](https://github.com/explosion/weasel).
 
 ### ⏯ Commands
 
 The following commands are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run).
+can be executed using [`weasel run [name]`](https://github.com/explosion/weasel/tree/main/docs/cli.md#rocket-run).
 Commands are only re-run if their inputs have changed.
 
 | Command | Description |
@@ -31,7 +31,7 @@ Commands are only re-run if their inputs have changed.
 ### ⏭ Workflows
 
 The following workflows are defined by the project. They
-can be executed using [`spacy project run [name]`](https://spacy.io/api/cli#project-run)
+can be executed using [`weasel run [name]`](https://github.com/explosion/weasel/tree/main/docs/cli.md#rocket-run)
 and will run the specified commands in order. Commands are only re-run if their
 inputs have changed.
 
@@ -42,7 +42,7 @@ inputs have changed.
 ### 🗂 Assets
 
 The following assets are defined by the project. They can
-be fetched by running [`spacy project assets`](https://spacy.io/api/cli#project-assets)
+be fetched by running [`weasel assets`](https://github.com/explosion/weasel/tree/main/docs/cli.md#open_file_folder-assets)
 in the project directory.
 
 | File | Source | Description |
@@ -52,7 +52,7 @@ in the project directory.
 | `assets/n2c2_2011/Task_1C.zip` | Local | Zipfile containing original challenge test data |
 | [`assets/mock_notes.jsonl`](assets/mock_notes.jsonl) | Local | JSONL file with raw mock notes to annotate in prodigy |
 
-<!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
+<!-- WEASEL: AUTO-GENERATED DOCS END (do not remove) -->
 
 ---
 

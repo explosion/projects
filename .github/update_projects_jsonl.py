@@ -1,5 +1,6 @@
 from pathlib import Path
-from spacy.cli._util import PROJECT_FILE, load_project_config
+from weasel.cli.main import PROJECT_FILE
+from weasel.util import load_project_config
 from wasabi import msg
 import json
 import typer

@@ -3,8 +3,6 @@ description: |
   This project demonstrates how to improve spaCy's pretrained models by
   augmenting the training data and adapting it to a different domain.
 
-spacy_version: ">=3.3.0,<4.0.0"
-
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   config: "config.cfg"
