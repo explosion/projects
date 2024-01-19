@@ -9,8 +9,8 @@ from spacy_llm.util import assemble
 from wasabi import msg
 
 DEBUG = False
-PRINT_CONSOLE = False
-PRINT_DISPLACY = True
+PRINT_CONSOLE = True
+PRINT_DISPLACY = False
 
 
 def visualise_entities(pmid: int, config_path: Path, verbose: bool = False):
@@ -18,16 +18,16 @@ def visualise_entities(pmid: int, config_path: Path, verbose: bool = False):
     if DEBUG:
         spacy_llm.logger.setLevel(logging.DEBUG)
 
-    msg.text(f"Processing PMID {pmid}", show=verbose)
-    msg.text(f"Loading config from {config_path}", show=verbose)
+    msg.info(f"Processing PMID {pmid}", show=verbose)
+    msg.info(f"Loading config from {config_path}", show=verbose)
     text = read_trial(pmid, verbose=verbose)
     nlp = assemble(config_path)
     doc = nlp(text)
     ents = list(doc.ents)
     if PRINT_CONSOLE:
-        print("ents", len(ents))
+        msg.text(f" - Number of entities: {len(ents)}")
         for ent in ents:
-            print(ent.text, ent.label_)
+            msg.text(f"    - {ent.text} [{ent.label_}]")
     if PRINT_DISPLACY:
         options = {
             "ents": ["Drug", "Dose"],

@@ -1,0 +1,48 @@
+[
+  {
+    "text": "The patient was given 1mg of paracetamol.",
+    "spans": [
+      {
+        "text": "paracetamol",
+        "is_entity": true,
+        "label": "Drug",
+        "reason": "is a drug name, used as medication"
+      },
+      {
+        "text": "1mg",
+        "is_entity": true,
+        "label": "Dose",
+        "reason": "is the quantity or dose of the given medication"
+      },
+      {
+        "text": "patient",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "is a person, not a drug or dose"
+      }
+    ]
+  },
+  {
+    "text": "Throughout the treatment, they received Aspirin 1mg/kg.",
+    "spans": [
+      {
+        "text": "Aspirin",
+        "is_entity": true,
+        "label": "Drug",
+        "reason": "is a drug brand, used as medication"
+      },
+      {
+        "text": "1mg/kg",
+        "is_entity": true,
+        "label": "Dose",
+        "reason": "is the quantity or dose of the given drug"
+      },
+      {
+        "text": "Aspirin 1mg/kg",
+        "is_entity": false,
+        "label": "==NONE==",
+        "reason": "contains both the drug and the dose - these should be two entities instead"
+      }
+    ]
+  }
+]

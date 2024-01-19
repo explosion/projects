@@ -2,7 +2,7 @@ title: 'Clinical trial results extraction with LLMs'
 description: "Using an LLM in a spaCy pipeline to extract patient groups, treatments and outcomes in clinical trials."
 
 vars:
-  ner_config: "ner_zeroshot_openai.cfg"  # "ner_dolly.cfg"   # "ner_falcon.cfg"
+  ner_config: "ner_fewshot_openai.cfg"   # "ner_zeroshot_openai.cfg"
   trial_config: "trial_openai.cfg"
   pmid: 27144689
 
