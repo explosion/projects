@@ -15,7 +15,7 @@ Then, for each patient group, write down the following:
 Patient group: <name>
 Number of patients in the group: <number>
 Treatment drug or substance: <drug>
-Treatment dose: <drug>
+Treatment dose: <dose>
 Treatment frequency of administration: <frequency>
 Treatment duration: <duration>
 Outcome: <outcome>
@@ -114,9 +114,9 @@ class TrialSummaryTask(LLMTask):
             matcher.add("Patient_Group", [nlp.make_doc(text) for text in patient_groups])
             matcher.add("Patient_Number", [nlp.make_doc(text) for text in patient_numbers])
             matcher.add("Treatment_Drug", [nlp.make_doc(text) for text in drugs])
-            matcher.add("Dose", [nlp.make_doc(text) for text in doses])
-            matcher.add("Frequency", [nlp.make_doc(text) for text in frequencies])
-            matcher.add("Duration", [nlp.make_doc(text) for text in durations])
+            matcher.add("Treatment_Dose", [nlp.make_doc(text) for text in doses])
+            matcher.add("Treatment_Frequency", [nlp.make_doc(text) for text in frequencies])
+            matcher.add("Treatment_Duration", [nlp.make_doc(text) for text in durations])
             matcher.add("Outcome", [nlp.make_doc(text) for text in outcomes])
 
             matches = matcher(doc, as_spans=True)
