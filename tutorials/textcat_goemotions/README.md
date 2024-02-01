@@ -119,7 +119,7 @@ To make your own config to combine pipelines, the basic steps are:
 1. Include all the components you want in `nlp.pipeline`
 2. Add a section for each component, specifying the pipeline to source it from.
 3. If you have two components of the same type, specify unqiue component names for each.
-4. If necessary, [specify `replace_listeners`](https://spacy.io/api/language#replace_listeners) to bundle a component with its tok2vec.
+4. If necessary, specify [`replace_listeners`](https://spacy.io/api/language#replace_listeners) to bundle a component with its tok2vec.
 
 You can also remove many values related to training - since you aren't running
 a training loop with `spacy assemble`, default values are fine.
