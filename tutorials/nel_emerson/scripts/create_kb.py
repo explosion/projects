@@ -10,10 +10,9 @@ from spacy.kb import InMemoryLookupKB
 def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
     """ Step 1: create the Knowledge Base in spaCy and write it to file """
 
-    # First: create a simpel model from a model with an NER component
-    # To ensure we get the correct entities for this demo, add a simple entity_ruler as well.
-    nlp = spacy.load(vectors_model, exclude="parser, tagger, lemmatizer")
-    ruler = nlp.add_pipe("entity_ruler", after="ner")
+    # First: create a pipeline with vectors and an entity_ruler to ensure we get the correct entities.
+    nlp = spacy.load(vectors_model, exclude="parser, tagger, lemmatizer, ner")
+    ruler = nlp.add_pipe("entity_ruler", first=True)
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
     nlp.add_pipe("sentencizer", first=True)

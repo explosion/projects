@@ -4,7 +4,7 @@ description: "**This project was created as part of a [step-by-step video tutori
 vars:
   name: "nel_emerson"
   config: "nel.cfg"
-  vectors_model: "en_core_web_md"
+  vectors_model: "en_core_web_lg"
   annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"
   kb: "my_kb"
