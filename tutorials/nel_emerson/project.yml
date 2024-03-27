@@ -3,7 +3,7 @@ description: "**This project was created as part of a [step-by-step video tutori
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "nel_emerson"
-  config: "nel.cfg"
+  config: "nel_entityruler.cfg"      # "nel_ner.cfg"
   vectors_model: "en_core_web_lg"
   annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"

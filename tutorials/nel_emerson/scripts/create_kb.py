@@ -11,7 +11,7 @@ def main(entities_loc: Path, vectors_model: str, kb_loc: Path, nlp_dir: Path):
     """ Step 1: create the Knowledge Base in spaCy and write it to file """
 
     # First: create a pipeline with vectors and an entity_ruler to ensure we get the correct entities.
-    nlp = spacy.load(vectors_model, exclude="parser, tagger, lemmatizer, ner")
+    nlp = spacy.load(vectors_model, exclude="parser, tagger, lemmatizer")
     ruler = nlp.add_pipe("entity_ruler", first=True)
     patterns = [{"label": "PERSON", "pattern": [{"LOWER": "emerson"}]}]
     ruler.add_patterns(patterns)
