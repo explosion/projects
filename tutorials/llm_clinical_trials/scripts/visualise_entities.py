@@ -8,7 +8,7 @@ from spacy import displacy
 from spacy_llm.util import assemble
 from wasabi import msg
 
-DEBUG = False
+DEBUG = True
 PRINT_CONSOLE = True
 PRINT_DISPLACY = False
 
