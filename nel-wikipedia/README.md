@@ -3,6 +3,8 @@
 These scripts are provided on an as-is basis. Questions around usage of these scripts are best asked at StackOverflow.
 Note that processing the whole of Wikipedia will require a lot of resources and can be overkill for your specific use-case.
 
+Note: this project was created for spaCy v2.x. If you want to run this functionality with spaCy v3.x, check out [wikid](https://github.com/explosion/wikid) and https://github.com/explosion/projects/tree/v3/benchmarks/nel.
+
 ### Step 1: Create a Knowledge Base (KB) and training data
 
 Run `wikidata_pretrain_kb.py` 
