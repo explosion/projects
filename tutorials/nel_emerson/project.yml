@@ -3,7 +3,7 @@ description: "**This project was created as part of a [step-by-step video tutori
 # Variables can be referenced across the project.yml using ${vars.var_name}
 vars:
   name: "nel_emerson"
-  config: "nel.cfg"
+  config: "nel_entityruler.cfg"
   vectors_model: "en_core_web_md"
   annotations: "emerson_annotated_text.jsonl"
   entities: "entities.csv"
@@ -11,7 +11,7 @@ vars:
   nlp: "my_nlp"
   train: "train"
   dev: "dev"
-  version: "0.0.3"
+  version: "0.0.4"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
