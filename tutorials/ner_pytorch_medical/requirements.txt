@@ -1,6 +1,6 @@
 spacy-streamlit>=1.0.0a0
 spacy-transformers
-torch==1.8.1
+torch==2.2.0
 streamlit
 presidio-analyzer==2.2.1
 presidio-anonymizer==2.2.1
