@@ -1,6 +1,7 @@
 import typer
+import numpy
 from pathlib import Path
-import floret
+
 
 
 def main(
