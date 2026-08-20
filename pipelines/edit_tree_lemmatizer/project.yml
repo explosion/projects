@@ -28,7 +28,7 @@ commands:
   - name: "preprocess"
     help: "Convert data to spaCy format"
     script:
-      - "mkdir -p corpus/${vars.treebank}"
+      - python -c "import os; os.makedirs('corpus/${vars.treebank}', exist_ok=True)"
       - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
       - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
       - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --n-sents 10"

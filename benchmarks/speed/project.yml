@@ -74,4 +74,4 @@ commands:
   - name: clean
     help: "Remove output file(s)"
     script:
-      - "rm -rf results/*"
+      - python -c "import shutil, os; shutil.rmtree('results', ignore_errors=True); os.makedirs('results', exist_ok=True)"

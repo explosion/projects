@@ -66,6 +66,6 @@ commands:
   - name: clean
     help: "Remove intermediate files"
     script:
-      - "rm -rf training/*"
-      - "rm -rf metrics/*"
-      - "rm -rf corpus/*"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('metrics', ignore_errors=True); os.makedirs('metrics', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('corpus', ignore_errors=True); os.makedirs('corpus', exist_ok=True)"

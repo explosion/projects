@@ -283,7 +283,7 @@ commands:
   - name: "evaluate"
     help: "Evaluate NER model."
     script:
-      - mkdir -p ${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - python -c "import os; os.makedirs('${vars.metrics_dir}/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/', exist_ok=True)"
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
@@ -315,7 +315,7 @@ commands:
         --output ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
-      - mkdir -p ${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - python -c "import os; os.makedirs('${vars.metrics_dir}-test-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/', exist_ok=True)"
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
@@ -335,7 +335,7 @@ commands:
   - name: "evaluate-unseen-only"
     help: "Evaluate NER model on the dev and tests sets only considering entities that did not appear in the training set."
     script:
-      - mkdir -p ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - python -c "import os; os.makedirs('${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/', exist_ok=True)"
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
@@ -343,7 +343,7 @@ commands:
         --output ${vars.metrics_dir}-dev-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
-      - mkdir -p ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - python -c "import os; os.makedirs('${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/', exist_ok=True)"
       - >-
         python -m spacy evaluate
         training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
@@ -351,7 +351,7 @@ commands:
         --output ${vars.metrics_dir}-test-unseen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/scores.json
         --gpu-id ${vars.gpu_id}
         --code scripts/custom_components.py
-      - mkdir -p ${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/
+      - python -c "import os; os.makedirs('${vars.metrics_dir}-dev-seen/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/', exist_ok=True)"
     deps:
       - training/${vars.dataset}/${vars.vectors}/${vars.ner_config}/${vars.seed}/model-best
       - corpus/${vars.dataset}-dev-unseen.spacy

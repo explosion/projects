@@ -155,8 +155,8 @@ commands:
   - name: clean
     help: "Remove intermediate files for specified dataset and language (excluding Wiki resources and database)."
     script:
-      - "rm -rf training/${vars.dataset}"
-      - "rm -rf corpora/${vars.dataset}"
-      - "rm -rf assets/${vars.dataset}"
-      - "rm -rf evaluation/${vars.dataset}"
-      - "rm -rf wikid/output/${vars.language}"
+      - python -c "import shutil, os; shutil.rmtree('training/${vars.dataset}', ignore_errors=True); os.makedirs('training/${vars.dataset}', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('corpora/${vars.dataset}', ignore_errors=True); os.makedirs('corpora/${vars.dataset}', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('assets/${vars.dataset}', ignore_errors=True); os.makedirs('assets/${vars.dataset}', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('evaluation/${vars.dataset}', ignore_errors=True); os.makedirs('evaluation/${vars.dataset}', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('wikid/output/${vars.language}', ignore_errors=True); os.makedirs('wikid/output/${vars.language}', exist_ok=True)"

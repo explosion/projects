@@ -64,5 +64,5 @@ commands:
   - name: "clean"
     help: "Remove intermediate files."
     script:
-      - "rm -rf training/*"
-      - "rm -rf wandb/*"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('wandb', ignore_errors=True); os.makedirs('wandb', exist_ok=True)"
