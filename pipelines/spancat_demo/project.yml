@@ -131,6 +131,6 @@ commands:
   - name: clean
     help: "Remove intermediary directories"
     script:
-      - "rm -rf corpus/*"
-      - "rm -rf training/*"
-      - "rm -rf metrics/*"
+      - python -c "import shutil, os; shutil.rmtree('corpus', ignore_errors=True); os.makedirs('corpus', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('metrics', ignore_errors=True); os.makedirs('metrics', exist_ok=True)"

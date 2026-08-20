@@ -99,7 +99,7 @@ commands:
   - name: clean
     help: "Remove intermediate files"
     script:
-      - "rm -rf training/*"
-      - "rm -rf corpus/*"
-      - "rm -rf temp/${vars.kb}"
-      - "rm -rf temp/${vars.nlp}"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('corpus', ignore_errors=True); os.makedirs('corpus', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('temp/${vars.kb}', ignore_errors=True); os.makedirs('temp/${vars.kb}', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('temp/${vars.nlp}', ignore_errors=True); os.makedirs('temp/${vars.nlp}', exist_ok=True)"

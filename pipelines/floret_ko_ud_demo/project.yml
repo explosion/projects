@@ -113,7 +113,7 @@ commands:
   - name: "convert"
     help: "Convert the data to spaCy's format"
     script:
-      - "mkdir -p corpus/${vars.treebank}"
+      - python -c "import os; os.makedirs('corpus/${vars.treebank}', exist_ok=True)"
       - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
       - "mv corpus/${vars.treebank}/${vars.train_name}.spacy corpus/${vars.treebank}/train.spacy"
       - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --n-sents 10"
@@ -177,13 +177,13 @@ commands:
   - name: "evaluate"
     help: "Evaluate the models and export metrics"
     script:
-      - "mkdir -p metrics/${vars.treebank}-novectors"
+      - python -c "import os; os.makedirs('metrics/${vars.treebank}-novectors', exist_ok=True)"
       - "python -m spacy evaluate training/${vars.treebank}-novectors/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}-novectors/metrics.json --gpu-id ${vars.gpu_id}"
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned"
+      - python -c "import os; os.makedirs('metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned', exist_ok=True)"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard-unpruned/metrics.json --gpu-id ${vars.gpu_id}"
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard"
+      - python -c "import os; os.makedirs('metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard', exist_ok=True)"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-standard/metrics.json --gpu-id ${vars.gpu_id}"
-      - "mkdir -p metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret"
+      - python -c "import os; os.makedirs('metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret', exist_ok=True)"
       - "python -m spacy evaluate training/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/model-best corpus/${vars.treebank}/test.spacy --output metrics/${vars.treebank}.${vars.max_texts}.n${vars.minn}-${vars.maxn}-floret/metrics.json --gpu-id ${vars.gpu_id}"
     deps:
       - "corpus/${vars.treebank}/test.spacy"

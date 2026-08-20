@@ -35,7 +35,7 @@ commands:
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
-      - "mkdir -p assets/PTB_SD_3_3_0_pos_fix"
+      - python -c "import os; os.makedirs('assets/PTB_SD_3_3_0_pos_fix', exist_ok=True)"
       - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/train.gold.conll assets/PTB_SD_3_3_0_pos_fix/train.conll"
       - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/dev.gold.conll assets/PTB_SD_3_3_0_pos_fix/dev.conll"
       - "python scripts/fix_conll_format.py assets/PTB_SD_3_3_0/test.gold.conll assets/PTB_SD_3_3_0_pos_fix/test.conll"
@@ -83,6 +83,6 @@ commands:
   - name: clean
     help: "Remove intermediate files"
     script:
-      - "rm -rf training/*"
-      - "rm -rf metrics/*"
-      - "rm -rf corpus/*"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('metrics', ignore_errors=True); os.makedirs('metrics', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('corpus', ignore_errors=True); os.makedirs('corpus', exist_ok=True)"

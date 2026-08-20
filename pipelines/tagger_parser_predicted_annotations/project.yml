@@ -37,7 +37,7 @@ commands:
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
-      - "mkdir -p corpus/${vars.treebank}"
+      - python -c "import os; os.makedirs('corpus/${vars.treebank}', exist_ok=True)"
       - "python -m spacy convert assets/${vars.treebank}/${vars.train_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
       - "python -m spacy convert assets/${vars.treebank}/${vars.dev_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
       - "python -m spacy convert assets/${vars.treebank}/${vars.test_name}.conllu corpus/${vars.treebank}/ --converter conllu --n-sents 10 --merge-subtokens"
@@ -86,6 +86,6 @@ commands:
   - name: clean
     help: "Remove intermediate files"
     script:
-      - "rm -rf training/*"
-      - "rm -rf metrics/*"
-      - "rm -rf corpus/*"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('metrics', ignore_errors=True); os.makedirs('metrics', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('corpus', ignore_errors=True); os.makedirs('corpus', exist_ok=True)"

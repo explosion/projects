@@ -79,5 +79,5 @@ commands:
   - name: "clean"
     help: "Remove intermediate files to start data preparation and training from a clean slate."
     script:
-      - "rm -rf data/*"
-      - "rm -rf training/*"
+      - python -c "import shutil, os; shutil.rmtree('data', ignore_errors=True); os.makedirs('data', exist_ok=True)"
+      - python -c "import shutil, os; shutil.rmtree('training', ignore_errors=True); os.makedirs('training', exist_ok=True)"
